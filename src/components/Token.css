@@ -1,0 +1,166 @@
+/* ============================================
+   TOKEN STYLING - CONVEX SPHERES
+   ============================================ */
+
+.token {
+    width: 80%;
+    height: 80%;
+    margin: 10%;
+    border-radius: 50%;
+
+    /* Convex (raised) effect */
+    box-shadow:
+        4px 4px 10px rgba(0, 0, 0, 0.3),
+        -2px -2px 6px rgba(255, 255, 255, 0.5),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.2),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.3);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    cursor: default;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    z-index: 10;
+}
+
+/* Shine effect (light reflection) */
+.token-shine {
+    position: absolute;
+    top: 12%;
+    left: 18%;
+    width: 35%;
+    height: 35%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%,
+            rgba(255, 255, 255, 0.9),
+            rgba(255, 255, 255, 0.4) 40%,
+            transparent 70%);
+    pointer-events: none;
+}
+
+/* ============================================
+   TOKEN COLORS
+   ============================================ */
+
+.token-red {
+    background: radial-gradient(circle at 35% 35%, #ff8a95, #ff4757 50%, #cc3946);
+    border: 2px solid #b8303e;
+}
+
+.token-green {
+    background: radial-gradient(circle at 35% 35%, #7bed9f, #2ed573 50%, #25ab5c);
+    border: 2px solid #1e8a4a;
+}
+
+.token-yellow {
+    background: radial-gradient(circle at 35% 35%, #ffcc4d, #ffa502 50%, #cc8400);
+    border: 2px solid #b37400;
+}
+
+.token-blue {
+    background: radial-gradient(circle at 35% 35%, #74b9ff, #1e90ff 50%, #1876cc);
+    border: 2px solid #1565b3;
+}
+
+/* ============================================
+   STATES
+   ============================================ */
+
+.token.clickable {
+    cursor: pointer;
+}
+
+.token.clickable:hover {
+    transform: scale(1.2) translateY(-3px);
+    box-shadow:
+        6px 6px 15px rgba(0, 0, 0, 0.4),
+        -3px -3px 8px rgba(255, 255, 255, 0.6),
+        0 0 20px currentColor;
+    z-index: 20;
+}
+
+/* Highlighted (valid move available) */
+.token.highlighted {
+    animation: pulse-highlight 0.8s ease-in-out infinite;
+    z-index: 15;
+}
+
+@keyframes pulse-highlight {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow:
+            4px 4px 10px rgba(0, 0, 0, 0.3),
+            -2px -2px 6px rgba(255, 255, 255, 0.5),
+            0 0 15px currentColor;
+    }
+
+    50% {
+        transform: scale(1.15);
+        box-shadow:
+            4px 4px 10px rgba(0, 0, 0, 0.3),
+            -2px -2px 6px rgba(255, 255, 255, 0.5),
+            0 0 25px currentColor;
+    }
+}
+
+/* Moving animation */
+.token.moving {
+    animation: token-move 0.4s ease-out;
+}
+
+@keyframes token-move {
+    0% {
+        transform: scale(1);
+    }
+
+    30% {
+        transform: scale(1.3) rotate(15deg);
+    }
+
+    60% {
+        transform: scale(1.1) rotate(-10deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* In yard - slightly smaller */
+.token.in-yard {
+    width: 70%;
+    height: 70%;
+    margin: 15%;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .token {
+        box-shadow:
+            3px 3px 8px rgba(0, 0, 0, 0.25),
+            -1px -1px 4px rgba(255, 255, 255, 0.4);
+    }
+
+    .token.clickable:hover {
+        transform: scale(1.15) translateY(-2px);
+    }
+}
+
+@media (max-width: 480px) {
+    .token {
+        border-width: 1px;
+    }
+
+    .token-shine {
+        width: 30%;
+        height: 30%;
+    }
+}

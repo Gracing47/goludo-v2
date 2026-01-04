@@ -1,0 +1,279 @@
+/* ============================================
+   LUDO BOARD - 15x15 GRID
+   ============================================ */
+
+.board-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.ludo-board {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+
+    width: var(--board-size);
+    height: var(--board-size);
+    aspect-ratio: 1;
+
+    background: var(--neuro-base);
+    border-radius: 20px;
+    padding: 8px;
+    gap: 2px;
+
+    box-shadow: var(--shadow-outer);
+}
+
+/* Token layer - positioned above cells */
+.token-layer {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    gap: 2px;
+    pointer-events: none;
+}
+
+.token-layer>* {
+    pointer-events: auto;
+}
+
+/* ============================================
+   BASE CELL STYLES
+   ============================================ */
+
+.board-cell {
+    border-radius: 4px;
+    position: relative;
+}
+
+/* ============================================
+   EMPTY CELLS (corners between bases and paths)
+   ============================================ */
+
+.empty {
+    background: transparent;
+}
+
+/* ============================================
+   PATH CELLS (walkable area)
+   ============================================ */
+
+.path {
+    background: #f5f5f5;
+    border-radius: 4px;
+    box-shadow:
+        inset 2px 2px 4px rgba(0, 0, 0, 0.1),
+        inset -1px -1px 3px rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   BASE AREAS (colored corners)
+   ============================================ */
+
+.base-red {
+    background: linear-gradient(135deg, #ff4757, #ff6b7a);
+}
+
+.base-green {
+    background: linear-gradient(135deg, #2ed573, #7bed9f);
+}
+
+.base-yellow {
+    background: linear-gradient(135deg, #ffa502, #ffbe4d);
+}
+
+.base-blue {
+    background: linear-gradient(135deg, #1e90ff, #54a0ff);
+}
+
+/* Spawn points within bases */
+.spawn-point {
+    border-radius: 50% !important;
+    box-shadow:
+        inset 3px 3px 6px rgba(0, 0, 0, 0.3),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.4);
+    margin: 15%;
+}
+
+.base-red .spawn-point,
+.base-red.spawn-point {
+    background: radial-gradient(circle, #fff 30%, #ff4757 100%);
+}
+
+.base-green .spawn-point,
+.base-green.spawn-point {
+    background: radial-gradient(circle, #fff 30%, #2ed573 100%);
+}
+
+.base-yellow .spawn-point,
+.base-yellow.spawn-point {
+    background: radial-gradient(circle, #fff 30%, #ffa502 100%);
+}
+
+.base-blue .spawn-point,
+.base-blue.spawn-point {
+    background: radial-gradient(circle, #fff 30%, #1e90ff 100%);
+}
+
+/* ============================================
+   START POSITIONS (entry points to path)
+   ============================================ */
+
+.start-red {
+    background: linear-gradient(135deg, #ff4757, #ff8a95);
+    border-radius: 4px;
+    box-shadow:
+        0 0 8px rgba(255, 71, 87, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.start-green {
+    background: linear-gradient(135deg, #2ed573, #7bed9f);
+    border-radius: 4px;
+    box-shadow:
+        0 0 8px rgba(46, 213, 115, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.start-yellow {
+    background: linear-gradient(135deg, #ffa502, #ffc048);
+    border-radius: 4px;
+    box-shadow:
+        0 0 8px rgba(255, 165, 2, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.start-blue {
+    background: linear-gradient(135deg, #1e90ff, #74b9ff);
+    border-radius: 4px;
+    box-shadow:
+        0 0 8px rgba(30, 144, 255, 0.5),
+        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Star marker on start cells */
+.start-red::after,
+.start-green::after,
+.start-yellow::after,
+.start-blue::after {
+    content: '★';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   HOME STRETCH (colored paths to center)
+   ============================================ */
+
+.home-red {
+    background: linear-gradient(90deg, #ff4757, #ff6b7a);
+    border-radius: 4px;
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.home-green {
+    background: linear-gradient(180deg, #2ed573, #7bed9f);
+    border-radius: 4px;
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.home-yellow {
+    background: linear-gradient(270deg, #ffa502, #ffbe4d);
+    border-radius: 4px;
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.home-blue {
+    background: linear-gradient(0deg, #1e90ff, #54a0ff);
+    border-radius: 4px;
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   CENTER AREA (goal)
+   ============================================ */
+
+.center {
+    background: linear-gradient(135deg,
+            #ff4757 0%,
+            #ff4757 25%,
+            #2ed573 25%,
+            #2ed573 50%,
+            #ffa502 50%,
+            #ffa502 75%,
+            #1e90ff 75%,
+            #1e90ff 100%);
+    border-radius: 4px;
+    box-shadow:
+        inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+        0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+/* Center cell with crown */
+.board-cell.center[data-row="7"][data-col="7"]::after {
+    content: '👑';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+/* ============================================
+   RESPONSIVE SIZING
+   ============================================ */
+
+@media (max-width: 768px) {
+    .ludo-board {
+        padding: 5px;
+        gap: 1px;
+        border-radius: 15px;
+    }
+
+    .token-layer {
+        top: 5px;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        gap: 1px;
+    }
+
+    .start-red::after,
+    .start-green::after,
+    .start-yellow::after,
+    .start-blue::after {
+        font-size: 8px;
+    }
+
+    .board-cell.center[data-row="7"][data-col="7"]::after {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ludo-board {
+        padding: 3px;
+        border-radius: 10px;
+    }
+
+    .token-layer {
+        top: 3px;
+        left: 3px;
+        right: 3px;
+        bottom: 3px;
+    }
+}
