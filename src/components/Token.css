@@ -1,5 +1,5 @@
 /* ============================================
-   TOKEN STYLING - CONVEX SPHERES
+   TOKEN STYLING - NEON GLOW DARK THEME
    ============================================ */
 
 .token {
@@ -7,13 +7,14 @@
     height: 80%;
     margin: 10%;
     border-radius: 50%;
+    transform: rotate(var(--token-rotation, 0deg));
 
-    /* Convex (raised) effect */
+    /* Neon glow effect */
     box-shadow:
-        4px 4px 10px rgba(0, 0, 0, 0.3),
-        -2px -2px 6px rgba(255, 255, 255, 0.5),
-        inset -2px -2px 4px rgba(0, 0, 0, 0.2),
-        inset 2px 2px 4px rgba(255, 255, 255, 0.3);
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        inset 0 -3px 8px rgba(0, 0, 0, 0.4),
+        inset 0 3px 8px rgba(255, 255, 255, 0.2);
 
     display: flex;
     justify-content: center;
@@ -26,6 +27,11 @@
     z-index: 10;
 }
 
+/* Stacking transform */
+.token.stacked {
+    transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
+}
+
 /* Shine effect (light reflection) */
 .token-shine {
     position: absolute;
@@ -35,34 +41,38 @@
     height: 35%;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%,
-            rgba(255, 255, 255, 0.9),
-            rgba(255, 255, 255, 0.4) 40%,
+            rgba(255, 255, 255, 0.8),
+            rgba(255, 255, 255, 0.3) 40%,
             transparent 70%);
     pointer-events: none;
 }
 
 /* ============================================
-   TOKEN COLORS
+   TOKEN COLORS - NEON STYLE
    ============================================ */
 
 .token-red {
-    background: radial-gradient(circle at 35% 35%, #ff8a95, #ff4757 50%, #cc3946);
-    border: 2px solid #b8303e;
+    background: radial-gradient(circle at 35% 35%, #ff8a8a, #ff4757 50%, #cc2233);
+    border: 2px solid #ff4757;
+    color: #ff4757;
 }
 
 .token-green {
-    background: radial-gradient(circle at 35% 35%, #7bed9f, #2ed573 50%, #25ab5c);
-    border: 2px solid #1e8a4a;
+    background: radial-gradient(circle at 35% 35%, #5eeea0, #00d26a 50%, #00a855);
+    border: 2px solid #00d26a;
+    color: #00d26a;
 }
 
 .token-yellow {
-    background: radial-gradient(circle at 35% 35%, #ffcc4d, #ffa502 50%, #cc8400);
-    border: 2px solid #b37400;
+    background: radial-gradient(circle at 35% 35%, #ffe066, #ffbe0b 50%, #e6a800);
+    border: 2px solid #ffbe0b;
+    color: #ffbe0b;
 }
 
 .token-blue {
-    background: radial-gradient(circle at 35% 35%, #74b9ff, #1e90ff 50%, #1876cc);
-    border: 2px solid #1565b3;
+    background: radial-gradient(circle at 35% 35%, #7ab8ff, #3a86ff 50%, #2060cc);
+    border: 2px solid #3a86ff;
+    color: #3a86ff;
 }
 
 /* ============================================
@@ -74,37 +84,59 @@
 }
 
 .token.clickable:hover {
-    transform: scale(1.2) translateY(-3px);
+    transform: rotate(var(--token-rotation, 0deg)) scale(1.3) translateY(-5px);
     box-shadow:
-        6px 6px 15px rgba(0, 0, 0, 0.4),
-        -3px -3px 8px rgba(255, 255, 255, 0.6),
-        0 0 20px currentColor;
-    z-index: 20;
+        0 0 20px currentColor,
+        0 0 40px currentColor,
+        0 0 60px currentColor;
+    z-index: 50;
+}
+
+/* Stacked + Hover */
+.token.stacked.clickable:hover {
+    transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(calc(var(--stack-scale, 1) * 1.3)) translateY(-5px);
 }
 
 /* Highlighted (valid move available) */
 .token.highlighted {
-    animation: pulse-highlight 0.8s ease-in-out infinite;
-    z-index: 15;
+    animation: pulse-neon 0.8s ease-in-out infinite;
+    z-index: 40;
 }
 
-@keyframes pulse-highlight {
+.token.stacked.highlighted {
+    animation: pulse-neon-stacked 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-neon {
 
     0%,
     100% {
-        transform: scale(1);
+        transform: rotate(var(--token-rotation, 0deg)) scale(1);
         box-shadow:
-            4px 4px 10px rgba(0, 0, 0, 0.3),
-            -2px -2px 6px rgba(255, 255, 255, 0.5),
-            0 0 15px currentColor;
+            0 0 10px currentColor,
+            0 0 20px currentColor;
     }
 
     50% {
-        transform: scale(1.15);
+        transform: rotate(var(--token-rotation, 0deg)) scale(1.15);
         box-shadow:
-            4px 4px 10px rgba(0, 0, 0, 0.3),
-            -2px -2px 6px rgba(255, 255, 255, 0.5),
-            0 0 25px currentColor;
+            0 0 20px currentColor,
+            0 0 40px currentColor,
+            0 0 60px currentColor;
+    }
+}
+
+@keyframes pulse-neon-stacked {
+
+    0%,
+    100% {
+        transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
+        box-shadow: 0 0 15px currentColor;
+    }
+
+    50% {
+        transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(calc(var(--stack-scale, 1) * 1.15));
+        box-shadow: 0 0 30px currentColor, 0 0 50px currentColor;
     }
 }
 
@@ -116,26 +148,56 @@
 @keyframes token-move {
     0% {
         transform: scale(1);
+        box-shadow: 0 0 10px currentColor;
     }
 
     30% {
         transform: scale(1.3) rotate(15deg);
+        box-shadow: 0 0 40px currentColor;
     }
 
     60% {
         transform: scale(1.1) rotate(-10deg);
+        box-shadow: 0 0 25px currentColor;
     }
 
     100% {
         transform: scale(1) rotate(0deg);
+        box-shadow: 0 0 10px currentColor;
+    }
+}
+
+/* Captured animation */
+.token.captured {
+    animation: token-captured 0.5s ease-out forwards;
+}
+
+@keyframes token-captured {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+        box-shadow: 0 0 50px #ff007a, 0 0 80px #ff007a;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
     }
 }
 
 /* In yard - slightly smaller */
 .token.in-yard {
-    width: 70%;
-    height: 70%;
-    margin: 15%;
+    width: 65%;
+    height: 65%;
+    margin: 17.5%;
+    box-shadow:
+        0 0 5px currentColor,
+        0 0 10px currentColor;
 }
 
 /* ============================================
@@ -145,12 +207,12 @@
 @media (max-width: 768px) {
     .token {
         box-shadow:
-            3px 3px 8px rgba(0, 0, 0, 0.25),
-            -1px -1px 4px rgba(255, 255, 255, 0.4);
+            0 0 8px currentColor,
+            0 0 15px currentColor;
     }
 
     .token.clickable:hover {
-        transform: scale(1.15) translateY(-2px);
+        transform: scale(1.2) translateY(-2px);
     }
 }
 
@@ -162,5 +224,11 @@
     .token-shine {
         width: 30%;
         height: 30%;
+    }
+
+    .token.in-yard {
+        width: 60%;
+        height: 60%;
+        margin: 20%;
     }
 }

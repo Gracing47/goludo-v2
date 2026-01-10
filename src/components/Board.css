@@ -1,12 +1,12 @@
 /* ============================================
-   LUDO BOARD - 15x15 GRID
+   LUDO BOARD - DARK THEME WITH GLOW EFFECTS
    ============================================ */
 
 .board-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    position: relative;
 }
 
 .ludo-board {
@@ -19,12 +19,15 @@
     height: var(--board-size);
     aspect-ratio: 1;
 
-    background: var(--neuro-base);
+    background: rgba(20, 20, 35, 0.95);
     border-radius: 20px;
     padding: 8px;
-    gap: 2px;
+    gap: 1px;
 
-    box-shadow: var(--shadow-outer);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 0 60px rgba(0, 0, 0, 0.5),
+        inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 /* Token layer - positioned above cells */
@@ -37,7 +40,7 @@
     display: grid;
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
-    gap: 2px;
+    gap: 1px;
     pointer-events: none;
 }
 
@@ -50,12 +53,12 @@
    ============================================ */
 
 .board-cell {
-    border-radius: 4px;
+    border-radius: 3px;
     position: relative;
 }
 
 /* ============================================
-   EMPTY CELLS (corners between bases and paths)
+   EMPTY CELLS
    ============================================ */
 
 .empty {
@@ -67,11 +70,33 @@
    ============================================ */
 
 .path {
-    background: #f5f5f5;
-    border-radius: 4px;
-    box-shadow:
-        inset 2px 2px 4px rgba(0, 0, 0, 0.1),
-        inset -1px -1px 3px rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   SAFE ZONES (Stars) ⭐
+   ============================================ */
+
+.safe {
+    background: linear-gradient(135deg, rgba(255, 190, 11, 0.3), rgba(255, 150, 0, 0.2));
+    border-radius: 3px;
+    border: 1px solid rgba(255, 190, 11, 0.4);
+    box-shadow: 0 0 15px rgba(255, 190, 11, 0.2);
+}
+
+.safe::after {
+    content: '★';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
+    font-size: clamp(10px, 2vw, 16px);
+    color: #ffbe0b;
+    text-shadow: 0 0 10px rgba(255, 190, 11, 0.8);
+    pointer-events: none;
+    transition: transform 0.5s ease;
 }
 
 /* ============================================
@@ -79,87 +104,71 @@
    ============================================ */
 
 .base-red {
-    background: linear-gradient(135deg, #ff4757, #ff6b7a);
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.4), rgba(255, 50, 60, 0.3));
+    border: 1px solid rgba(255, 71, 87, 0.3);
 }
 
 .base-green {
-    background: linear-gradient(135deg, #2ed573, #7bed9f);
+    background: linear-gradient(135deg, rgba(0, 210, 106, 0.4), rgba(0, 180, 90, 0.3));
+    border: 1px solid rgba(0, 210, 106, 0.3);
 }
 
 .base-yellow {
-    background: linear-gradient(135deg, #ffa502, #ffbe4d);
+    background: linear-gradient(135deg, rgba(255, 190, 11, 0.4), rgba(255, 160, 0, 0.3));
+    border: 1px solid rgba(255, 190, 11, 0.3);
 }
 
 .base-blue {
-    background: linear-gradient(135deg, #1e90ff, #54a0ff);
+    background: linear-gradient(135deg, rgba(58, 134, 255, 0.4), rgba(40, 100, 220, 0.3));
+    border: 1px solid rgba(58, 134, 255, 0.3);
 }
 
 /* Spawn points within bases */
 .spawn-point {
     border-radius: 50% !important;
-    box-shadow:
-        inset 3px 3px 6px rgba(0, 0, 0, 0.3),
-        inset -2px -2px 4px rgba(255, 255, 255, 0.4);
-    margin: 15%;
-}
-
-.base-red .spawn-point,
-.base-red.spawn-point {
-    background: radial-gradient(circle, #fff 30%, #ff4757 100%);
-}
-
-.base-green .spawn-point,
-.base-green.spawn-point {
-    background: radial-gradient(circle, #fff 30%, #2ed573 100%);
-}
-
-.base-yellow .spawn-point,
-.base-yellow.spawn-point {
-    background: radial-gradient(circle, #fff 30%, #ffa502 100%);
-}
-
-.base-blue .spawn-point,
-.base-blue.spawn-point {
-    background: radial-gradient(circle, #fff 30%, #1e90ff 100%);
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    margin: 12%;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* ============================================
-   START POSITIONS (entry points to path)
+   START POSITIONS (entry points)
    ============================================ */
 
+.start-red,
+.start-green,
+.start-yellow,
+.start-blue {
+    border-radius: 3px;
+    position: relative;
+}
+
 .start-red {
-    background: linear-gradient(135deg, #ff4757, #ff8a95);
-    border-radius: 4px;
-    box-shadow:
-        0 0 8px rgba(255, 71, 87, 0.5),
-        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.6), rgba(255, 50, 60, 0.5));
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+    border: 1px solid rgba(255, 71, 87, 0.5);
 }
 
 .start-green {
-    background: linear-gradient(135deg, #2ed573, #7bed9f);
-    border-radius: 4px;
-    box-shadow:
-        0 0 8px rgba(46, 213, 115, 0.5),
-        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(0, 210, 106, 0.6), rgba(0, 180, 90, 0.5));
+    box-shadow: 0 0 15px rgba(0, 210, 106, 0.4);
+    border: 1px solid rgba(0, 210, 106, 0.5);
 }
 
 .start-yellow {
-    background: linear-gradient(135deg, #ffa502, #ffc048);
-    border-radius: 4px;
-    box-shadow:
-        0 0 8px rgba(255, 165, 2, 0.5),
-        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(255, 190, 11, 0.6), rgba(255, 160, 0, 0.5));
+    box-shadow: 0 0 15px rgba(255, 190, 11, 0.4);
+    border: 1px solid rgba(255, 190, 11, 0.5);
 }
 
 .start-blue {
-    background: linear-gradient(135deg, #1e90ff, #74b9ff);
-    border-radius: 4px;
-    box-shadow:
-        0 0 8px rgba(30, 144, 255, 0.5),
-        inset 1px 1px 2px rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, rgba(58, 134, 255, 0.6), rgba(40, 100, 220, 0.5));
+    box-shadow: 0 0 15px rgba(58, 134, 255, 0.4);
+    border: 1px solid rgba(58, 134, 255, 0.5);
 }
 
-/* Star marker on start cells */
+/* Star on start cells */
 .start-red::after,
 .start-green::after,
 .start-yellow::after,
@@ -168,10 +177,12 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
+    font-size: clamp(8px, 1.5vw, 12px);
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 8px currentColor;
+    pointer-events: none;
+    transition: transform 0.5s ease;
 }
 
 /* ============================================
@@ -179,27 +190,27 @@
    ============================================ */
 
 .home-red {
-    background: linear-gradient(90deg, #ff4757, #ff6b7a);
-    border-radius: 4px;
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(90deg, rgba(255, 71, 87, 0.5), rgba(255, 50, 60, 0.4));
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    border-radius: 3px;
 }
 
 .home-green {
-    background: linear-gradient(180deg, #2ed573, #7bed9f);
-    border-radius: 4px;
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(180deg, rgba(0, 210, 106, 0.5), rgba(0, 180, 90, 0.4));
+    border: 1px solid rgba(0, 210, 106, 0.3);
+    border-radius: 3px;
 }
 
 .home-yellow {
-    background: linear-gradient(270deg, #ffa502, #ffbe4d);
-    border-radius: 4px;
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(270deg, rgba(255, 190, 11, 0.5), rgba(255, 160, 0, 0.4));
+    border: 1px solid rgba(255, 190, 11, 0.3);
+    border-radius: 3px;
 }
 
 .home-blue {
-    background: linear-gradient(0deg, #1e90ff, #54a0ff);
-    border-radius: 4px;
-    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(0deg, rgba(58, 134, 255, 0.5), rgba(40, 100, 220, 0.4));
+    border: 1px solid rgba(58, 134, 255, 0.3);
+    border-radius: 3px;
 }
 
 /* ============================================
@@ -207,30 +218,79 @@
    ============================================ */
 
 .center {
-    background: linear-gradient(135deg,
-            #ff4757 0%,
-            #ff4757 25%,
-            #2ed573 25%,
-            #2ed573 50%,
-            #ffa502 50%,
-            #ffa502 75%,
-            #1e90ff 75%,
-            #1e90ff 100%);
-    border-radius: 4px;
-    box-shadow:
-        inset 2px 2px 5px rgba(0, 0, 0, 0.2),
-        0 0 15px rgba(255, 215, 0, 0.3);
+    background: conic-gradient(from 45deg,
+            rgba(255, 71, 87, 0.6) 0deg 90deg,
+            rgba(0, 210, 106, 0.6) 90deg 180deg,
+            rgba(255, 190, 11, 0.6) 180deg 270deg,
+            rgba(58, 134, 255, 0.6) 270deg 360deg);
+    border-radius: 3px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Center cell with crown */
+/* Crown in exact center */
 .board-cell.center[data-row="7"][data-col="7"]::after {
     content: '👑';
     position: absolute;
     top: 50%;
     left: 50%;
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
+    font-size: clamp(16px, 4vw, 32px);
+    filter: drop-shadow(0 0 10px rgba(255, 190, 11, 0.8));
+    pointer-events: none;
+    z-index: 5;
+    transition: transform 0.5s ease;
+}
+
+/* ============================================
+   BLOCKADE INDICATOR
+   ============================================ */
+
+.board-cell.has-blockade {
+    box-shadow: inset 0 0 0 2px #ff007a, 0 0 15px rgba(255, 0, 122, 0.5);
+}
+
+.board-cell.has-blockade::before {
+    content: '🚫';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 12px;
+    z-index: 100;
+}
+
+/* ============================================
+   DEBUG OVERLAY
+   ============================================ */
+
+.debug-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 16px;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
+    font-size: 8px;
+    font-weight: 800;
+    color: #ffffff;
+    pointer-events: none;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 1px 3px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.debug-alert {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #ff007a, #8b5cf6);
+    color: white;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 4px 15px rgba(255, 0, 122, 0.4);
 }
 
 /* ============================================
@@ -240,8 +300,7 @@
 @media (max-width: 768px) {
     .ludo-board {
         padding: 5px;
-        gap: 1px;
-        border-radius: 15px;
+        border-radius: 16px;
     }
 
     .token-layer {
@@ -249,9 +308,9 @@
         left: 5px;
         right: 5px;
         bottom: 5px;
-        gap: 1px;
     }
 
+    .safe::after,
     .start-red::after,
     .start-green::after,
     .start-yellow::after,
@@ -260,20 +319,24 @@
     }
 
     .board-cell.center[data-row="7"][data-col="7"]::after {
-        font-size: 12px;
+        font-size: 14px;
     }
 }
 
 @media (max-width: 480px) {
     .ludo-board {
-        padding: 3px;
-        border-radius: 10px;
+        padding: 4px;
+        border-radius: 12px;
     }
 
     .token-layer {
-        top: 3px;
-        left: 3px;
-        right: 3px;
-        bottom: 3px;
+        top: 4px;
+        left: 4px;
+        right: 4px;
+        bottom: 4px;
+    }
+
+    .spawn-point {
+        margin: 8%;
     }
 }

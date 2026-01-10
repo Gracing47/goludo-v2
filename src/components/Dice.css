@@ -1,38 +1,40 @@
 /* ============================================
-   3D DICE STYLING
+   3D DICE STYLING - DARK THEME
    ============================================ */
 
 .dice-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
     perspective: 1000px;
 }
 
 .dice-roll-button {
-    background: var(--neuro-base);
-    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
-    padding: 30px;
+    padding: 25px;
     cursor: pointer;
-    box-shadow: var(--shadow-outer);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
 .dice-roll-button:hover:not(.disabled) {
-    box-shadow: 25px 25px 70px #bebebe, -25px -25px 70px #ffffff;
-    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 0, 122, 0.4);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 0, 122, 0.15);
+    transform: translateY(-3px);
 }
 
 .dice-roll-button:active:not(.disabled) {
-    box-shadow: var(--shadow-inner);
     transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .dice-roll-button.disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.5;
 }
 
 /* ============================================
@@ -40,8 +42,8 @@
    ============================================ */
 
 .dice {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     position: relative;
     transform-style: preserve-3d;
     transition: transform 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -57,7 +59,7 @@
 }
 
 .dice.show-2 {
-    transform: rotateX(0deg) rotateY(90deg);
+    transform: rotateX(0deg) rotateY(-90deg);
 }
 
 .dice.show-3 {
@@ -65,7 +67,7 @@
 }
 
 .dice.show-4 {
-    transform: rotateX(0deg) rotateY(-90deg);
+    transform: rotateX(0deg) rotateY(90deg);
 }
 
 .dice.show-5 {
@@ -77,24 +79,24 @@
 }
 
 /* ============================================
-   DICE FACES
+   DICE FACES - Glass Style
    ============================================ */
 
 .dice-face {
     position: absolute;
-    width: 80px;
-    height: 80px;
-    background: #ffffff;
-    border: 2px solid #333;
-    border-radius: 12px;
+    width: 70px;
+    height: 70px;
+    background: rgba(30, 30, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
     display: grid;
     padding: 10px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Face 1 - Front */
 .face-1 {
-    transform: translateZ(40px);
+    transform: translateZ(35px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
@@ -104,7 +106,7 @@
 
 /* Face 2 - Right */
 .face-2 {
-    transform: rotateY(90deg) translateZ(40px);
+    transform: rotateY(90deg) translateZ(35px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
@@ -118,7 +120,7 @@
 
 /* Face 3 - Back */
 .face-3 {
-    transform: rotateY(180deg) translateZ(40px);
+    transform: rotateY(180deg) translateZ(35px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
@@ -136,9 +138,9 @@
 
 /* Face 4 - Left */
 .face-4 {
-    transform: rotateY(-90deg) translateZ(40px);
+    transform: rotateY(-90deg) translateZ(35px);
     grid-template: 1fr 1fr / 1fr 1fr;
-    padding: 15px;
+    padding: 12px;
 }
 
 .face-4 .dot:nth-child(1) {
@@ -159,7 +161,7 @@
 
 /* Face 5 - Top */
 .face-5 {
-    transform: rotateX(90deg) translateZ(40px);
+    transform: rotateX(90deg) translateZ(35px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
@@ -185,9 +187,9 @@
 
 /* Face 6 - Bottom */
 .face-6 {
-    transform: rotateX(-90deg) translateZ(40px);
+    transform: rotateX(-90deg) translateZ(35px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr;
-    padding: 15px;
+    padding: 12px;
 }
 
 .face-6 .dot:nth-child(1) {
@@ -215,15 +217,17 @@
 }
 
 /* ============================================
-   DOTS
+   DOTS - Neon Glow
    ============================================ */
 
 .dot {
-    width: 12px;
-    height: 12px;
-    background: #333;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #ff007a, #8b5cf6);
     border-radius: 50%;
-    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 8px rgba(255, 0, 122, 0.6), 0 0 15px rgba(139, 92, 246, 0.4);
+    justify-self: center;
+    align-self: center;
 }
 
 /* ============================================
@@ -231,9 +235,60 @@
    ============================================ */
 
 .dice-result {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 600;
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 10px rgba(255, 0, 122, 0.5);
     animation: float 2s ease-in-out infinite;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .dice-roll-button {
+        padding: 20px;
+    }
+
+    .dice {
+        width: 60px;
+        height: 60px;
+    }
+
+    .dice-face {
+        width: 60px;
+        height: 60px;
+    }
+
+    .face-1,
+    .face-2,
+    .face-3 {
+        transform: translateZ(30px);
+    }
+
+    .face-2 {
+        transform: rotateY(90deg) translateZ(30px);
+    }
+
+    .face-3 {
+        transform: rotateY(180deg) translateZ(30px);
+    }
+
+    .face-4 {
+        transform: rotateY(-90deg) translateZ(30px);
+    }
+
+    .face-5 {
+        transform: rotateX(90deg) translateZ(30px);
+    }
+
+    .face-6 {
+        transform: rotateX(-90deg) translateZ(30px);
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+    }
 }

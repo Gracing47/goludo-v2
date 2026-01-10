@@ -1,0 +1,21 @@
+{
+    "name": "goludo-contracts",
+    "version": "1.0.0",
+    "description": "Smart contracts for GoLudo",
+    "main": "index.js",
+    "scripts": {
+        "test": "hardhat test",
+        "deploy": "hardhat run scripts/deploy.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "hardhat": "^2.22.3",
+        "dotenv": "^16.4.5"
+    },
+    "dependencies": {
+        "@openzeppelin/contracts": "^5.0.2"
+    }
+}

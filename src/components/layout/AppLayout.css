@@ -1,0 +1,52 @@
+/**
+ * App Layout Styles
+ * 
+ * Global layout styling for the application.
+ * Maintains the dark theme and premium aesthetics.
+ */
+
+.app-layout {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    color: #ffffff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Debug Info */
+.debug-info {
+    position: fixed;
+    bottom: 8px;
+    right: 8px;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Selection styling */
+::selection {
+    background: #ff007a;
+    color: #ffffff;
+}
+
+::-moz-selection {
+    background: #ff007a;
+    color: #ffffff;
+}

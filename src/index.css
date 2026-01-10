@@ -1,6 +1,9 @@
 /* ============================================
-   GLOBAL STYLES & CSS RESET
+   GLOBAL STYLES - UNISWAP/PANCAKESWAP INSPIRED
+   Dark Theme with Glassmorphism & Gradients
    ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 * {
   margin: 0;
@@ -17,12 +20,14 @@ body {
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Uniswap-style dark gradient */
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #16213e 100%);
   display: flex;
   justify-content: center;
   align-items: center;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #ffffff;
 }
 
 #root {
@@ -34,29 +39,118 @@ body {
 }
 
 /* ============================================
-   DESIGN TOKENS - NEUMORPHISM PALETTE
+   DESIGN TOKENS - WEB3/DEFI PALETTE
    ============================================ */
 
 :root {
-  /* Base colors for neumorphic surface */
-  --neuro-base: #e0e5ec;
-  --neuro-light: #ffffff;
-  --neuro-dark: #a3b1c6;
+  /* Dark theme base */
+  --bg-primary: #0d0d0d;
+  --bg-secondary: #1a1a2e;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
 
-  /* Player colors (vibrant, modern) */
+  /* Glass effect */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(20px);
+
+  /* Accent colors - Uniswap pink/purple */
+  --accent-primary: #ff007a;
+  --accent-secondary: #8b5cf6;
+  --accent-gradient: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
+
+  /* PancakeSwap cyan/yellow accent */
+  --pancake-cyan: #1fc7d4;
+  --pancake-yellow: #f4ca64;
+
+  /* Player colors (neon for dark theme) */
   --color-red: #ff4757;
-  --color-green: #2ed573;
-  --color-yellow: #ffa502;
-  --color-blue: #1e90ff;
+  --color-green: #00d26a;
+  --color-yellow: #ffbe0b;
+  --color-blue: #3a86ff;
 
-  /* Shadow system for depth */
-  --shadow-outer: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
-  --shadow-inner: inset 6px 6px 12px #a3b1c6, inset -6px -6px 12px #ffffff;
-  --shadow-inner-soft: inset 3px 3px 7px #a3b1c6, inset -3px -3px 7px #ffffff;
+  /* Text colors */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
 
-  /* Spacing - Board fills most of viewport */
+  /* Shadows - neon glow */
+  --shadow-glow: 0 0 20px rgba(255, 0, 122, 0.3);
+  --shadow-soft: 0 4px 30px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Legacy support */
+  --neuro-base: #1a1a2e;
+  --shadow-outer: var(--shadow-card);
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-inner-soft: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+
+  /* Spacing */
   --board-size: min(80vh, 80vw, 650px);
   --cell-gap: 2%;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+}
+
+/* ============================================
+   GLASSMORPHISM CARDS
+   ============================================ */
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.glass-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   GRADIENT BUTTONS (Uniswap style)
+   ============================================ */
+
+.btn-primary {
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  padding: 14px 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 0, 122, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(255, 0, 122, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  color: var(--accent-primary);
+  font-weight: 600;
+  padding: 12px 22px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 0, 122, 0.1);
+  box-shadow: 0 0 20px rgba(255, 0, 122, 0.2);
 }
 
 /* ============================================
@@ -67,11 +161,25 @@ body {
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(255, 0, 122, 0.3);
   }
 
   50% {
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 40px rgba(255, 0, 122, 0.6);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
   }
 }
 
@@ -121,6 +229,16 @@ body {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* ============================================
    UTILITY CLASSES
    ============================================ */
@@ -142,4 +260,42 @@ body {
 
 .clickable:active {
   transform: translateY(0);
+}
+
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-pink {
+  box-shadow: 0 0 20px rgba(255, 0, 122, 0.4);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(31, 199, 212, 0.4);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 0, 122, 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 0, 122, 0.7);
 }

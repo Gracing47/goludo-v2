@@ -1,0 +1,206 @@
+/**
+ * Game Setup Page Styles
+ * 
+ * Layout and styling for player configuration.
+ */
+
+.game-setup-page {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    justify-content: center;
+    padding: 20px 20px 140px 20px;
+    /* Increased from 100px to 140px for 4 players */
+}
+
+.setup-container {
+    max-width: 900px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* Header */
+.setup-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.header-content {
+    flex: 1;
+    min-width: 200px;
+}
+
+.setup-title {
+    font-size: 32px;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 0 0 8px 0;
+}
+
+.setup-subtitle {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+.mode-badge {
+    color: #ff007a;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.match-type-badge {
+    background: rgba(30, 41, 59, 0.8);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+/* Players Section */
+.players-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section-header {
+    margin-bottom: 4px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+}
+
+.section-subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+}
+
+.players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Add Player Button */
+.add-player-btn {
+    width: 100%;
+    padding: 20px;
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.add-player-btn:hover {
+    border-color: rgba(255, 0, 122, 0.5);
+    color: #ff007a;
+    background: rgba(255, 0, 122, 0.05);
+}
+
+.add-player-btn:active {
+    transform: scale(0.98);
+}
+
+.add-icon {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+/* Footer */
+.setup-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    z-index: 50;
+}
+
+.start-game-btn {
+    min-width: 200px;
+    box-shadow: 0 8px 24px rgba(255, 0, 122, 0.3);
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+    .setup-title {
+        font-size: 40px;
+    }
+
+    .setup-subtitle {
+        font-size: 16px;
+    }
+
+    .players-list {
+        gap: 16px;
+    }
+
+    .setup-footer {
+        padding: 20px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .setup-container {
+        gap: 40px;
+    }
+}
+
+/* Mobile Landscape */
+@media (max-height: 600px) and (orientation: landscape) {
+    .game-setup-page {
+        padding: 12px 12px 80px 12px;
+    }
+
+    .setup-container {
+        gap: 20px;
+    }
+
+    .setup-title {
+        font-size: 24px;
+    }
+
+    .setup-subtitle {
+        font-size: 13px;
+    }
+
+    .players-list {
+        gap: 10px;
+    }
+
+    .setup-footer {
+        padding: 12px;
+    }
+}

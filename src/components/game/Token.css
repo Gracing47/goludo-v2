@@ -1,0 +1,90 @@
+/**
+ * Token Component Styles
+ * 
+ * 3D game piece styling with color variants.
+ */
+
+.token {
+    position: relative;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: default;
+}
+
+/* Color Variants */
+.token-red {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+}
+
+.token-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.5);
+}
+
+.token-yellow {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.5);
+}
+
+.token-blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+}
+
+/* Clickable State */
+.token.clickable {
+    cursor: pointer;
+    animation: pulse-token 1.5s ease-in-out infinite;
+}
+
+.token.clickable:hover {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+    z-index: 10;
+}
+
+.token.clickable:active {
+    transform: scale(1.05);
+}
+
+/* 3D Highlight */
+.token-highlight {
+    position: absolute;
+    top: 15%;
+    left: 15%;
+    width: 40%;
+    height: 40%;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    filter: blur(2px);
+    pointer-events: none;
+}
+
+/* Inner Ring */
+.token-ring {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Pulse Animation */
+@keyframes pulse-token {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+    }
+}
