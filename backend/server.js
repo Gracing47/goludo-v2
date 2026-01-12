@@ -193,19 +193,27 @@ function handleNextTurn(io, room) {
     // Player is NOT connected (disconnected mid-game)
     console.log(`⚠️ Player ${currentPlayerIndex} (${currentPlayer?.name || 'Unknown'}) is disconnected. Skipping turn...`);
 
-    // Auto-skip disconnected players
-    const nextPlayerIdx = getNextPlayer(currentPlayerIndex, room.gameState.activeColors);
-    room.gameState.activePlayer = nextPlayerIdx;
-    room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
-    room.gameState.validMoves = [];
-    room.gameState.diceValue = null;
-    room.gameState.consecutiveSixes = 0;
-    room.gameState.bonusMoves = 0;
-
+    // Auto-skip disconnected players - with small delay to prevent rapid-fire recursion
     broadcastState(room, `⚠️ ${currentPlayer?.name || 'Player'} disconnected. Turn skipped.`);
 
-    // Recursively check next player
-    handleNextTurn(io, room);
+    setTimeout(() => {
+        // Check if anyone is actually still connected before checking next turn
+        const anyHumanConnected = room.players.some(p => p.socketId);
+        if (!anyHumanConnected) {
+            console.log(`⏹️ No human players connected in Room ${room.id}. Pausing turn logic.`);
+            return;
+        }
+
+        const nextPlayerIdx = getNextPlayer(currentPlayerIndex, room.gameState.activeColors);
+        room.gameState.activePlayer = nextPlayerIdx;
+        room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
+        room.gameState.validMoves = [];
+        room.gameState.diceValue = null;
+        room.gameState.consecutiveSixes = 0;
+        room.gameState.bonusMoves = 0;
+
+        handleNextTurn(io, room);
+    }, 2000); // 2 second delay between skips to prevent stack overflow and give user time to see message
 }
 
 // Helper function to get next player
