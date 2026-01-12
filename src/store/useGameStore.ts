@@ -45,6 +45,8 @@ export const useGameStore = create<GameStoreState>()(
             boardRotation: 0,
             turnTimer: null,
             serverMsg: null,
+            socket: null,
+            myPlayerIndex: null,
 
             // Actions
             setConfig: (config) => set({ config }, false, 'setConfig'),
@@ -69,6 +71,12 @@ export const useGameStore = create<GameStoreState>()(
 
             setServerMsg: (msg) => set({ serverMsg: msg }, false, 'setServerMsg'),
 
+            initGame: (config) => set({ config }, false, 'initGame'),
+
+            setSocket: (socket) => set({ socket }, false, 'setSocket'),
+
+            setMyPlayerIndex: (index) => set({ myPlayerIndex: index }, false, 'setMyPlayerIndex'),
+
             reset: () => set({
                 config: null,
                 state: null,
@@ -77,6 +85,8 @@ export const useGameStore = create<GameStoreState>()(
                 boardRotation: 0,
                 turnTimer: null,
                 serverMsg: null,
+                socket: null,
+                myPlayerIndex: null,
             }, false, 'reset'),
         })),
         {

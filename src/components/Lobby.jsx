@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import './Lobby.css';
 import WalletButton from './WalletButton';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
+import { API_URL } from '../config/api';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -39,7 +40,7 @@ const Lobby = ({ onStartGame }) => {
 
         const fetchRooms = async () => {
             try {
-                const res = await fetch('http://localhost:3333/api/rooms');
+                const res = await fetch(`${API_URL}/api/rooms`);
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 setOpenRooms(Array.isArray(data) ? data : []);

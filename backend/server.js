@@ -438,10 +438,11 @@ app.post('/api/rooms/join', (req, res) => {
 
         // KICKSTART TURN LOGIC - Delay to allow socket connections to establish
         // Players need time to receive game_started and emit join_match
+        // INCREASED to 5000ms to fix race condition with socket linking
         setTimeout(() => {
             console.log(`⏰ Starting turn logic. Current socket states:`, room.players.map(p => `${p.name}: ${p.socketId ? 'Connected' : 'Bot'}`));
             handleNextTurn(io, room);
-        }, 2500);
+        }, 5000);
     }
 
     res.json({ success: true, room });

@@ -387,5 +387,8 @@ export interface GameStoreState {
     setBoardRotation: (rotation: number) => void;
     setTurnTimer: (seconds: number | null) => void;
     setServerMsg: (msg: string | null) => void;
+    initGame: (config: GameConfig) => void;
+    setSocket: (socket: any) => void;
+    setMyPlayerIndex: (index: number | null) => void;
     reset: () => void;
 }

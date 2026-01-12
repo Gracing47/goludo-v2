@@ -3,6 +3,7 @@ import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb
 import { prepareContractCall, toWei, readContract, sendAndConfirmTransaction } from "thirdweb";
 import { ethers } from "ethers";
 import { goTokenContract, ludoVaultContract, LUDO_VAULT_ADDRESS, coston2, client } from "../config/web3";
+import { API_URL } from "../config/api";
 
 export const useLudoWeb3 = () => {
     const account = useActiveAccount();
@@ -27,7 +28,7 @@ export const useLudoWeb3 = () => {
     // 3. Sync with Backend
     const syncWithBackend = async (endpoint, body) => {
         try {
-            const res = await fetch(`http://localhost:3333/api/${endpoint}`, {
+            const res = await fetch(`${API_URL}/api/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
@@ -56,13 +57,18 @@ export const useLudoWeb3 = () => {
 
             // Step B: Create Room on Blockchain (PAYABLE)
             console.log("Creating room on blockchain with native currency...");
+            console.log("Room ID:", roomId);
+            console.log("Amount in Wei:", amountInWei.toString());
             const createTx = prepareContractCall({
                 contract: ludoVaultContract,
                 method: "function createRoom(bytes32,uint256)",
                 params: [roomId, amountInWei],
                 value: amountInWei, // Send native C2FLR
             });
-            await sendTx(createTx);
+            console.log("Prepared TX:", createTx);
+            console.log("Sending transaction to wallet...");
+            const txResult = await sendTx(createTx);
+            console.log("Transaction confirmed:", txResult);
 
             // Step C: Register Room in Backend Lobby
             console.log("Registering room in backend...");
