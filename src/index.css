@@ -85,13 +85,27 @@ body {
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-inner-soft: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 
-  /* Spacing */
-  --board-size: min(80vh, 80vw, 650px);
+  /* Spacing - Mobile First */
+  --board-size: min(55vh, 92vw, 450px);
   --cell-gap: 2%;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 24px;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  :root {
+    --board-size: min(75vh, 70vw, 600px);
+  }
+}
+
+/* Desktop screens */
+@media (min-width: 1024px) {
+  :root {
+    --board-size: min(80vh, 60vw, 650px);
+  }
 }
 
 /* ============================================
