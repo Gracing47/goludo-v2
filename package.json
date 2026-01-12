@@ -10,7 +10,7 @@
     "dev": "vite",
     "dev:backend": "node backend/server.js",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:backend\"",
-    "build": "vite build",
+    "build": "npx vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
