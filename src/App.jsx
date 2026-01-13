@@ -510,13 +510,11 @@ function App() {
                 </Board>
 
                 <div className="game-sidebar">
-                    <header className="game-header">
-                        <h1 className="game-title">GoLudo</h1>
-                        <p className="game-subtitle">
-                            {gameConfig.mode === 'ai' ? 'vs Computer' :
-                                gameConfig.mode === 'web3' ? 'Web3 Match' : 'Local Game'}
-                        </p>
-                    </header>
+                    {/* Compact Game Mode Badge instead of full header */}
+                    <div className="game-mode-badge">
+                        {gameConfig.mode === 'ai' ? '🤖 vs AI' :
+                            gameConfig.mode === 'web3' ? '🔗 Web3' : '👥 Local'}
+                    </div>
 
                     {/* --- SPOTLIGHT PLAYER LIST --- */}
                     <div className="players-list">
