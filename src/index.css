@@ -86,7 +86,7 @@ body {
   --shadow-inner-soft: inset 0 1px 2px rgba(0, 0, 0, 0.2);
 
   /* Spacing - Mobile First */
-  --board-size: min(55vh, 92vw, 450px);
+  --board-size: min(48vh, 92vw, 400px);
   --cell-gap: 2%;
   --radius-sm: 8px;
   --radius-md: 12px;
