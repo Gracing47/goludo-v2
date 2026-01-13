@@ -595,35 +595,54 @@
 }
 
 /* ============================================
-   WEB3 LOBBY
+   WEB3 LOBBY - Open Matches
    ============================================ */
 
 .web3-lobby {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     flex: 1;
     min-height: 0;
+}
+
+/* Header with title and button */
+.web3-lobby header.lobby-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 8px;
+}
+
+.web3-lobby .setup-title {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .create-game-btn {
     background: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
     color: #ffffff;
     border: none;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-size: 14px;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(255, 0, 122, 0.3);
-    transition: all 0.2s ease;
+    box-shadow: 0 6px 20px rgba(255, 0, 122, 0.35);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    letter-spacing: 0.5px;
+    width: 100%;
+    max-width: 280px;
 }
 
 .create-game-btn:active {
-    transform: scale(0.97);
-    box-shadow: 0 3px 12px rgba(255, 0, 122, 0.35);
+    transform: scale(0.96);
+    box-shadow: 0 4px 14px rgba(255, 0, 122, 0.4);
 }
 
 .room-list {
@@ -637,21 +656,37 @@
     margin-right: -6px;
 }
 
+/* Room Cards */
 .room-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1.5px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle gradient accent on left */
+.room-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #1fc7d4, #ff007a);
+    border-radius: 4px 0 0 4px;
 }
 
 .room-card:active {
-    border-color: rgba(255, 0, 122, 0.3);
-    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(31, 199, 212, 0.4);
+    background: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 20px rgba(31, 199, 212, 0.15);
 }
 
 .room-details {
@@ -659,36 +694,41 @@
     flex-direction: column;
     gap: 6px;
     flex: 1;
+    padding-left: 8px;
 }
 
 .room-stake {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     color: #1fc7d4;
+    text-shadow: 0 0 10px rgba(31, 199, 212, 0.3);
 }
 
 .room-players {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: 500;
 }
 
 .join-btn {
-    background: linear-gradient(135deg, #00d26a 0%, #00b65d 100%);
+    background: linear-gradient(135deg, #00d26a 0%, #00a855 100%);
     color: #ffffff;
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 12px 24px;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 3px 12px rgba(0, 210, 106, 0.3);
+    box-shadow: 0 4px 14px rgba(0, 210, 106, 0.35);
     transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    letter-spacing: 0.3px;
 }
 
 .join-btn:active:not(:disabled) {
     transform: scale(0.95);
+    box-shadow: 0 2px 10px rgba(0, 210, 106, 0.4);
 }
 
 .join-btn:disabled {
@@ -696,19 +736,47 @@
     cursor: not-allowed;
 }
 
+/* Empty State - No Rooms */
 .no-rooms {
     text-align: center;
-    padding: 40px 20px;
-    color: rgba(255, 255, 255, 0.5);
+    padding: 50px 24px;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.no-rooms::before {
+    content: '🎲';
+    font-size: 48px;
+    margin-bottom: 8px;
+    opacity: 0.7;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .no-rooms p {
-    margin: 8px 0;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .no-rooms small {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 /* ============================================
