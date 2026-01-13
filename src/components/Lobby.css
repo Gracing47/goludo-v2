@@ -34,9 +34,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    max-height: calc(100vh - 24px);
-    max-height: calc(100dvh - 24px);
-    overflow: hidden;
+    /* Removed max-height and overflow: hidden to allow full page scroll */
 }
 
 /* ============================================
@@ -273,7 +271,7 @@
 .setup-section.players-section {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    /* Removed overflow: hidden to allow content to flow naturally */
 }
 
 .setup-label {
@@ -334,13 +332,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    min-height: 0;
-    padding-right: 6px;
-    margin-right: -6px;
-    -webkit-overflow-scrolling: touch;
+    /* Removed internal scroll - page scrolls instead */
 }
 
 /* Custom Scrollbar for Mobile */
