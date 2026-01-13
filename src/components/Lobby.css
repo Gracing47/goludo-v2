@@ -361,10 +361,13 @@
 .player-config-card {
     background: rgba(255, 255, 255, 0.05);
     border: 1.5px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 14px 16px;
+    border-radius: 16px;
+    padding: 16px;
     flex-shrink: 0;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .player-config-card:active {
@@ -376,7 +379,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
 }
 
 .player-label {
@@ -429,6 +431,13 @@
 
 .player-controls-row {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Name input row */
+.player-name-row {
+    display: flex;
     align-items: center;
     gap: 12px;
 }
@@ -463,13 +472,14 @@
 
 .color-picker {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    padding: 8px 0 4px 0;
 }
 
 .color-swatch {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 3px solid transparent;
     cursor: pointer;
