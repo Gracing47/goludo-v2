@@ -586,24 +586,32 @@ function App() {
 
                         return (
                             <div className="controls-wrapper">
-                                {/* Turn Timer Display */}
-                                {turnTimer !== null && turnTimer > 0 && (
-                                    <div className={`turn-timer ${turnTimer <= 3 ? 'urgent' : ''}`}>
-                                        ⏱️ {turnTimer}s
+                                {/* 3-Column Layout: Status | Dice | Timer */}
+                                <div className="controls-row">
+                                    <div className="controls-left">
+                                        <div className="smart-status">{statusText}</div>
                                     </div>
-                                )}
 
-                                <div className="smart-status">{statusText}</div>
+                                    <div className="controls-center">
+                                        <Dice
+                                            value={gameState.diceValue}
+                                            onRoll={handleRoll}
+                                            disabled={diceDisabled}
+                                            isRolling={isRolling}
+                                        />
+                                    </div>
 
-                                <Dice
-                                    value={gameState.diceValue}
-                                    onRoll={handleRoll}
-                                    disabled={diceDisabled}
-                                    isRolling={isRolling}
-                                />
+                                    <div className="controls-right">
+                                        {turnTimer !== null && turnTimer > 0 && (
+                                            <div className={`turn-timer ${turnTimer <= 3 ? 'urgent' : ''}`}>
+                                                ⏱️ {turnTimer}s
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
 
                                 {gameState.message && (
-                                    <p className="game-message" style={{ fontSize: '11px', maxWidth: '200px' }}>
+                                    <p className="game-message">
                                         {gameState.message}
                                     </p>
                                 )}
