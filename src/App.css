@@ -265,29 +265,35 @@
 .controls-left {
     display: flex;
     justify-content: flex-start;
+    flex: 1;
+    min-width: 0;
 }
 
 .controls-center {
     display: flex;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .controls-right {
     display: flex;
     justify-content: flex-end;
+    flex: 1;
+    min-width: 0;
 }
 
 /* Turn Timer */
 .turn-timer {
-    font-size: 16px;
-    font-weight: 900;
+    font-size: 13px;
+    font-weight: 800;
     color: #4ade80;
     background: rgba(74, 222, 128, 0.15);
-    padding: 8px 18px;
-    border-radius: 20px;
+    padding: 6px 12px;
+    border-radius: 16px;
     border: 2px solid rgba(74, 222, 128, 0.4);
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     transition: all 0.3s;
+    white-space: nowrap;
 }
 
 .turn-timer.urgent {
