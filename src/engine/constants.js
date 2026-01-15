@@ -138,9 +138,9 @@ export const BOARD_LAYOUT = [
     [BR, BR, BR, BR, BR, BR, P, HG, P, BG, BG, BG, BG, BG, BG], // 3
     [BR, BR, BR, BR, BR, BR, P, HG, P, BG, BG, BG, BG, BG, BG], // 4
     [BR, BR, BR, BR, BR, BR, P, HG, P, BG, BG, BG, BG, BG, BG], // 5
-    [P, SR, P, P, P, P, C, C, C, P, P, P, P, S, P], // 6 - SR at (6,1), S at (6,12)
+    [P, SR, P, P, P, P, C, C, C, P, P, P, S, P, P], // 6 - SR at (6,1), S at (6,12)
     [P, HR, HR, HR, HR, HR, C, C, C, HY, HY, HY, HY, HY, P], // 7
-    [P, S, P, P, P, P, C, C, C, P, P, P, P, SY, P], // 8 - S at (8,2), SY at (8,13)
+    [P, P, S, P, P, P, C, C, C, P, P, P, P, SY, P], // 8 - S at (8,2), SY at (8,13)
     [BB, BB, BB, BB, BB, BB, P, HB, P, BY, BY, BY, BY, BY, BY], // 9
     [BB, BB, BB, BB, BB, BB, P, HB, P, BY, BY, BY, BY, BY, BY], // 10
     [BB, BB, BB, BB, BB, BB, P, HB, P, BY, BY, BY, BY, BY, BY], // 11
