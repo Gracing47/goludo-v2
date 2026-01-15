@@ -39,62 +39,71 @@
     justify-content: center;
     background: #475569;
     transition: background 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 /* Cell Types */
 .cell-empty {
-    background: #1e293b;
+    background: #1a2332;
+    border-color: transparent;
 }
 
 .cell-path {
-    background: #f8fafc;
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .cell-center {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #ef4444 100%);
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Bases (Corners) */
+/* Bases (Corners) - LudoKing Style: Solid vibrant colors */
 .cell-base-red {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.2) 100%);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: #e74c3c;
+    border-color: #c0392b;
 }
 
 .cell-base-green {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.2) 100%);
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: #27ae60;
+    border-color: #1e8449;
 }
 
 .cell-base-yellow {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.3) 0%, rgba(245, 158, 11, 0.2) 100%);
-    border: 1px solid rgba(251, 191, 36, 0.2);
+    background: #f1c40f;
+    border-color: #d4ac0d;
 }
 
 .cell-base-blue {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: #3498db;
+    border-color: #2980b9;
 }
 
-/* Home Stretches (Colored Paths) */
+/* Home Stretches (Colored Paths) - Brighter, more vibrant */
 .cell-home-red {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+    background: #e74c3c;
+    border-color: #c0392b;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.15);
 }
 
 .cell-home-green {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+    background: #27ae60;
+    border-color: #1e8449;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.15);
 }
 
 .cell-home-yellow {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+    background: #f1c40f;
+    border-color: #d4ac0d;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.15);
 }
 
 .cell-home-blue {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+    background: #3498db;
+    border-color: #2980b9;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Token Container */
