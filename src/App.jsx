@@ -480,9 +480,27 @@ function App() {
     // Render game
     if (!gameState || !gameConfig) return null;
 
+    // Helper: Calculate visual position based on board rotation
+    const getVisualPositionIndex = (playerIndex) => {
+        const rotationSteps = boardRotation / 90;
+        return (playerIndex + rotationSteps) % 4;
+    };
+
+    // Helper: Get ticker text
+    const getTickerText = () => {
+        if (gameState.gamePhase === 'WIN') return "🎉 Game Over!";
+        if (canRoll) return "🎲 Tap to Roll!";
+        if (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') {
+            return isLocalPlayerTurn ? "👆 Select Token" : `${currentPlayer?.name}'s Turn`;
+        }
+        return `${currentPlayer?.name || 'Player'}'s Turn`;
+    };
+
     return (
-        <div className="app">
-            <div className="game-container">
+        <div className="app aaa-layout">
+
+            {/* 1. BOARD LAYER (Centered) */}
+            <div className="board-layer">
                 <Board rotation={boardRotation}>
                     {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
                         const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
@@ -508,154 +526,102 @@ function App() {
                         );
                     })}
                 </Board>
+            </div>
 
-                <div className="game-sidebar">
-                    {/* Compact Game Mode Badge instead of full header */}
-                    <div className="game-mode-badge">
-                        {gameConfig.mode === 'ai' ? '🤖 vs AI' :
-                            gameConfig.mode === 'web3' ? '🔗 Web3' : '👥 Local'}
-                    </div>
+            {/* 2. HUD LAYER (Overlay) */}
+            <div className="game-hud">
 
-                    {/* --- SPOTLIGHT PLAYER LIST --- */}
-                    <div className="players-list">
-                        {gameConfig.players.map((p, idx) => {
-                            const isActive = gameState.activePlayer === idx;
-                            const isMe = gameConfig.mode === 'web3'
-                                ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                                : !p.isAI && idx === 0; // Local game assumption: Player 0 is human
+                {/* A. CORNER AVATARS */}
+                {gameConfig.players.map((p, idx) => {
+                    const isActive = gameState.activePlayer === idx;
+                    const color = PLAYER_COLORS[idx];
+                    const visualPos = getVisualPositionIndex(idx);
+                    const isMe = gameConfig.mode === 'web3'
+                        ? p.address?.toLowerCase() === account?.address?.toLowerCase()
+                        : !p.isAI && idx === 0;
 
-                            const colorClass = `player-${PLAYER_COLORS[idx]}`; // 'player-red', etc.
-
-                            return (
-                                <div
-                                    key={idx}
-                                    className={`player-card ${colorClass} ${isActive ? 'active-turn' : ''} ${isMe ? 'is-me' : ''}`}
-                                >
-                                    <div className="player-indicator" />
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span className="player-name">
-                                            {p.name}
-                                            {p.isAI && ' 🤖'}
-                                            {isMe && ' (You)'}
-                                        </span>
-                                        {isActive && <span style={{ fontSize: '10px', opacity: 0.8 }}>
-                                            {isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Thinking...'}
-                                        </span>}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {serverMsg && <div className="server-msg pulse-animation">{serverMsg}</div>}
-
-                    {/* --- SMART CONTROLS --- */}
-                    {(() => {
-                        // Determine Smart State
-                        const myIdx = gameConfig.players.findIndex(p =>
-                            gameConfig.mode === 'web3'
-                                ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                                : !p.isAI && p.color === 'red' // Fallback for local
-                        );
-                        // In local mode vs AI, I am technically Player 0 (Red)
-                        // If local hotseat, we might need different logic, but assuming vs AI for now.
-
-                        const isMyTurn = isLocalPlayerTurn; // Re-use existing var
-                        const phase = gameState.gamePhase;
-
-                        let statusText = "";
-                        let diceDisabled = true;
-
-                        if (!isMyTurn) {
-                            statusText = `Waiting for ${currentPlayer?.name || 'Opponent'}...`;
-                            diceDisabled = true;
-                        } else {
-                            if (phase === 'ROLL_DICE') {
-                                statusText = isRolling ? "Rolling..." : "🎲 It's your turn!";
-                                diceDisabled = isRolling || isMoving;
-                            } else if (phase === 'SELECT_TOKEN') {
-                                statusText = "👆 Select a token to move!";
-                                diceDisabled = true; // DISABLE DICE TO PREVENT OUT-OF-TURN
-                            } else if (phase === 'BONUS_MOVE') {
-                                statusText = "🚀 Bonus! Select token!";
-                                diceDisabled = true;
-                            }
-                        }
-
-                        if (gameState.gamePhase === 'WIN') statusText = "🎉 GAME OVER!";
-
-                        return (
-                            <div className="controls-wrapper">
-                                {/* 3-Column Layout: Status | Dice | Timer */}
-                                <div className="controls-row">
-                                    <div className="controls-left">
-                                        <div className="smart-status">{statusText}</div>
-                                    </div>
-
-                                    <div className="controls-center">
-                                        <Dice
-                                            value={gameState.diceValue}
-                                            onRoll={handleRoll}
-                                            disabled={diceDisabled}
-                                            isRolling={isRolling}
-                                        />
-                                    </div>
-
-                                    <div className="controls-right">
-                                        {turnTimer !== null && turnTimer > 0 && (
-                                            <div className={`turn-timer ${turnTimer <= 3 ? 'urgent' : ''}`}>
-                                                ⏱️ {turnTimer}s
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {gameState.message && (
-                                    <p className="game-message">
-                                        {gameState.message}
-                                    </p>
+                    return (
+                        <div key={idx} className={`player-corner pos-${visualPos} ${isActive ? 'active' : ''}`}>
+                            <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
+                                {p.isAI ? '🤖' : '👤'}
+                                {isActive && <div className="turn-ripple" />}
+                            </div>
+                            <div className="player-info">
+                                <span className="p-name">
+                                    {p.name}{isMe && ' (You)'}
+                                </span>
+                                {isActive && (
+                                    <span className="p-status">
+                                        {isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Thinking...'}
+                                    </span>
                                 )}
                             </div>
-                        );
-                    })()}
+                        </div>
+                    );
+                })}
 
-                    {/* Win Message Overlay logic removed from here, can be modal or remain in sidebar if space permits. 
-                        Let's keep the Win Message simple below if Won. 
-                    */}
-                    {gameState.gamePhase === 'WIN' && (
-                        <div className="win-message">
-                            <h2>🏆 {gameConfig.players[gameState.winner]?.name} Wins!</h2>
+                {/* B. SERVER MESSAGE TOAST */}
+                {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
+
+                {/* C. WIN SCREEN (Modal) */}
+                {gameState.gamePhase === 'WIN' && (
+                    <div className="modal-overlay">
+                        <div className="win-card">
+                            <h1>🏆 VICTORY!</h1>
+                            <p>{gameConfig.players[gameState.winner]?.name} wins the match!</p>
+
                             {gameConfig.mode === 'web3' && (
-                                <div className="web3-win-actions">
+                                <div style={{ margin: '20px 0' }}>
                                     {payoutProof ? (
-                                        <button className="claim-button" onClick={onClaimClick} disabled={isClaiming}>
-                                            {isClaiming ? 'Claiming...' : 'Claim 💰'}
+                                        <button className="btn-primary" onClick={onClaimClick} disabled={isClaiming}>
+                                            {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
                                         </button>
                                     ) : (
-                                        <p className="loading-proof">Verifying... ⏳</p>
+                                        <p style={{ color: '#00f3ff' }}>Verifying on Blockchain... ⏳</p>
                                     )}
                                 </div>
                             )}
-                        </div>
-                    )}
 
-                    <div className="sidebar-actions">
-                        {gameConfig.mode !== 'web3' && (
-                            <button className="reset-button-small" onClick={handleReset}>
-                                Restart
+                            <button className="btn-secondary" onClick={handleBackToLobby}>
+                                Back to Menu
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* D. BOTTOM DOCK (Controls) */}
+                <div className="bottom-dock">
+
+                    {/* Left: Timer */}
+                    <div className="dock-left">
+                        {turnTimer !== null && turnTimer > 0 && (
+                            <div className={`turn-timer ${turnTimer <= 5 ? 'urgent' : ''}`}>
+                                ⏱ {turnTimer}s
+                            </div>
                         )}
-                        <button className="reset-button-small" onClick={handleBackToLobby}>
-                            Menu
-                        </button>
                     </div>
 
-                    <Commentator
-                        gameState={gameState}
-                        diceValue={gameState.diceValue}
-                        lastMessage={gameState.message}
-                    />
+                    {/* Center: Dice & Ticker */}
+                    <div className="dock-center">
+                        <div className="game-ticker">{getTickerText()}</div>
+                        <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
+                            <Dice
+                                value={gameState.diceValue}
+                                onRoll={handleRoll}
+                                disabled={!canRoll}
+                                isRolling={isRolling}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Right: Menu */}
+                    <div className="dock-right">
+                        <button className="menu-btn" onClick={handleBackToLobby}>
+                            ☰
+                        </button>
+                    </div>
                 </div>
+
             </div>
         </div>
     );
