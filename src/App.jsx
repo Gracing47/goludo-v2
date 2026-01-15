@@ -85,20 +85,6 @@ function App() {
 
     // ... (rest of code)
 
-    socket.on('state_update', (update) => {
-        console.log('📡 state_update received:', {
-            activePlayer: update.activePlayer,
-            gamePhase: update.gamePhase,
-            hasTokens: !!update.tokens
-        });
-
-        if (update.msg) setServerMsg(update.msg);
-
-        // Use the store action directly!
-        // This correctly merges with previous state
-        updateState(update);
-    });
-
     // Ref to prevent double AI actions
     const aiActionInProgress = useRef(false);
 
