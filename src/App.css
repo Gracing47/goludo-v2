@@ -114,43 +114,43 @@ body {
     transform: scale(1.05);
 }
 
-/* Screen Positions (0=BL, 1=TL, 2=TR, 3=BR) */
+/* Screen Positions (0=BL, 1=TL, 2=TR, 3=BR) - More margin from edges */
 .pos-0 {
-    bottom: 100px;
-    left: 10px;
+    bottom: 130px;
+    left: 16px;
 }
 
 .pos-1 {
-    top: 10px;
-    left: 10px;
+    top: 16px;
+    left: 16px;
 }
 
 .pos-2 {
-    top: 10px;
-    right: 10px;
+    top: 16px;
+    right: 16px;
     flex-direction: row-reverse;
     text-align: right;
 }
 
 .pos-3 {
-    bottom: 100px;
-    right: 10px;
+    bottom: 130px;
+    right: 16px;
     flex-direction: row-reverse;
     text-align: right;
 }
 
-/* Avatar Circle */
+/* Avatar Circle - Dark Gradient */
 .avatar-ring {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    background: #2c3e50;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(145deg, #2b2d42, #1a1b2f);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    font-size: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
     position: relative;
     z-index: 2;
     transition: all 0.3s ease;
@@ -177,11 +177,12 @@ body {
     border-color: #2980b9;
 }
 
-/* Active Turn Glow */
+/* Active Turn Glow - Subtle */
 .player-corner.active .avatar-ring {
-    border-color: white;
-    box-shadow: 0 0 25px currentColor, 0 0 40px currentColor;
-    transform: scale(1.15);
+    border-width: 2px;
+    border-color: currentColor;
+    box-shadow: 0 0 18px currentColor;
+    transform: scale(1.1);
 }
 
 /* Turn Ripple Animation */
@@ -208,19 +209,26 @@ body {
 
 /* Player Info Badge */
 .player-info {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(6px);
-    padding: 6px 10px;
-    border-radius: 10px;
+    padding: 6px 12px;
+    border-radius: 12px;
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    opacity: 0.65;
+    transition: opacity 0.3s ease;
+}
+
+.player-corner.active .player-info {
+    opacity: 1;
 }
 
 .p-name {
     display: block;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.2;
+    letter-spacing: 0.3px;
 }
 
 .p-status {
@@ -244,7 +252,7 @@ body {
 
     .pos-0,
     .pos-3 {
-        bottom: 90px;
+        bottom: 100px;
     }
 }
 
@@ -283,29 +291,40 @@ body {
     gap: 4px;
 }
 
-/* Dice Plate */
+/* Dice Plate - Glassmorphic Dark */
 .dice-plate {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 4px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease;
+    background: rgba(20, 20, 35, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .dice-plate.active-turn {
-    animation: pulse-dice 1.2s infinite;
-    box-shadow: 0 0 30px var(--neon-gold), 0 0 50px rgba(255, 215, 0, 0.4);
+    animation: pulse-border 2s infinite;
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
 }
 
-@keyframes pulse-dice {
+@keyframes pulse-border {
 
     0%,
     100% {
         transform: scale(1);
+        border-color: rgba(255, 215, 0, 0.3);
     }
 
     50% {
-        transform: scale(1.05);
+        transform: scale(1.03);
+        border-color: rgba(255, 215, 0, 0.7);
     }
 }
 
