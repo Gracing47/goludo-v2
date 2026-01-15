@@ -486,18 +486,26 @@ function App() {
         [currentPlayer]
     );
 
-    // Turn Logic for Web3 - MEMOIZED to prevent loop
+    // Turn Logic - MEMOIZED to prevent loop
     const isLocalPlayerTurn = useMemo(() => {
-        if (!gameConfig || !currentPlayer) return false;
+        // Need config to determine mode
+        if (!gameConfig) return false;
+
+        // For Web3 mode: compare addresses
         if (gameConfig.mode === 'web3') {
-            return currentPlayer?.address?.toLowerCase() === account?.address?.toLowerCase();
+            if (!currentPlayer || !account?.address) return false;
+            return currentPlayer?.address?.toLowerCase() === account.address.toLowerCase();
         }
+
+        // For Local/AI mode: human can always play (when not AI turn)
         return !isAITurn;
     }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn]);
 
     const canRoll = useMemo(() => {
         if (!gameState) return false;
-        return gameState.gamePhase === 'ROLL_DICE' && !isRolling && !isMoving && isLocalPlayerTurn;
+        const phase = gameState.gamePhase;
+        const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
+        return canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
     }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
     // Render lobby
