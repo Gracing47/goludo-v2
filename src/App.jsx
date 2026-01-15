@@ -1,14 +1,15 @@
 /**
- * MAIN APP COMPONENT - GoLudo
+ * MAIN APP COMPONENT - GoLudo (v2 - Zustand State Management)
  * 
  * Features:
  * - Lobby → Game flow
  * - Intelligent AI with priority-based decisions
  * - Token stacking for multiple tokens on same cell
  * - USA Standard Rules
+ * - Unified Zustand state management
  */
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useMemo } from 'react';
 import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
@@ -18,6 +19,10 @@ import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { io } from 'socket.io-client';
 import { API_URL, SOCKET_URL } from './config/api';
 import './App.css';
+
+// Zustand Store
+import { useGameStore } from './store/useGameStore';
+import { useShallow } from 'zustand/shallow';
 
 import {
     PLAYER_COLORS,
@@ -37,28 +42,56 @@ import {
 import { calculateAIMove } from './engine/aiEngine';
 
 function App() {
-    const [appState, setAppState] = useState('lobby');
-    const [gameConfig, setGameConfig] = useState(null);
-    const [gameState, setGameState] = useState(null);
-    const [isRolling, setIsRolling] = useState(false);
-    const [isMoving, setIsMoving] = useState(false);
+    // ============================================
+    // ZUSTAND STORE - Single Source of Truth
+    // ============================================
+    const {
+        appState, setAppState,
+        config: gameConfig, setConfig: setGameConfig,
+        state: gameState, setState: setGameState,
+        isRolling, setIsRolling,
+        isMoving, setIsMoving,
+        boardRotation, setBoardRotation,
+        serverMsg, setServerMsg,
+        turnTimer, setTurnTimer,
+        payoutProof, setPayoutProof,
+        socket, setSocket,
+        reset: resetStore,
+    } = useGameStore(useShallow((s) => ({
+        appState: s.appState,
+        setAppState: s.setAppState,
+        config: s.config,
+        setConfig: s.setConfig,
+        state: s.state,
+        setState: s.setState,
+        isRolling: s.isRolling,
+        setIsRolling: s.setIsRolling,
+        isMoving: s.isMoving,
+        setIsMoving: s.setIsMoving,
+        boardRotation: s.boardRotation,
+        setBoardRotation: s.setBoardRotation,
+        serverMsg: s.serverMsg,
+        setServerMsg: s.setServerMsg,
+        turnTimer: s.turnTimer,
+        setTurnTimer: s.setTurnTimer,
+        payoutProof: s.payoutProof,
+        setPayoutProof: s.setPayoutProof,
+        socket: s.socket,
+        setSocket: s.setSocket,
+        reset: s.reset,
+    })));
 
     // Ref to prevent double AI actions
     const aiActionInProgress = useRef(false);
 
-    // Board rotation for Web3 matches (local player always at bottom)
-    const [boardRotation, setBoardRotation] = useState(0);
+    // Socket ref for direct access
+    const socketRef = useRef(null);
+
+    // Local state for claiming (not needed in global store)
+    const [isClaiming, setIsClaiming] = React.useState(false);
 
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
-    const [payoutProof, setPayoutProof] = useState(null);
-    const [isClaiming, setIsClaiming] = useState(false);
-
-    // Socket for Web3 sync
-    const socketRef = useRef(null);
-    const [serverMsg, setServerMsg] = useState(null);
-    const [turnTimer, setTurnTimer] = useState(null); // Countdown timer in seconds
-    const timerIntervalRef = useRef(null); // Store interval ID
 
     // Start game from lobby
     const handleStartGame = useCallback((config) => {
@@ -196,21 +229,15 @@ function App() {
         }
     }, [account]);
 
-    // Return to lobby
+    // Return to lobby - uses Zustand reset
     const handleBackToLobby = useCallback(() => {
         if (socketRef.current) {
             socketRef.current.disconnect();
             socketRef.current = null;
         }
-        setAppState('lobby');
-        setGameState(null);
-        setGameConfig(null);
-        setPayoutProof(null);
-        setIsRolling(false);
-        setIsMoving(false);
-        setTurnTimer(null);
+        resetStore(); // Resets all state to initial values
         aiActionInProgress.current = false;
-    }, []);
+    }, [resetStore]);
 
     // Roll dice
     const handleRoll = useCallback(() => {
