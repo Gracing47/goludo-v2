@@ -68,7 +68,8 @@ export const Dice: React.FC<DiceProps> = ({
             6: [0, 2, 3, 5, 6, 8], // two columns
         };
 
-        const positions = patterns[value] || [];
+        const displayValue = value || 1;
+        const positions = patterns[displayValue] || patterns[1];
 
         for (let i = 0; i < 9; i++) {
             if (positions.includes(i)) {

@@ -79,8 +79,13 @@ export const useGameStore = create<GameStoreState>()(
             /** Set game configuration */
             setConfig: (config) => set({ config }, false, 'setConfig'),
 
-            /** Set full game state (replaces entirely) */
-            setState: (state) => set({ state }, false, 'setState'),
+            /** 
+             * Set full game state
+             * Supports functional updates like setState(prev => ...)
+             */
+            setState: (stateOrFn) => set((prev) => ({
+                state: typeof stateOrFn === 'function' ? stateOrFn(prev.state) : stateOrFn
+            }), false, 'setState'),
 
             /** 
              * Update game state partially (merges with existing)

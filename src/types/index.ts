@@ -405,7 +405,7 @@ export interface GameStoreState {
     /** Actions */
     setAppState: (appState: 'lobby' | 'game') => void;
     setConfig: (config: GameConfig | null) => void;
-    setState: (state: GameState | null) => void;
+    setState: (stateOrFn: GameState | null | ((prev: GameState | null) => GameState | null)) => void;
     updateState: (partial: Partial<GameState>) => void;
     setIsRolling: (isRolling: boolean) => void;
     setIsMoving: (isMoving: boolean) => void;
