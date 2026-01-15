@@ -96,10 +96,10 @@ export const useGameStore = create<GameStoreState>()(
             }), false, 'updateState'),
 
             /** Set rolling animation state (transient for performance) */
-            setIsRolling: (isRolling) => set({ isRolling }, true, 'setIsRolling'),
+            setIsRolling: (isRolling) => set({ isRolling }, false, 'setIsRolling'),
 
             /** Set moving animation state (transient for performance) */
-            setIsMoving: (isMoving) => set({ isMoving }, true, 'setIsMoving'),
+            setIsMoving: (isMoving) => set({ isMoving }, false, 'setIsMoving'),
 
             /** Set board rotation angle */
             setBoardRotation: (rotation) => set({ boardRotation: rotation }, false, 'setBoardRotation'),
