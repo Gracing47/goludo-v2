@@ -999,12 +999,32 @@
 
 @media (min-width: 768px) {
     .lobby-container {
-        max-width: 480px;
-        padding: 28px 24px;
+        max-width: 520px;
+        padding: 32px;
+        /* Ensure it can grow with content */
+        height: auto;
+        min-height: unset;
+    }
+
+    .lobby-setup,
+    .setup-view {
+        flex: none;
+        height: auto;
+    }
+
+    .setup-section.players-section {
+        flex: none;
+        min-height: unset;
+    }
+
+    .setup-actions {
+        margin-top: 32px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .lobby-title {
-        font-size: 48px;
+        font-size: 52px;
     }
 
     .menu-button:hover:not(:disabled) {
