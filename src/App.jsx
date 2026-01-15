@@ -49,6 +49,7 @@ function App() {
         appState, setAppState,
         config: gameConfig, setConfig: setGameConfig,
         state: gameState, setState: setGameState,
+        updateState, // Import updateState action
         isRolling, setIsRolling,
         isMoving, setIsMoving,
         boardRotation, setBoardRotation,
@@ -64,6 +65,7 @@ function App() {
         setConfig: s.setConfig,
         state: s.state,
         setState: s.setState,
+        updateState: s.updateState, // Map updateState
         isRolling: s.isRolling,
         setIsRolling: s.setIsRolling,
         isMoving: s.isMoving,
@@ -80,6 +82,22 @@ function App() {
         setSocket: s.setSocket,
         reset: s.reset,
     })));
+
+    // ... (rest of code)
+
+    socket.on('state_update', (update) => {
+        console.log('📡 state_update received:', {
+            activePlayer: update.activePlayer,
+            gamePhase: update.gamePhase,
+            hasTokens: !!update.tokens
+        });
+
+        if (update.msg) setServerMsg(update.msg);
+
+        // Use the store action directly!
+        // This correctly merges with previous state
+        updateState(update);
+    });
 
     // Ref to prevent double AI actions
     const aiActionInProgress = useRef(false);
@@ -175,22 +193,8 @@ function App() {
 
                 if (update.msg) setServerMsg(update.msg);
 
-                // Only update fields that are actually present in the update
-                // Don't overwrite good state with undefined!
-                setGameState(prev => {
-                    if (!prev) return update; // No previous state, use update as-is
-
-                    return {
-                        ...prev,
-                        ...update,
-                        // Only overwrite if update has defined values
-                        activePlayer: update.activePlayer ?? prev.activePlayer,
-                        gamePhase: update.gamePhase ?? prev.gamePhase,
-                        tokens: update.tokens ?? prev.tokens,
-                        validMoves: update.validMoves ?? prev.validMoves,
-                        diceValue: update.diceValue ?? prev.diceValue,
-                    };
-                });
+                // Use the store action directly (merges partial updates correctly)
+                updateState(update);
             });
 
             // Timer events
@@ -229,7 +233,7 @@ function App() {
         setGameState(createInitialState(config.playerCount, activeColors));
         setAppState('game');
         setBoardRotation(0);
-    }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer]);
+    }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer, updateState]);
 
     // Return to lobby - uses Zustand reset
     const handleBackToLobby = useCallback(() => {
