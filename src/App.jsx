@@ -493,19 +493,28 @@ function App() {
 
         // For Web3 mode: compare addresses
         if (gameConfig.mode === 'web3') {
-            if (!currentPlayer || !account?.address) return false;
-            return currentPlayer?.address?.toLowerCase() === account.address.toLowerCase();
+            if (!currentPlayer || !account?.address) {
+                console.log('🎯 Turn: No player/account', { currentPlayer, hasAccount: !!account });
+                return false;
+            }
+            const currentAddr = currentPlayer?.address?.toLowerCase();
+            const myAddr = account.address.toLowerCase();
+            const isMyTurn = currentAddr === myAddr;
+            console.log('🎯 Turn:', { activePlayer: gameState?.activePlayer, currentAddr, myAddr, isMyTurn });
+            return isMyTurn;
         }
 
         // For Local/AI mode: human can always play (when not AI turn)
         return !isAITurn;
-    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn]);
+    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.activePlayer]);
 
     const canRoll = useMemo(() => {
         if (!gameState) return false;
         const phase = gameState.gamePhase;
         const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
-        return canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
+        const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
+        console.log('🎲 canRoll:', { phase, isLocalPlayerTurn, result });
+        return result;
     }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
     // Render lobby
