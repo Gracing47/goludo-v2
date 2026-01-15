@@ -14,7 +14,7 @@ import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
 import Commentator from './components/Commentator';
-import Dice from './components/game/Dice';
+import Dice from './components/Dice';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { io } from 'socket.io-client';
 import { API_URL, SOCKET_URL } from './config/api';
@@ -662,7 +662,7 @@ function App() {
                         <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
                             <Dice
                                 value={gameState.diceValue}
-                                onClick={handleRoll}
+                                onRoll={handleRoll}
                                 disabled={!canRoll}
                                 isRolling={isRolling}
                             />
