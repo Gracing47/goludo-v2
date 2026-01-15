@@ -400,12 +400,17 @@ function App() {
 
     // Get token coordinates with stacking info
     const getTokensWithCoords = useCallback(() => {
-        if (!gameState) return [];
+        // Defensive check: ensure gameState and tokens array exist
+        if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
+            return [];
+        }
 
         // Group tokens by position to detect stacking
         const positionMap = new Map();
 
         gameState.tokens.forEach((playerTokens, playerIdx) => {
+            // Skip if playerTokens is not an array
+            if (!Array.isArray(playerTokens)) return;
             playerTokens.forEach((position, tokenIdx) => {
                 let coords = null;
                 let inYard = false;
@@ -467,8 +472,8 @@ function App() {
     }, [gameState?.tokens]); // Don't include getTokensWithCoords - it changes every render!
 
     const currentPlayer = useMemo(() => {
-        if (!gameState || !gameConfig) return null;
-        return gameConfig.players[gameState.activePlayer];
+        if (!gameState || !gameConfig || !gameConfig.players) return null;
+        return gameConfig.players[gameState.activePlayer] || null;
     }, [gameConfig?.players, gameState?.activePlayer]);
 
     const currentColor = useMemo(() => {
