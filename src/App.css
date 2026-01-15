@@ -22,11 +22,11 @@
 
 body {
     margin: 0;
-    overflow: hidden;
     background: var(--bg-dark);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* Let pages decide their own overflow */
 }
 
 /* ============================================
@@ -35,9 +35,11 @@ body {
 
 .app {
     width: 100%;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .app.aaa-layout {
