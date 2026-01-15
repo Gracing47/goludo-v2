@@ -357,7 +357,21 @@ export interface LobbyState {
     reset: () => void;
 }
 
+export interface PayoutProof {
+    /** Room ID */
+    roomId: string;
+    /** Winner address */
+    winner: string;
+    /** Payout amount */
+    amount: string;
+    /** Server signature */
+    signature: string;
+}
+
 export interface GameStoreState {
+    /** Application state */
+    appState: 'lobby' | 'game';
+
     /** Game configuration */
     config: GameConfig | null;
 
@@ -379,9 +393,20 @@ export interface GameStoreState {
     /** Server message */
     serverMsg: string | null;
 
+    /** Socket.io instance */
+    socket: any | null;
+
+    /** Local player index in multiplayer */
+    myPlayerIndex: number | null;
+
+    /** Payout proof for Web3 claims */
+    payoutProof: PayoutProof | null;
+
     /** Actions */
-    setConfig: (config: GameConfig) => void;
-    setState: (state: GameState) => void;
+    setAppState: (appState: 'lobby' | 'game') => void;
+    setConfig: (config: GameConfig | null) => void;
+    setState: (state: GameState | null) => void;
+    updateState: (partial: Partial<GameState>) => void;
     setIsRolling: (isRolling: boolean) => void;
     setIsMoving: (isMoving: boolean) => void;
     setBoardRotation: (rotation: number) => void;
@@ -390,5 +415,7 @@ export interface GameStoreState {
     initGame: (config: GameConfig) => void;
     setSocket: (socket: any) => void;
     setMyPlayerIndex: (index: number | null) => void;
+    setPayoutProof: (proof: PayoutProof | null) => void;
     reset: () => void;
 }
+

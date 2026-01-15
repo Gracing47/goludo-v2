@@ -1,83 +1,125 @@
 /**
- * Game Store - Zustand State Management
+ * Game Store - Zustand State Management (v2)
  * 
- * Manages active game state including:
- * - Game configuration
- * - Current game state (board, tokens, turn)
- * - Animation states (rolling, moving)
- * - UI state (timer, messages)
- * 
- * Designed for high-frequency updates with minimal re-renders.
- * Uses transient updates for animation states.
+ * Unified state management for GoLudo following 2025 best practices:
+ * - Single source of truth for all game state
+ * - Atomic selectors for optimized re-renders
+ * - subscribeWithSelector for socket event integration
+ * - Transient updates for animation states
  * 
  * @see https://github.com/pmndrs/zustand
  */
 
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
-import type { GameStoreState, GameConfig, GameState } from '@types/index';
+import type { GameStoreState, GameConfig, GameState, PayoutProof } from '../types';
 
 /**
- * Game Store
+ * Game Store - Single Source of Truth
  * 
  * @example
  * ```tsx
- * function GameBoard() {
- *   const state = useGameStore(selectGameState);
- *   const setIsRolling = useGameStore((s) => s.setIsRolling);
- *   
- *   return (
- *     <Board gameState={state}>
- *       <Dice onRoll={() => setIsRolling(true)} />
- *     </Board>
- *   );
- * }
+ * // Use atomic selectors for performance
+ * const isRolling = useGameStore((s) => s.isRolling);
+ * const setIsRolling = useGameStore((s) => s.setIsRolling);
+ * 
+ * // Or use useShallow for multiple values
+ * const { isRolling, isMoving } = useGameStore(
+ *   useShallow((s) => ({ isRolling: s.isRolling, isMoving: s.isMoving }))
+ * );
  * ```
  */
 export const useGameStore = create<GameStoreState>()(
     devtools(
-        subscribeWithSelector((set) => ({
-            // State
+        subscribeWithSelector((set, get) => ({
+            // ============================================
+            // STATE
+            // ============================================
+
+            /** Application state (lobby or game) */
+            appState: 'lobby',
+
+            /** Game configuration */
             config: null,
+
+            /** Current game state from engine */
             state: null,
+
+            /** Dice rolling animation */
             isRolling: false,
+
+            /** Token moving animation */
             isMoving: false,
+
+            /** Board rotation for local player perspective */
             boardRotation: 0,
+
+            /** Turn timer countdown (seconds) */
             turnTimer: null,
+
+            /** Server message toast */
             serverMsg: null,
+
+            /** Socket.io instance for multiplayer */
             socket: null,
+
+            /** Local player index in multiplayer match */
             myPlayerIndex: null,
 
-            // Actions
+            /** Payout proof for Web3 claims */
+            payoutProof: null,
+
+            // ============================================
+            // ACTIONS
+            // ============================================
+
+            /** Set application state */
+            setAppState: (appState) => set({ appState }, false, 'setAppState'),
+
+            /** Set game configuration */
             setConfig: (config) => set({ config }, false, 'setConfig'),
 
+            /** Set full game state (replaces entirely) */
             setState: (state) => set({ state }, false, 'setState'),
 
-            /**
-             * Set rolling animation state
-             * Uses transient update for performance
+            /** 
+             * Update game state partially (merges with existing)
+             * Useful for socket updates that only contain changed fields
              */
+            updateState: (partial) => set((prev) => ({
+                state: prev.state ? { ...prev.state, ...partial } : null
+            }), false, 'updateState'),
+
+            /** Set rolling animation state (transient for performance) */
             setIsRolling: (isRolling) => set({ isRolling }, true, 'setIsRolling'),
 
-            /**
-             * Set moving animation state
-             * Uses transient update for performance
-             */
+            /** Set moving animation state (transient for performance) */
             setIsMoving: (isMoving) => set({ isMoving }, true, 'setIsMoving'),
 
+            /** Set board rotation angle */
             setBoardRotation: (rotation) => set({ boardRotation: rotation }, false, 'setBoardRotation'),
 
+            /** Set turn timer countdown */
             setTurnTimer: (seconds) => set({ turnTimer: seconds }, false, 'setTurnTimer'),
 
+            /** Set server message */
             setServerMsg: (msg) => set({ serverMsg: msg }, false, 'setServerMsg'),
 
-            initGame: (config) => set({ config }, false, 'initGame'),
+            /** Initialize game with config (convenience action) */
+            initGame: (config) => set({ config, appState: 'game' }, false, 'initGame'),
 
+            /** Set socket instance */
             setSocket: (socket) => set({ socket }, false, 'setSocket'),
 
+            /** Set local player index */
             setMyPlayerIndex: (index) => set({ myPlayerIndex: index }, false, 'setMyPlayerIndex'),
 
+            /** Set payout proof for Web3 claims */
+            setPayoutProof: (proof) => set({ payoutProof: proof }, false, 'setPayoutProof'),
+
+            /** Reset all state to initial values */
             reset: () => set({
+                appState: 'lobby',
                 config: null,
                 state: null,
                 isRolling: false,
@@ -87,6 +129,7 @@ export const useGameStore = create<GameStoreState>()(
                 serverMsg: null,
                 socket: null,
                 myPlayerIndex: null,
+                payoutProof: null,
             }, false, 'reset'),
         })),
         {
