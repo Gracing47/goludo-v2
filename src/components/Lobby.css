@@ -999,32 +999,53 @@
 
 @media (min-width: 768px) {
     .lobby-container {
-        max-width: 520px;
-        padding: 32px;
-        /* Ensure it can grow with content */
+        max-width: 540px;
+        padding: 40px;
         height: auto;
         min-height: unset;
+        display: block;
+        /* Switch to block to ensure natural flow */
     }
 
-    .lobby-setup,
-    .setup-view {
-        flex: none;
+    .lobby-setup {
+        display: block;
+        /* Ensure natural flow */
         height: auto;
+        flex: none;
+    }
+
+    .setup-section {
+        margin-bottom: 24px;
+        display: block;
     }
 
     .setup-section.players-section {
         flex: none;
         min-height: unset;
+        height: auto;
+    }
+
+    .player-list {
+        display: block;
+        height: auto;
+    }
+
+    .player-config-card {
+        margin-bottom: 16px;
     }
 
     .setup-actions {
-        margin-top: 32px;
-        padding-top: 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: 40px;
+        padding-top: 24px;
+        border-top: 1.5px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        position: relative;
+        clear: both;
     }
 
     .lobby-title {
-        font-size: 52px;
+        font-size: 56px;
+        margin-bottom: 32px;
     }
 
     .menu-button:hover:not(:disabled) {
