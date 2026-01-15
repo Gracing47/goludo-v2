@@ -92,45 +92,31 @@ function App() {
 
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
-
     // Start game from lobby
     const handleStartGame = useCallback((config) => {
-        setGameConfig(config);
-
-        // Map config players to engine color indices
-        // RED: 0, GREEN: 1, YELLOW: 2, BLUE: 3
-        const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-
-        // Active colors based on the players' selected colors
-        // Note: config.players is already sliced to playerCount
-        const activeColors = config.players.map(p => colorMap[p.color]);
-
-        setGameState(createInitialState(config.playerCount, activeColors));
-        setAppState('game');
         aiActionInProgress.current = false;
 
-        // Calculate board rotation for Web3
-        if (config.mode === 'web3' && account) {
-            const myIdx = config.players.findIndex(p => p.address?.toLowerCase() === account.address?.toLowerCase());
-            if (myIdx !== -1) {
-                // We want the local player to be at the bottom-left (Index 3 usually)
-                // Angle = (targetIndex - myIndex) * 90
-                const angle = (3 - myIdx) * 90;
-                setBoardRotation(angle);
-            } else {
-                setBoardRotation(0);
-            }
-        } else {
-            setBoardRotation(0);
-        }
-
-        // Socket logic for Web3
+        // ============================================
+        // WEB3 MODE: Wait for server's game_started event
+        // ============================================
         if (config.mode === 'web3') {
+            console.log('🎮 Web3 mode: Setting up socket, waiting for game_started...');
+
+            // Set minimal config - players will come from server
+            setGameConfig({
+                mode: 'web3',
+                roomId: config.roomId,
+                stake: config.stake,
+                playerCount: config.playerCount,
+                players: [] // Will be populated by game_started
+            });
+
+            // Setup socket connection
             const socket = io(SOCKET_URL);
             socketRef.current = socket;
 
             socket.on('connect', () => {
-                // Identify self so server knows I am a human
+                console.log('🔌 Socket connected, joining match...');
                 socket.emit('join_match', {
                     roomId: config.roomId,
                     playerAddress: account?.address
@@ -139,95 +125,94 @@ function App() {
 
             socket.on('dice_rolled', ({ value, playerIndex }) => {
                 setIsRolling(true);
-                // Only clear if it was a normal turn roll, not a bonus message roll
                 if (value !== 6) setServerMsg(null);
-
-                setTimeout(() => {
-                    // For Web3, we do NOT apply logic locally. We rely on state_update.
-                    // This timeout just syncs the visual end of the animation with the state update arrival.
-                    setIsRolling(false);
-                }, 800);
+                setTimeout(() => setIsRolling(false), 800);
             });
 
             socket.on('game_started', (room) => {
-                console.log("🚀 Server says Game Started!");
-                // Map config players to engine color indices
+                console.log('🚀 Game Started! Players:', room.players.map(p => p.name));
+
                 const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
                 const activeColors = room.players.map(p => colorMap[p.color]);
 
+                // Set full config with addresses
                 setGameConfig({
                     mode: 'web3',
                     roomId: room.id,
                     stake: room.stake,
-                    players: room.players.map(p => ({
+                    playerCount: room.players.length,
+                    players: room.players.map((p, idx) => ({
+                        id: idx,
                         name: p.name,
                         color: p.color,
                         address: p.address,
+                        type: 'human',
                         isAI: false
                     }))
                 });
 
+                // NOW set game state and transition to game
                 setGameState(createInitialState(room.players.length, activeColors));
                 setAppState('game');
-                aiActionInProgress.current = false;
 
-                // Set board rotation for creator too
+                // Set board rotation
                 if (account) {
-                    const myIdx = room.players.findIndex(p => p.address?.toLowerCase() === account.address?.toLowerCase());
+                    const myIdx = room.players.findIndex(p =>
+                        p.address?.toLowerCase() === account.address?.toLowerCase()
+                    );
                     if (myIdx !== -1) {
-                        const angle = (3 - myIdx) * 90;
-                        setBoardRotation(angle);
+                        setBoardRotation((3 - myIdx) * 90);
                     }
                 }
             });
 
             socket.on('state_update', (update) => {
                 if (update.msg) setServerMsg(update.msg);
-
-                // FULL STATE SYNC: Trust the server engine completely
-                // update contains { tokens, activePlayer, gamePhase, validMoves, diceValue, ... }
                 setGameState(prev => ({
-                    ...prev, // Keep any local UI flags if they exist (though we should clean them)
-                    ...update, // Override with server truth
-                    // Ensure UI mappings are correct
+                    ...prev,
+                    ...update,
                     activePlayer: update.activePlayer,
                     gamePhase: update.gamePhase
                 }));
             });
 
-
-            // ============================================
-            // AAA-LEVEL TURN TIMER LISTENERS
-            // ============================================
-
-            // Timer Start - Server initiates countdown
+            // Timer events
             socket.on('turn_timer_start', ({ playerIndex, timeoutMs, phase }) => {
-                const timeoutSeconds = Math.floor(timeoutMs / 1000);
-                setTurnTimer(timeoutSeconds);
-                console.log(`⏰ Timer started: ${timeoutSeconds}s for Player ${playerIndex} (${phase})`);
+                setTurnTimer(Math.floor(timeoutMs / 1000));
+                console.log(`⏰ Timer started: ${Math.floor(timeoutMs / 1000)}s for Player ${playerIndex} (${phase})`);
             });
 
-            // Timer Update - Server sends countdown updates every second
-            socket.on('turn_timer_update', ({ playerIndex, remainingSeconds, phase }) => {
+            socket.on('turn_timer_update', ({ remainingSeconds }) => {
                 setTurnTimer(remainingSeconds);
-
-                // Visual feedback for urgent time
                 if (remainingSeconds <= 3 && remainingSeconds > 0) {
                     console.log(`⚠️ Time running out: ${remainingSeconds}s`);
                 }
             });
 
-            // Timeout Event - Player ran out of time
-            socket.on('turn_timeout', ({ playerIndex, playerName, phase }) => {
+            socket.on('turn_timeout', ({ playerName, phase }) => {
                 setTurnTimer(0);
                 setServerMsg(`⏰ ${playerName} timed out!`);
                 console.log(`⏰ TIMEOUT: ${playerName} (Phase: ${phase})`);
-
-                // Clear message after 3 seconds
                 setTimeout(() => setServerMsg(null), 3000);
             });
+
+            return; // Exit early for Web3
         }
-    }, [account]);
+
+        // ============================================
+        // LOCAL/AI MODE: Initialize immediately
+        // ============================================
+        console.log('🎮 Local mode: Initializing game...');
+
+        setGameConfig(config);
+
+        const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+        const activeColors = config.players.map(p => colorMap[p.color]);
+
+        setGameState(createInitialState(config.playerCount, activeColors));
+        setAppState('game');
+        setBoardRotation(0);
+    }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer]);
 
     // Return to lobby - uses Zustand reset
     const handleBackToLobby = useCallback(() => {
