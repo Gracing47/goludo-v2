@@ -541,8 +541,11 @@
     display: flex;
     gap: 12px;
     flex-shrink: 0;
-    margin-top: auto;
+    margin-top: 20px;
+    /* Changed from auto to fixed spacing to prevent overlap */
     padding-top: 12px;
+    position: relative;
+    z-index: 5;
 }
 
 .action-btn {
@@ -566,6 +569,9 @@
     background: rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.7);
     border: 2px solid rgba(255, 255, 255, 0.15);
+    flex: 0 0 auto;
+    min-width: 100px;
+    /* Fixed width for back button */
 }
 
 .action-btn.back:active {
