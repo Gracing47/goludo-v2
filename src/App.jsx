@@ -167,13 +167,30 @@ function App() {
             });
 
             socket.on('state_update', (update) => {
-                if (update.msg) setServerMsg(update.msg);
-                setGameState(prev => ({
-                    ...prev,
-                    ...update,
+                console.log('📡 state_update received:', {
                     activePlayer: update.activePlayer,
-                    gamePhase: update.gamePhase
-                }));
+                    gamePhase: update.gamePhase,
+                    hasTokens: !!update.tokens
+                });
+
+                if (update.msg) setServerMsg(update.msg);
+
+                // Only update fields that are actually present in the update
+                // Don't overwrite good state with undefined!
+                setGameState(prev => {
+                    if (!prev) return update; // No previous state, use update as-is
+
+                    return {
+                        ...prev,
+                        ...update,
+                        // Only overwrite if update has defined values
+                        activePlayer: update.activePlayer ?? prev.activePlayer,
+                        gamePhase: update.gamePhase ?? prev.gamePhase,
+                        tokens: update.tokens ?? prev.tokens,
+                        validMoves: update.validMoves ?? prev.validMoves,
+                        diceValue: update.diceValue ?? prev.diceValue,
+                    };
+                });
             });
 
             // Timer events
