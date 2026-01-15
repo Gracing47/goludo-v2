@@ -442,11 +442,6 @@ const Lobby = ({ onStartGame }) => {
                                     </div>
                                 ))}
 
-                                {gameMode === 'web3' && (
-                                    <div className="web3-info-box">
-                                        <p>Opponents will join from the lobby after creation.</p>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -472,6 +467,13 @@ const Lobby = ({ onStartGame }) => {
                                         gameMode === 'web3' ? 'Create & Pay Stake 💰' : 'Start Local Game 🎲'}
                             </button>
                         </div>
+
+                        {gameMode === 'web3' && (
+                            <div className="web3-info-box">
+                                <p>Opponents will join from the lobby after creation.</p>
+                            </div>
+                        )}
+
                     </div>
                 )}
 
