@@ -14,7 +14,7 @@ import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
 import Commentator from './components/Commentator';
-import Dice from './components/Dice';
+import Dice from './components/game/Dice';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { io } from 'socket.io-client';
 import { API_URL, SOCKET_URL } from './config/api';
@@ -519,7 +519,21 @@ function App() {
     }
 
     // Render game
-    if (!gameState || !gameConfig) return null;
+    if (!gameState || !gameConfig) {
+        return (
+            <div className="app-loading">
+                <div className="loading-spinner">↻</div>
+                <p>Loading Game State...</p>
+                {/* Debug info in case it gets stuck */}
+                <small style={{ opacity: 0.5, fontSize: 10 }}>
+                    State: {gameState ? 'OK' : 'MISSING'} | Config: {gameConfig ? 'OK' : 'MISSING'}
+                </small>
+                <button onClick={handleBackToLobby} style={{ marginTop: 20 }}>
+                    Return to Lobby
+                </button>
+            </div>
+        );
+    }
 
     // Helper: Calculate visual position based on board rotation
     const getVisualPositionIndex = (playerIndex) => {
@@ -648,7 +662,7 @@ function App() {
                         <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
                             <Dice
                                 value={gameState.diceValue}
-                                onRoll={handleRoll}
+                                onClick={handleRoll}
                                 disabled={!canRoll}
                                 isRolling={isRolling}
                             />
