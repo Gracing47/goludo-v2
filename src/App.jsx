@@ -97,18 +97,12 @@ function App() {
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
 
-    // Board shake state for rolling a 6
-    const [boardShaking, setBoardShaking] = React.useState(false);
-
-    // Effect: Shake board and vibrate on rolling a 6
+    // Effect: Haptic feedback on rolling a 6 (visual shake removed)
     React.useEffect(() => {
         if (gameState?.diceValue === 6 && !isRolling) {
-            setBoardShaking(true);
             if (navigator.vibrate) {
                 navigator.vibrate([10, 30, 10]);
             }
-            const timer = setTimeout(() => setBoardShaking(false), 250);
-            return () => clearTimeout(timer);
         }
     }, [gameState?.diceValue, isRolling]);
 
@@ -604,7 +598,7 @@ function App() {
         <div className="app aaa-layout">
 
             {/* 1. BOARD LAYER (Centered) */}
-            <div className={`board-layer ${boardShaking ? 'shaking' : ''}`}>
+            <div className="board-layer">
                 <Board rotation={boardRotation}>
                     {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
                         const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);

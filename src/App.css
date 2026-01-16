@@ -66,35 +66,6 @@ body {
     transform: scale(0.92);
 }
 
-/* Board Shake on rolling a 6 */
-.board-layer.shaking {
-    animation: board-shake 0.25s ease-out;
-}
-
-@keyframes board-shake {
-
-    0%,
-    100% {
-        transform: scale(0.92) translateX(0);
-    }
-
-    20% {
-        transform: scale(0.92) translateX(-6px) rotate(-0.5deg);
-    }
-
-    40% {
-        transform: scale(0.92) translateX(5px) rotate(0.5deg);
-    }
-
-    60% {
-        transform: scale(0.92) translateX(-4px) rotate(-0.3deg);
-    }
-
-    80% {
-        transform: scale(0.92) translateX(3px) rotate(0.2deg);
-    }
-}
-
 /* Tablet+ */
 @media (min-width: 768px) {
     .board-layer {
