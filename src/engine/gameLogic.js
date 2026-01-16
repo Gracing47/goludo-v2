@@ -72,10 +72,15 @@ export function rollDice(state, forcedValue = null) {
     if (forcedValue !== null) {
         diceValue = forcedValue;
     } else {
-        // Smart RNG: "Bag System"
-        // If bag is empty, refill with [1,2,3,4,5,6] and shuffle
+        // Smart RNG: "Boosted Bag System" (~23% change of 6)
+        // Bag = 2 full sets [1..6, 1..6] + 1 extra [6] = 13 dice (3 Sixes)
+        // 3 / 13 ≈ 23.07%
         if (newDiceBag.length === 0) {
-            newDiceBag = [1, 2, 3, 4, 5, 6];
+            newDiceBag = [
+                1, 2, 3, 4, 5, 6,
+                1, 2, 3, 4, 5, 6,
+                6
+            ];
             // Fisher-Yates Shuffle
             for (let i = newDiceBag.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));

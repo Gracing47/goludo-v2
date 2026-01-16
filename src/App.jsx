@@ -276,6 +276,16 @@ function App() {
                 roomId: gameConfig.roomId,
                 playerAddress: account?.address
             });
+
+            // TIMEOUT SAFETY: If server doesn't respond in 2.5s, unlock UI
+            setTimeout(() => {
+                if (isRollingRef.current) { // Need ref to check current state in timeout? 
+                    // Actually, just checking if we still haven't received state update
+                    // We can just reset isRolling. If event comes later, it handles itself.
+                    setIsRolling(false);
+                    console.warn("⚠️ Network slow? Resetting roll state to allow retry.");
+                }
+            }, 2500);
             return;
         }
 
@@ -284,6 +294,7 @@ function App() {
         setTimeout(() => {
             setGameState(prev => rollDice(prev));
             setIsRolling(false);
+            aiActionInProgress.current = false; // Reset lock so AI can proceed (select token or next turn)
         }, 800);
     }, [gameState, isRolling, isMoving, gameConfig, account]);
 
@@ -445,7 +456,8 @@ function App() {
                 };
                 requestPayoutSignature();
             }
-        }, [gameState, gameConfig, appState, payoutProof]);
+        }
+    }, [gameState, gameConfig, appState, payoutProof]);
 
     const onClaimClick = useCallback(async () => {
         if (!payoutProof || isClaiming) return;
