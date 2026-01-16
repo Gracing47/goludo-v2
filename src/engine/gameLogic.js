@@ -56,7 +56,8 @@ export function createInitialState(playerCount = 4, activeColors = [0, 1, 2, 3])
         bonusMoves: 0,
         lastCapture: null,
         winner: null,
-        message: null
+        message: null,
+        diceBag: [] // Smart RNG: Bag of remaining die rolls
     };
 }
 
@@ -65,11 +66,30 @@ export function createInitialState(playerCount = 4, activeColors = [0, 1, 2, 3])
 // ============================================
 
 export function rollDice(state, forcedValue = null) {
-    const diceValue = forcedValue !== null ? forcedValue : (Math.floor(Math.random() * DICE.MAX) + DICE.MIN);
+    let diceValue;
+    let newDiceBag = [...(state.diceBag || [])];
+
+    if (forcedValue !== null) {
+        diceValue = forcedValue;
+    } else {
+        // Smart RNG: "Bag System"
+        // If bag is empty, refill with [1,2,3,4,5,6] and shuffle
+        if (newDiceBag.length === 0) {
+            newDiceBag = [1, 2, 3, 4, 5, 6];
+            // Fisher-Yates Shuffle
+            for (let i = newDiceBag.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newDiceBag[i], newDiceBag[j]] = [newDiceBag[j], newDiceBag[i]];
+            }
+        }
+        // Draw one value
+        diceValue = newDiceBag.pop();
+    }
 
     let newState = {
         ...state,
         diceValue,
+        diceBag: newDiceBag,
         consecutiveSixes: diceValue === 6 ? state.consecutiveSixes + 1 : 0,
         message: null
     };

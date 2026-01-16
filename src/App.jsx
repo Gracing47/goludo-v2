@@ -15,6 +15,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 import CaptureExplosion from './components/CaptureExplosion';
+import soundManager from './services/SoundManager';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { io } from 'socket.io-client';
 import { API_URL, SOCKET_URL } from './config/api';
@@ -108,6 +109,27 @@ function App() {
 
     // Capture explosion effect state: { id, color, row, col }[]
     const [captureEffects, setCaptureEffects] = React.useState([]);
+
+    // Sound Mute State
+    const [isMuted, setIsMuted] = React.useState(soundManager.isMuted());
+
+    const handleToggleMute = useCallback(() => {
+        const newMuted = soundManager.toggleMute();
+        setIsMuted(newMuted);
+    }, []);
+
+    // Initialize Audio (BGM)
+    useEffect(() => {
+        // Attempt to play BGM (might require interaction)
+        const handleInteraction = () => {
+            if (!soundManager.isMuted()) {
+                soundManager.playBGM();
+            }
+            window.removeEventListener('click', handleInteraction);
+        };
+        window.addEventListener('click', handleInteraction);
+        return () => window.removeEventListener('click', handleInteraction);
+    }, []);
 
     // Start game from lobby
     const handleStartGame = useCallback((config) => {
@@ -258,6 +280,7 @@ function App() {
         }
 
         setIsRolling(true);
+        soundManager.play('roll');
         setTimeout(() => {
             setGameState(prev => rollDice(prev));
             setIsRolling(false);
@@ -304,10 +327,11 @@ function App() {
                 }, 500);
             }
 
-            // Haptic feedback
+            // Haptic feedback & Sound
             if (navigator.vibrate) {
                 navigator.vibrate([50, 30, 50]);
             }
+            soundManager.play('capture');
         }
 
         setIsMoving(true);
@@ -332,6 +356,7 @@ function App() {
         const validMove = gameState.validMoves.find(m => m.tokenIndex === tokenIndex);
         if (!validMove) return;
 
+        soundManager.play('click');
         executeMove(validMove);
     }, [gameState, gameConfig, executeMove]);
 
@@ -386,37 +411,41 @@ function App() {
         }
     }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
 
-    // Web3 Payout Proof Handler
+    // Web3 Payout Proof Handler & Win Sound
     useEffect(() => {
-        if (appState === 'game' && gameState?.gamePhase === 'WIN' && gameConfig?.mode === 'web3' && !payoutProof) {
-            const winner = gameConfig.players[gameState.winner];
-            if (!winner?.address) return;
+        if (appState === 'game' && gameState?.gamePhase === 'WIN') {
+            // Play success sound
+            soundManager.play('win');
 
-            const requestPayoutSignature = async () => {
-                try {
-                    console.log("🏆 Game Won! Requesting signature...");
-                    const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
+            if (gameConfig?.mode === 'web3' && !payoutProof) {
+                const winner = gameConfig.players[gameState.winner];
+                if (!winner?.address) return;
 
-                    const response = await fetch(`${API_URL}/api/payout/sign`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            roomId: gameConfig.roomId,
-                            winner: winner.address,
-                            amount: potAmount
-                        })
-                    });
+                const requestPayoutSignature = async () => {
+                    try {
+                        console.log("🏆 Game Won! Requesting signature...");
+                        const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
 
-                    const data = await response.json();
-                    if (data.error) throw new Error(data.error);
-                    setPayoutProof(data);
-                } catch (error) {
-                    console.error("Payout signature failed:", error);
-                }
-            };
-            requestPayoutSignature();
-        }
-    }, [gameState, gameConfig, appState, payoutProof]);
+                        const response = await fetch(`${API_URL}/api/payout/sign`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                roomId: gameConfig.roomId,
+                                winner: winner.address,
+                                amount: potAmount
+                            })
+                        });
+
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.error);
+                        setPayoutProof(data);
+                    } catch (error) {
+                        console.error("Payout signature failed:", error);
+                    }
+                };
+                requestPayoutSignature();
+            }
+        }, [gameState, gameConfig, appState, payoutProof]);
 
     const onClaimClick = useCallback(async () => {
         if (!payoutProof || isClaiming) return;
@@ -723,7 +752,10 @@ function App() {
                     </div>
 
                     {/* Right: Menu */}
-                    <div className="dock-right">
+                    <div className="dock-right" style={{ gap: '10px' }}>
+                        <button className="menu-btn" onClick={handleToggleMute}>
+                            {isMuted ? '🔇' : '🔊'}
+                        </button>
                         <button className="menu-btn" onClick={handleBackToLobby}>
                             ☰
                         </button>
