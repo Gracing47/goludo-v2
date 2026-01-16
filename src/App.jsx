@@ -14,6 +14,7 @@ import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
+import CaptureExplosion from './components/CaptureExplosion';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { io } from 'socket.io-client';
 import { API_URL, SOCKET_URL } from './config/api';
@@ -95,6 +96,25 @@ function App() {
 
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
+
+    // Board shake state for rolling a 6
+    const [boardShaking, setBoardShaking] = React.useState(false);
+
+    // Effect: Shake board and vibrate on rolling a 6
+    React.useEffect(() => {
+        if (gameState?.diceValue === 6 && !isRolling) {
+            setBoardShaking(true);
+            if (navigator.vibrate) {
+                navigator.vibrate([10, 30, 10]);
+            }
+            const timer = setTimeout(() => setBoardShaking(false), 250);
+            return () => clearTimeout(timer);
+        }
+    }, [gameState?.diceValue, isRolling]);
+
+    // Capture explosion effect state: { id, color, row, col }[]
+    const [captureEffects, setCaptureEffects] = React.useState([]);
+
     // Start game from lobby
     const handleStartGame = useCallback((config) => {
         aiActionInProgress.current = false;
@@ -264,6 +284,36 @@ function App() {
             // Actually, we SHOULD advance locally for smooth UI, but only if we trust the outcome.
             // But with capture logic, it might be safer to wait for server update.
             // Let's do local update for UI and let server correct if needed.
+        }
+
+        // 💥 Capture Explosion: Trigger if this move has captures
+        if (move.captures && move.captures.length > 0) {
+            // Get coordinates for the destination (where capture happens)
+            let coords = null;
+            const toPos = move.toPosition;
+            if (toPos >= 0 && toPos < MASTER_LOOP.length) {
+                coords = MASTER_LOOP[toPos];
+            } else if (toPos >= 100 && toPos < 106) {
+                coords = HOME_STRETCH_COORDS[gameState.activePlayer]?.[toPos - 100];
+            }
+
+            if (coords) {
+                const newEffect = {
+                    id: Date.now(),
+                    color: PLAYER_COLORS[move.captures[0].player], // Victim's color
+                    row: coords.r,
+                    col: coords.c,
+                };
+                setCaptureEffects(prev => [...prev, newEffect]);
+                setTimeout(() => {
+                    setCaptureEffects(prev => prev.filter(e => e.id !== newEffect.id));
+                }, 500);
+            }
+
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 30, 50]);
+            }
         }
 
         setIsMoving(true);
@@ -554,7 +604,7 @@ function App() {
         <div className="app aaa-layout">
 
             {/* 1. BOARD LAYER (Centered) */}
-            <div className="board-layer">
+            <div className={`board-layer ${boardShaking ? 'shaking' : ''}`}>
                 <Board rotation={boardRotation}>
                     {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
                         const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
@@ -579,6 +629,16 @@ function App() {
                             />
                         );
                     })}
+
+                    {/* 💥 Capture Explosions */}
+                    {captureEffects.map(effect => (
+                        <CaptureExplosion
+                            key={effect.id}
+                            color={effect.color}
+                            row={effect.row}
+                            col={effect.col}
+                        />
+                    ))}
                 </Board>
             </div>
 

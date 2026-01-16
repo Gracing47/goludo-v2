@@ -111,18 +111,18 @@
 
     0%,
     100% {
-        transform: rotate(var(--token-rotation, 0deg)) scale(1);
+        transform: rotate(var(--token-rotation, 0deg)) scale(1) translateY(0);
         box-shadow:
             0 0 10px currentColor,
             0 0 20px currentColor;
     }
 
     50% {
-        transform: rotate(var(--token-rotation, 0deg)) scale(1.15);
+        transform: rotate(var(--token-rotation, 0deg)) scale(1.12) translateY(-8px);
         box-shadow:
-            0 0 20px currentColor,
-            0 0 40px currentColor,
-            0 0 60px currentColor;
+            0 0 25px currentColor,
+            0 0 45px currentColor,
+            0 0 70px currentColor;
     }
 }
 
