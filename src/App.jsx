@@ -271,6 +271,10 @@ function App() {
     // Handle Start from Lobby
     const handleStartGame = useCallback((config) => {
         if (config.mode === 'web3') {
+            // Update URL for Web3 re-entry
+            if (config.roomId) {
+                navigate(`/game/${config.roomId}`);
+            }
             onGameStart(config);
         } else {
             // Local/AI Mode: Generate unique ID and navigate
