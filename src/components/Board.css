@@ -132,51 +132,38 @@
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Active Turn Base Glow */
-/* Active Turn Base Glow - BOOSTED */
+/* Active Turn Base Glow - SUBTLE LAYERED */
 .base-red.active-turn {
-    box-shadow: 0 0 40px #ff4757, inset 0 0 20px #ff4757;
+    box-shadow:
+        0 0 4px rgba(255, 71, 87, 0.4),
+        0 0 10px rgba(255, 71, 87, 0.2);
     border-color: #ff4757;
-    z-index: 5;
-    animation: pulse-base 1.5s infinite alternate;
 }
 
 .base-green.active-turn {
-    box-shadow: 0 0 40px #00d26a, inset 0 0 20px #00d26a;
+    box-shadow:
+        0 0 4px rgba(0, 210, 106, 0.4),
+        0 0 10px rgba(0, 210, 106, 0.2);
     border-color: #00d26a;
-    z-index: 5;
-    animation: pulse-base 1.5s infinite alternate;
 }
 
 .base-yellow.active-turn {
-    box-shadow: 0 0 40px #ffbe0b, inset 0 0 20px #ffbe0b;
+    box-shadow:
+        0 0 4px rgba(255, 190, 11, 0.4),
+        0 0 10px rgba(255, 190, 11, 0.2);
     border-color: #ffbe0b;
-    z-index: 5;
-    animation: pulse-base 1.5s infinite alternate;
 }
 
 .base-blue.active-turn {
-    box-shadow: 0 0 40px #3a86ff, inset 0 0 20px #3a86ff;
+    box-shadow:
+        0 0 4px rgba(58, 134, 255, 0.4),
+        0 0 10px rgba(58, 134, 255, 0.2);
     border-color: #3a86ff;
-    z-index: 5;
-    animation: pulse-base 1.5s infinite alternate;
 }
 
-@keyframes pulse-base {
-    from {
-        box-shadow: 0 0 30px currentColor, inset 0 0 15px currentColor;
-    }
-
-    to {
-        box-shadow: 0 0 50px currentColor, inset 0 0 25px currentColor;
-    }
-}
-
-/* Home Stretch Active Highlight */
-/* Home Stretch Active Highlight - BOOSTED */
+/* Home Stretch Active Highlight - SUBTLE */
 .home-path-active {
-    filter: brightness(1.8) drop-shadow(0 0 5px currentColor);
-    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.5);
+    filter: brightness(1.15);
     transition: all 0.3s ease;
 }
 
