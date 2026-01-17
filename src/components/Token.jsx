@@ -23,10 +23,10 @@ function getStackOffset(stackIndex, stackSize) {
 
     // Offset positions for stacked tokens
     const offsets = [
-        { x: -20, y: -20 },  // Top-left
-        { x: 20, y: -20 },   // Top-right
-        { x: -20, y: 20 },   // Bottom-left
-        { x: 20, y: 20 }     // Bottom-right
+        { x: -15, y: -15 },  // Top-left
+        { x: 15, y: -15 },   // Top-right
+        { x: -15, y: 15 },   // Bottom-left
+        { x: 15, y: 15 }     // Bottom-right
     ];
 
     const scale = stackSize === 2 ? 0.75 : 0.6;

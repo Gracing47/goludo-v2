@@ -247,8 +247,9 @@ export function completeMoveAnimation(state) {
             };
         }
 
-        // If no valid moves for the bonus, it is forfeited. 
+        // If no valid moves for the bonus, it is forfeited.
         // We fall through to the normal turn completion checking.
+        state = { ...state, bonusMoves: 0, message: "Bonus forfeited! No active tokens." };
     }
 
     // NORMAL TURN COMPLETION

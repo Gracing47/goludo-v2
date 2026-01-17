@@ -640,7 +640,7 @@ function App() {
 
             {/* 1. BOARD LAYER (Centered) */}
             <div className="board-layer">
-                <Board rotation={boardRotation}>
+                <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
                     {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
                         const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
                         const isHighlighted = isValid &&
