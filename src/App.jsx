@@ -267,14 +267,13 @@ function App() {
     // ============================================
     // STATE PERSISTENCE (Local & AI)
     // ============================================
+    // 1. Persistence Hook: Re-entry (Lobby -> Game)
     useEffect(() => {
-        // Resume from URL if possible
         if (gameId && appState === 'lobby') {
             const savedData = localStorage.getItem(`ludo_game_${gameId}`);
             if (savedData) {
                 try {
                     const { config, state } = JSON.parse(savedData);
-                    console.log('💾 Resuming local game:', gameId);
                     setGameConfig(config);
                     setGameState(state);
                     setAppState('game');
@@ -282,12 +281,13 @@ function App() {
                     console.warn("Failed to resume game", e);
                 }
             } else if (gameId.length > 20) {
-                // Potential Web3 room ID
                 onGameStart({ mode: 'web3', roomId: gameId });
             }
         }
+    }, [gameId, appState, onGameStart]);
 
-        // Auto-save on every state change (Local games only)
+    // 2. Persistence Hook: Auto-save (Local/AI only)
+    useEffect(() => {
         if (appState === 'game' && gameId && gameState && gameConfig?.mode !== 'web3') {
             localStorage.setItem(`ludo_game_${gameId}`, JSON.stringify({
                 config: gameConfig,
@@ -295,7 +295,7 @@ function App() {
                 ts: Date.now()
             }));
         }
-    }, [gameId, gameState, gameConfig, appState, setGameConfig, setGameState, setAppState, onGameStart]);
+    }, [gameId, gameState, gameConfig, appState]);
 
     // Return to lobby
     const handleBackToLobby = useCallback(() => {
