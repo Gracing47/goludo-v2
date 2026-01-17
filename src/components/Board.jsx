@@ -20,30 +20,11 @@ import {
 } from '../engine/constants';
 
 const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
-    const [showDebug, setShowDebug] = useState(false);
-
-    // Toggle debug with 'D' key
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'd' || e.key === 'D') {
-                setShowDebug(prev => !prev);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
     // Calculate responsive board size - Mobile First
     const getBoardSize = () => {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-
-        // Mobile portrait: Use most of width
-        if (vw < 768) {
-            return Math.min(vw - 24, vh * 0.6, 500);
-        }
-
-        // Tablet/Desktop: Balance with sidebar
+        if (vw < 768) return Math.min(vw - 24, vh * 0.6, 500);
         return Math.min(vw * 0.5, vh - 100, 600);
     };
 
@@ -62,26 +43,6 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
             const cellType = BOARD_LAYOUT[row][col];
             const cellClasses = getCellClasses(cellType, row, col, activePlayer);
 
-            // Debug Info
-            let debugLabel = null;
-            if (showDebug) {
-                // Check Main Loop
-                const loopIndex = MASTER_LOOP.findIndex(p => p.r === row && p.c === col);
-                if (loopIndex !== -1) {
-                    debugLabel = loopIndex;
-                } else {
-                    // Check Home Stretches
-                    Object.keys(PLAYERS).forEach(key => {
-                        const pId = PLAYERS[key];
-                        const stretch = HOME_STRETCH_COORDS[pId];
-                        if (stretch) {
-                            const sIdx = stretch.findIndex(p => p.r === row && p.c === col);
-                            if (sIdx !== -1) debugLabel = `H${pId}-${sIdx}`;
-                        }
-                    });
-                }
-            }
-
             cells.push(
                 <div
                     key={`${row}-${col}`}
@@ -92,11 +53,7 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
                         gridRow: row + 1,
                         gridColumn: col + 1
                     }}
-                >
-                    {debugLabel !== null && (
-                        <span className="debug-label">{debugLabel}</span>
-                    )}
-                </div>
+                />
             );
         }
     }

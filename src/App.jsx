@@ -17,7 +17,7 @@ import Dice from './components/Dice';
 import CaptureExplosion from './components/CaptureExplosion';
 import soundManager from './services/SoundManager';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 import './App.css';
 
@@ -84,12 +84,9 @@ function App() {
         reset: s.reset,
     })));
 
-    // ... (rest of code)
-
     // React Router hooks
     const navigate = useNavigate();
     const { gameId } = useParams();
-    const location = useLocation();
 
     // Ref to prevent double AI actions
     const aiActionInProgress = useRef(false);
@@ -102,13 +99,13 @@ function App() {
     useEffect(() => { isRollingRef.current = isRolling; }, [isRolling]);
 
     // Local state for claiming (not needed in global store)
-    const [isClaiming, setIsClaiming] = React.useState(false);
+    const [isClaiming, setIsClaiming] = useState(false);
 
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
 
-    // Effect: Haptic feedback on rolling a 6 (visual shake removed)
-    React.useEffect(() => {
+    // Effect: Haptic feedback on rolling a 6
+    useEffect(() => {
         if (gameState?.diceValue === 6 && !isRolling) {
             if (navigator.vibrate) {
                 navigator.vibrate([10, 30, 10]);
@@ -117,10 +114,10 @@ function App() {
     }, [gameState?.diceValue, isRolling]);
 
     // Capture explosion effect state: { id, color, row, col }[]
-    const [captureEffects, setCaptureEffects] = React.useState([]);
+    const [captureEffects, setCaptureEffects] = useState([]);
 
     // Sound Mute State
-    const [isMuted, setIsMuted] = React.useState(soundManager.isMuted());
+    const [isMuted, setIsMuted] = useState(soundManager.isMuted());
 
     const handleToggleMute = useCallback(() => {
         const newMuted = soundManager.toggleMute();
@@ -163,7 +160,6 @@ function App() {
             setSocket(socket);
 
             socket.on('connect', () => {
-                console.log('🔌 Socket connected, joining match...');
                 socket.emit('join_match', {
                     roomId: config.roomId,
                     playerAddress: account?.address
@@ -177,12 +173,9 @@ function App() {
             });
 
             socket.on('game_started', (room) => {
-                console.log('🚀 Game Started! Players:', room.players.map(p => p.name));
-
                 const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
                 const activeColors = room.players.map(p => colorMap[p.color]);
 
-                // Set full config with addresses
                 setGameConfig({
                     mode: 'web3',
                     roomId: room.id,
@@ -198,11 +191,9 @@ function App() {
                     }))
                 });
 
-                // NOW set game state and transition to game
                 setGameState(createInitialState(room.players.length, activeColors));
                 setAppState('game');
 
-                // Set board rotation
                 if (account) {
                     const myIdx = room.players.findIndex(p =>
                         p.address?.toLowerCase() === account.address?.toLowerCase()
@@ -214,35 +205,22 @@ function App() {
             });
 
             socket.on('state_update', (update) => {
-                console.log('📡 state_update received:', {
-                    activePlayer: update.activePlayer,
-                    gamePhase: update.gamePhase,
-                    hasTokens: !!update.tokens
-                });
-
                 if (update.msg) setServerMsg(update.msg);
-
-                // Use the store action directly (merges partial updates correctly)
                 updateState(update);
             });
 
             // Timer events
-            socket.on('turn_timer_start', ({ playerIndex, timeoutMs, phase }) => {
+            socket.on('turn_timer_start', ({ timeoutMs }) => {
                 setTurnTimer(Math.floor(timeoutMs / 1000));
-                console.log(`⏰ Timer started: ${Math.floor(timeoutMs / 1000)}s for Player ${playerIndex} (${phase})`);
             });
 
             socket.on('turn_timer_update', ({ remainingSeconds }) => {
                 setTurnTimer(remainingSeconds);
-                if (remainingSeconds <= 3 && remainingSeconds > 0) {
-                    console.log(`⚠️ Time running out: ${remainingSeconds}s`);
-                }
             });
 
-            socket.on('turn_timeout', ({ playerName, phase }) => {
+            socket.on('turn_timeout', ({ playerName }) => {
                 setTurnTimer(0);
                 setServerMsg(`⏰ ${playerName} timed out!`);
-                console.log(`⏰ TIMEOUT: ${playerName} (Phase: ${phase})`);
                 setTimeout(() => setServerMsg(null), 3000);
             });
 
@@ -302,8 +280,7 @@ function App() {
                     console.warn("Failed to resume game", e);
                 }
             } else if (gameId.length > 20) {
-                // Potential Web3 room ID (usually 66 char hex)
-                console.log('🌐 Attempting Web3 re-entry for ID:', gameId);
+                // Potential Web3 room ID
                 onGameStart({ mode: 'web3', roomId: gameId });
             }
         }

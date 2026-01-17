@@ -45,7 +45,6 @@ const Lobby = ({ onStartGame }) => {
                 const data = await res.json();
                 setOpenRooms(Array.isArray(data) ? data : []);
 
-                // If waiting, check if room is full
                 if (step === 'waiting' && waitingRoomId) {
                     const room = data.find(r => r.id === waitingRoomId);
                     if (room && room.status === "ACTIVE") {
@@ -53,7 +52,6 @@ const Lobby = ({ onStartGame }) => {
                     }
                 }
             } catch (err) {
-                console.error("Failed to fetch rooms:", err);
                 setOpenRooms([]);
             }
         };
