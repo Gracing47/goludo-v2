@@ -33,7 +33,27 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    // ... (rest of Board component until cells loop)
+    // Calculate responsive board size - Mobile First
+    const getBoardSize = () => {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Mobile portrait: Use most of width
+        if (vw < 768) {
+            return Math.min(vw - 24, vh * 0.6, 500);
+        }
+
+        // Tablet/Desktop: Balance with sidebar
+        return Math.min(vw * 0.5, vh - 100, 600);
+    };
+
+    const [boardSize, setBoardSize] = useState(getBoardSize());
+
+    useEffect(() => {
+        const handleResize = () => setBoardSize(getBoardSize());
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const cells = [];
 
@@ -42,112 +62,61 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
             const cellType = BOARD_LAYOUT[row][col];
             const cellClasses = getCellClasses(cellType, row, col, activePlayer);
 
-            // ... (debug logic skipped, assuming it remains same or similar, but for brevity I will just replace the getCellClasses call inside the loop if I can target it specifically, but Board struct is big.
-            // Let's target the Board component signature first, then getCellClasses logic specifically.
-
-            // Wait, I can't replace scattered parts easily.
-            // I'll replace the Board signature first.
-        }
-    }
-}
-// ERROR: I shouldn't put comments in ReplacementContent that aren't code. I'll split this.
-const [showDebug, setShowDebug] = useState(false);
-
-// Toggle debug with 'D' key
-useEffect(() => {
-    const handleKeyDown = (e) => {
-        if (e.key === 'd' || e.key === 'D') {
-            setShowDebug(prev => !prev);
-        }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-}, []);
-
-// Calculate responsive board size - Mobile First
-const getBoardSize = () => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    // Mobile portrait: Use most of width
-    if (vw < 768) {
-        return Math.min(vw - 24, vh * 0.6, 500);
-    }
-
-    // Tablet/Desktop: Balance with sidebar
-    return Math.min(vw * 0.5, vh - 100, 600);
-};
-
-const [boardSize, setBoardSize] = useState(getBoardSize());
-
-useEffect(() => {
-    const handleResize = () => setBoardSize(getBoardSize());
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-}, []);
-
-const cells = [];
-
-for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
-        const cellType = BOARD_LAYOUT[row][col];
-        const cellClasses = getCellClasses(cellType, row, col, activePlayer);
-
-        // Debug Info
-        let debugLabel = null;
-        if (showDebug) {
-            // Check Main Loop
-            const loopIndex = MASTER_LOOP.findIndex(p => p.r === row && p.c === col);
-            if (loopIndex !== -1) {
-                debugLabel = loopIndex;
-            } else {
-                // Check Home Stretches
-                Object.keys(PLAYERS).forEach(key => {
-                    const pId = PLAYERS[key];
-                    const stretch = HOME_STRETCH_COORDS[pId];
-                    if (stretch) {
-                        const sIdx = stretch.findIndex(p => p.r === row && p.c === col);
-                        if (sIdx !== -1) debugLabel = `H${pId}-${sIdx}`;
-                    }
-                });
+            // Debug Info
+            let debugLabel = null;
+            if (showDebug) {
+                // Check Main Loop
+                const loopIndex = MASTER_LOOP.findIndex(p => p.r === row && p.c === col);
+                if (loopIndex !== -1) {
+                    debugLabel = loopIndex;
+                } else {
+                    // Check Home Stretches
+                    Object.keys(PLAYERS).forEach(key => {
+                        const pId = PLAYERS[key];
+                        const stretch = HOME_STRETCH_COORDS[pId];
+                        if (stretch) {
+                            const sIdx = stretch.findIndex(p => p.r === row && p.c === col);
+                            if (sIdx !== -1) debugLabel = `H${pId}-${sIdx}`;
+                        }
+                    });
+                }
             }
+
+            cells.push(
+                <div
+                    key={`${row}-${col}`}
+                    className={`board-cell ${cellClasses}`}
+                    data-row={row}
+                    data-col={col}
+                    style={{
+                        gridRow: row + 1,
+                        gridColumn: col + 1
+                    }}
+                >
+                    {debugLabel !== null && (
+                        <span className="debug-label">{debugLabel}</span>
+                    )}
+                </div>
+            );
         }
-
-        cells.push(
-            <div
-                key={`${row}-${col}`}
-                className={`board-cell ${cellClasses}`}
-                data-row={row}
-                data-col={col}
-                style={{
-                    gridRow: row + 1,
-                    gridColumn: col + 1
-                }}
-            >
-                {debugLabel !== null && (
-                    <span className="debug-label">{debugLabel}</span>
-                )}
-            </div>
-        );
     }
-}
 
-return (
-    <div className="board-wrapper">
-        <div className="ludo-board" style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: 'transform 0.5s ease',
-            '--board-rotation': `${rotation}deg`,
-            '--board-size': `${boardSize}px`
-        }}>
-            {cells}
-            <div className="token-layer" style={{ transform: `rotate(0deg)` }}>
-                {children}
+    return (
+        <div className="board-wrapper">
+            <div className="ludo-board" style={{
+                transform: `rotate(${rotation}deg)`,
+                transition: 'transform 0.5s ease',
+                '--board-rotation': `${rotation}deg`,
+                '--board-size': `${boardSize}px`
+            }}>
+                {cells}
+                <div className="token-layer" style={{ transform: `rotate(0deg)` }}>
+                    {children}
+                </div>
             </div>
+            {showDebug && <div className="debug-alert">DEBUG MODE: ON (Nums = Path Index)</div>}
         </div>
-        {showDebug && <div className="debug-alert">DEBUG MODE: ON (Nums = Path Index)</div>}
-    </div>
-);
+    );
 };
 
 /**
