@@ -147,6 +147,11 @@ function App() {
         aiActionInProgress.current = false;
 
         if (config.mode === 'web3') {
+            // Cleanup existing socket if any
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+
             console.log('🌐 Web3 Match: Connecting to socket...');
             aiActionInProgress.current = false;
 
@@ -155,6 +160,7 @@ function App() {
             });
 
             socketRef.current = socket;
+            setSocket(socket);
 
             socket.on('connect', () => {
                 console.log('🔌 Socket connected, joining match...');
@@ -240,7 +246,11 @@ function App() {
                 setTimeout(() => setServerMsg(null), 3000);
             });
 
-            return; // Exit early for Web3
+            // Cleanup on effect change
+            return () => {
+                socket.disconnect();
+                socketRef.current = null;
+            };
         }
 
         // ============================================
@@ -287,10 +297,14 @@ function App() {
                 } catch (e) {
                     console.warn("Failed to resume game", e);
                 }
+            } else if (gameId.length > 20) {
+                // Potential Web3 room ID (usually 66 char hex)
+                console.log('🌐 Attempting Web3 re-entry for ID:', gameId);
+                onGameStart({ mode: 'web3', roomId: gameId });
             }
         }
 
-        // Auto-save on every state change
+        // Auto-save on every state change (Local games only)
         if (appState === 'game' && gameId && gameState && gameConfig?.mode !== 'web3') {
             localStorage.setItem(`ludo_game_${gameId}`, JSON.stringify({
                 config: gameConfig,
@@ -298,7 +312,7 @@ function App() {
                 ts: Date.now()
             }));
         }
-    }, [gameId, gameState, gameConfig, appState, setGameConfig, setGameState, setAppState]);
+    }, [gameId, gameState, gameConfig, appState, setGameConfig, setGameState, setAppState, onGameStart]);
 
     // Return to lobby
     const handleBackToLobby = useCallback(() => {
