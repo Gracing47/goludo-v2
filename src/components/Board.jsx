@@ -71,7 +71,6 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
                     {children}
                 </div>
             </div>
-            {showDebug && <div className="debug-alert">DEBUG MODE: ON (Nums = Path Index)</div>}
         </div>
     );
 };

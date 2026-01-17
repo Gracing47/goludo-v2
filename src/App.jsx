@@ -9,7 +9,9 @@
  * - Unified Zustand state management
  */
 
-import React, { useCallback, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { io } from 'socket.io-client';
+import { ethers } from 'ethers';
 import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
