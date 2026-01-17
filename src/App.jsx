@@ -484,363 +484,362 @@ function App() {
             aiActionInProgress.current = false;
         }
     }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
-}, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
 
-// Web3 Payout Proof Handler & Win Sound
-useEffect(() => {
-    if (appState === 'game' && gameState?.gamePhase === 'WIN') {
-        // Play success sound
-        soundManager.play('win');
+    // Web3 Payout Proof Handler & Win Sound
+    useEffect(() => {
+        if (appState === 'game' && gameState?.gamePhase === 'WIN') {
+            // Play success sound
+            soundManager.play('win');
 
-        if (gameConfig?.mode === 'web3' && !payoutProof) {
-            const winner = gameConfig.players[gameState.winner];
-            if (!winner?.address) return;
+            if (gameConfig?.mode === 'web3' && !payoutProof) {
+                const winner = gameConfig.players[gameState.winner];
+                if (!winner?.address) return;
 
-            const requestPayoutSignature = async () => {
-                try {
-                    console.log("🏆 Game Won! Requesting signature...");
-                    const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
+                const requestPayoutSignature = async () => {
+                    try {
+                        console.log("🏆 Game Won! Requesting signature...");
+                        const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
 
-                    const response = await fetch(`${API_URL}/api/payout/sign`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            roomId: gameConfig.roomId,
-                            winner: winner.address,
-                            amount: potAmount
-                        })
-                    });
+                        const response = await fetch(`${API_URL}/api/payout/sign`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                roomId: gameConfig.roomId,
+                                winner: winner.address,
+                                amount: potAmount
+                            })
+                        });
 
-                    const data = await response.json();
-                    if (data.error) throw new Error(data.error);
-                    setPayoutProof(data);
-                } catch (error) {
-                    console.error("Payout signature failed:", error);
+                        const data = await response.json();
+                        if (data.error) throw new Error(data.error);
+                        setPayoutProof(data);
+                    } catch (error) {
+                        console.error("Payout signature failed:", error);
+                    }
+                };
+                requestPayoutSignature();
+            }
+        }
+    }, [gameState, gameConfig, appState, payoutProof]);
+
+    const onClaimClick = useCallback(async () => {
+        if (!payoutProof || isClaiming) return;
+        setIsClaiming(true);
+        try {
+            await handleClaimPayout(payoutProof);
+            setPayoutProof(null);
+            alert("Victory! Payout claimed. 💰");
+        } catch (err) {
+            console.error(err);
+            alert("Claim failed: " + (err.message || "Unknown error"));
+        } finally {
+            setIsClaiming(false);
+        }
+    }, [payoutProof, isClaiming, handleClaimPayout]);
+
+    // Get token coordinates with stacking info
+    const getTokensWithCoords = useCallback(() => {
+        // Defensive check: ensure gameState and tokens array exist
+        if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
+            return [];
+        }
+
+        // Group tokens by position to detect stacking
+        const positionMap = new Map();
+
+        gameState.tokens.forEach((playerTokens, playerIdx) => {
+            // Skip if playerTokens is not an array
+            if (!Array.isArray(playerTokens)) return;
+            playerTokens.forEach((position, tokenIdx) => {
+                let coords = null;
+                let inYard = false;
+
+                if (position === POSITION.IN_YARD) {
+                    coords = YARD_COORDS[playerIdx][tokenIdx];
+                    inYard = true;
+                } else if (position === POSITION.FINISHED) {
+                    const offsets = [{ r: 6, c: 6 }, { r: 6, c: 8 }, { r: 8, c: 6 }, { r: 8, c: 8 }];
+                    coords = offsets[tokenIdx % 4];
+                } else if (position >= 100 && position < 106) {
+                    coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
+                } else if (position >= 0 && position < MASTER_LOOP.length) {
+                    coords = MASTER_LOOP[position];
                 }
-            };
-            requestPayoutSignature();
-        }
-    }
-}, [gameState, gameConfig, appState, payoutProof]);
 
-const onClaimClick = useCallback(async () => {
-    if (!payoutProof || isClaiming) return;
-    setIsClaiming(true);
-    try {
-        await handleClaimPayout(payoutProof);
-        setPayoutProof(null);
-        alert("Victory! Payout claimed. 💰");
-    } catch (err) {
-        console.error(err);
-        alert("Claim failed: " + (err.message || "Unknown error"));
-    } finally {
-        setIsClaiming(false);
-    }
-}, [payoutProof, isClaiming, handleClaimPayout]);
+                if (!coords) return;
 
-// Get token coordinates with stacking info
-const getTokensWithCoords = useCallback(() => {
-    // Defensive check: ensure gameState and tokens array exist
-    if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
-        return [];
-    }
+                // Create position key for stacking
+                const posKey = inYard
+                    ? `yard-${playerIdx}-${tokenIdx}` // Yard tokens don't stack
+                    : `${coords.r}-${coords.c}`;
 
-    // Group tokens by position to detect stacking
-    const positionMap = new Map();
+                if (!positionMap.has(posKey)) {
+                    positionMap.set(posKey, []);
+                }
 
-    gameState.tokens.forEach((playerTokens, playerIdx) => {
-        // Skip if playerTokens is not an array
-        if (!Array.isArray(playerTokens)) return;
-        playerTokens.forEach((position, tokenIdx) => {
-            let coords = null;
-            let inYard = false;
-
-            if (position === POSITION.IN_YARD) {
-                coords = YARD_COORDS[playerIdx][tokenIdx];
-                inYard = true;
-            } else if (position === POSITION.FINISHED) {
-                const offsets = [{ r: 6, c: 6 }, { r: 6, c: 8 }, { r: 8, c: 6 }, { r: 8, c: 8 }];
-                coords = offsets[tokenIdx % 4];
-            } else if (position >= 100 && position < 106) {
-                coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
-            } else if (position >= 0 && position < MASTER_LOOP.length) {
-                coords = MASTER_LOOP[position];
-            }
-
-            if (!coords) return;
-
-            // Create position key for stacking
-            const posKey = inYard
-                ? `yard-${playerIdx}-${tokenIdx}` // Yard tokens don't stack
-                : `${coords.r}-${coords.c}`;
-
-            if (!positionMap.has(posKey)) {
-                positionMap.set(posKey, []);
-            }
-
-            positionMap.get(posKey).push({
-                playerIdx,
-                tokenIdx,
-                position,
-                coords,
-                inYard
+                positionMap.get(posKey).push({
+                    playerIdx,
+                    tokenIdx,
+                    position,
+                    coords,
+                    inYard
+                });
             });
         });
-    });
 
-    // Flatten with stack info
-    const allTokens = [];
-    positionMap.forEach((tokensAtPos) => {
-        const stackSize = tokensAtPos.length;
-        tokensAtPos.forEach((token, stackIndex) => {
-            allTokens.push({
-                ...token,
-                stackIndex,
-                stackSize
+        // Flatten with stack info
+        const allTokens = [];
+        positionMap.forEach((tokensAtPos) => {
+            const stackSize = tokensAtPos.length;
+            tokensAtPos.forEach((token, stackIndex) => {
+                allTokens.push({
+                    ...token,
+                    stackIndex,
+                    stackSize
+                });
             });
         });
-    });
 
-    return allTokens;
-}, [gameState]);
+        return allTokens;
+    }, [gameState]);
 
-// 🔥 PERFORMANCE FIX: Memoize expensive calculations BEFORE any returns
-// These must be called unconditionally (React Rules of Hooks)
-const tokensWithCoords = useMemo(() => {
-    if (!gameState) return [];
-    return getTokensWithCoords();
-}, [gameState?.tokens]); // Don't include getTokensWithCoords - it changes every render!
+    // 🔥 PERFORMANCE FIX: Memoize expensive calculations BEFORE any returns
+    // These must be called unconditionally (React Rules of Hooks)
+    const tokensWithCoords = useMemo(() => {
+        if (!gameState) return [];
+        return getTokensWithCoords();
+    }, [gameState?.tokens]); // Don't include getTokensWithCoords - it changes every render!
 
-const currentPlayer = useMemo(() => {
-    if (!gameState || !gameConfig || !gameConfig.players) return null;
-    return gameConfig.players[gameState.activePlayer] || null;
-}, [gameConfig?.players, gameState?.activePlayer]);
+    const currentPlayer = useMemo(() => {
+        if (!gameState || !gameConfig || !gameConfig.players) return null;
+        return gameConfig.players[gameState.activePlayer] || null;
+    }, [gameConfig?.players, gameState?.activePlayer]);
 
-const currentColor = useMemo(() => {
-    if (!gameState) return null;
-    return PLAYER_COLORS[gameState.activePlayer];
-}, [gameState?.activePlayer]);
+    const currentColor = useMemo(() => {
+        if (!gameState) return null;
+        return PLAYER_COLORS[gameState.activePlayer];
+    }, [gameState?.activePlayer]);
 
-const isAITurn = useMemo(() =>
-    currentPlayer?.isAI || false,
-    [currentPlayer]
-);
+    const isAITurn = useMemo(() =>
+        currentPlayer?.isAI || false,
+        [currentPlayer]
+    );
 
-// Turn Logic - MEMOIZED to prevent loop
-const isLocalPlayerTurn = useMemo(() => {
-    // Need config to determine mode
-    if (!gameConfig) return false;
+    // Turn Logic - MEMOIZED to prevent loop
+    const isLocalPlayerTurn = useMemo(() => {
+        // Need config to determine mode
+        if (!gameConfig) return false;
 
-    // For Web3 mode: compare addresses
-    if (gameConfig.mode === 'web3') {
-        if (!currentPlayer || !account?.address) {
-            console.log('🎯 Turn: No player/account', { currentPlayer, hasAccount: !!account });
-            return false;
+        // For Web3 mode: compare addresses
+        if (gameConfig.mode === 'web3') {
+            if (!currentPlayer || !account?.address) {
+                console.log('🎯 Turn: No player/account', { currentPlayer, hasAccount: !!account });
+                return false;
+            }
+            const currentAddr = currentPlayer?.address?.toLowerCase();
+            const myAddr = account.address.toLowerCase();
+            const isMyTurn = currentAddr === myAddr;
+            console.log('🎯 Turn:', { activePlayer: gameState?.activePlayer, currentAddr, myAddr, isMyTurn });
+            return isMyTurn;
         }
-        const currentAddr = currentPlayer?.address?.toLowerCase();
-        const myAddr = account.address.toLowerCase();
-        const isMyTurn = currentAddr === myAddr;
-        console.log('🎯 Turn:', { activePlayer: gameState?.activePlayer, currentAddr, myAddr, isMyTurn });
-        return isMyTurn;
+
+        // For Local/AI mode: human can always play (when not AI turn)
+        return !isAITurn;
+    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.activePlayer]);
+
+    const canRoll = useMemo(() => {
+        if (!gameState) return false;
+        const phase = gameState.gamePhase;
+        const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
+        const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
+        console.log('🎲 canRoll:', { phase, isLocalPlayerTurn, result });
+        return result;
+    }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
+
+    // Render lobby
+    if (appState === 'lobby') {
+        return (
+            <div className="app">
+                <Lobby onStartGame={handleStartGame} />
+            </div>
+        );
     }
 
-    // For Local/AI mode: human can always play (when not AI turn)
-    return !isAITurn;
-}, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.activePlayer]);
-
-const canRoll = useMemo(() => {
-    if (!gameState) return false;
-    const phase = gameState.gamePhase;
-    const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
-    const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
-    console.log('🎲 canRoll:', { phase, isLocalPlayerTurn, result });
-    return result;
-}, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
-
-// Render lobby
-if (appState === 'lobby') {
-    return (
-        <div className="app">
-            <Lobby onStartGame={handleStartGame} />
-        </div>
-    );
-}
-
-// Render game
-if (!gameState || !gameConfig) {
-    return (
-        <div className="app-loading">
-            <div className="loading-spinner">↻</div>
-            <p>Loading Game State...</p>
-            {/* Debug info in case it gets stuck */}
-            <small style={{ opacity: 0.5, fontSize: 10 }}>
-                State: {gameState ? 'OK' : 'MISSING'} | Config: {gameConfig ? 'OK' : 'MISSING'}
-            </small>
-            <button onClick={handleBackToLobby} style={{ marginTop: 20 }}>
-                Return to Lobby
-            </button>
-        </div>
-    );
-}
-
-// Helper: Calculate visual position based on board rotation
-const getVisualPositionIndex = (playerIndex) => {
-    const rotationSteps = boardRotation / 90;
-    return (playerIndex + rotationSteps) % 4;
-};
-
-// Helper: Get ticker text
-const getTickerText = () => {
-    if (gameState.gamePhase === 'WIN') return "🎉 Game Over!";
-    if (canRoll) return "🎲 Tap to Roll!";
-    if (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') {
-        return isLocalPlayerTurn ? "👆 Select Token" : `${currentPlayer?.name}'s Turn`;
+    // Render game
+    if (!gameState || !gameConfig) {
+        return (
+            <div className="app-loading">
+                <div className="loading-spinner">↻</div>
+                <p>Loading Game State...</p>
+                {/* Debug info in case it gets stuck */}
+                <small style={{ opacity: 0.5, fontSize: 10 }}>
+                    State: {gameState ? 'OK' : 'MISSING'} | Config: {gameConfig ? 'OK' : 'MISSING'}
+                </small>
+                <button onClick={handleBackToLobby} style={{ marginTop: 20 }}>
+                    Return to Lobby
+                </button>
+            </div>
+        );
     }
-    return `${currentPlayer?.name || 'Player'}'s Turn`;
-};
 
-return (
-    <div className="app aaa-layout">
+    // Helper: Calculate visual position based on board rotation
+    const getVisualPositionIndex = (playerIndex) => {
+        const rotationSteps = boardRotation / 90;
+        return (playerIndex + rotationSteps) % 4;
+    };
 
-        {/* 1. BOARD LAYER (Centered) */}
-        <div className="board-layer">
-            <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
-                {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
-                    const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
-                    const isHighlighted = isValid &&
-                        playerIdx === gameState.activePlayer &&
-                        (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
-                        !isAITurn;
+    // Helper: Get ticker text
+    const getTickerText = () => {
+        if (gameState.gamePhase === 'WIN') return "🎉 Game Over!";
+        if (canRoll) return "🎲 Tap to Roll!";
+        if (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') {
+            return isLocalPlayerTurn ? "👆 Select Token" : `${currentPlayer?.name}'s Turn`;
+        }
+        return `${currentPlayer?.name || 'Player'}'s Turn`;
+    };
+
+    return (
+        <div className="app aaa-layout">
+
+            {/* 1. BOARD LAYER (Centered) */}
+            <div className="board-layer">
+                <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
+                    {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
+                        const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
+                        const isHighlighted = isValid &&
+                            playerIdx === gameState.activePlayer &&
+                            (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
+                            !isAITurn;
+
+                        return (
+                            <Token
+                                key={`${playerIdx}-${tokenIdx}`}
+                                color={PLAYER_COLORS[playerIdx]}
+                                row={coords.r}
+                                col={coords.c}
+                                onClick={isHighlighted ? () => handleTokenClick(playerIdx, tokenIdx) : null}
+                                isHighlighted={isHighlighted}
+                                isMoving={isMoving && isHighlighted}
+                                inYard={inYard}
+                                stackIndex={stackIndex}
+                                stackSize={stackSize}
+                                rotation={-boardRotation}
+                            />
+                        );
+                    })}
+
+                    {/* 💥 Capture Explosions */}
+                    {captureEffects.map(effect => (
+                        <CaptureExplosion
+                            key={effect.id}
+                            color={effect.color}
+                            row={effect.row}
+                            col={effect.col}
+                        />
+                    ))}
+                </Board>
+            </div>
+
+            {/* 2. HUD LAYER (Overlay) */}
+            <div className="game-hud">
+
+                {/* A. CORNER AVATARS */}
+                {gameConfig.players.map((p, idx) => {
+                    const isActive = gameState.activePlayer === idx;
+                    const color = PLAYER_COLORS[idx];
+                    const visualPos = getVisualPositionIndex(idx);
+                    const isMe = gameConfig.mode === 'web3'
+                        ? p.address?.toLowerCase() === account?.address?.toLowerCase()
+                        : !p.isAI && idx === 0;
 
                     return (
-                        <Token
-                            key={`${playerIdx}-${tokenIdx}`}
-                            color={PLAYER_COLORS[playerIdx]}
-                            row={coords.r}
-                            col={coords.c}
-                            onClick={isHighlighted ? () => handleTokenClick(playerIdx, tokenIdx) : null}
-                            isHighlighted={isHighlighted}
-                            isMoving={isMoving && isHighlighted}
-                            inYard={inYard}
-                            stackIndex={stackIndex}
-                            stackSize={stackSize}
-                            rotation={-boardRotation}
-                        />
+                        <div key={idx} className={`player-corner pos-${visualPos} ${isActive ? 'active' : ''}`}>
+                            <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
+                                {p.isAI ? '🤖' : '👤'}
+                                {isActive && <div className="turn-ripple" />}
+                            </div>
+                            <div className="player-info">
+                                <span className="p-name">
+                                    {p.name}{isMe && ' (You)'}
+                                </span>
+                                {isActive && (
+                                    <span className="p-status">
+                                        {isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Thinking...'}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     );
                 })}
 
-                {/* 💥 Capture Explosions */}
-                {captureEffects.map(effect => (
-                    <CaptureExplosion
-                        key={effect.id}
-                        color={effect.color}
-                        row={effect.row}
-                        col={effect.col}
-                    />
-                ))}
-            </Board>
-        </div>
+                {/* B. SERVER MESSAGE TOAST */}
+                {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
 
-        {/* 2. HUD LAYER (Overlay) */}
-        <div className="game-hud">
+                {/* C. WIN SCREEN (Modal) */}
+                {gameState.gamePhase === 'WIN' && (
+                    <div className="modal-overlay">
+                        <div className="win-card">
+                            <h1>🏆 VICTORY!</h1>
+                            <p>{gameConfig.players[gameState.winner]?.name} wins the match!</p>
 
-            {/* A. CORNER AVATARS */}
-            {gameConfig.players.map((p, idx) => {
-                const isActive = gameState.activePlayer === idx;
-                const color = PLAYER_COLORS[idx];
-                const visualPos = getVisualPositionIndex(idx);
-                const isMe = gameConfig.mode === 'web3'
-                    ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                    : !p.isAI && idx === 0;
-
-                return (
-                    <div key={idx} className={`player-corner pos-${visualPos} ${isActive ? 'active' : ''}`}>
-                        <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
-                            {p.isAI ? '🤖' : '👤'}
-                            {isActive && <div className="turn-ripple" />}
-                        </div>
-                        <div className="player-info">
-                            <span className="p-name">
-                                {p.name}{isMe && ' (You)'}
-                            </span>
-                            {isActive && (
-                                <span className="p-status">
-                                    {isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Thinking...'}
-                                </span>
+                            {gameConfig.mode === 'web3' && (
+                                <div style={{ margin: '20px 0' }}>
+                                    {payoutProof ? (
+                                        <button className="btn-primary" onClick={onClaimClick} disabled={isClaiming}>
+                                            {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
+                                        </button>
+                                    ) : (
+                                        <p style={{ color: '#00f3ff' }}>Verifying on Blockchain... ⏳</p>
+                                    )}
+                                </div>
                             )}
+
+                            <button className="btn-secondary" onClick={handleBackToLobby}>
+                                Back to Menu
+                            </button>
                         </div>
                     </div>
-                );
-            })}
+                )}
 
-            {/* B. SERVER MESSAGE TOAST */}
-            {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
+                {/* D. BOTTOM DOCK (Controls) */}
+                <div className="bottom-dock">
 
-            {/* C. WIN SCREEN (Modal) */}
-            {gameState.gamePhase === 'WIN' && (
-                <div className="modal-overlay">
-                    <div className="win-card">
-                        <h1>🏆 VICTORY!</h1>
-                        <p>{gameConfig.players[gameState.winner]?.name} wins the match!</p>
-
-                        {gameConfig.mode === 'web3' && (
-                            <div style={{ margin: '20px 0' }}>
-                                {payoutProof ? (
-                                    <button className="btn-primary" onClick={onClaimClick} disabled={isClaiming}>
-                                        {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
-                                    </button>
-                                ) : (
-                                    <p style={{ color: '#00f3ff' }}>Verifying on Blockchain... ⏳</p>
-                                )}
+                    {/* Left: Timer */}
+                    <div className="dock-left">
+                        {turnTimer !== null && turnTimer > 0 && (
+                            <div className={`turn-timer ${turnTimer <= 5 ? 'urgent' : ''}`}>
+                                ⏱ {turnTimer}s
                             </div>
                         )}
+                    </div>
 
-                        <button className="btn-secondary" onClick={handleBackToLobby}>
-                            Back to Menu
+                    {/* Center: Dice & Ticker */}
+                    <div className="dock-center">
+                        <div className="game-ticker">{getTickerText()}</div>
+                        <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
+                            <Dice
+                                value={gameState.diceValue}
+                                onRoll={handleRoll}
+                                disabled={!canRoll}
+                                isRolling={isRolling}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Right: Menu */}
+                    <div className="dock-right" style={{ gap: '10px' }}>
+                        <button className="menu-btn" onClick={handleToggleMute}>
+                            {isMuted ? '🔇' : '🔊'}
+                        </button>
+                        <button className="menu-btn" onClick={handleBackToLobby}>
+                            ☰
                         </button>
                     </div>
                 </div>
-            )}
 
-            {/* D. BOTTOM DOCK (Controls) */}
-            <div className="bottom-dock">
-
-                {/* Left: Timer */}
-                <div className="dock-left">
-                    {turnTimer !== null && turnTimer > 0 && (
-                        <div className={`turn-timer ${turnTimer <= 5 ? 'urgent' : ''}`}>
-                            ⏱ {turnTimer}s
-                        </div>
-                    )}
-                </div>
-
-                {/* Center: Dice & Ticker */}
-                <div className="dock-center">
-                    <div className="game-ticker">{getTickerText()}</div>
-                    <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
-                        <Dice
-                            value={gameState.diceValue}
-                            onRoll={handleRoll}
-                            disabled={!canRoll}
-                            isRolling={isRolling}
-                        />
-                    </div>
-                </div>
-
-                {/* Right: Menu */}
-                <div className="dock-right" style={{ gap: '10px' }}>
-                    <button className="menu-btn" onClick={handleToggleMute}>
-                        {isMuted ? '🔇' : '🔊'}
-                    </button>
-                    <button className="menu-btn" onClick={handleBackToLobby}>
-                        ☰
-                    </button>
-                </div>
             </div>
-
         </div>
-    </div>
-);
+    );
 }
 
 export default App;
