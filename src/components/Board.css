@@ -133,34 +133,51 @@
 }
 
 /* Active Turn Base Glow */
+/* Active Turn Base Glow - BOOSTED */
 .base-red.active-turn {
-    box-shadow: 0 0 15px #ff4757, inset 0 0 10px #ff4757;
+    box-shadow: 0 0 40px #ff4757, inset 0 0 20px #ff4757;
     border-color: #ff4757;
     z-index: 5;
+    animation: pulse-base 1.5s infinite alternate;
 }
 
 .base-green.active-turn {
-    box-shadow: 0 0 15px #00d26a, inset 0 0 10px #00d26a;
+    box-shadow: 0 0 40px #00d26a, inset 0 0 20px #00d26a;
     border-color: #00d26a;
     z-index: 5;
+    animation: pulse-base 1.5s infinite alternate;
 }
 
 .base-yellow.active-turn {
-    box-shadow: 0 0 15px #ffbe0b, inset 0 0 10px #ffbe0b;
+    box-shadow: 0 0 40px #ffbe0b, inset 0 0 20px #ffbe0b;
     border-color: #ffbe0b;
     z-index: 5;
+    animation: pulse-base 1.5s infinite alternate;
 }
 
 .base-blue.active-turn {
-    box-shadow: 0 0 15px #3a86ff, inset 0 0 10px #3a86ff;
+    box-shadow: 0 0 40px #3a86ff, inset 0 0 20px #3a86ff;
     border-color: #3a86ff;
     z-index: 5;
+    animation: pulse-base 1.5s infinite alternate;
+}
+
+@keyframes pulse-base {
+    from {
+        box-shadow: 0 0 30px currentColor, inset 0 0 15px currentColor;
+    }
+
+    to {
+        box-shadow: 0 0 50px currentColor, inset 0 0 25px currentColor;
+    }
 }
 
 /* Home Stretch Active Highlight */
+/* Home Stretch Active Highlight - BOOSTED */
 .home-path-active {
-    filter: brightness(1.3);
-    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.3);
+    filter: brightness(1.8) drop-shadow(0 0 5px currentColor);
+    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
 }
 
 /* ============================================

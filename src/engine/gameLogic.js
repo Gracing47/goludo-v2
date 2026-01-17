@@ -219,47 +219,42 @@ export function completeMoveAnimation(state) {
         };
     }
 
+    let currentState = state;
+
     // CHECK FOR BONUS MOVES (Capture +20 or Home +10)
-    if (state.bonusMoves > 0) {
+    if (currentState.bonusMoves > 0) {
         // Temporarily set diceValue to the bonus amount so getValidMoves can work
         const bonusState = {
-            ...state,
-            diceValue: state.bonusMoves,
+            ...currentState,
+            diceValue: currentState.bonusMoves,
             gamePhase: GAME_PHASE.BONUS_MOVE,
-            // Keep actual bonusMoves property for reference, but next recursive step will clear it
-            // Actually, we must clear it NOW so we don't loop forever if we can't move
-            // But if we clear it, validMoves needs it in the state? No, validMoves uses diceValue.
         };
 
         const validBonusMoves = getValidMoves(bonusState);
 
         if (validBonusMoves.length > 0) {
             return {
-                ...state,
-                diceValue: state.bonusMoves,
+                ...currentState,
+                diceValue: currentState.bonusMoves,
                 gamePhase: GAME_PHASE.BONUS_MOVE,
                 validMoves: validBonusMoves,
-                // We consume 'bonusMoves' from the state now that we've converted it to a playable turn
-                // But wait, if we consume it (set to 0), and then complete THIS move, we come back here.
-                // We want to enter the loop correctly.
                 bonusMoves: 0,
-                message: `BONUS! Move ${state.bonusMoves} spaces!`
+                message: `BONUS! Move ${currentState.bonusMoves} spaces!`
             };
         }
 
         // If no valid moves for the bonus, it is forfeited.
         // We fall through to the normal turn completion checking.
-        state = { ...state, bonusMoves: 0, message: "Bonus forfeited! No active tokens." };
+        currentState = { ...currentState, bonusMoves: 0, message: "Bonus forfeited! No active tokens." };
     }
 
     // NORMAL TURN COMPLETION
 
     // Check if we should roll again (because we rolled a 6)
     // We check consecutiveSixes to see if the LAST roll was a 6 sequence
-    // (Note: diceValue might be 20/10 from a previous bonus, so we can't trust diceValue === 6)
-    if (state.consecutiveSixes > 0 && RULES.BONUS_ON_SIX) {
+    if (currentState.consecutiveSixes > 0 && RULES.BONUS_ON_SIX) {
         return {
-            ...state,
+            ...currentState,
             gamePhase: GAME_PHASE.ROLL_DICE,
             diceValue: null,
             validMoves: [],
@@ -269,8 +264,8 @@ export function completeMoveAnimation(state) {
 
     // Next player's turn
     return {
-        ...state,
-        activePlayer: getNextPlayer(state.activePlayer, state.activeColors),
+        ...currentState,
+        activePlayer: getNextPlayer(currentState.activePlayer, currentState.activeColors),
         gamePhase: GAME_PHASE.ROLL_DICE,
         diceValue: null,
         validMoves: [],
