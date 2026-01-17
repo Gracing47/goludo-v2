@@ -16,20 +16,17 @@
     border-radius: 20px;
     padding: 25px;
     cursor: pointer;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
 .dice-roll-button:hover:not(.disabled) {
     background: rgba(255, 255, 255, 0.12);
     border-color: rgba(255, 0, 122, 0.4);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 0, 122, 0.15);
     transform: translateY(-3px);
 }
 
 .dice-roll-button:active:not(.disabled) {
     transform: translateY(0);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .dice-roll-button.disabled {

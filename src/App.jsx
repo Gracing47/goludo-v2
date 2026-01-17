@@ -17,7 +17,7 @@ import Dice from './components/Dice';
 import CaptureExplosion from './components/CaptureExplosion';
 import soundManager from './services/SoundManager';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
-import { io } from 'socket.io-client';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 import './App.css';
 
@@ -86,11 +86,20 @@ function App() {
 
     // ... (rest of code)
 
+    // React Router hooks
+    const navigate = useNavigate();
+    const { gameId } = useParams();
+    const location = useLocation();
+
     // Ref to prevent double AI actions
     const aiActionInProgress = useRef(false);
 
     // Socket ref for direct access
     const socketRef = useRef(null);
+
+    // Sync isRolling to ref for safety timeouts
+    const isRollingRef = useRef(isRolling);
+    useEffect(() => { isRollingRef.current = isRolling; }, [isRolling]);
 
     // Local state for claiming (not needed in global store)
     const [isClaiming, setIsClaiming] = React.useState(false);
@@ -131,27 +140,20 @@ function App() {
         return () => window.removeEventListener('click', handleInteraction);
     }, []);
 
-    // Start game from lobby
-    const handleStartGame = useCallback((config) => {
+    // ============================================
+    // GAME START LOGIC (Refactored from handleStartGame)
+    // ============================================
+    const onGameStart = useCallback((config) => {
         aiActionInProgress.current = false;
 
-        // ============================================
-        // WEB3 MODE: Wait for server's game_started event
-        // ============================================
         if (config.mode === 'web3') {
-            console.log('🎮 Web3 mode: Setting up socket, waiting for game_started...');
+            console.log('🌐 Web3 Match: Connecting to socket...');
+            aiActionInProgress.current = false;
 
-            // Set minimal config - players will come from server
-            setGameConfig({
-                mode: 'web3',
-                roomId: config.roomId,
-                stake: config.stake,
-                playerCount: config.playerCount,
-                players: [] // Will be populated by game_started
+            const socket = io(SOCKET_URL, {
+                query: { roomId: config.roomId, userAddress: account?.address || 'anonymous' }
             });
 
-            // Setup socket connection
-            const socket = io(SOCKET_URL);
             socketRef.current = socket;
 
             socket.on('connect', () => {
@@ -256,15 +258,58 @@ function App() {
         setBoardRotation(0);
     }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer, updateState]);
 
-    // Return to lobby - uses Zustand reset
+    // Handle Start from Lobby
+    const handleStartGame = useCallback((config) => {
+        if (config.mode === 'web3') {
+            onGameStart(config);
+        } else {
+            // Local/AI Mode: Generate unique ID and navigate
+            const newGameId = Math.random().toString(36).substring(2, 11);
+            navigate(`/game/${newGameId}`);
+            onGameStart(config);
+        }
+    }, [onGameStart, navigate]);
+
+    // ============================================
+    // STATE PERSISTENCE (Local & AI)
+    // ============================================
+    useEffect(() => {
+        // Resume from URL if possible
+        if (gameId && appState === 'lobby') {
+            const savedData = localStorage.getItem(`ludo_game_${gameId}`);
+            if (savedData) {
+                try {
+                    const { config, state } = JSON.parse(savedData);
+                    console.log('💾 Resuming local game:', gameId);
+                    setGameConfig(config);
+                    setGameState(state);
+                    setAppState('game');
+                } catch (e) {
+                    console.warn("Failed to resume game", e);
+                }
+            }
+        }
+
+        // Auto-save on every state change
+        if (appState === 'game' && gameId && gameState && gameConfig?.mode !== 'web3') {
+            localStorage.setItem(`ludo_game_${gameId}`, JSON.stringify({
+                config: gameConfig,
+                state: gameState,
+                ts: Date.now()
+            }));
+        }
+    }, [gameId, gameState, gameConfig, appState, setGameConfig, setGameState, setAppState]);
+
+    // Return to lobby
     const handleBackToLobby = useCallback(() => {
         if (socketRef.current) {
             socketRef.current.disconnect();
             socketRef.current = null;
         }
-        resetStore(); // Resets all state to initial values
+        resetStore();
         aiActionInProgress.current = false;
-    }, [resetStore]);
+        navigate('/'); // Go back to root
+    }, [resetStore, navigate]);
 
     // Roll dice
     const handleRoll = useCallback(() => {
@@ -397,7 +442,10 @@ function App() {
             const timer = setTimeout(() => {
                 handleRoll();
             }, delay);
-            return () => clearTimeout(timer);
+            return () => {
+                clearTimeout(timer);
+                aiActionInProgress.current = false;
+            };
         }
 
         // AI needs to select token
@@ -417,366 +465,368 @@ function App() {
             };
         }
 
+        // If turn skipped or no moves, reset lock
         if (gameState.validMoves.length === 0 && gameState.gamePhase !== 'ROLL_DICE') {
             aiActionInProgress.current = false;
         }
     }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
+}, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
 
-    // Web3 Payout Proof Handler & Win Sound
-    useEffect(() => {
-        if (appState === 'game' && gameState?.gamePhase === 'WIN') {
-            // Play success sound
-            soundManager.play('win');
+// Web3 Payout Proof Handler & Win Sound
+useEffect(() => {
+    if (appState === 'game' && gameState?.gamePhase === 'WIN') {
+        // Play success sound
+        soundManager.play('win');
 
-            if (gameConfig?.mode === 'web3' && !payoutProof) {
-                const winner = gameConfig.players[gameState.winner];
-                if (!winner?.address) return;
+        if (gameConfig?.mode === 'web3' && !payoutProof) {
+            const winner = gameConfig.players[gameState.winner];
+            if (!winner?.address) return;
 
-                const requestPayoutSignature = async () => {
-                    try {
-                        console.log("🏆 Game Won! Requesting signature...");
-                        const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
+            const requestPayoutSignature = async () => {
+                try {
+                    console.log("🏆 Game Won! Requesting signature...");
+                    const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
 
-                        const response = await fetch(`${API_URL}/api/payout/sign`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                roomId: gameConfig.roomId,
-                                winner: winner.address,
-                                amount: potAmount
-                            })
-                        });
+                    const response = await fetch(`${API_URL}/api/payout/sign`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            roomId: gameConfig.roomId,
+                            winner: winner.address,
+                            amount: potAmount
+                        })
+                    });
 
-                        const data = await response.json();
-                        if (data.error) throw new Error(data.error);
-                        setPayoutProof(data);
-                    } catch (error) {
-                        console.error("Payout signature failed:", error);
-                    }
-                };
-                requestPayoutSignature();
-            }
-        }
-    }, [gameState, gameConfig, appState, payoutProof]);
-
-    const onClaimClick = useCallback(async () => {
-        if (!payoutProof || isClaiming) return;
-        setIsClaiming(true);
-        try {
-            await handleClaimPayout(payoutProof);
-            setPayoutProof(null);
-            alert("Victory! Payout claimed. 💰");
-        } catch (err) {
-            console.error(err);
-            alert("Claim failed: " + (err.message || "Unknown error"));
-        } finally {
-            setIsClaiming(false);
-        }
-    }, [payoutProof, isClaiming, handleClaimPayout]);
-
-    // Get token coordinates with stacking info
-    const getTokensWithCoords = useCallback(() => {
-        // Defensive check: ensure gameState and tokens array exist
-        if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
-            return [];
-        }
-
-        // Group tokens by position to detect stacking
-        const positionMap = new Map();
-
-        gameState.tokens.forEach((playerTokens, playerIdx) => {
-            // Skip if playerTokens is not an array
-            if (!Array.isArray(playerTokens)) return;
-            playerTokens.forEach((position, tokenIdx) => {
-                let coords = null;
-                let inYard = false;
-
-                if (position === POSITION.IN_YARD) {
-                    coords = YARD_COORDS[playerIdx][tokenIdx];
-                    inYard = true;
-                } else if (position === POSITION.FINISHED) {
-                    const offsets = [{ r: 6, c: 6 }, { r: 6, c: 8 }, { r: 8, c: 6 }, { r: 8, c: 8 }];
-                    coords = offsets[tokenIdx % 4];
-                } else if (position >= 100 && position < 106) {
-                    coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
-                } else if (position >= 0 && position < MASTER_LOOP.length) {
-                    coords = MASTER_LOOP[position];
+                    const data = await response.json();
+                    if (data.error) throw new Error(data.error);
+                    setPayoutProof(data);
+                } catch (error) {
+                    console.error("Payout signature failed:", error);
                 }
-
-                if (!coords) return;
-
-                // Create position key for stacking
-                const posKey = inYard
-                    ? `yard-${playerIdx}-${tokenIdx}` // Yard tokens don't stack
-                    : `${coords.r}-${coords.c}`;
-
-                if (!positionMap.has(posKey)) {
-                    positionMap.set(posKey, []);
-                }
-
-                positionMap.get(posKey).push({
-                    playerIdx,
-                    tokenIdx,
-                    position,
-                    coords,
-                    inYard
-                });
-            });
-        });
-
-        // Flatten with stack info
-        const allTokens = [];
-        positionMap.forEach((tokensAtPos) => {
-            const stackSize = tokensAtPos.length;
-            tokensAtPos.forEach((token, stackIndex) => {
-                allTokens.push({
-                    ...token,
-                    stackIndex,
-                    stackSize
-                });
-            });
-        });
-
-        return allTokens;
-    }, [gameState]);
-
-    // 🔥 PERFORMANCE FIX: Memoize expensive calculations BEFORE any returns
-    // These must be called unconditionally (React Rules of Hooks)
-    const tokensWithCoords = useMemo(() => {
-        if (!gameState) return [];
-        return getTokensWithCoords();
-    }, [gameState?.tokens]); // Don't include getTokensWithCoords - it changes every render!
-
-    const currentPlayer = useMemo(() => {
-        if (!gameState || !gameConfig || !gameConfig.players) return null;
-        return gameConfig.players[gameState.activePlayer] || null;
-    }, [gameConfig?.players, gameState?.activePlayer]);
-
-    const currentColor = useMemo(() => {
-        if (!gameState) return null;
-        return PLAYER_COLORS[gameState.activePlayer];
-    }, [gameState?.activePlayer]);
-
-    const isAITurn = useMemo(() =>
-        currentPlayer?.isAI || false,
-        [currentPlayer]
-    );
-
-    // Turn Logic - MEMOIZED to prevent loop
-    const isLocalPlayerTurn = useMemo(() => {
-        // Need config to determine mode
-        if (!gameConfig) return false;
-
-        // For Web3 mode: compare addresses
-        if (gameConfig.mode === 'web3') {
-            if (!currentPlayer || !account?.address) {
-                console.log('🎯 Turn: No player/account', { currentPlayer, hasAccount: !!account });
-                return false;
-            }
-            const currentAddr = currentPlayer?.address?.toLowerCase();
-            const myAddr = account.address.toLowerCase();
-            const isMyTurn = currentAddr === myAddr;
-            console.log('🎯 Turn:', { activePlayer: gameState?.activePlayer, currentAddr, myAddr, isMyTurn });
-            return isMyTurn;
+            };
+            requestPayoutSignature();
         }
+    }
+}, [gameState, gameConfig, appState, payoutProof]);
 
-        // For Local/AI mode: human can always play (when not AI turn)
-        return !isAITurn;
-    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.activePlayer]);
+const onClaimClick = useCallback(async () => {
+    if (!payoutProof || isClaiming) return;
+    setIsClaiming(true);
+    try {
+        await handleClaimPayout(payoutProof);
+        setPayoutProof(null);
+        alert("Victory! Payout claimed. 💰");
+    } catch (err) {
+        console.error(err);
+        alert("Claim failed: " + (err.message || "Unknown error"));
+    } finally {
+        setIsClaiming(false);
+    }
+}, [payoutProof, isClaiming, handleClaimPayout]);
 
-    const canRoll = useMemo(() => {
-        if (!gameState) return false;
-        const phase = gameState.gamePhase;
-        const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
-        const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
-        console.log('🎲 canRoll:', { phase, isLocalPlayerTurn, result });
-        return result;
-    }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
-
-    // Render lobby
-    if (appState === 'lobby') {
-        return (
-            <div className="app">
-                <Lobby onStartGame={handleStartGame} />
-            </div>
-        );
+// Get token coordinates with stacking info
+const getTokensWithCoords = useCallback(() => {
+    // Defensive check: ensure gameState and tokens array exist
+    if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
+        return [];
     }
 
-    // Render game
-    if (!gameState || !gameConfig) {
-        return (
-            <div className="app-loading">
-                <div className="loading-spinner">↻</div>
-                <p>Loading Game State...</p>
-                {/* Debug info in case it gets stuck */}
-                <small style={{ opacity: 0.5, fontSize: 10 }}>
-                    State: {gameState ? 'OK' : 'MISSING'} | Config: {gameConfig ? 'OK' : 'MISSING'}
-                </small>
-                <button onClick={handleBackToLobby} style={{ marginTop: 20 }}>
-                    Return to Lobby
-                </button>
-            </div>
-        );
+    // Group tokens by position to detect stacking
+    const positionMap = new Map();
+
+    gameState.tokens.forEach((playerTokens, playerIdx) => {
+        // Skip if playerTokens is not an array
+        if (!Array.isArray(playerTokens)) return;
+        playerTokens.forEach((position, tokenIdx) => {
+            let coords = null;
+            let inYard = false;
+
+            if (position === POSITION.IN_YARD) {
+                coords = YARD_COORDS[playerIdx][tokenIdx];
+                inYard = true;
+            } else if (position === POSITION.FINISHED) {
+                const offsets = [{ r: 6, c: 6 }, { r: 6, c: 8 }, { r: 8, c: 6 }, { r: 8, c: 8 }];
+                coords = offsets[tokenIdx % 4];
+            } else if (position >= 100 && position < 106) {
+                coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
+            } else if (position >= 0 && position < MASTER_LOOP.length) {
+                coords = MASTER_LOOP[position];
+            }
+
+            if (!coords) return;
+
+            // Create position key for stacking
+            const posKey = inYard
+                ? `yard-${playerIdx}-${tokenIdx}` // Yard tokens don't stack
+                : `${coords.r}-${coords.c}`;
+
+            if (!positionMap.has(posKey)) {
+                positionMap.set(posKey, []);
+            }
+
+            positionMap.get(posKey).push({
+                playerIdx,
+                tokenIdx,
+                position,
+                coords,
+                inYard
+            });
+        });
+    });
+
+    // Flatten with stack info
+    const allTokens = [];
+    positionMap.forEach((tokensAtPos) => {
+        const stackSize = tokensAtPos.length;
+        tokensAtPos.forEach((token, stackIndex) => {
+            allTokens.push({
+                ...token,
+                stackIndex,
+                stackSize
+            });
+        });
+    });
+
+    return allTokens;
+}, [gameState]);
+
+// 🔥 PERFORMANCE FIX: Memoize expensive calculations BEFORE any returns
+// These must be called unconditionally (React Rules of Hooks)
+const tokensWithCoords = useMemo(() => {
+    if (!gameState) return [];
+    return getTokensWithCoords();
+}, [gameState?.tokens]); // Don't include getTokensWithCoords - it changes every render!
+
+const currentPlayer = useMemo(() => {
+    if (!gameState || !gameConfig || !gameConfig.players) return null;
+    return gameConfig.players[gameState.activePlayer] || null;
+}, [gameConfig?.players, gameState?.activePlayer]);
+
+const currentColor = useMemo(() => {
+    if (!gameState) return null;
+    return PLAYER_COLORS[gameState.activePlayer];
+}, [gameState?.activePlayer]);
+
+const isAITurn = useMemo(() =>
+    currentPlayer?.isAI || false,
+    [currentPlayer]
+);
+
+// Turn Logic - MEMOIZED to prevent loop
+const isLocalPlayerTurn = useMemo(() => {
+    // Need config to determine mode
+    if (!gameConfig) return false;
+
+    // For Web3 mode: compare addresses
+    if (gameConfig.mode === 'web3') {
+        if (!currentPlayer || !account?.address) {
+            console.log('🎯 Turn: No player/account', { currentPlayer, hasAccount: !!account });
+            return false;
+        }
+        const currentAddr = currentPlayer?.address?.toLowerCase();
+        const myAddr = account.address.toLowerCase();
+        const isMyTurn = currentAddr === myAddr;
+        console.log('🎯 Turn:', { activePlayer: gameState?.activePlayer, currentAddr, myAddr, isMyTurn });
+        return isMyTurn;
     }
 
-    // Helper: Calculate visual position based on board rotation
-    const getVisualPositionIndex = (playerIndex) => {
-        const rotationSteps = boardRotation / 90;
-        return (playerIndex + rotationSteps) % 4;
-    };
+    // For Local/AI mode: human can always play (when not AI turn)
+    return !isAITurn;
+}, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.activePlayer]);
 
-    // Helper: Get ticker text
-    const getTickerText = () => {
-        if (gameState.gamePhase === 'WIN') return "🎉 Game Over!";
-        if (canRoll) return "🎲 Tap to Roll!";
-        if (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') {
-            return isLocalPlayerTurn ? "👆 Select Token" : `${currentPlayer?.name}'s Turn`;
-        }
-        return `${currentPlayer?.name || 'Player'}'s Turn`;
-    };
+const canRoll = useMemo(() => {
+    if (!gameState) return false;
+    const phase = gameState.gamePhase;
+    const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
+    const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
+    console.log('🎲 canRoll:', { phase, isLocalPlayerTurn, result });
+    return result;
+}, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
+// Render lobby
+if (appState === 'lobby') {
     return (
-        <div className="app aaa-layout">
+        <div className="app">
+            <Lobby onStartGame={handleStartGame} />
+        </div>
+    );
+}
 
-            {/* 1. BOARD LAYER (Centered) */}
-            <div className="board-layer">
-                <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
-                    {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
-                        const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
-                        const isHighlighted = isValid &&
-                            playerIdx === gameState.activePlayer &&
-                            (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
-                            !isAITurn;
+// Render game
+if (!gameState || !gameConfig) {
+    return (
+        <div className="app-loading">
+            <div className="loading-spinner">↻</div>
+            <p>Loading Game State...</p>
+            {/* Debug info in case it gets stuck */}
+            <small style={{ opacity: 0.5, fontSize: 10 }}>
+                State: {gameState ? 'OK' : 'MISSING'} | Config: {gameConfig ? 'OK' : 'MISSING'}
+            </small>
+            <button onClick={handleBackToLobby} style={{ marginTop: 20 }}>
+                Return to Lobby
+            </button>
+        </div>
+    );
+}
 
-                        return (
-                            <Token
-                                key={`${playerIdx}-${tokenIdx}`}
-                                color={PLAYER_COLORS[playerIdx]}
-                                row={coords.r}
-                                col={coords.c}
-                                onClick={isHighlighted ? () => handleTokenClick(playerIdx, tokenIdx) : null}
-                                isHighlighted={isHighlighted}
-                                isMoving={isMoving && isHighlighted}
-                                inYard={inYard}
-                                stackIndex={stackIndex}
-                                stackSize={stackSize}
-                                rotation={-boardRotation}
-                            />
-                        );
-                    })}
+// Helper: Calculate visual position based on board rotation
+const getVisualPositionIndex = (playerIndex) => {
+    const rotationSteps = boardRotation / 90;
+    return (playerIndex + rotationSteps) % 4;
+};
 
-                    {/* 💥 Capture Explosions */}
-                    {captureEffects.map(effect => (
-                        <CaptureExplosion
-                            key={effect.id}
-                            color={effect.color}
-                            row={effect.row}
-                            col={effect.col}
-                        />
-                    ))}
-                </Board>
-            </div>
+// Helper: Get ticker text
+const getTickerText = () => {
+    if (gameState.gamePhase === 'WIN') return "🎉 Game Over!";
+    if (canRoll) return "🎲 Tap to Roll!";
+    if (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') {
+        return isLocalPlayerTurn ? "👆 Select Token" : `${currentPlayer?.name}'s Turn`;
+    }
+    return `${currentPlayer?.name || 'Player'}'s Turn`;
+};
 
-            {/* 2. HUD LAYER (Overlay) */}
-            <div className="game-hud">
+return (
+    <div className="app aaa-layout">
 
-                {/* A. CORNER AVATARS */}
-                {gameConfig.players.map((p, idx) => {
-                    const isActive = gameState.activePlayer === idx;
-                    const color = PLAYER_COLORS[idx];
-                    const visualPos = getVisualPositionIndex(idx);
-                    const isMe = gameConfig.mode === 'web3'
-                        ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                        : !p.isAI && idx === 0;
+        {/* 1. BOARD LAYER (Centered) */}
+        <div className="board-layer">
+            <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
+                {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
+                    const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
+                    const isHighlighted = isValid &&
+                        playerIdx === gameState.activePlayer &&
+                        (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
+                        !isAITurn;
 
                     return (
-                        <div key={idx} className={`player-corner pos-${visualPos} ${isActive ? 'active' : ''}`}>
-                            <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
-                                {p.isAI ? '🤖' : '👤'}
-                                {isActive && <div className="turn-ripple" />}
-                            </div>
-                            <div className="player-info">
-                                <span className="p-name">
-                                    {p.name}{isMe && ' (You)'}
-                                </span>
-                                {isActive && (
-                                    <span className="p-status">
-                                        {isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Thinking...'}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                        <Token
+                            key={`${playerIdx}-${tokenIdx}`}
+                            color={PLAYER_COLORS[playerIdx]}
+                            row={coords.r}
+                            col={coords.c}
+                            onClick={isHighlighted ? () => handleTokenClick(playerIdx, tokenIdx) : null}
+                            isHighlighted={isHighlighted}
+                            isMoving={isMoving && isHighlighted}
+                            inYard={inYard}
+                            stackIndex={stackIndex}
+                            stackSize={stackSize}
+                            rotation={-boardRotation}
+                        />
                     );
                 })}
 
-                {/* B. SERVER MESSAGE TOAST */}
-                {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
+                {/* 💥 Capture Explosions */}
+                {captureEffects.map(effect => (
+                    <CaptureExplosion
+                        key={effect.id}
+                        color={effect.color}
+                        row={effect.row}
+                        col={effect.col}
+                    />
+                ))}
+            </Board>
+        </div>
 
-                {/* C. WIN SCREEN (Modal) */}
-                {gameState.gamePhase === 'WIN' && (
-                    <div className="modal-overlay">
-                        <div className="win-card">
-                            <h1>🏆 VICTORY!</h1>
-                            <p>{gameConfig.players[gameState.winner]?.name} wins the match!</p>
+        {/* 2. HUD LAYER (Overlay) */}
+        <div className="game-hud">
 
-                            {gameConfig.mode === 'web3' && (
-                                <div style={{ margin: '20px 0' }}>
-                                    {payoutProof ? (
-                                        <button className="btn-primary" onClick={onClaimClick} disabled={isClaiming}>
-                                            {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
-                                        </button>
-                                    ) : (
-                                        <p style={{ color: '#00f3ff' }}>Verifying on Blockchain... ⏳</p>
-                                    )}
-                                </div>
+            {/* A. CORNER AVATARS */}
+            {gameConfig.players.map((p, idx) => {
+                const isActive = gameState.activePlayer === idx;
+                const color = PLAYER_COLORS[idx];
+                const visualPos = getVisualPositionIndex(idx);
+                const isMe = gameConfig.mode === 'web3'
+                    ? p.address?.toLowerCase() === account?.address?.toLowerCase()
+                    : !p.isAI && idx === 0;
+
+                return (
+                    <div key={idx} className={`player-corner pos-${visualPos} ${isActive ? 'active' : ''}`}>
+                        <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
+                            {p.isAI ? '🤖' : '👤'}
+                            {isActive && <div className="turn-ripple" />}
+                        </div>
+                        <div className="player-info">
+                            <span className="p-name">
+                                {p.name}{isMe && ' (You)'}
+                            </span>
+                            {isActive && (
+                                <span className="p-status">
+                                    {isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Thinking...'}
+                                </span>
                             )}
-
-                            <button className="btn-secondary" onClick={handleBackToLobby}>
-                                Back to Menu
-                            </button>
                         </div>
                     </div>
-                )}
+                );
+            })}
 
-                {/* D. BOTTOM DOCK (Controls) */}
-                <div className="bottom-dock">
+            {/* B. SERVER MESSAGE TOAST */}
+            {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
 
-                    {/* Left: Timer */}
-                    <div className="dock-left">
-                        {turnTimer !== null && turnTimer > 0 && (
-                            <div className={`turn-timer ${turnTimer <= 5 ? 'urgent' : ''}`}>
-                                ⏱ {turnTimer}s
+            {/* C. WIN SCREEN (Modal) */}
+            {gameState.gamePhase === 'WIN' && (
+                <div className="modal-overlay">
+                    <div className="win-card">
+                        <h1>🏆 VICTORY!</h1>
+                        <p>{gameConfig.players[gameState.winner]?.name} wins the match!</p>
+
+                        {gameConfig.mode === 'web3' && (
+                            <div style={{ margin: '20px 0' }}>
+                                {payoutProof ? (
+                                    <button className="btn-primary" onClick={onClaimClick} disabled={isClaiming}>
+                                        {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
+                                    </button>
+                                ) : (
+                                    <p style={{ color: '#00f3ff' }}>Verifying on Blockchain... ⏳</p>
+                                )}
                             </div>
                         )}
-                    </div>
 
-                    {/* Center: Dice & Ticker */}
-                    <div className="dock-center">
-                        <div className="game-ticker">{getTickerText()}</div>
-                        <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
-                            <Dice
-                                value={gameState.diceValue}
-                                onRoll={handleRoll}
-                                disabled={!canRoll}
-                                isRolling={isRolling}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Right: Menu */}
-                    <div className="dock-right" style={{ gap: '10px' }}>
-                        <button className="menu-btn" onClick={handleToggleMute}>
-                            {isMuted ? '🔇' : '🔊'}
-                        </button>
-                        <button className="menu-btn" onClick={handleBackToLobby}>
-                            ☰
+                        <button className="btn-secondary" onClick={handleBackToLobby}>
+                            Back to Menu
                         </button>
                     </div>
                 </div>
+            )}
 
+            {/* D. BOTTOM DOCK (Controls) */}
+            <div className="bottom-dock">
+
+                {/* Left: Timer */}
+                <div className="dock-left">
+                    {turnTimer !== null && turnTimer > 0 && (
+                        <div className={`turn-timer ${turnTimer <= 5 ? 'urgent' : ''}`}>
+                            ⏱ {turnTimer}s
+                        </div>
+                    )}
+                </div>
+
+                {/* Center: Dice & Ticker */}
+                <div className="dock-center">
+                    <div className="game-ticker">{getTickerText()}</div>
+                    <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
+                        <Dice
+                            value={gameState.diceValue}
+                            onRoll={handleRoll}
+                            disabled={!canRoll}
+                            isRolling={isRolling}
+                        />
+                    </div>
+                </div>
+
+                {/* Right: Menu */}
+                <div className="dock-right" style={{ gap: '10px' }}>
+                    <button className="menu-btn" onClick={handleToggleMute}>
+                        {isMuted ? '🔇' : '🔊'}
+                    </button>
+                    <button className="menu-btn" onClick={handleBackToLobby}>
+                        ☰
+                    </button>
+                </div>
             </div>
+
         </div>
-    );
+    </div>
+);
 }
 
 export default App;
