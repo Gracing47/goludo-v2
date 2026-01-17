@@ -169,6 +169,7 @@ function App() {
             });
 
             socket.on('dice_rolled', ({ value, playerIndex }) => {
+                console.log(`🎲 Socket Event: dice_rolled value=${value} for player=${playerIndex}`);
                 setIsRolling(true);
                 if (value !== 6) setServerMsg(null);
                 setTimeout(() => setIsRolling(false), 800);
@@ -207,8 +208,13 @@ function App() {
             });
 
             socket.on('state_update', (update) => {
+                console.log('📡 Socket Event: state_update', { phase: update.gamePhase, activePlayer: update.activePlayer });
                 if (update.msg) setServerMsg(update.msg);
                 updateState(update);
+
+                // Safety: Clear visual locks on every server update
+                setIsRolling(false);
+                setIsMoving(false);
             });
 
             // Timer events
@@ -280,7 +286,8 @@ function App() {
                 } catch (e) {
                     console.warn("Failed to resume game", e);
                 }
-            } else if (gameId.length > 20) {
+            } else if (gameId.length > 20 && !socketRef.current) {
+                // Potential Web3 room ID: Only connect if not already connected
                 onGameStart({ mode: 'web3', roomId: gameId });
             }
         }
