@@ -349,9 +349,18 @@ function App() {
         setIsRolling(true);
         soundManager.play('roll');
         setTimeout(() => {
-            setGameState(prev => rollDice(prev));
+            const newState = rollDice(gameState);
+            setGameState(newState);
             setIsRolling(false);
-            aiActionInProgress.current = false; // Reset lock so AI can proceed (select token or next turn)
+
+            // Handle Triple-6 penalty with visual feedback
+            if (newState.message && newState.message.includes('Triple 6')) {
+                soundManager.play('capture'); // Penalty sound
+                setServerMsg(newState.message);
+                setTimeout(() => setServerMsg(null), 2500);
+            }
+
+            aiActionInProgress.current = false;
         }, 800);
     }, [gameState, isRolling, isMoving, gameConfig, account]);
 

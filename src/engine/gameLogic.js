@@ -106,6 +106,9 @@ export function rollDice(state, forcedValue = null) {
             gamePhase: GAME_PHASE.ROLL_DICE,
             activePlayer: getNextPlayer(state.activePlayer, state.activeColors),
             consecutiveSixes: 0,
+            diceValue: null,    // Clear dice display
+            validMoves: [],     // Clear any stale moves
+            bonusMoves: 0,      // Clear any pending bonuses
             message: '⚠️ Triple 6! Turn forfeited!'
         };
     }
