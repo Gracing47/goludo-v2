@@ -58,21 +58,22 @@ body {
 
 .board-layer {
     position: absolute;
-    top: 5%;
+    inset: 0;
     z-index: var(--z-board);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
+    padding-bottom: 80px;
+    /* Offset for bottom dock */
     transition: transform 0.5s ease;
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 /* Tablet+ */
 @media (min-width: 768px) {
     .board-layer {
-        top: auto;
-        align-items: center;
-        transform: scale(0.88);
+        padding-bottom: 60px;
+        transform: scale(0.85);
     }
 }
 
@@ -117,27 +118,27 @@ body {
     transform: scale(1.05);
 }
 
-/* Screen Positions (0=BL, 1=TL, 2=TR, 3=BR) - More margin from edges */
+/* Screen Positions (0=BL, 1=TL, 2=TR, 3=BR) - Safe margin from edges */
 .pos-0 {
-    bottom: 130px;
-    left: 16px;
+    bottom: 110px;
+    left: 12px;
 }
 
 .pos-1 {
-    top: 16px;
-    left: 16px;
+    top: 12px;
+    left: 12px;
 }
 
 .pos-2 {
-    top: 16px;
-    right: 16px;
+    top: 12px;
+    right: 12px;
     flex-direction: row-reverse;
     text-align: right;
 }
 
 .pos-3 {
-    bottom: 130px;
-    right: 16px;
+    bottom: 110px;
+    right: 12px;
     flex-direction: row-reverse;
     text-align: right;
 }
@@ -278,7 +279,7 @@ body {
 
 .dock-left,
 .dock-right {
-    flex: 1;
+    flex: 0 0 60px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -286,13 +287,13 @@ body {
 
 /* Center Dice Area */
 .dock-center {
+    flex: 1;
     position: relative;
-    top: -65px;
-    /* Moved up 15% (was -15px) */
+    top: -50px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 /* Dice Plate - Minimal (just contains the dice) */
