@@ -175,35 +175,86 @@
     }
 }
 
-.base-red.active-turn {
-    animation: pulse-minimal 2.5s infinite ease-in-out;
-    border-color: rgba(255, 71, 87, 0.4) !important;
-}
-
-.base-green.active-turn {
-    animation: pulse-minimal 2.5s infinite ease-in-out;
-    border-color: rgba(0, 210, 106, 0.4) !important;
-}
-
-.base-yellow.active-turn {
-    animation: pulse-minimal 2.5s infinite ease-in-out;
-    border-color: rgba(255, 190, 11, 0.4) !important;
-}
-
+/* Active Base - Premium Shimmer Effect */
+.base-red.active-turn,
+.base-green.active-turn,
+.base-yellow.active-turn,
 .base-blue.active-turn {
-    animation: pulse-minimal 2.5s infinite ease-in-out;
-    border-color: rgba(58, 134, 255, 0.4) !important;
+    position: relative;
+    overflow: hidden;
 }
 
-@keyframes pulse-minimal {
+/* Shimmer overlay */
+.base-red.active-turn::before,
+.base-green.active-turn::before,
+.base-yellow.active-turn::before,
+.base-blue.active-turn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg,
+            transparent 0%,
+            transparent 40%,
+            rgba(255, 255, 255, 0.15) 50%,
+            transparent 60%,
+            transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer-sweep 3s infinite ease-in-out;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Outer glow ring */
+.base-red.active-turn::after,
+.base-green.active-turn::after,
+.base-yellow.active-turn::after,
+.base-blue.active-turn::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    animation: glow-pulse 2s infinite ease-in-out;
+}
+
+/* Color-specific glows */
+.base-red.active-turn::after {
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.4), inset 0 0 20px rgba(255, 71, 87, 0.1);
+}
+
+.base-green.active-turn::after {
+    box-shadow: 0 0 15px rgba(0, 210, 106, 0.4), inset 0 0 20px rgba(0, 210, 106, 0.1);
+}
+
+.base-yellow.active-turn::after {
+    box-shadow: 0 0 15px rgba(255, 190, 11, 0.4), inset 0 0 20px rgba(255, 190, 11, 0.1);
+}
+
+.base-blue.active-turn::after {
+    box-shadow: 0 0 15px rgba(58, 134, 255, 0.4), inset 0 0 20px rgba(58, 134, 255, 0.1);
+}
+
+/* Keyframes */
+@keyframes shimmer-sweep {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes glow-pulse {
 
     0%,
     100% {
-        filter: brightness(1);
+        opacity: 0.6;
     }
 
     50% {
-        filter: brightness(1.04);
+        opacity: 1;
     }
 }
 

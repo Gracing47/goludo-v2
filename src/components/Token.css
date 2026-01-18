@@ -1,5 +1,5 @@
 /* ============================================
-   TOKEN STYLING - NEON GLOW DARK THEME
+   TOKEN STYLING - NEON GLOW DARK THEME (Framer Motion Enhanced)
    ============================================ */
 
 .token {
@@ -7,12 +7,10 @@
     height: 85%;
     margin: 7.5%;
     border-radius: 50%;
-    transform: rotate(var(--token-rotation, 0deg));
-
+    
     /* Subtle glow effect */
     box-shadow:
-        0 0 6px currentColor,
-        0 0 12px currentColor,
+        0 0 8px currentColor,
         inset 0 -2px 5px rgba(0, 0, 0, 0.3),
         inset 0 2px 5px rgba(255, 255, 255, 0.15);
 
@@ -20,16 +18,11 @@
     justify-content: center;
     align-items: center;
     position: relative;
-
     cursor: default;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
     z-index: 10;
-}
-
-/* Stacking transform */
-.token.stacked {
-    transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
+    
+    /* We remove CSS transitions for transform/top/left as Framer handles them */
+    transition: box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 /* Shine effect (light reflection) */
@@ -47,8 +40,18 @@
     pointer-events: none;
 }
 
+/* Active Highlight Glow Ring (Framer Mockup) */
+.token-glow-ring {
+    position: absolute;
+    inset: -6px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(4px);
+}
+
 /* ============================================
-   TOKEN COLORS - NEON STYLE
+   TOKEN COLORS
    ============================================ */
 
 .token-red {
@@ -83,151 +86,26 @@
     cursor: pointer;
 }
 
-.token.clickable:hover {
-    transform: rotate(var(--token-rotation, 0deg)) scale(1.2) translateY(-3px);
-    box-shadow:
-        0 0 12px currentColor,
-        0 0 24px currentColor;
-    z-index: 50;
-}
-
-/* Stacked + Hover */
-.token.stacked.clickable:hover {
-    transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(calc(var(--stack-scale, 1) * 1.3)) translateY(-5px);
-}
-
-/* Highlighted (valid move available) */
 .token.highlighted {
-    animation: pulse-neon 0.8s ease-in-out infinite;
+    box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
     z-index: 40;
 }
 
-.token.stacked.highlighted {
-    animation: pulse-neon-stacked 0.8s ease-in-out infinite;
-}
-
-@keyframes pulse-neon {
-
-    0%,
-    100% {
-        transform: rotate(var(--token-rotation, 0deg)) scale(1) translateY(0);
-        box-shadow:
-            0 0 10px currentColor,
-            0 0 20px currentColor;
-    }
-
-    50% {
-        transform: rotate(var(--token-rotation, 0deg)) scale(1.12) translateY(-8px);
-        box-shadow:
-            0 0 25px currentColor,
-            0 0 45px currentColor,
-            0 0 70px currentColor;
-    }
-}
-
-@keyframes pulse-neon-stacked {
-
-    0%,
-    100% {
-        transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
-        box-shadow: 0 0 15px currentColor;
-    }
-
-    50% {
-        transform: rotate(var(--token-rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(calc(var(--stack-scale, 1) * 1.15));
-        box-shadow: 0 0 30px currentColor, 0 0 50px currentColor;
-    }
-}
-
-/* Moving animation */
-.token.moving {
-    animation: token-move 0.4s ease-out;
-}
-
-@keyframes token-move {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 10px currentColor;
-    }
-
-    30% {
-        transform: scale(1.3) rotate(15deg);
-        box-shadow: 0 0 40px currentColor;
-    }
-
-    60% {
-        transform: scale(1.1) rotate(-10deg);
-        box-shadow: 0 0 25px currentColor;
-    }
-
-    100% {
-        transform: scale(1) rotate(0deg);
-        box-shadow: 0 0 10px currentColor;
-    }
-}
-
-/* Captured animation */
-.token.captured {
-    animation: token-captured 0.5s ease-out forwards;
-}
-
-@keyframes token-captured {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.5);
-        opacity: 0.5;
-        box-shadow: 0 0 50px #ff007a, 0 0 80px #ff007a;
-    }
-
-    100% {
-        transform: scale(0);
-        opacity: 0;
-    }
-}
-
-/* In yard - slightly smaller */
 .token.in-yard {
     width: 65%;
     height: 65%;
-    margin: 17.5%;
-    box-shadow:
-        0 0 5px currentColor,
-        0 0 10px currentColor;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
 
-@media (max-width: 768px) {
-    .token {
-        box-shadow:
-            0 0 8px currentColor,
-            0 0 15px currentColor;
-    }
-
-    .token.clickable:hover {
-        transform: scale(1.2) translateY(-2px);
-    }
-}
-
 @media (max-width: 480px) {
     .token {
-        border-width: 1px;
+        box-shadow: 0 0 8px currentColor;
     }
-
     .token-shine {
         width: 30%;
         height: 30%;
-    }
-
-    .token.in-yard {
-        width: 60%;
-        height: 60%;
-        margin: 20%;
     }
 }
