@@ -26,11 +26,18 @@ const Token = ({
 }) => {
     const offset = getStackOffset(stackIndex, stackSize);
 
-    // Use CSS Grid for positioning + CSS transition for smooth movement
-    // Framer Motion handles only hover/tap/highlight effects
+    const classes = [
+        'token',
+        `token-${color}`,
+        isHighlighted && 'highlighted',
+        inYard && 'in-yard',
+        onClick && 'clickable',
+        stackSize > 1 && 'stacked'
+    ].filter(Boolean).join(' ');
+
     return (
         <motion.div
-            className={`token token-${color} ${isHighlighted ? 'highlighted' : ''} ${isMoving ? 'moving' : ''} ${inYard ? 'in-yard' : ''} ${onClick ? 'clickable' : ''} ${stackSize > 1 ? 'stacked' : ''}`}
+            className={classes}
             style={{
                 gridRow: row + 1,
                 gridColumn: col + 1,
@@ -38,7 +45,7 @@ const Token = ({
                 '--stack-y': `${offset.y}%`,
                 '--stack-scale': offset.scale,
                 '--rotation': `${rotation}deg`,
-                zIndex: isHighlighted ? 100 : isMoving ? 200 : 10 + stackIndex
+                zIndex: isHighlighted ? 100 : 10 + stackIndex
             }}
             whileHover={onClick ? { scale: 1.15, filter: 'brightness(1.2)' } : {}}
             whileTap={onClick ? { scale: 0.9 } : {}}
@@ -48,7 +55,6 @@ const Token = ({
                 <div className="token-shine" />
             </div>
 
-            {/* Pulsing highlight for valid moves */}
             {isHighlighted && (
                 <motion.div
                     className="token-glow-ring"
@@ -58,11 +64,6 @@ const Token = ({
                     }}
                     transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }}
                 />
-            )}
-
-            {/* Landing ripple effect */}
-            {isMoving && (
-                <div className="token-landing-ripple" />
             )}
         </motion.div>
     );
