@@ -1,5 +1,5 @@
 /* ============================================
-   TOKEN STYLING - FRAMER MOTION ANIMATED
+   TOKEN STYLING - CSS Grid + CSS Transition
    ============================================ */
 
 .token {
@@ -8,7 +8,21 @@
     align-items: center;
     pointer-events: auto;
     cursor: default;
-    will-change: transform;
+
+    /* SMOOTH MOVEMENT via CSS transition */
+    transition:
+        grid-row 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        grid-column 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.2s ease;
+
+    /* Base transform */
+    transform: rotate(var(--rotation, 0deg));
+}
+
+/* Stacked tokens get offset */
+.token.stacked {
+    transform:
+        rotate(var(--rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
 }
 
 .token-inner {
@@ -39,7 +53,7 @@
     pointer-events: none;
 }
 
-/* Pulsing glow ring for highlighted tokens */
+/* Pulsing glow ring */
 .token-glow-ring {
     position: absolute;
     inset: -8%;
