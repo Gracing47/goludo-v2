@@ -19,28 +19,29 @@
     height: var(--board-size);
     aspect-ratio: 1;
 
-    background: rgba(20, 20, 35, 0.95);
-    border-radius: 20px;
-    padding: 8px;
-    gap: 1px;
+    background: rgba(15, 20, 35, 0.98);
+    border-radius: 16px;
+    padding: 6px;
+    gap: 0px;
+    /* Seamless grid */
 
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow:
-        0 0 60px rgba(0, 0, 0, 0.5),
-        inset 0 0 30px rgba(0, 0, 0, 0.3);
+        0 0 40px rgba(0, 0, 0, 0.4),
+        inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 /* Token layer - positioned above cells */
 .token-layer {
     position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
     display: grid;
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
-    gap: 1px;
+    gap: 0px;
     pointer-events: none;
 }
 
@@ -70,11 +71,9 @@
    ============================================ */
 
 .path {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 3px;
-    border: 0.5px solid rgba(255, 255, 255, 0.02);
-    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5);
-    /* Engraved look */
+    background: rgba(40, 50, 70, 0.4);
+    border-radius: 2px;
+    border: none;
 }
 
 /* ============================================
@@ -82,10 +81,10 @@
    ============================================ */
 
 .safe {
-    background: linear-gradient(135deg, rgba(255, 190, 11, 0.3), rgba(255, 150, 0, 0.2));
-    border-radius: 3px;
-    border: 1px solid rgba(255, 190, 11, 0.4);
-    box-shadow: 0 0 15px rgba(255, 190, 11, 0.2);
+    background: linear-gradient(135deg, rgba(255, 190, 11, 0.25), rgba(255, 150, 0, 0.15));
+    border-radius: 2px;
+    border: none;
+    box-shadow: 0 0 8px rgba(255, 190, 11, 0.15);
 }
 
 @keyframes star-shimmer {
@@ -123,16 +122,14 @@
    BASE AREAS (colored corners)
    ============================================ */
 
-/* Glassmorphism & Depth for all bases */
+/* Glassmorphism & Depth for all bases - SUBTLE */
 .base-red,
 .base-green,
 .base-yellow,
 .base-blue {
-    backdrop-filter: blur(4px);
-    box-shadow:
-        inset 0 0 20px rgba(255, 255, 255, 0.05),
-        0 10px 20px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(2px);
+    border: none !important;
+    box-shadow: none;
 }
 
 .base-red {
@@ -151,13 +148,12 @@
     background: linear-gradient(135deg, rgba(58, 134, 255, 0.4), rgba(40, 100, 220, 0.3));
 }
 
-/* Spawn points within bases */
+/* Spawn points within bases - MINIMAL */
 .spawn-point {
     border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    margin: 12%;
-    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: none !important;
+    margin: 14%;
 }
 
 /* Breathing Pulse Animation for Active Turn */
