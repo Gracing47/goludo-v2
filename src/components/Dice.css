@@ -11,12 +11,13 @@
 }
 
 .dice-roll-button {
-    background: transparent;
-    border: none;
+    background: rgba(20, 25, 40, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    padding: 15px;
+    padding: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
+    overflow: hidden;
 }
 
 .dice-roll-button:hover:not(.disabled) {
@@ -242,7 +243,7 @@
 
 @media (max-width: 768px) {
     .dice-roll-button {
-        padding: 20px;
+        padding: 10px;
     }
 
     .dice {
