@@ -15,41 +15,22 @@ const Dice = ({ value, onRoll, disabled, isRolling }) => {
             onClick={onRoll}
             disabled={disabled}
         >
-            <div className={`dice ${isRolling ? 'rolling' : ''} show-${value || 1}`}>
-                <div className="dice-face face-1">
-                    <span className="dot"></span>
-                </div>
-                <div className="dice-face face-2">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                </div>
-                <div className="dice-face face-3">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                </div>
-                <div className="dice-face face-4">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                </div>
-                <div className="dice-face face-5">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                </div>
-                <div className="dice-face face-6">
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                    <span className="dot"></span>
-                </div>
+            <div className={`dice ${isRolling ? 'rolling' : ''} show-${(value > 0 && value <= 6) ? value : 1}`}>
+                {/* Standard faces */}
+                <div className="dice-face face-1"><span className="dot"></span></div>
+                <div className="dice-face face-2"><span className="dot"></span><span className="dot"></span></div>
+                <div className="dice-face face-3"><span className="dot"></span><span className="dot"></span><span className="dot"></span></div>
+                <div className="dice-face face-4"><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span></div>
+                <div className="dice-face face-5"><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span></div>
+                <div className="dice-face face-6"><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span></div>
             </div>
+
+            {/* Bonus value overlay */}
+            {value > 6 && !isRolling && (
+                <div className="dice-bonus-overlay">
+                    +{value}
+                </div>
+            )}
         </button>
     );
 };

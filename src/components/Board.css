@@ -176,26 +176,26 @@
 }
 
 .base-red.active-turn {
-    animation: pulse-subtle 2s infinite ease-in-out;
-    border-color: rgba(255, 71, 87, 0.6) !important;
+    animation: pulse-minimal 2.5s infinite ease-in-out;
+    border-color: rgba(255, 71, 87, 0.4) !important;
 }
 
 .base-green.active-turn {
-    animation: pulse-subtle 2s infinite ease-in-out;
-    border-color: rgba(0, 210, 106, 0.6) !important;
+    animation: pulse-minimal 2.5s infinite ease-in-out;
+    border-color: rgba(0, 210, 106, 0.4) !important;
 }
 
 .base-yellow.active-turn {
-    animation: pulse-subtle 2s infinite ease-in-out;
-    border-color: rgba(255, 190, 11, 0.6) !important;
+    animation: pulse-minimal 2.5s infinite ease-in-out;
+    border-color: rgba(255, 190, 11, 0.4) !important;
 }
 
 .base-blue.active-turn {
-    animation: pulse-subtle 2s infinite ease-in-out;
-    border-color: rgba(58, 134, 255, 0.6) !important;
+    animation: pulse-minimal 2.5s infinite ease-in-out;
+    border-color: rgba(58, 134, 255, 0.4) !important;
 }
 
-@keyframes pulse-subtle {
+@keyframes pulse-minimal {
 
     0%,
     100% {
@@ -203,7 +203,7 @@
     }
 
     50% {
-        filter: brightness(1.08);
+        filter: brightness(1.04);
     }
 }
 

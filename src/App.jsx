@@ -173,9 +173,28 @@ function App() {
 
             socket.on('dice_rolled', ({ value, playerIndex }) => {
                 console.log(`🎲 Socket Event: dice_rolled value=${value} for player=${playerIndex}`);
+                // Update diceValue immediately so the 3D dice knows where to land after the roll
+                updateState({ diceValue: value });
                 setIsRolling(true);
                 if (value !== 6) setServerMsg(null);
-                setTimeout(() => setIsRolling(false), 800);
+                setTimeout(() => setIsRolling(false), 700); // 700ms matches Dice.css animation duration
+            });
+
+            socket.on('state_update', (update) => {
+                console.log('📡 Socket Event: state_update', { phase: update.gamePhase, activePlayer: update.activePlayer });
+                if (update.msg) setServerMsg(update.msg);
+                updateState(update);
+
+                // Safety: Clear visual locks on every server update
+                // Skip if we are mid-animation for a roll just started
+                if (update.gamePhase !== 'ROLL_DICE') {
+                    setIsRolling(false);
+                }
+                setIsMoving(false);
+            });
+
+            socket.on('turn_timer_start', ({ timeoutMs }) => {
+                setTurnTimer(Math.floor(timeoutMs / 1000));
             });
 
             socket.on('game_started', (room) => {
@@ -208,20 +227,6 @@ function App() {
                         setBoardRotation((3 - myIdx) * 90);
                     }
                 }
-            });
-
-            socket.on('state_update', (update) => {
-                console.log('📡 Socket Event: state_update', { phase: update.gamePhase, activePlayer: update.activePlayer });
-                if (update.msg) setServerMsg(update.msg);
-                updateState(update);
-
-                // Safety: Clear visual locks on every server update
-                setIsRolling(false);
-                setIsMoving(false);
-            });
-
-            // Timer events
-            socket.on('turn_timer_start', ({ timeoutMs }) => {
                 setTurnTimer(Math.floor(timeoutMs / 1000));
             });
 
