@@ -121,6 +121,9 @@ function App() {
     // Sound Mute State
     const [isMuted, setIsMuted] = useState(soundManager.isMuted());
 
+    // Menu Dropdown State
+    const [menuOpen, setMenuOpen] = useState(false);
+
     const handleToggleMute = useCallback(() => {
         const newMuted = soundManager.toggleMute();
         setIsMuted(newMuted);
@@ -817,13 +820,22 @@ function App() {
                     </div>
 
                     {/* Right: Menu */}
-                    <div className="dock-right" style={{ gap: '10px' }}>
-                        <button className="menu-btn" onClick={handleToggleMute}>
-                            {isMuted ? '🔇' : '🔊'}
-                        </button>
-                        <button className="menu-btn" onClick={handleBackToLobby}>
-                            ☰
-                        </button>
+                    <div className="dock-right">
+                        <div className="menu-dropdown-container">
+                            <button className="menu-btn" onClick={() => setMenuOpen(!menuOpen)}>
+                                ☰
+                            </button>
+                            {menuOpen && (
+                                <div className="menu-dropdown">
+                                    <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
+                                        {isMuted ? '🔇 Unmute' : '🔊 Mute'}
+                                    </button>
+                                    <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
+                                        🚪 Leave Game
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

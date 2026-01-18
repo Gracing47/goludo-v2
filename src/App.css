@@ -58,18 +58,21 @@ body {
 
 .board-layer {
     position: absolute;
+    top: 5%;
     z-index: var(--z-board);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     transition: transform 0.5s ease;
-    transform: scale(0.92);
+    transform: scale(0.95);
 }
 
 /* Tablet+ */
 @media (min-width: 768px) {
     .board-layer {
-        transform: scale(0.85);
+        top: auto;
+        align-items: center;
+        transform: scale(0.88);
     }
 }
 
@@ -400,6 +403,49 @@ body {
 .menu-btn:active {
     transform: scale(0.95);
     background: rgba(255, 255, 255, 0.2);
+}
+
+/* Menu Dropdown */
+.menu-dropdown-container {
+    position: relative;
+}
+
+.menu-dropdown {
+    position: absolute;
+    bottom: 50px;
+    right: 0;
+    background: rgba(20, 20, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 140px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 200;
+    pointer-events: auto;
+}
+
+.menu-dropdown button {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+
+.menu-dropdown button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.menu-dropdown button:active {
+    background: rgba(255, 0, 122, 0.3);
 }
 
 /* ============================================

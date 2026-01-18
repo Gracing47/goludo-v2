@@ -11,18 +11,16 @@
 }
 
 .dice-roll-button {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    padding: 25px;
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    padding: 15px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .dice-roll-button:hover:not(.disabled) {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 0, 122, 0.4);
-    transform: translateY(-3px);
+    transform: scale(1.05);
 }
 
 .dice-roll-button:active:not(.disabled) {
