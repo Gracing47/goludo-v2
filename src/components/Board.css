@@ -31,17 +31,13 @@
         inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Token layer - positioned above cells */
+/* Token layer - container for absolutely positioned tokens */
 .token-layer {
     position: absolute;
     top: 6px;
     left: 6px;
     right: 6px;
     bottom: 6px;
-    display: grid;
-    grid-template-columns: repeat(15, 1fr);
-    grid-template-rows: repeat(15, 1fr);
-    gap: 0px;
     pointer-events: none;
 }
 

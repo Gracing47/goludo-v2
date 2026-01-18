@@ -1,12 +1,12 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import './Token.css';
 
 function getStackOffset(stackIndex, stackSize) {
     if (stackSize <= 1) return { x: 0, y: 0, scale: 1 };
     const offsets = [
-        { x: -15, y: -15 }, { x: 15, y: -15 },
-        { x: -15, y: 15 }, { x: 15, y: 15 }
+        { x: -20, y: -20 }, { x: 20, y: -20 },
+        { x: -20, y: 20 }, { x: 20, y: 20 }
     ];
     const scale = stackSize === 2 ? 0.75 : 0.6;
     const offset = offsets[stackIndex % 4];
@@ -27,50 +27,56 @@ const Token = ({
 }) => {
     const offset = getStackOffset(stackIndex, stackSize);
 
+    // Calculate percentage position (each cell is 100/15 = 6.667%)
+    const cellSize = 100 / 15;
+    const baseX = col * cellSize + cellSize / 2; // Center of cell
+    const baseY = row * cellSize + cellSize / 2;
+
     return (
         <motion.div
-            layout // Magic: Handles smooth transition between grid positions
-            initial={{ scale: 0, opacity: 0 }}
+            initial={false}
             animate={{
-                scale: 1,
-                opacity: 1,
-                // Apply stacking transforms
-                x: `${offset.x}%`,
-                y: `${offset.y}%`,
+                x: `calc(${baseX}% + ${offset.x}%)`,
+                y: `calc(${baseY}% + ${offset.y}%)`,
                 scale: offset.scale,
                 rotate: rotation
             }}
             whileHover={onClick ? {
-                scale: offset.scale * 1.2,
-                y: '-8%',
-                filter: 'brightness(1.2)'
+                scale: offset.scale * 1.25,
+                filter: 'brightness(1.3)'
             } : {}}
-            whileTap={onClick ? { scale: offset.scale * 0.9 } : {}}
+            whileTap={onClick ? { scale: offset.scale * 0.85 } : {}}
             transition={{
-                layout: { type: "spring", stiffness: 300, damping: 25 },
-                scale: { duration: 0.2 }
+                type: "spring",
+                stiffness: 200,
+                damping: 20,
+                mass: 0.8
             }}
             className={`token token-${color} ${isHighlighted ? 'highlighted' : ''} ${inYard ? 'in-yard' : ''} ${onClick ? 'clickable' : ''}`}
             style={{
-                gridRow: row + 1,
-                gridColumn: col + 1,
-                zIndex: isHighlighted || isMoving ? 100 : 10 + stackIndex,
-                position: 'relative'
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: `${cellSize}%`,
+                height: `${cellSize}%`,
+                zIndex: isHighlighted ? 100 : isMoving ? 90 : 10 + stackIndex,
+                transform: 'translate(-50%, -50%)' // Center on calculated position
             }}
             onClick={onClick}
         >
-            <div className="token-shine" />
+            <div className="token-inner">
+                <div className="token-shine" />
+            </div>
 
-            {/* Active Glow Overlay */}
+            {/* Pulsing highlight ring */}
             {isHighlighted && (
                 <motion.div
                     className="token-glow-ring"
-                    initial={{ opacity: 0, scale: 0.8 }}
                     animate={{
-                        opacity: [0.3, 0.6, 0.3],
-                        scale: [1, 1.2, 1]
+                        opacity: [0.4, 0.8, 0.4],
+                        scale: [1, 1.15, 1]
                     }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
                 />
             )}
         </motion.div>

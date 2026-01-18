@@ -1,31 +1,30 @@
 /* ============================================
-   TOKEN STYLING - NEON GLOW DARK THEME (Framer Motion Enhanced)
+   TOKEN STYLING - FRAMER MOTION ANIMATED
    ============================================ */
 
 .token {
-    width: 85%;
-    height: 85%;
-    margin: 7.5%;
-    border-radius: 50%;
-    
-    /* Subtle glow effect */
-    box-shadow:
-        0 0 8px currentColor,
-        inset 0 -2px 5px rgba(0, 0, 0, 0.3),
-        inset 0 2px 5px rgba(255, 255, 255, 0.15);
-
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
+    pointer-events: auto;
     cursor: default;
-    z-index: 10;
-    
-    /* We remove CSS transitions for transform/top/left as Framer handles them */
-    transition: box-shadow 0.2s ease, filter 0.2s ease;
+    will-change: transform;
 }
 
-/* Shine effect (light reflection) */
+.token-inner {
+    width: 85%;
+    height: 85%;
+    border-radius: 50%;
+    position: relative;
+
+    /* 3D sphere effect */
+    box-shadow:
+        0 0 10px currentColor,
+        inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+        inset 0 3px 6px rgba(255, 255, 255, 0.2);
+}
+
+/* Shine highlight */
 .token-shine {
     position: absolute;
     top: 12%;
@@ -34,47 +33,59 @@
     height: 35%;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%,
-            rgba(255, 255, 255, 0.8),
-            rgba(255, 255, 255, 0.3) 40%,
+            rgba(255, 255, 255, 0.9),
+            rgba(255, 255, 255, 0.4) 40%,
             transparent 70%);
     pointer-events: none;
 }
 
-/* Active Highlight Glow Ring (Framer Mockup) */
+/* Pulsing glow ring for highlighted tokens */
 .token-glow-ring {
     position: absolute;
-    inset: -6px;
+    inset: -8%;
     border: 2px solid currentColor;
     border-radius: 50%;
+    filter: blur(3px);
     pointer-events: none;
-    filter: blur(4px);
 }
 
 /* ============================================
    TOKEN COLORS
    ============================================ */
 
+.token-red .token-inner {
+    background: radial-gradient(circle at 35% 35%, #ff9999, #ff4757 50%, #cc2233);
+    border: 2px solid rgba(255, 71, 87, 0.7);
+}
+
 .token-red {
-    background: radial-gradient(circle at 35% 35%, #ff8a8a, #ff4757 50%, #cc2233);
-    border: 1px solid rgba(255, 71, 87, 0.6);
     color: #ff4757;
 }
 
+.token-green .token-inner {
+    background: radial-gradient(circle at 35% 35%, #6fffb0, #00d26a 50%, #00a855);
+    border: 2px solid rgba(0, 210, 106, 0.7);
+}
+
 .token-green {
-    background: radial-gradient(circle at 35% 35%, #5eeea0, #00d26a 50%, #00a855);
-    border: 1px solid rgba(0, 210, 106, 0.6);
     color: #00d26a;
 }
 
+.token-yellow .token-inner {
+    background: radial-gradient(circle at 35% 35%, #fff080, #ffbe0b 50%, #e6a800);
+    border: 2px solid rgba(255, 190, 11, 0.7);
+}
+
 .token-yellow {
-    background: radial-gradient(circle at 35% 35%, #ffe066, #ffbe0b 50%, #e6a800);
-    border: 1px solid rgba(255, 190, 11, 0.6);
     color: #ffbe0b;
 }
 
+.token-blue .token-inner {
+    background: radial-gradient(circle at 35% 35%, #8ac4ff, #3a86ff 50%, #2060cc);
+    border: 2px solid rgba(58, 134, 255, 0.7);
+}
+
 .token-blue {
-    background: radial-gradient(circle at 35% 35%, #7ab8ff, #3a86ff 50%, #2060cc);
-    border: 1px solid rgba(58, 134, 255, 0.6);
     color: #3a86ff;
 }
 
@@ -86,14 +97,17 @@
     cursor: pointer;
 }
 
-.token.highlighted {
-    box-shadow: 0 0 20px currentColor, 0 0 40px currentColor;
-    z-index: 40;
+.token.highlighted .token-inner {
+    box-shadow:
+        0 0 15px currentColor,
+        0 0 30px currentColor,
+        inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+        inset 0 3px 6px rgba(255, 255, 255, 0.2);
 }
 
-.token.in-yard {
-    width: 65%;
-    height: 65%;
+.token.in-yard .token-inner {
+    width: 70%;
+    height: 70%;
 }
 
 /* ============================================
@@ -101,9 +115,12 @@
    ============================================ */
 
 @media (max-width: 480px) {
-    .token {
-        box-shadow: 0 0 8px currentColor;
+    .token-inner {
+        box-shadow:
+            0 0 6px currentColor,
+            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
     }
+
     .token-shine {
         width: 30%;
         height: 30%;
