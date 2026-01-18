@@ -283,17 +283,25 @@ io.on('connection', (socket) => {
         clearRoomTimers(room.id);
 
         const newState = rollDice(room.gameState);
-        const rolledValue = newState.diceValue;
+        const rolledValue = newState.diceValue; // This might be null if penalty applied, but let's check original
+        const isPenalty = newState.message && newState.message.includes('Triple 6');
+
         room.gameState = newState;
 
-        console.log(`🎲 Player ${activePlayerIdx} rolled ${rolledValue}`);
+        console.log(`🎲 Player ${activePlayerIdx} rolled ${rolledValue || 'Penalty'}`);
 
-        io.to(roomId).emit('dice_rolled', { value: rolledValue, playerIndex: activePlayerIdx });
+        // Emit the roll (use 6 if penalty, so dice actually rolls)
+        io.to(roomId).emit('dice_rolled', {
+            value: isPenalty ? 6 : rolledValue,
+            playerIndex: activePlayerIdx
+        });
+
         broadcastState(room);
 
-        // If no valid moves, auto-skip after brief delay
-        if (room.gameState.validMoves.length === 0) {
-            setTimeout(() => handleNextTurn(io, room), 1500);
+        // If penalty or no valid moves, auto-skip after brief delay
+        if (isPenalty || room.gameState.validMoves.length === 0) {
+            const delay = isPenalty ? 2500 : 1500;
+            setTimeout(() => handleNextTurn(io, room), delay);
         } else {
             // Player has valid moves - start timer for token selection
             startTurnTimer(io, room, activePlayerIdx, room.gameState.gamePhase);
