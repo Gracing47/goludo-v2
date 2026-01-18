@@ -176,44 +176,34 @@
 }
 
 .base-red.active-turn {
-    --glow-color: rgba(255, 71, 87, 0.7);
-    animation: pulse-glow-base 1.5s infinite ease-in-out;
-    border-color: #ff4757 !important;
-    box-shadow: 0 0 20px var(--glow-color), inset 0 0 15px var(--glow-color);
+    animation: pulse-subtle 2s infinite ease-in-out;
+    border-color: rgba(255, 71, 87, 0.6) !important;
 }
 
 .base-green.active-turn {
-    --glow-color: rgba(0, 210, 106, 0.7);
-    animation: pulse-glow-base 1.5s infinite ease-in-out;
-    border-color: #00d26a !important;
-    box-shadow: 0 0 20px var(--glow-color), inset 0 0 15px var(--glow-color);
+    animation: pulse-subtle 2s infinite ease-in-out;
+    border-color: rgba(0, 210, 106, 0.6) !important;
 }
 
 .base-yellow.active-turn {
-    --glow-color: rgba(255, 190, 11, 0.7);
-    animation: pulse-glow-base 1.5s infinite ease-in-out;
-    border-color: #ffbe0b !important;
-    box-shadow: 0 0 20px var(--glow-color), inset 0 0 15px var(--glow-color);
+    animation: pulse-subtle 2s infinite ease-in-out;
+    border-color: rgba(255, 190, 11, 0.6) !important;
 }
 
 .base-blue.active-turn {
-    --glow-color: rgba(58, 134, 255, 0.7);
-    animation: pulse-glow-base 1.5s infinite ease-in-out;
-    border-color: #3a86ff !important;
-    box-shadow: 0 0 20px var(--glow-color), inset 0 0 15px var(--glow-color);
+    animation: pulse-subtle 2s infinite ease-in-out;
+    border-color: rgba(58, 134, 255, 0.6) !important;
 }
 
-@keyframes pulse-glow-base {
+@keyframes pulse-subtle {
 
     0%,
     100% {
         filter: brightness(1);
-        box-shadow: 0 0 15px var(--glow-color), inset 0 0 10px var(--glow-color);
     }
 
     50% {
-        filter: brightness(1.15);
-        box-shadow: 0 0 30px var(--glow-color), inset 0 0 20px var(--glow-color);
+        filter: brightness(1.08);
     }
 }
 

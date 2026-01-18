@@ -10,55 +10,47 @@ import './Dice.css';
 
 const Dice = ({ value, onRoll, disabled, isRolling }) => {
     return (
-        <div className="dice-container">
-            <button
-                className={`dice-roll-button ${disabled ? 'disabled' : ''}`}
-                onClick={onRoll}
-                disabled={disabled}
-            >
-                <div className={`dice ${isRolling ? 'rolling' : ''} show-${value || 1}`}>
-                    <div className="dice-face face-1">
-                        <span className="dot"></span>
-                    </div>
-                    <div className="dice-face face-2">
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                    </div>
-                    <div className="dice-face face-3">
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                    </div>
-                    <div className="dice-face face-4">
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                    </div>
-                    <div className="dice-face face-5">
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                    </div>
-                    <div className="dice-face face-6">
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                        <span className="dot"></span>
-                    </div>
+        <button
+            className={`dice-button ${disabled ? 'disabled' : ''} ${isRolling ? 'rolling-container' : ''}`}
+            onClick={onRoll}
+            disabled={disabled}
+        >
+            <div className={`dice ${isRolling ? 'rolling' : ''} show-${value || 1}`}>
+                <div className="dice-face face-1">
+                    <span className="dot"></span>
                 </div>
-            </button>
-
-            {value && !disabled && (
-                <div className="dice-result">
-                    Rolled: {value}
+                <div className="dice-face face-2">
+                    <span className="dot"></span>
+                    <span className="dot"></span>
                 </div>
-            )}
-        </div>
+                <div className="dice-face face-3">
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                </div>
+                <div className="dice-face face-4">
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                </div>
+                <div className="dice-face face-5">
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                </div>
+                <div className="dice-face face-6">
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                    <span className="dot"></span>
+                </div>
+            </div>
+        </button>
     );
 };
 

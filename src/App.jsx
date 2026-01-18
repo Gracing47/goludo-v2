@@ -809,14 +809,12 @@ function App() {
                     {/* Center: Dice & Ticker */}
                     <div className="dock-center">
                         <div className="game-ticker">{getTickerText()}</div>
-                        <div className={`dice-plate ${canRoll ? 'active-turn' : ''}`}>
-                            <Dice
-                                value={gameState.diceValue}
-                                onRoll={handleRoll}
-                                disabled={!canRoll}
-                                isRolling={isRolling}
-                            />
-                        </div>
+                        <Dice
+                            value={gameState.diceValue}
+                            onRoll={handleRoll}
+                            disabled={!canRoll}
+                            isRolling={isRolling}
+                        />
                     </div>
 
                     {/* Right: Menu */}
