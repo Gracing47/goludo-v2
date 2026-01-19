@@ -102,14 +102,17 @@ export function rollDice(state, forcedValue = null) {
 
     // Triple-6 penalty check
     if (RULES.TRIPLE_SIX_PENALTY && newState.consecutiveSixes >= 3) {
+        soundManager.play('penalty');
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
         return {
             ...newState,
             gamePhase: GAME_PHASE.ROLL_DICE,
             activePlayer: getNextPlayer(state.activePlayer, state.activeColors),
             consecutiveSixes: 0,
-            diceValue: null,    // Clear dice display
-            validMoves: [],     // Clear any stale moves
-            bonusMoves: 0,      // Clear any pending bonuses
+            diceValue: null,
+            validMoves: [],
+            bonusMoves: 0,
             message: '⚠️ Triple 6! Turn forfeited!'
         };
     }

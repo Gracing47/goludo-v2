@@ -36,27 +36,29 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const cells = [];
+    const cells = React.useMemo(() => {
+        const result = [];
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                const cellType = BOARD_LAYOUT[row][col];
+                const cellClasses = getCellClasses(cellType, row, col, activePlayer);
 
-    for (let row = 0; row < GRID_SIZE; row++) {
-        for (let col = 0; col < GRID_SIZE; col++) {
-            const cellType = BOARD_LAYOUT[row][col];
-            const cellClasses = getCellClasses(cellType, row, col, activePlayer);
-
-            cells.push(
-                <div
-                    key={`${row}-${col}`}
-                    className={`board-cell ${cellClasses}`}
-                    data-row={row}
-                    data-col={col}
-                    style={{
-                        gridRow: row + 1,
-                        gridColumn: col + 1
-                    }}
-                />
-            );
+                result.push(
+                    <div
+                        key={`${row}-${col}`}
+                        className={`board-cell ${cellClasses}`}
+                        data-row={row}
+                        data-col={col}
+                        style={{
+                            gridRow: row + 1,
+                            gridColumn: col + 1
+                        }}
+                    />
+                );
+            }
         }
-    }
+        return result;
+    }, [activePlayer, rotation, boardSize]);
 
     return (
         <div className="board-wrapper">
@@ -81,7 +83,7 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
 function getCellClasses(cellType, row, col, activePlayer) {
     const classes = [cellType];
 
-    // Check for spawn points in bases
+    // 1. Check for spawn points in bases
     const spawnPositions = {
         'base-red': [[1, 1], [1, 4], [4, 1], [4, 4]],
         'base-green': [[1, 10], [1, 13], [4, 10], [4, 13]],
@@ -90,27 +92,31 @@ function getCellClasses(cellType, row, col, activePlayer) {
     };
 
     if (spawnPositions[cellType]) {
-        const isSpawn = spawnPositions[cellType].some(
-            ([r, c]) => r === row && c === col
-        );
-        if (isSpawn) {
-            classes.push('spawn-point');
-        }
+        const isSpawn = spawnPositions[cellType].some(([r, c]) => r === row && c === col);
+        if (isSpawn) classes.push('spawn-point');
     }
 
-    // Active Base Glow
-    if (activePlayer === 0 && cellType === 'base-red') classes.push('active-turn');
-    if (activePlayer === 1 && cellType === 'base-green') classes.push('active-turn');
-    if (activePlayer === 2 && cellType === 'base-yellow') classes.push('active-turn');
-    if (activePlayer === 3 && cellType === 'base-blue') classes.push('active-turn');
+    // 2. Base Detail: Edge vs Inner for refined active effects
+    // Bases are 6x6 in corners
+    const isBase = cellType.startsWith('base-');
+    if (isBase) {
+        const r0 = row < 6 ? 0 : 9;
+        const c0 = col < 6 ? 0 : 9;
+        const isEdge = row === r0 || row === r0 + 5 || col === c0 || col === c0 + 5;
+        classes.push(isEdge ? 'base-edge' : 'base-inner');
+    }
 
-    // Home Stretch Highlight
+    // 3. Active Player Highlight
+    const activeColor = ['base-red', 'base-green', 'base-yellow', 'base-blue'][activePlayer];
+    if (cellType === activeColor) {
+        classes.push('active-turn');
+    }
+
+    // 4. Home Stretch Highlight
     const homeStretch = HOME_STRETCH_COORDS[activePlayer];
     if (homeStretch) {
         const isHomePath = homeStretch.some(p => p.r === row && p.c === col);
-        if (isHomePath) {
-            classes.push('home-path-active');
-        }
+        if (isHomePath) classes.push('home-path-active');
     }
 
     return classes.join(' ');

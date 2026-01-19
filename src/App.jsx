@@ -134,18 +134,18 @@ function App() {
         setIsMuted(newMuted);
     }, []);
 
+    const handleInteraction = useCallback(() => {
+        if (!soundManager.isMuted()) {
+            soundManager.playBGM();
+        }
+        window.removeEventListener('click', handleInteraction);
+    }, []);
+
     // Initialize Audio (BGM)
     useEffect(() => {
-        // Attempt to play BGM (might require interaction)
-        const handleInteraction = () => {
-            if (!soundManager.isMuted()) {
-                soundManager.playBGM();
-            }
-            window.removeEventListener('click', handleInteraction);
-        };
         window.addEventListener('click', handleInteraction);
         return () => window.removeEventListener('click', handleInteraction);
-    }, []);
+    }, [handleInteraction]);
 
     // ============================================
     // GAME START LOGIC (Refactored from handleStartGame)
@@ -451,19 +451,19 @@ function App() {
         setGameState(prev => moveToken(prev, move));
 
         setTimeout(() => {
-            const newState = completeMoveAnimation(gameState);
-            setGameState(prev => completeMoveAnimation(prev));
+            setGameState(prev => {
+                const newState = completeMoveAnimation(prev);
+
+                // Audio feedback based on outcome
+                soundManager.play('land');
+                if (newState.bonusMoves > 0) {
+                    soundManager.play('bonus');
+                }
+
+                return newState;
+            });
             setIsMoving(false);
             aiActionInProgress.current = false;
-
-            // Play sound based on result
-            soundManager.play('land');
-
-            if (newState.bonusMoves > 0) {
-                soundManager.play('bonus');
-            } else if (newState.gamePhase === 'WIN') {
-                // Win sound handled in useEffect
-            }
         }, 400);
     }, [gameState, gameConfig, account]);
 
@@ -658,13 +658,13 @@ function App() {
 
     // 🔥 PERFORMANCE FIX: Memoize expensive calculations BEFORE any returns
     // These must be called unconditionally (React Rules of Hooks)
+    // 🔥 PERFORMANCE FIX: Memoize expensive calculations
     const tokensWithCoords = useMemo(() => {
-        if (!gameState) return [];
         return getTokensWithCoords();
-    }, [gameState?.tokens]); // Don't include getTokensWithCoords - it changes every render!
+    }, [getTokensWithCoords]);
 
     const currentPlayer = useMemo(() => {
-        if (!gameState || !gameConfig || !gameConfig.players) return null;
+        if (!gameState || !gameConfig?.players) return null;
         return gameConfig.players[gameState.activePlayer] || null;
     }, [gameConfig?.players, gameState?.activePlayer]);
 
@@ -680,25 +680,19 @@ function App() {
 
     // Turn Logic - MEMOIZED to prevent loop
     const isLocalPlayerTurn = useMemo(() => {
-        // Need config to determine mode
         if (!gameConfig) return false;
 
         // For Web3 mode: compare addresses
         if (gameConfig.mode === 'web3') {
-            if (!currentPlayer || !account?.address) {
-                console.log('🎯 Turn: No player/account', { currentPlayer, hasAccount: !!account });
-                return false;
-            }
+            if (!currentPlayer || !account?.address) return false;
             const currentAddr = currentPlayer?.address?.toLowerCase();
             const myAddr = account.address.toLowerCase();
-            const isMyTurn = currentAddr === myAddr;
-            console.log('🎯 Turn:', { activePlayer: gameState?.activePlayer, currentAddr, myAddr, isMyTurn });
-            return isMyTurn;
+            return currentAddr === myAddr;
         }
 
         // For Local/AI mode: human can always play (when not AI turn)
         return !isAITurn;
-    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.activePlayer]);
+    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn]);
 
     const canRoll = useMemo(() => {
         if (!gameState) return false;
