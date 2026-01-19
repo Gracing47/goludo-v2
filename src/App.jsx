@@ -18,6 +18,7 @@ import Token from './components/Token';
 import Dice from './components/Dice';
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
+import { SpawnSparkle } from './components/ParticleEffects';
 import soundManager from './services/SoundManager';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -118,6 +119,9 @@ function App() {
 
     // Capture explosion effect state: { id, color, row, col }[]
     const [captureEffects, setCaptureEffects] = useState([]);
+
+    // Spawn sparkle effect state: { id, color, row, col }[]
+    const [spawnEffects, setSpawnEffects] = useState([]);
 
     // Sound Mute State
     const [isMuted, setIsMuted] = useState(soundManager.isMuted());
@@ -381,9 +385,35 @@ function App() {
             // Let's do local update for UI and let server correct if needed.
         }
 
+        // 🌟 Spawn Sparkle
+        if (move.isSpawn) {
+            const coords = PLAYER_START_POSITIONS[gameState.activePlayer];
+            // Correct mapping for spawn point
+            const gridPos = PLAYER_START_POSITIONS[gameState.activePlayer]; // Wait, this is position index
+            // I need the actual Row/Col for the start position
+            // It's in boardMap or constants. PLAYER_START_POSITIONS are indices.
+            // Let's use the MASTER_LOOP to get coords for startPos
+            const startPos = PLAYER_START_POSITIONS[gameState.activePlayer];
+            const startCoords = MASTER_LOOP[startPos];
+
+            if (startCoords) {
+                const newSpawn = {
+                    id: Date.now(),
+                    color: PLAYER_COLORS[gameState.activePlayer],
+                    row: startCoords.r,
+                    col: startCoords.c
+                };
+                setSpawnEffects(prev => [...prev, newSpawn]);
+                setTimeout(() => {
+                    setSpawnEffects(prev => prev.filter(e => e.id !== newSpawn.id));
+                }, 600);
+            }
+            soundManager.play('spawn');
+        }
+
         // 💥 Capture Explosion: Trigger if this move has captures
         if (move.captures && move.captures.length > 0) {
-            // Get coordinates for the destination (where capture happens)
+            // ... (rest of capture logic)
             let coords = null;
             const toPos = move.toPosition;
             if (toPos >= 0 && toPos < MASTER_LOOP.length) {
@@ -410,6 +440,8 @@ function App() {
                 navigator.vibrate([50, 30, 50]);
             }
             soundManager.play('capture');
+        } else if (move.isHome) {
+            soundManager.play('home');
         } else {
             // Regular move sound
             soundManager.play('move');
@@ -425,6 +457,8 @@ function App() {
             aiActionInProgress.current = false;
 
             // Play sound based on result
+            soundManager.play('land');
+
             if (newState.bonusMoves > 0) {
                 soundManager.play('bonus');
             } else if (newState.gamePhase === 'WIN') {
@@ -754,6 +788,19 @@ function App() {
                             color={effect.color}
                             row={effect.row}
                             col={effect.col}
+                        />
+                    ))}
+
+                    {/* ✨ Spawn Sparkles */}
+                    {spawnEffects.map(effect => (
+                        <SpawnSparkle
+                            key={effect.id}
+                            color={effect.color}
+                            position={{
+                                x: (effect.col + 0.5) * (100 / 15) + '%', // Assuming 15x15 board
+                                y: (effect.row + 0.5) * (100 / 15) + '%'
+                            }}
+                            onComplete={() => { }}
                         />
                     ))}
                 </Board>

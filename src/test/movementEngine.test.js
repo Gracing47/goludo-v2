@@ -125,7 +125,7 @@ describe('Movement Engine', () => {
     });
 
     describe('isBlockedByBlockade', () => {
-        it('should NOT detect blockade when BLOCKADE_STRICT is false (casual mode)', () => {
+        it('should detect blockade when BLOCKADE_STRICT is true (standard mode)', () => {
             const state = createTestState([
                 [10, 10, POSITION.IN_YARD, POSITION.IN_YARD], // Two Red tokens at 10
                 [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD],
@@ -133,9 +133,9 @@ describe('Movement Engine', () => {
                 [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD]
             ]);
 
-            // With BLOCKADE_STRICT: false, tokens can stack freely - no blockade
+            // With BLOCKADE_STRICT: true, tokens at position 10 form a wall
             const blocked = isBlockedByBlockade(state, 1, 10);
-            expect(blocked).toBe(false);
+            expect(blocked).toBe(true);
         });
 
         it('should not block on home stretch positions', () => {
