@@ -15,16 +15,22 @@ import { useShallow } from 'zustand/shallow';
 const LudoLobby: React.FC = () => {
     const navigate = useNavigate();
 
-    const { setConfig, setAppState } = useGameStore(useShallow((s) => ({
+    const { setConfig, setAppState, setState } = useGameStore(useShallow((s) => ({
         setConfig: s.setConfig,
         setAppState: s.setAppState,
+        setState: s.setState,
     })));
 
     /**
      * Handle game start from Lobby component
-     * Navigates to the game room and updates app state
+     * Sets up game state BEFORE navigation to ensure GameRoom has data
      */
     const handleStartGame = useCallback((config: any) => {
+        // Set config and state FIRST, THEN navigate
+        setConfig(config);
+        setAppState('game');
+
+        // Navigate to game room
         if (config.mode === 'web3' && config.roomId) {
             // Web3: Use existing room ID from blockchain
             navigate(gameRoute(config.roomId));
@@ -33,11 +39,6 @@ const LudoLobby: React.FC = () => {
             const newGameId = Math.random().toString(36).substring(2, 11);
             navigate(gameRoute(newGameId));
         }
-
-        // The actual game initialization happens in GameRoom
-        // We just pass the config through the store
-        setConfig(config);
-        setAppState('game');
     }, [navigate, setConfig, setAppState]);
 
     const handleBack = useCallback(() => {

@@ -704,16 +704,7 @@ function App() {
         return result;
     }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
-    // Render lobby
-    if (appState === 'lobby') {
-        return (
-            <div className="app">
-                <Lobby onStartGame={handleStartGame} />
-            </div>
-        );
-    }
-
-    // Render game
+    // Game loading state - show when game state isn't ready yet
     if (!gameState || !gameConfig) {
         return (
             <div className="app-loading">
