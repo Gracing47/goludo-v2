@@ -41,7 +41,7 @@ const LudoLobby: React.FC = () => {
     }, [navigate, setConfig, setAppState]);
 
     const handleBack = useCallback(() => {
-        navigate(ROUTES.APP);
+        navigate(ROUTES.LANDING);
     }, [navigate]);
 
     return (
@@ -49,7 +49,7 @@ const LudoLobby: React.FC = () => {
             {/* Back Button Header */}
             <header className="lobby-header">
                 <button className="btn-back-lobby" onClick={handleBack}>
-                    ← Games
+                    ← Home
                 </button>
             </header>
 

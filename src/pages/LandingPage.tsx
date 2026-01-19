@@ -1,12 +1,11 @@
 /**
  * Landing Page
  * 
- * Premium marketing page with:
+ * Simple Uniswap-style marketing page with:
  * - Hero section with CTA
  * - Live stats (games played, earnings, etc.)
- * - Game showcase
  * 
- * This is the entry point when users visit goludo.app
+ * "Launch App" navigates directly to the Ludo Lobby
  */
 
 import React from 'react';
@@ -26,7 +25,8 @@ const LandingPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleLaunchApp = () => {
-        navigate(ROUTES.APP);
+        // Go directly to Ludo Lobby
+        navigate(ROUTES.LUDO_LOBBY);
     };
 
     return (
@@ -34,14 +34,14 @@ const LandingPage: React.FC = () => {
             {/* Hero Section */}
             <section className="hero">
                 <div className="hero-content">
+                    <div className="logo-badge">🎲</div>
                     <h1 className="hero-title">
-                        <span className="gradient-text">Play.</span>
-                        <span className="gradient-text">Stake.</span>
-                        <span className="gradient-text">Win.</span>
+                        <span className="gradient-text">GoLudo</span>
                     </h1>
+                    <p className="hero-tagline">Play. Stake. Win.</p>
                     <p className="hero-subtitle">
-                        The ultimate Web3 gaming platform. Compete in classic board games,
-                        stake crypto, and earn real rewards.
+                        The ultimate Web3 Ludo experience. Compete with friends,
+                        stake crypto, and earn real rewards on Flare Network.
                     </p>
                     <button className="btn-launch" onClick={handleLaunchApp}>
                         🚀 Launch App
@@ -79,40 +79,9 @@ const LandingPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Game Showcase */}
-            <section className="game-showcase">
-                <h2 className="section-title">Featured Games</h2>
-                <div className="game-cards">
-                    <div className="game-card featured" onClick={handleLaunchApp}>
-                        <div className="card-badge">🔥 Most Popular</div>
-                        <div className="card-icon">🎲</div>
-                        <h3>Ludo</h3>
-                        <p>Classic board game with Web3 stakes</p>
-                        <div className="card-stats">
-                            <span>2-4 Players</span>
-                            <span>0.01 - 1 ETH</span>
-                        </div>
-                    </div>
-
-                    <div className="game-card coming-soon">
-                        <div className="card-badge">Coming Soon</div>
-                        <div className="card-icon">♟️</div>
-                        <h3>Chess</h3>
-                        <p>Stake and checkmate</p>
-                    </div>
-
-                    <div className="game-card coming-soon">
-                        <div className="card-badge">Coming Soon</div>
-                        <div className="card-icon">🃏</div>
-                        <h3>Cards</h3>
-                        <p>Classic card games</p>
-                    </div>
-                </div>
-            </section>
-
             {/* Footer */}
             <footer className="landing-footer">
-                <p>© 2026 GoLudo. Built on Celo.</p>
+                <p>© 2026 GoLudo. Built on Flare Network.</p>
             </footer>
         </div>
     );
