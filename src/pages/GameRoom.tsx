@@ -9,54 +9,84 @@
  * It acts as the boundary between the routing layer and the game engine.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import App from '../App';
 import { ROUTES } from '../config/routes';
 import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
+import { createInitialState } from '../engine/gameLogic';
 
 const GameRoom: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const navigate = useNavigate();
+    const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
 
-    const { appState, config, setAppState } = useGameStore(useShallow((s) => ({
+    const { appState, config, state, setAppState, setConfig, setState } = useGameStore(useShallow((s) => ({
         appState: s.appState,
         config: s.config,
+        state: s.state,
         setAppState: s.setAppState,
+        setConfig: s.setConfig,
+        setState: s.setState,
     })));
 
     /**
-     * Ensure we're in game state when accessing this route
-     * If no config exists, try to resume from localStorage or redirect
+     * Validate room and initialize game state
      */
     useEffect(() => {
         if (!roomId) {
             // No room ID in URL, redirect to lobby
-            navigate(ROUTES.LUDO_LOBBY);
+            navigate(ROUTES.LUDO_LOBBY, { replace: true });
             return;
         }
 
-        // If we're coming directly to this URL (refresh or direct link)
-        if (appState === 'lobby' && !config) {
-            // Try to resume from localStorage
-            const savedData = localStorage.getItem(`ludo_game_${roomId}`);
+        // If we already have valid game state, we're good
+        if (state && config) {
+            setIsValidRoom(true);
+            return;
+        }
 
-            if (savedData) {
-                // Game exists in localStorage, App component will handle resumption
+        // Try to resume from localStorage
+        const savedData = localStorage.getItem(`ludo_game_${roomId}`);
+
+        if (savedData) {
+            try {
+                const { config: savedConfig, state: savedState } = JSON.parse(savedData);
+                setConfig(savedConfig);
+                setState(savedState);
                 setAppState('game');
-            } else if (roomId.length > 20) {
-                // Looks like a Web3 room ID (bytes32 hash), App will connect
-                setAppState('game');
-            } else {
-                // Unknown room, redirect to lobby
-                navigate(ROUTES.LUDO_LOBBY);
+                setIsValidRoom(true);
+                return;
+            } catch (e) {
+                console.warn("Failed to resume game from localStorage", e);
             }
         }
-    }, [roomId, appState, config, navigate, setAppState]);
 
-    // The App component handles all game logic
-    // We just render it here in the game route context
+        // Check if it's a Web3 room ID (bytes32 hash = 66 chars with 0x prefix or 64 without)
+        if (roomId.length > 20) {
+            // Looks like a Web3 room, let App.jsx handle socket connection
+            setAppState('game');
+            setIsValidRoom(true);
+            return;
+        }
+
+        // Unknown/invalid room - redirect to lobby
+        console.warn(`Room ${roomId} not found, redirecting to lobby`);
+        navigate(ROUTES.LUDO_LOBBY, { replace: true });
+    }, [roomId, state, config, navigate, setAppState, setConfig, setState]);
+
+    // Show nothing while validating (will redirect if invalid)
+    if (isValidRoom === null) {
+        return null;
+    }
+
+    // If invalid, we're redirecting - show nothing
+    if (!isValidRoom) {
+        return null;
+    }
+
+    // Valid room - render the game
     return <App />;
 };
 
