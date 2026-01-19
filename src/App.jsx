@@ -34,7 +34,8 @@ import {
     MASTER_LOOP,
     HOME_STRETCH_COORDS,
     YARD_COORDS,
-    POSITION
+    POSITION,
+    PLAYER_START_POSITIONS
 } from './engine/constants';
 
 import {
