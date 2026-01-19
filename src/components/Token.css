@@ -1,5 +1,5 @@
 /* ============================================
-   TOKEN STYLING - Clean & Simple
+   TOKEN STYLING - Premium AAA Gaming
    ============================================ */
 
 .token {
@@ -8,8 +8,9 @@
     align-items: center;
     pointer-events: auto;
     cursor: default;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, filter 0.15s ease;
     transform: rotate(var(--rotation, 0deg));
+    position: relative;
 }
 
 .token.stacked {
@@ -17,8 +18,12 @@
         rotate(var(--rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
 }
 
+.token.animating {
+    z-index: 50 !important;
+}
+
 /* ============================================
-   TOKEN INNER SPHERE
+   TOKEN INNER SPHERE - Premium 3D Effect
    ============================================ */
 
 .token-inner {
@@ -27,42 +32,78 @@
     border-radius: 50%;
     position: relative;
     box-shadow:
-        0 0 10px currentColor,
-        inset 0 -3px 6px rgba(0, 0, 0, 0.4),
-        inset 0 3px 6px rgba(255, 255, 255, 0.2);
+        0 0 12px currentColor,
+        0 4px 8px rgba(0, 0, 0, 0.5),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+        inset 0 4px 8px rgba(255, 255, 255, 0.25);
+    transition: box-shadow 0.2s ease;
 }
 
 .token-shine {
     position: absolute;
-    top: 12%;
-    left: 18%;
-    width: 35%;
-    height: 35%;
+    top: 10%;
+    left: 15%;
+    width: 40%;
+    height: 40%;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%,
-            rgba(255, 255, 255, 0.9),
-            rgba(255, 255, 255, 0.4) 40%,
+            rgba(255, 255, 255, 1),
+            rgba(255, 255, 255, 0.5) 30%,
             transparent 70%);
     pointer-events: none;
 }
 
-/* Pulsing glow for highlighted tokens */
+/* Premium glow ring with sharper animation */
 .token-glow-ring {
     position: absolute;
-    inset: -8%;
-    border: 2px solid currentColor;
+    inset: -12%;
+    border: 3px solid currentColor;
     border-radius: 50%;
-    filter: blur(3px);
+    filter: blur(4px);
+    pointer-events: none;
+    box-shadow: 0 0 15px currentColor;
+}
+
+/* Landing ripple effect */
+.token-landing-ripple {
+    position: absolute;
+    inset: -5%;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: landing-ripple 0.4s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes landing-ripple {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Movement trail effect */
+.token-trail {
+    position: absolute;
+    inset: 5%;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.4;
     pointer-events: none;
 }
 
 /* ============================================
-   TOKEN COLORS
+   TOKEN COLORS - Vibrant & Premium
    ============================================ */
 
 .token-red .token-inner {
-    background: radial-gradient(circle at 35% 35%, #ff9999, #ff4757 50%, #cc2233);
-    border: 2px solid rgba(255, 71, 87, 0.7);
+    background: radial-gradient(circle at 30% 30%, #ffb3b8, #ff4757 45%, #b8001c 100%);
+    border: 2px solid rgba(255, 71, 87, 0.8);
 }
 
 .token-red {
@@ -70,8 +111,8 @@
 }
 
 .token-green .token-inner {
-    background: radial-gradient(circle at 35% 35%, #6fffb0, #00d26a 50%, #00a855);
-    border: 2px solid rgba(0, 210, 106, 0.7);
+    background: radial-gradient(circle at 30% 30%, #90ffb8, #00d26a 45%, #008040 100%);
+    border: 2px solid rgba(0, 210, 106, 0.8);
 }
 
 .token-green {
@@ -79,8 +120,8 @@
 }
 
 .token-yellow .token-inner {
-    background: radial-gradient(circle at 35% 35%, #fff080, #ffbe0b 50%, #e6a800);
-    border: 2px solid rgba(255, 190, 11, 0.7);
+    background: radial-gradient(circle at 30% 30%, #fff5a0, #ffbe0b 45%, #cc9600 100%);
+    border: 2px solid rgba(255, 190, 11, 0.8);
 }
 
 .token-yellow {
@@ -88,8 +129,8 @@
 }
 
 .token-blue .token-inner {
-    background: radial-gradient(circle at 35% 35%, #8ac4ff, #3a86ff 50%, #2060cc);
-    border: 2px solid rgba(58, 134, 255, 0.7);
+    background: radial-gradient(circle at 30% 30%, #a0d4ff, #3a86ff 45%, #1a50cc 100%);
+    border: 2px solid rgba(58, 134, 255, 0.8);
 }
 
 .token-blue {
@@ -97,24 +138,52 @@
 }
 
 /* ============================================
-   STATES
+   STATES - Interactive Feedback
    ============================================ */
 
 .token.clickable {
     cursor: pointer;
 }
 
+.token.clickable:hover .token-inner {
+    filter: brightness(1.15);
+}
+
 .token.highlighted .token-inner {
     box-shadow:
-        0 0 15px currentColor,
-        0 0 30px currentColor,
-        inset 0 -3px 6px rgba(0, 0, 0, 0.4),
-        inset 0 3px 6px rgba(255, 255, 255, 0.2);
+        0 0 20px currentColor,
+        0 0 40px currentColor,
+        0 4px 8px rgba(0, 0, 0, 0.5),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.4),
+        inset 0 4px 8px rgba(255, 255, 255, 0.3);
+    animation: highlighted-pulse 1s infinite ease-in-out;
+}
+
+@keyframes highlighted-pulse {
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.2);
+    }
 }
 
 .token.in-yard .token-inner {
     width: 70%;
     height: 70%;
+    opacity: 0.85;
+}
+
+/* Animating token gets shadow boost */
+.token.animating .token-inner {
+    box-shadow:
+        0 0 20px currentColor,
+        0 8px 16px rgba(0, 0, 0, 0.6),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.5),
+        inset 0 4px 8px rgba(255, 255, 255, 0.25);
 }
 
 /* ============================================
@@ -124,12 +193,37 @@
 @media (max-width: 480px) {
     .token-inner {
         box-shadow:
-            0 0 6px currentColor,
+            0 0 8px currentColor,
+            0 2px 4px rgba(0, 0, 0, 0.4),
             inset 0 -2px 4px rgba(0, 0, 0, 0.4);
     }
 
     .token-shine {
-        width: 30%;
-        height: 30%;
+        width: 35%;
+        height: 35%;
+    }
+
+    .token-glow-ring {
+        inset: -10%;
+        border-width: 2px;
+    }
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .token,
+    .token-inner,
+    .token-glow-ring {
+        animation: none !important;
+        transition: none !important;
+    }
+
+    .token-landing-ripple,
+    .token-trail {
+        display: none;
     }
 }

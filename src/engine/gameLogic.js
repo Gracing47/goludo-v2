@@ -17,7 +17,8 @@ import {
     POSITION,
     PLAYER_START_POSITIONS,
     RULES,
-    DICE
+    DICE,
+    SAFE_POSITIONS
 } from './constants.js';
 
 import {

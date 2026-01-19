@@ -266,90 +266,102 @@ io.on('connection', (socket) => {
     });
 
     socket.on('roll_dice', ({ roomId, playerAddress }) => {
-        const room = activeRooms.find(r => r.id === roomId);
-        if (!room || !room.gameState) return;
+        try {
+            const room = activeRooms.find(r => r.id === roomId);
+            if (!room || !room.gameState) return;
 
-        const activePlayerIdx = room.gameState.activePlayer;
-        const activePlayerObj = room.players[activePlayerIdx]; // FIXED: Direct index lookup
+            const activePlayerIdx = room.gameState.activePlayer;
+            const activePlayerObj = room.players[activePlayerIdx];
 
-        if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
-            console.log(`❌ Out-of-turn roll attempt by ${playerAddress} (Expected: Player ${activePlayerIdx} - ${activePlayerObj?.address})`);
-            return;
-        }
+            if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
+                console.log(`❌ Out-of-turn roll attempt by ${playerAddress} (Expected: Player ${activePlayerIdx} - ${activePlayerObj?.address})`);
+                return;
+            }
 
-        if (room.gameState.gamePhase !== GAME_PHASE.ROLL_DICE) return;
+            if (room.gameState.gamePhase !== GAME_PHASE.ROLL_DICE) return;
 
-        // Clear turn timer - player acted in time
-        clearRoomTimers(room.id);
+            // Clear turn timer - player acted in time
+            clearRoomTimers(room.id);
 
-        const newState = rollDice(room.gameState);
-        const rolledValue = newState.diceValue; // This might be null if penalty applied, but let's check original
-        const isPenalty = newState.message && newState.message.includes('Triple 6');
+            const newState = rollDice(room.gameState);
+            const rolledValue = newState.diceValue;
+            const isPenalty = newState.message && newState.message.includes('Triple 6');
 
-        room.gameState = newState;
+            room.gameState = newState;
 
-        console.log(`🎲 Player ${activePlayerIdx} rolled ${rolledValue || 'Penalty'}`);
+            console.log(`🎲 Player ${activePlayerIdx} rolled ${rolledValue || 'Penalty'}`);
 
-        // Emit the roll (use 6 if penalty, so dice actually rolls)
-        io.to(roomId).emit('dice_rolled', {
-            value: isPenalty ? 6 : rolledValue,
-            playerIndex: activePlayerIdx
-        });
+            // Emit the roll (use 6 if penalty, so dice actually rolls)
+            io.to(roomId).emit('dice_rolled', {
+                value: isPenalty ? 6 : rolledValue,
+                playerIndex: activePlayerIdx
+            });
 
-        broadcastState(room);
+            broadcastState(room);
 
-        // If penalty or no valid moves, auto-skip after brief delay
-        if (isPenalty || room.gameState.validMoves.length === 0) {
-            const delay = isPenalty ? 2500 : 1500;
-            setTimeout(() => handleNextTurn(io, room), delay);
-        } else {
-            // Player has valid moves - start timer for token selection
-            startTurnTimer(io, room, activePlayerIdx, room.gameState.gamePhase);
+            // If penalty or no valid moves, auto-skip after brief delay
+            if (isPenalty || room.gameState.validMoves.length === 0) {
+                const delay = isPenalty ? 2500 : 1500;
+                setTimeout(() => handleNextTurn(io, room), delay);
+            } else {
+                // Player has valid moves - start timer for token selection
+                startTurnTimer(io, room, activePlayerIdx, room.gameState.gamePhase);
+            }
+        } catch (error) {
+            console.error('🚨 Error in roll_dice handler:', error);
+            socket.emit('game_error', { message: 'Server error during dice roll. Please try again.' });
         }
     });
 
     socket.on('move_token', ({ roomId, playerAddress, tokenIndex }) => {
-        const room = activeRooms.find(r => r.id === roomId);
-        if (!room || !room.gameState) return;
+        try {
+            const room = activeRooms.find(r => r.id === roomId);
+            if (!room || !room.gameState) return;
 
-        const activePlayerIdx = room.gameState.activePlayer;
-        const activePlayerObj = room.players[activePlayerIdx]; // FIXED: Direct index lookup
+            const activePlayerIdx = room.gameState.activePlayer;
+            const activePlayerObj = room.players[activePlayerIdx];
 
-        if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
-            console.log(`❌ Out-of-turn move by ${playerAddress}`);
-            return;
-        }
+            if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
+                console.log(`❌ Out-of-turn move by ${playerAddress}`);
+                return;
+            }
 
-        const validMove = room.gameState.validMoves.find(m => m.tokenIndex === tokenIndex);
-        if (!validMove) {
-            console.log(`❌ Invalid move attempt for token ${tokenIndex}`);
-            return;
-        }
+            const validMove = room.gameState.validMoves.find(m => m.tokenIndex === tokenIndex);
+            if (!validMove) {
+                console.log(`❌ Invalid move attempt for token ${tokenIndex}`);
+                return;
+            }
 
-        // Clear turn timer - player acted in time
-        clearRoomTimers(room.id);
+            // Clear turn timer - player acted in time
+            clearRoomTimers(room.id);
 
-        console.log(`➡️ Player ${activePlayerIdx} moved token ${tokenIndex}`);
+            console.log(`➡️ Player ${activePlayerIdx} moved token ${tokenIndex}`);
 
-        let newState = moveToken(room.gameState, validMove);
-        newState = completeMoveAnimation(newState);
-        room.gameState = newState;
+            let newState = moveToken(room.gameState, validMove);
+            newState = completeMoveAnimation(newState);
+            room.gameState = newState;
 
-        let msg = null;
-        if (newState.gamePhase === 'WIN') {
-            msg = `🎉 Player ${newState.winner + 1} Wins!`;
-        } else if (newState.gamePhase === GAME_PHASE.BONUS_MOVE) {
-            msg = "Bonus Turn! Move again.";
-        } else if (newState.diceValue === 6 && newState.gamePhase === GAME_PHASE.ROLL_DICE) {
-            msg = "Six! Roll again.";
-        }
+            let msg = null;
+            if (newState.gamePhase === 'WIN') {
+                msg = `🎉 Player ${newState.winner + 1} Wins!`;
+                // Clear all timers on game end
+                clearRoomTimers(room.id);
+            } else if (newState.gamePhase === GAME_PHASE.BONUS_MOVE) {
+                msg = "Bonus Turn! Move again.";
+            } else if (newState.diceValue === 6 && newState.gamePhase === GAME_PHASE.ROLL_DICE) {
+                msg = "Six! Roll again.";
+            }
 
-        broadcastState(room, msg);
+            broadcastState(room, msg);
 
-        // TRIGGER NEXT TURN (Bot Check)
-        // Check for ROLL_DICE or BONUS_MOVE to continue automatic flow
-        if (room.gameState.gamePhase === GAME_PHASE.ROLL_DICE || room.gameState.gamePhase === GAME_PHASE.BONUS_MOVE) {
-            handleNextTurn(io, room);
+            // TRIGGER NEXT TURN (only if game not won)
+            if (newState.gamePhase !== 'WIN' &&
+                (room.gameState.gamePhase === GAME_PHASE.ROLL_DICE || room.gameState.gamePhase === GAME_PHASE.BONUS_MOVE)) {
+                handleNextTurn(io, room);
+            }
+        } catch (error) {
+            console.error('🚨 Error in move_token handler:', error);
+            socket.emit('game_error', { message: 'Server error during token move. Please try again.' });
         }
     });
 
