@@ -17,6 +17,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 import CaptureExplosion from './components/CaptureExplosion';
+import VictoryCelebration from './components/VictoryCelebration';
 import soundManager from './services/SoundManager';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -409,15 +410,26 @@ function App() {
                 navigator.vibrate([50, 30, 50]);
             }
             soundManager.play('capture');
+        } else {
+            // Regular move sound
+            soundManager.play('move');
         }
 
         setIsMoving(true);
         setGameState(prev => moveToken(prev, move));
 
         setTimeout(() => {
+            const newState = completeMoveAnimation(gameState);
             setGameState(prev => completeMoveAnimation(prev));
             setIsMoving(false);
             aiActionInProgress.current = false;
+
+            // Play sound based on result
+            if (newState.bonusMoves > 0) {
+                soundManager.play('bonus');
+            } else if (newState.gamePhase === 'WIN') {
+                // Win sound handled in useEffect
+            }
         }, 400);
     }, [gameState, gameConfig, account]);
 
@@ -782,29 +794,29 @@ function App() {
                 {/* B. SERVER MESSAGE TOAST */}
                 {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
 
-                {/* C. WIN SCREEN (Modal) */}
+                {/* C. WIN SCREEN (Premium Victory Celebration) */}
                 {gameState.gamePhase === 'WIN' && (
-                    <div className="modal-overlay">
-                        <div className="win-card">
-                            <h1>🏆 VICTORY!</h1>
-                            <p>{gameConfig.players[gameState.winner]?.name} wins the match!</p>
+                    <VictoryCelebration
+                        winner={gameState.winner}
+                        playerName={gameConfig.players[gameState.winner]?.name}
+                        isWeb3Match={gameConfig.mode === 'web3'}
+                        onClose={handleBackToLobby}
+                    />
+                )}
 
-                            {gameConfig.mode === 'web3' && (
-                                <div style={{ margin: '20px 0' }}>
-                                    {payoutProof ? (
-                                        <button className="btn-primary" onClick={onClaimClick} disabled={isClaiming}>
-                                            {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
-                                        </button>
-                                    ) : (
-                                        <p style={{ color: '#00f3ff' }}>Verifying on Blockchain... ⏳</p>
-                                    )}
-                                </div>
-                            )}
-
-                            <button className="btn-secondary" onClick={handleBackToLobby}>
-                                Back to Menu
+                {/* Web3 Claim Button (shown alongside victory) */}
+                {gameState.gamePhase === 'WIN' && gameConfig.mode === 'web3' && (
+                    <div className="web3-claim-overlay">
+                        {payoutProof ? (
+                            <button className="btn-claim-payout" onClick={onClaimClick} disabled={isClaiming}>
+                                {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
                             </button>
-                        </div>
+                        ) : (
+                            <div className="payout-verifying">
+                                <span className="spinner">⏳</span>
+                                Verifying on Blockchain...
+                            </div>
+                        )}
                     </div>
                 )}
 

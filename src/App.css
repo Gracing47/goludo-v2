@@ -586,3 +586,95 @@ body {
 .reset-button-small:active {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* ============================================
+   WEB3 CLAIM OVERLAY
+   ============================================ */
+
+.web3-claim-overlay {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-claim-payout {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+    color: #000;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow:
+        0 6px 20px rgba(255, 215, 0, 0.4),
+        0 0 40px rgba(255, 215, 0, 0.2);
+    transition: all 0.2s ease;
+    animation: pulse-claim 2s infinite;
+}
+
+.btn-claim-payout:hover {
+    transform: scale(1.05);
+    box-shadow:
+        0 8px 30px rgba(255, 215, 0, 0.5),
+        0 0 60px rgba(255, 215, 0, 0.3);
+}
+
+.btn-claim-payout:active {
+    transform: scale(0.98);
+}
+
+.btn-claim-payout:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    animation: none;
+}
+
+@keyframes pulse-claim {
+
+    0%,
+    100% {
+        box-shadow:
+            0 6px 20px rgba(255, 215, 0, 0.4),
+            0 0 40px rgba(255, 215, 0, 0.2);
+    }
+
+    50% {
+        box-shadow:
+            0 8px 30px rgba(255, 215, 0, 0.6),
+            0 0 60px rgba(255, 215, 0, 0.4);
+    }
+}
+
+.payout-verifying {
+    background: rgba(0, 243, 255, 0.15);
+    border: 1px solid rgba(0, 243, 255, 0.4);
+    color: var(--neon-blue);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.payout-verifying .spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

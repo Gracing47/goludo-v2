@@ -1,0 +1,158 @@
+/* ============================================
+   PARTICLE EFFECTS - Premium AAA Gaming
+   ============================================ */
+
+/* Container for positioned effects */
+.particle-container {
+    position: absolute;
+    pointer-events: none;
+    z-index: 100;
+    transform: translate(-50%, -50%);
+}
+
+/* ============================================
+   CAPTURE EXPLOSION
+   ============================================ */
+
+.particle-container.explosion {
+    width: 0;
+    height: 0;
+}
+
+.explosion-flash {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(8px);
+}
+
+.explosion-particle {
+    position: absolute;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+}
+
+/* ============================================
+   CONFETTI CONTAINER
+   ============================================ */
+
+.confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.confetti-particle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+.winner-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    filter: blur(80px);
+    opacity: 0.3;
+}
+
+/* ============================================
+   SPAWN SPARKLE
+   ============================================ */
+
+.particle-container.sparkle {
+    width: 0;
+    height: 0;
+}
+
+.sparkle-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 8px currentColor;
+}
+
+/* ============================================
+   VICTORY OVERLAY
+   ============================================ */
+
+.victory-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    pointer-events: none;
+    z-index: 150;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.victory-text {
+    font-size: clamp(2rem, 8vw, 4rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: white;
+    text-shadow:
+        0 0 20px currentColor,
+        0 0 40px currentColor,
+        0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.victory-text.red {
+    color: #ff4757;
+}
+
+.victory-text.green {
+    color: #00d26a;
+}
+
+.victory-text.yellow {
+    color: #ffbe0b;
+}
+
+.victory-text.blue {
+    color: #3a86ff;
+}
+
+.victory-subtext {
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .particle-container,
+    .confetti-container,
+    .explosion-flash,
+    .explosion-particle,
+    .confetti-particle,
+    .sparkle-particle {
+        animation: none !important;
+        transition: none !important;
+    }
+}
