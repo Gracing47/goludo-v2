@@ -287,9 +287,12 @@ function App() {
     // ============================================
     // STATE PERSISTENCE (Local & AI)
     // ============================================
-    // 1. Persistence Hook: Re-entry (Lobby -> Game)
+    // 1. Persistence Hook: Re-entry (Lobby -> Game) OR Web3 Connection
     useEffect(() => {
-        if (gameId && appState === 'lobby') {
+        if (!gameId) return;
+
+        // Case 1: Resume from localStorage (local/AI games)
+        if (appState === 'lobby') {
             const savedData = localStorage.getItem(`ludo_game_${gameId}`);
             if (savedData) {
                 try {
@@ -297,15 +300,29 @@ function App() {
                     setGameConfig(config);
                     setGameState(state);
                     setAppState('game');
+                    return;
                 } catch (e) {
                     console.warn("Failed to resume game", e);
                 }
-            } else if (gameId.length > 20 && !socketRef.current) {
-                // Potential Web3 room ID: Only connect if not already connected
-                onGameStart({ mode: 'web3', roomId: gameId });
             }
         }
-    }, [gameId, appState, onGameStart]);
+
+        // Case 2: Web3 room needs socket connection
+        // This triggers when:
+        // - gameId looks like a Web3 room ID (> 20 chars)
+        // - We don't have an active socket connection
+        // - We have a gameConfig with mode 'web3' OR we're detecting Web3 from URL
+        if (gameId.length > 20 && !socketRef.current) {
+            console.log('🌐 Detected Web3 room from URL, initializing connection...');
+
+            // If we have config from store, use it; otherwise create minimal config
+            const config = gameConfig?.mode === 'web3' && gameConfig.roomId === gameId
+                ? gameConfig
+                : { mode: 'web3', roomId: gameId };
+
+            onGameStart(config);
+        }
+    }, [gameId, appState, gameConfig, onGameStart]);
 
     // 2. Persistence Hook: Auto-save (Local/AI only)
     useEffect(() => {
