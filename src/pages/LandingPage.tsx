@@ -37,6 +37,34 @@ const TargetIcon = () => (
     </svg>
 );
 
+const RocketIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+        <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+        <path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3" />
+        <path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5" />
+    </svg>
+);
+
+const GameIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="6" y1="11" x2="10" y2="11" />
+        <line x1="8" y1="9" x2="8" y2="13" />
+        <rect x="2" y="6" width="20" height="12" rx="2" />
+        <circle cx="17" cy="9" r="1" />
+        <circle cx="15" cy="13" r="1" />
+    </svg>
+);
+
+const CoinsIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="8" cy="8" r="6" />
+        <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+        <path d="M7 6h1v4" />
+        <path d="m16.71 13.88.7.71-2.82 2.82" />
+    </svg>
+);
+
 // Mock stats - will be replaced with API call
 const MOCK_STATS = {
     gamesPlayed: 12847,
@@ -167,7 +195,7 @@ const LandingPage: React.FC = () => {
                     {/* CTA Button */}
                     <motion.div variants={itemVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                         <button className="btn-launch" onClick={handleLaunchApp}>
-                            <span className="btn-icon">🚀</span>
+                            <span className="btn-icon"><RocketIcon /></span>
                             <span className="btn-text">Launch App</span>
                             <span className="btn-glow" />
                         </button>
@@ -198,22 +226,34 @@ const LandingPage: React.FC = () => {
                     variants={containerVariants}
                 >
                     <motion.div className="stat-card" variants={itemVariants}>
-                        <div className="stat-icon">🎮</div>
+                        <div className="stat-icon"><GameIcon /></div>
                         <span className="stat-value">{MOCK_STATS.gamesPlayed.toLocaleString()}</span>
                         <span className="stat-label">Games Played</span>
                     </motion.div>
                     <motion.div className="stat-card highlight" variants={itemVariants}>
-                        <div className="stat-icon">💰</div>
+                        <div className="stat-icon"><CoinsIcon /></div>
                         <span className="stat-value">{MOCK_STATS.totalEarned}</span>
                         <span className="stat-label">Total Earned</span>
                     </motion.div>
                     <motion.div className="stat-card" variants={itemVariants}>
-                        <div className="stat-icon">👥</div>
+                        <div className="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            </svg>
+                        </div>
                         <span className="stat-value">{MOCK_STATS.activePlayers}</span>
                         <span className="stat-label">Active Now</span>
                     </motion.div>
                     <motion.div className="stat-card" variants={itemVariants}>
-                        <div className="stat-icon">⏱️</div>
+                        <div className="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                        </div>
                         <span className="stat-value">{MOCK_STATS.avgGameTime}</span>
                         <span className="stat-label">Avg. Game</span>
                     </motion.div>

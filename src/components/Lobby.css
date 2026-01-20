@@ -49,31 +49,37 @@
 .lobby-header {
     text-align: center;
     flex-shrink: 0;
-    padding-bottom: 12px;
+    padding-bottom: 24px;
+    /* Increased padding */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    /* Added separator */
+    margin-bottom: 12px;
 }
 
 .lobby-title {
     font-family: 'Orbitron', sans-serif;
-    font-size: clamp(32px, 8vw, 42px);
-    /* Reduced size to prevent overlap */
+    font-size: clamp(28px, 6vw, 36px);
+    /* Reduced size */
     font-weight: 800;
     margin: 0;
     letter-spacing: 2px;
-    line-height: 1;
+    line-height: 1.2;
+    /* Better line height */
     background: var(--accent-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 40px rgba(0, 243, 255, 0.3);
+    text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
 }
 
 .lobby-subtitle {
     font-family: 'Exo 2', sans-serif;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 8px 0 0 0;
+    font-size: 12px;
+    /* Smaller subtitle */
+    color: rgba(255, 255, 255, 0.5);
+    margin: 4px 0 0 0;
     font-weight: 500;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
 }
 
@@ -130,11 +136,18 @@
 }
 
 .menu-icon {
-    font-size: 32px;
+    font-size: 28px;
     min-width: 44px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
-    filter: drop-shadow(0 0 8px currentColor);
+    color: inherit;
+    transition: transform 0.3s ease;
+}
+
+.menu-button:hover .menu-icon {
+    transform: scale(1.1) rotate(5deg);
 }
 
 .menu-text {
