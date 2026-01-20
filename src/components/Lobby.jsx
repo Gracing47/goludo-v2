@@ -263,11 +263,12 @@ const Lobby = ({ onStartGame }) => {
 
     return (
         <div className="lobby">
+            <div className="lobby-header">
+                <h1 className="lobby-title">GoLudo</h1>
+                <p className="lobby-subtitle">Classic Board Game</p>
+            </div>
+
             <div className="lobby-container">
-                <div className="lobby-header">
-                    <h1 className="lobby-title">GoLudo</h1>
-                    <p className="lobby-subtitle">Classic Board Game</p>
-                </div>
 
                 {/* Main Menu */}
                 {step === 'menu' && (
