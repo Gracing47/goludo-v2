@@ -10,7 +10,6 @@
 
 import React, { useState, useEffect } from 'react';
 import './Lobby.css';
-import WalletButton from './WalletButton';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
 
@@ -48,6 +47,17 @@ const GlobeIcon = () => (
         <circle cx="12" cy="12" r="10" />
         <line x1="2" y1="12" x2="22" y2="12" />
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+);
+
+const DiceIcon = ({ size = 28 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <circle cx="8.5" cy="8.5" r="1" fill="currentColor" />
+        <circle cx="15.5" cy="15.5" r="1" fill="currentColor" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" />
+        <circle cx="8.5" cy="15.5" r="1" fill="currentColor" />
+        <circle cx="15.5" cy="8.5" r="1" fill="currentColor" />
     </svg>
 );
 
@@ -301,20 +311,16 @@ const Lobby = ({ onStartGame }) => {
                             </span>
                         </button>
 
-                        <div className="wallet-section">
-                            {account && (
-                                <div className="wallet-info">
-                                    <p className="balance-text">Balance: <span>{parseFloat(balance).toLocaleString()} {balanceSymbol || '$GO'}</span></p>
-                                    <button
-                                        className="faucet-btn"
-                                        onClick={() => window.open('https://faucet.flare.network/coston2', '_blank')}
-                                    >
-                                        Get Test tokens (C2FLR) ↗
-                                    </button>
-                                </div>
-                            )}
-                            {!account && <p className="wallet-hint">Connect wallet in header for Web3 features</p>}
-                        </div>
+                        {account && (
+                            <div className="wallet-section">
+                                <button
+                                    className="faucet-btn"
+                                    onClick={() => window.open('https://faucet.flare.network/coston2', '_blank')}
+                                >
+                                    Get Test tokens (C2FLR) ↗
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -322,7 +328,10 @@ const Lobby = ({ onStartGame }) => {
                 {step === 'web3-lobby' && (
                     <div className="web3-lobby">
                         <header className="lobby-header">
-                            <h2 className="setup-title">🎲 Open Matches</h2>
+                            <h2 className="setup-title">
+                                <span className="setup-title-icon"><DiceIcon size={24} /></span>
+                                Open Matches
+                            </h2>
                             <button className="create-game-btn" onClick={() => setStep('setup')}>
                                 + Create Game
                             </button>
@@ -331,6 +340,9 @@ const Lobby = ({ onStartGame }) => {
                         <div className="room-list">
                             {openRooms.filter(r => r.status === 'WAITING').length === 0 ? (
                                 <div className="no-rooms">
+                                    <div className="no-rooms-icon">
+                                        <DiceIcon size={48} />
+                                    </div>
                                     <p>No open matches found.</p>
                                     <p><small>Be the first to create one!</small></p>
                                 </div>
@@ -363,7 +375,9 @@ const Lobby = ({ onStartGame }) => {
                 {step === 'waiting' && (
                     <div className="waiting-room">
                         <div className="waiting-content">
-                            <div className="spinner-ludo">🎲</div>
+                            <div className="spinner-ludo">
+                                <DiceIcon size={48} />
+                            </div>
                             <h3>Waiting for Opponent...</h3>
                             <p>Room: <small>{waitingRoomId.substring(0, 10)}...</small></p>
                             <div className="waiting-stats">

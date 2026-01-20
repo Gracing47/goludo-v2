@@ -18,8 +18,8 @@
     justify-content: center;
     align-items: flex-start;
     /* Start from top to allow scrolling */
-    padding: 100px 16px 40px;
-    /* Buffer for fixed header */
+    /* Buffer for fixed header + safe area breathing room */
+    padding: 180px 16px 80px;
     box-sizing: border-box;
     overflow-y: auto;
     background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0d1b2a 100%);
@@ -775,12 +775,14 @@
     gap: 8px;
 }
 
-.no-rooms::before {
-    content: '🎲';
+.no-rooms-icon {
     font-size: 48px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     opacity: 0.7;
     animation: float 3s ease-in-out infinite;
+    display: flex;
+    justify-content: center;
+    color: var(--pancake-cyan);
 }
 
 @keyframes float {
