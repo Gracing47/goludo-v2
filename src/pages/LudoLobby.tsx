@@ -61,13 +61,6 @@ const LudoLobby: React.FC = () => {
 
     return (
         <div className="ludo-lobby-page">
-            {/* Back Button Header */}
-            <header className="lobby-header">
-                <button className="btn-back-lobby" onClick={handleBack}>
-                    ← Home
-                </button>
-            </header>
-
             {/* Existing Lobby Component */}
             <Lobby onStartGame={handleStartGame} />
         </div>

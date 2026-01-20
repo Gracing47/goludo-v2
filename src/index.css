@@ -14,13 +14,42 @@
 html,
 body {
   width: 100%;
-  height: 100%;
-  /* Allow pages to scroll - individual pages control their own overflow */
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  /* Support for modern mobile notches */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  background: #0d0d0d;
 }
 
 #root {
   width: 100%;
   min-height: 100%;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* Buffer for fixed header on pages that need it */
+  padding-top: 80px;
+}
+
+/* Landing page might want to handle its own padding 
+   over the hero section for a more immersive look */
+.app-shell:has(.is-landing) .main-content {
+  padding-top: 0;
 }
 
 /* ============================================
@@ -136,54 +165,55 @@ body {
 
 :root {
   /* Dark theme base */
-  --bg-primary: #0d0d0d;
-  --bg-secondary: #1a1a2e;
-  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-primary: #0a0a1a;
+  --bg-secondary: #1a1035;
+  --bg-surface: #101020;
+  --bg-card: rgba(255, 255, 255, 0.04);
   --bg-card-hover: rgba(255, 255, 255, 0.08);
 
-  /* Glass effect */
-  --glass-bg: rgba(255, 255, 255, 0.05);
+  /* AAA Web3 Glass Effect - Sharper & Layered */
+  --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-blur: blur(20px);
+  --glass-border-bright: rgba(255, 255, 255, 0.2);
+  --glass-blur: blur(24px);
 
   /* Accent colors - Uniswap pink/purple */
-  --accent-primary: #ff007a;
-  --accent-secondary: #8b5cf6;
+  --accent-pink: #ff007a;
+  --accent-purple: #8b5cf6;
   --accent-gradient: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
+  --accent-glow: 0 0 40px rgba(255, 0, 122, 0.2);
 
-  /* PancakeSwap cyan/yellow accent */
-  --pancake-cyan: #1fc7d4;
-  --pancake-yellow: #f4ca64;
+  /* PancakeSwap / Flare Specifics */
+  --pancake-cyan: #00f3ff;
+  --pancake-yellow: #ffd700;
+  --pancake-cyan-glow: 0 0 30px rgba(0, 243, 255, 0.3);
 
-  /* Player colors (neon for dark theme) */
-  --color-red: #ff4757;
-  --color-green: #00d26a;
-  --color-yellow: #ffbe0b;
-  --color-blue: #3a86ff;
+  /* Player colors (Vibrant Neon) */
+  --color-red: #ff4d4d;
+  --color-green: #00ff88;
+  --color-yellow: #ffcc00;
+  --color-blue: #00a2ff;
 
   /* Text colors */
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.7);
   --text-tertiary: rgba(255, 255, 255, 0.4);
 
-  /* Shadows - neon glow */
-  --shadow-glow: 0 0 20px rgba(255, 0, 122, 0.3);
-  --shadow-soft: 0 4px 30px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+  /* Shadows - Layered Depth */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow-pink: 0 0 30px rgba(255, 0, 122, 0.4);
 
-  /* Legacy support */
-  --neuro-base: #1a1a2e;
-  --shadow-outer: var(--shadow-card);
-  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-inner-soft: inset 0 1px 2px rgba(0, 0, 0, 0.2);
-
-  /* Spacing - Mobile First */
-  --board-size: min(48vh, 92vw, 400px);
-  --cell-gap: 2%;
+  /* Spacing & Borders */
+  --radius-xs: 4px;
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --border-thin: 1px;
+  --border-thick: 2px;
 }
 
 /* Tablet and larger screens */
@@ -208,14 +238,17 @@ body {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  border: var(--border-thin) solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .glass-card:hover {
   background: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--glass-border-bright);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ============================================

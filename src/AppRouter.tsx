@@ -11,6 +11,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './config/routes';
+import GlobalHeader from './components/layout/GlobalHeader';
 
 // Lazy load pages for code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -32,27 +33,32 @@ const PageLoader: React.FC = () => (
  */
 const AppRouter: React.FC = () => {
     return (
-        <Suspense fallback={<PageLoader />}>
-            <Routes>
-                {/* Landing Page */}
-                <Route path={ROUTES.LANDING} element={<LandingPage />} />
+        <div className="app-shell">
+            <GlobalHeader />
+            <main className="main-content">
+                <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                        {/* Landing Page */}
+                        <Route path={ROUTES.LANDING} element={<LandingPage />} />
 
-                {/* Game Browser */}
-                <Route path={ROUTES.APP} element={<GameBrowser />} />
+                        {/* Game Browser */}
+                        <Route path={ROUTES.APP} element={<GameBrowser />} />
 
-                {/* Ludo Lobby */}
-                <Route path={ROUTES.LUDO_LOBBY} element={<LudoLobby />} />
+                        {/* Ludo Lobby */}
+                        <Route path={ROUTES.LUDO_LOBBY} element={<LudoLobby />} />
 
-                {/* Local Game Setup - redirect to lobby for now */}
-                <Route path={ROUTES.LUDO_LOCAL} element={<Navigate to={ROUTES.LUDO_LOBBY} replace />} />
+                        {/* Local Game Setup - redirect to lobby for now */}
+                        <Route path={ROUTES.LUDO_LOCAL} element={<Navigate to={ROUTES.LUDO_LOBBY} replace />} />
 
-                {/* Active Game Room */}
-                <Route path={ROUTES.GAME} element={<GameRoom />} />
+                        {/* Active Game Room */}
+                        <Route path={ROUTES.GAME} element={<GameRoom />} />
 
-                {/* Fallback - redirect to landing */}
-                <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
-            </Routes>
-        </Suspense>
+                        {/* Fallback - redirect to landing */}
+                        <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
+                    </Routes>
+                </Suspense>
+            </main>
+        </div>
     );
 };
 

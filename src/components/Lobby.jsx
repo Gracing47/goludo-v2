@@ -263,7 +263,7 @@ const Lobby = ({ onStartGame }) => {
                         </button>
 
                         <div className="wallet-section">
-                            {account ? (
+                            {account && (
                                 <div className="wallet-info">
                                     <p className="balance-text">Balance: <span>{parseFloat(balance).toLocaleString()} {balanceSymbol || '$GO'}</span></p>
                                     <button
@@ -273,10 +273,8 @@ const Lobby = ({ onStartGame }) => {
                                         Get Test tokens (C2FLR) ↗
                                     </button>
                                 </div>
-                            ) : (
-                                <p className="wallet-hint">Connect wallet for Web3 features</p>
                             )}
-                            <WalletButton />
+                            {!account && <p className="wallet-hint">Connect wallet in header for Web3 features</p>}
                         </div>
                     </div>
                 )}
