@@ -58,7 +58,9 @@ export function createInitialState(playerCount = 4, activeColors = [0, 1, 2, 3])
         lastCapture: null,
         winner: null,
         message: null,
-        diceBag: [] // Smart RNG: Bag of remaining die rolls
+        // Per-player dice bags for fair distribution
+        // Each player gets their own bag so one player can't drain all 6s
+        diceBags: {} // { [playerIndex]: number[] }
     };
 }
 
@@ -68,34 +70,42 @@ export function createInitialState(playerCount = 4, activeColors = [0, 1, 2, 3])
 
 export function rollDice(state, forcedValue = null) {
     let diceValue;
-    let newDiceBag = [...(state.diceBag || [])];
+    const currentPlayer = state.activePlayer;
+
+    // Per-player dice bags - each player has their own fair distribution
+    const newDiceBags = { ...(state.diceBags || {}) };
+    let playerBag = [...(newDiceBags[currentPlayer] || [])];
 
     if (forcedValue !== null) {
         diceValue = forcedValue;
     } else {
-        // Smart RNG: "Boosted Bag System" (~23% change of 6)
+        // Smart RNG: "Boosted Bag System" (~23% chance of 6)
+        // Each player gets their own bag for fairness!
         // Bag = 2 full sets [1..6, 1..6] + 1 extra [6] = 13 dice (3 Sixes)
         // 3 / 13 ≈ 23.07%
-        if (newDiceBag.length === 0) {
-            newDiceBag = [
+        if (playerBag.length === 0) {
+            playerBag = [
                 1, 2, 3, 4, 5, 6,
                 1, 2, 3, 4, 5, 6,
                 6
             ];
             // Fisher-Yates Shuffle
-            for (let i = newDiceBag.length - 1; i > 0; i--) {
+            for (let i = playerBag.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [newDiceBag[i], newDiceBag[j]] = [newDiceBag[j], newDiceBag[i]];
+                [playerBag[i], playerBag[j]] = [playerBag[j], playerBag[i]];
             }
         }
-        // Draw one value
-        diceValue = newDiceBag.pop();
+        // Draw one value from this player's bag
+        diceValue = playerBag.pop();
     }
+
+    // Update this player's bag
+    newDiceBags[currentPlayer] = playerBag;
 
     let newState = {
         ...state,
         diceValue,
-        diceBag: newDiceBag,
+        diceBags: newDiceBags,
         consecutiveSixes: diceValue === 6 ? state.consecutiveSixes + 1 : 0,
         message: null
     };
