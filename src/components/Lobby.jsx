@@ -404,23 +404,56 @@ const Lobby = ({ onStartGame }) => {
                 )}
 
                 {/* Waiting Room */}
-                {step === 'waiting' && (
-                    <div className="waiting-room">
-                        <div className="waiting-content">
-                            <div className="spinner-ludo">
-                                <DiceIcon size={48} />
+                {step === 'waiting' && (() => {
+                    // Find current room data from polled rooms
+                    const currentRoom = openRooms.find(r => r.id === waitingRoomId);
+                    const playerCount = currentRoom?.players?.length || 1;
+                    const maxPlayers = currentRoom?.maxPlayers || 2;
+
+                    return (
+                        <div className="waiting-room">
+                            <div className="waiting-content">
+                                <div className="spinner-ludo">
+                                    <DiceIcon size={48} />
+                                </div>
+                                <h3>Waiting for Players...</h3>
+                                <p>Room: <small>{waitingRoomId.substring(0, 10)}...</small></p>
+
+                                {/* Player Count Progress */}
+                                <div className="waiting-stats">
+                                    <span className="player-progress">
+                                        👥 <strong>{playerCount}/{maxPlayers}</strong> Players
+                                    </span>
+                                    <span>💰 <strong>{betAmount} {balanceSymbol || 'C2FLR'}</strong></span>
+                                </div>
+
+                                {/* Joined Players List */}
+                                {currentRoom?.players && currentRoom.players.length > 0 && (
+                                    <div className="waiting-players-list">
+                                        <p className="waiting-players-title">Players Joined:</p>
+                                        <div className="waiting-players">
+                                            {currentRoom.players.map((p, idx) => (
+                                                <div key={idx} className={`waiting-player ${p.color}`}>
+                                                    <span className={`color-dot ${p.color}`}></span>
+                                                    <span className="player-name">{p.name}</span>
+                                                    {idx === 0 && <span className="host-badge">👑</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {playerCount < maxPlayers && (
+                                            <p className="waiting-hint">
+                                                Waiting for {maxPlayers - playerCount} more player{maxPlayers - playerCount > 1 ? 's' : ''}...
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
-                            <h3>Waiting for Opponent...</h3>
-                            <p>Room: <small>{waitingRoomId.substring(0, 10)}...</small></p>
-                            <div className="waiting-stats">
-                                <span>Entry: <strong>{betAmount} {balanceSymbol || '$GO'}</strong></span>
-                            </div>
+                            <button className="action-btn back" onClick={() => setStep('menu')}>
+                                Cancel & Leave
+                            </button>
                         </div>
-                        <button className="action-btn back" onClick={() => setStep('menu')}>
-                            Cancel & Leave
-                        </button>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Game Setup */}
                 {step === 'setup' && (

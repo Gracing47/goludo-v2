@@ -1055,6 +1055,165 @@
 }
 
 /* ============================================
+   WAITING ROOM STYLES
+   ============================================ */
+
+.waiting-room {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.waiting-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 16px;
+}
+
+.waiting-content h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.25rem;
+    color: #ffffff;
+    margin: 0;
+}
+
+.waiting-content p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+.spinner-ludo {
+    color: var(--pancake-cyan, #00f3ff);
+    animation: spin-slow 3s linear infinite;
+    filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.5));
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.waiting-stats {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-top: 8px;
+}
+
+.waiting-stats strong {
+    color: var(--pancake-cyan, #00f3ff);
+}
+
+.player-progress {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Waiting Players List */
+.waiting-players-list {
+    width: 100%;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.waiting-players-title {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px !important;
+}
+
+.waiting-players {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.waiting-player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border-left: 3px solid transparent;
+}
+
+.waiting-player.red {
+    border-left-color: var(--color-red, #e74c3c);
+}
+
+.waiting-player.green {
+    border-left-color: var(--color-green, #27ae60);
+}
+
+.waiting-player.yellow {
+    border-left-color: var(--color-yellow, #f1c40f);
+}
+
+.waiting-player.blue {
+    border-left-color: var(--color-blue, #3498db);
+}
+
+.color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.color-dot.red {
+    background: var(--color-red, #e74c3c);
+}
+
+.color-dot.green {
+    background: var(--color-green, #27ae60);
+}
+
+.color-dot.yellow {
+    background: var(--color-yellow, #f1c40f);
+}
+
+.color-dot.blue {
+    background: var(--color-blue, #3498db);
+}
+
+.waiting-player .player-name {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #ffffff;
+    font-weight: 500;
+    text-align: left;
+}
+
+.host-badge {
+    font-size: 0.9rem;
+}
+
+.waiting-hint {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 12px !important;
+    font-style: italic;
+}
+
+/* ============================================
    LANDSCAPE MODE ADJUSTMENTS
    ============================================ */
 

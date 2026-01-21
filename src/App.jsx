@@ -233,7 +233,10 @@ function App() {
                         setBoardRotation((3 - myIdx) * 90);
                     }
                 }
-                setTurnTimer(Math.floor(timeoutMs / 1000));
+
+                // Set turn timer if provided by server, otherwise use default
+                const timeout = room.timeoutMs || room.turnTimeout || 30000;
+                setTurnTimer(Math.floor(timeout / 1000));
             });
 
             socket.on('turn_timer_update', ({ remainingSeconds }) => {
