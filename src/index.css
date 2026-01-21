@@ -3,6 +3,7 @@
    Dark Theme with Glassmorphism & Gradients
    ============================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 * {
@@ -159,54 +160,56 @@ body {
 :root {
   /* Dark theme base */
   --bg-primary: #0a0a1a;
-  --bg-secondary: #1a1035;
-  --bg-surface: #101020;
+  --bg-secondary: #0d0d21;
+  --bg-surface: #101025;
   --bg-card: rgba(255, 255, 255, 0.04);
   --bg-card-hover: rgba(255, 255, 255, 0.08);
 
-  /* AAA Web3 Glass Effect - Sharper & Layered */
+  /* Liquid Glass - Ultra Premium */
   --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-bright: rgba(255, 255, 255, 0.2);
-  --glass-blur: blur(24px);
+  --glass-blur: blur(20px);
+  --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.05) 100%);
 
-  /* Accent colors - Uniswap pink/purple */
+  /* Chromatic Aberration Colors */
+  --ca-red: rgba(255, 0, 0, 0.5);
+  --ca-blue: rgba(0, 0, 255, 0.5);
+  --ca-green: rgba(0, 255, 0, 0.5);
+
+  /* Accent colors - Premium Web3 */
   --accent-pink: #ff007a;
   --accent-purple: #8b5cf6;
-  --accent-gradient: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
-  --accent-glow: 0 0 40px rgba(255, 0, 122, 0.2);
-
-  /* PancakeSwap / Flare Specifics */
-  --pancake-cyan: #00f3ff;
-  --pancake-yellow: #ffd700;
-  --pancake-cyan-glow: 0 0 30px rgba(0, 243, 255, 0.3);
+  --accent-cyan: #22d3ee;
+  --accent-gold: #ffd700;
+  --accent-gradient: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
+  --accent-gradient-warm: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
+  --accent-glow: 0 0 40px rgba(34, 211, 238, 0.2);
 
   /* Player colors (Vibrant Neon) */
-  --color-red: #ff4d4d;
+  --color-red: #ff3e3e;
   --color-green: #00ff88;
   --color-yellow: #ffcc00;
   --color-blue: #00a2ff;
 
-  /* Text colors */
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  /* Fonts */
+  --font-display: 'Orbitron', sans-serif;
+  --font-body: 'Exo 2', 'Inter', sans-serif;
 
   /* Shadows - Layered Depth */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
-  --shadow-glow-pink: 0 0 30px rgba(255, 0, 122, 0.4);
+  --shadow-inner: inset 0 2px 4px rgba(255, 255, 255, 0.05);
 
-  /* Spacing & Borders */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
+  /* Board sizing */
+  --board-size: min(90vh, 90vw, 550px);
 
-  --border-thin: 1px;
-  --border-thick: 2px;
+  /* Animation timings */
+  --ease-premium: cubic-bezier(0.23, 1, 0.32, 1);
+  --duration-fast: 200ms;
+  --duration-normal: 400ms;
+  --duration-slow: 800ms;
 }
 
 /* Tablet and larger screens */
@@ -227,6 +230,23 @@ body {
    GLASSMORPHISM CARDS
    ============================================ */
 
+.liquid-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--border-thin) solid var(--glass-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
+}
+
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -234,14 +254,14 @@ body {
   border: var(--border-thin) solid var(--glass-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s var(--ease-premium);
 }
 
 .glass-card:hover {
   background: var(--bg-card-hover);
   border-color: var(--glass-border-bright);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 /* ============================================
@@ -368,6 +388,60 @@ body {
 
   100% {
     background-position: 200% 0;
+  }
+}
+
+@keyframes chromatic-aberration {
+  0% {
+    text-shadow: -1px 0 var(--ca-red), 1px 0 var(--ca-blue);
+  }
+
+  25% {
+    text-shadow: 1px 1px var(--ca-red), -1px -1px var(--ca-blue);
+  }
+
+  50% {
+    text-shadow: 1px -1px var(--ca-red), -1px 1px var(--ca-blue);
+  }
+
+  75% {
+    text-shadow: -1px -1px var(--ca-red), 1px 1px var(--ca-blue);
+  }
+
+  100% {
+    text-shadow: -1px 0 var(--ca-red), 1px 0 var(--ca-blue);
+  }
+}
+
+.ca-effect {
+  animation: chromatic-aberration 0.2s infinite;
+}
+
+.sports-ticker {
+  font-family: var(--font-display);
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 2px solid var(--accent-cyan);
+  border-bottom: 2px solid var(--accent-cyan);
+  padding: 8px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.ticker-content {
+  display: inline-block;
+  padding-left: 100%;
+  animation: ticker 20s linear infinite;
+}
+
+@keyframes ticker {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-100%, 0, 0);
   }
 }
 

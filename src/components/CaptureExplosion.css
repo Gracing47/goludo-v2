@@ -1,5 +1,5 @@
 /* ============================================
-   CAPTURE EXPLOSION EFFECT - CSS Particles
+   CAPTURE EXPLOSION EFFECT - Premium Phase 4
    ============================================ */
 
 .capture-explosion {
@@ -7,48 +7,69 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 1000;
     pointer-events: none;
 }
 
 .particle {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    /* Glass shard style */
     background: currentColor;
-    box-shadow: 0 0 15px currentColor, 0 0 30px currentColor;
-    animation: explode 0.5s ease-out forwards;
-    /* Distribute particles in a circle */
+    box-shadow: 0 0 20px currentColor;
+    animation: explode 0.6s var(--ease-premium) forwards;
     --angle: calc(var(--i) * 45deg);
+    filter: blur(1px);
 }
 
 @keyframes explode {
     0% {
-        transform: translate(0, 0) scale(1);
+        transform: translate(0, 0) scale(1) rotate(0deg);
         opacity: 1;
     }
 
     100% {
-        transform: translate(calc(cos(var(--angle)) * 50px),
-                calc(sin(var(--angle)) * 50px)) scale(0);
+        transform:
+            translate(calc(cos(var(--angle)) * 80px), calc(sin(var(--angle)) * 80px)) scale(0) rotate(360deg);
         opacity: 0;
     }
 }
 
-/* Color variants */
+.capture-explosion::before {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, white 0%, transparent 70%);
+    animation: flash 0.3s ease-out forwards;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 1;
+        scale: 0.5;
+    }
+
+    100% {
+        opacity: 0;
+        scale: 2;
+    }
+}
+
 .explosion-red {
-    color: #ff4757;
+    color: var(--color-red);
 }
 
 .explosion-green {
-    color: #00d26a;
+    color: var(--color-green);
 }
 
 .explosion-yellow {
-    color: #ffbe0b;
+    color: var(--color-yellow);
 }
 
 .explosion-blue {
-    color: #3a86ff;
+    color: var(--color-blue);
 }

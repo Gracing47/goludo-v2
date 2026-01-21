@@ -1,5 +1,5 @@
 /* ============================================
-   LUDO BOARD - DARK THEME WITH GLOW EFFECTS
+   LUDO BOARD - Phase 4 Liquid Glass & Web3 Premium
    ============================================ */
 
 .board-wrapper {
@@ -7,6 +7,7 @@
     justify-content: center;
     align-items: center;
     position: relative;
+    padding: 20px;
 }
 
 .ludo-board {
@@ -19,35 +20,36 @@
     height: var(--board-size);
     aspect-ratio: 1;
 
-    background: rgba(15, 20, 35, 0.98);
-    border-radius: 16px;
-    padding: 6px;
-    gap: 0px;
-    /* Seamless grid */
+    background: rgba(10, 10, 26, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 8px;
+    gap: 1px;
 
-    /* Elevated floating effect */
-    border: 2px solid rgba(255, 255, 255, 0.08);
+    /* AAA Liquid Glass Border */
+    border: 2px solid rgba(255, 255, 255, 0.1);
     box-shadow:
-        /* Primary drop shadow for depth */
-        0 20px 60px rgba(0, 0, 0, 0.6),
-        0 10px 30px rgba(0, 0, 0, 0.4),
-        /* Subtle inner highlight */
-        inset 0 1px 0 rgba(255, 255, 255, 0.05),
-        /* Outer glow */
-        0 0 40px rgba(0, 0, 0, 0.3);
+        0 30px 90px rgba(0, 0, 0, 0.8),
+        inset 0 0 40px rgba(255, 255, 255, 0.05);
 }
 
-/* Token layer - positioned above cells */
+.ludo-board::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
 .token-layer {
     position: absolute;
-    top: 6px;
-    left: 6px;
-    right: 6px;
-    bottom: 6px;
+    inset: 8px;
     display: grid;
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
-    gap: 0;
+    z-index: 10;
     pointer-events: none;
 }
 
@@ -56,443 +58,129 @@
 }
 
 /* ============================================
-   BASE CELL STYLES
+   CELL STYLES
    ============================================ */
 
 .board-cell {
-    border-radius: 3px;
-    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 0.5px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
 }
-
-/* ============================================
-   EMPTY CELLS
-   ============================================ */
-
-.empty {
-    background: transparent;
-}
-
-/* ============================================
-   PATH CELLS (walkable area)
-   ============================================ */
 
 .path {
-    background: rgba(70, 85, 110, 0.55);
-    border-radius: 2px;
-    border: 1px solid rgba(100, 120, 150, 0.25);
+    background: rgba(255, 255, 255, 0.08);
 }
-
-/* ============================================
-   SAFE ZONES (Stars) ⭐
-   ============================================ */
 
 .safe {
-    background: linear-gradient(135deg, rgba(255, 190, 11, 0.25), rgba(255, 150, 0, 0.15));
-    border-radius: 2px;
-    border: none;
-    box-shadow: 0 0 8px rgba(255, 190, 11, 0.15);
-}
-
-@keyframes star-shimmer {
-    0% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) scale(1);
-        filter: brightness(1);
-    }
-
-    50% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) scale(1.15);
-        filter: brightness(1.4);
-    }
-
-    100% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) scale(1);
-        filter: brightness(1);
-    }
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.05));
+    border-color: rgba(34, 211, 238, 0.3);
 }
 
 .safe::after {
-    content: '★';
+    content: '✦';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
-    font-size: clamp(10px, 2vw, 16px);
-    color: #ffbe0b;
-    text-shadow: 0 0 10px rgba(255, 190, 11, 0.8);
-    pointer-events: none;
-    transition: transform 0.5s ease;
-    animation: star-shimmer 3s infinite ease-in-out;
+    color: var(--accent-gold);
+    font-size: 18px;
+    text-shadow: 0 0 10px var(--accent-gold);
+    animation: shimmer 2s infinite alternate ease-in-out;
 }
 
 /* ============================================
-   BASE AREAS (colored corners)
+   BASES - Iridescent Glass
    ============================================ */
 
-/* Glassmorphism & Depth for all bases - SUBTLE */
-.base-red,
-.base-green,
-.base-yellow,
-.base-blue {
-    backdrop-filter: blur(2px);
-    border: 2px solid transparent;
-    box-shadow: none;
-    transition: all 0.3s ease;
-}
-
 .base-red {
-    background: linear-gradient(135deg, rgba(255, 71, 87, 0.4), rgba(255, 50, 60, 0.3));
+    background: rgba(255, 62, 62, 0.15);
 }
 
 .base-green {
-    background: linear-gradient(135deg, rgba(0, 210, 106, 0.4), rgba(0, 180, 90, 0.3));
+    background: rgba(0, 255, 136, 0.15);
 }
 
 .base-yellow {
-    background: linear-gradient(135deg, rgba(255, 190, 11, 0.4), rgba(255, 160, 0, 0.3));
+    background: rgba(255, 204, 0, 0.15);
 }
 
 .base-blue {
-    background: linear-gradient(135deg, rgba(58, 134, 255, 0.4), rgba(40, 100, 220, 0.3));
+    background: rgba(0, 162, 255, 0.15);
 }
 
-/* Spawn points within bases - MINIMAL */
 .spawn-point {
-    border-radius: 50% !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: none !important;
-    margin: 14%;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 50%;
+    margin: 15%;
+    border: 1px dashed rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Active Base - Premium Soft Glow Effect (Full Area) */
+/* Active Highlight */
 .active-turn {
-    filter: brightness(1.2);
-    z-index: 2;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
 }
 
-/* Soft glow overlay on ALL active base cells */
 .active-turn::before {
     content: '';
     position: absolute;
-    inset: -1px;
-    background: radial-gradient(ellipse 120% 120% at 50% 50%,
-            rgba(255, 255, 255, 0.15) 0%,
-            rgba(255, 255, 255, 0.05) 60%,
-            transparent 100%);
-    pointer-events: none;
-    border-radius: inherit;
-    animation: soft-breathe 2.5s infinite ease-in-out;
+    inset: 0;
+    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
+    animation: pulse-breathing 2s infinite ease-in-out;
 }
 
-@keyframes soft-breathe {
-
-    0%,
-    100% {
-        opacity: 0.6;
+@keyframes pulse-breathing {
+    0% {
+        opacity: 0.3;
     }
 
     50% {
         opacity: 1;
     }
-}
 
-/* Edge cells get subtle border glow */
-.active-turn.base-edge {
-    position: relative;
-    overflow: visible;
-}
-
-.active-turn.base-edge::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    pointer-events: none;
-    z-index: 0;
-    animation: edge-glow 2.5s infinite ease-in-out;
-}
-
-/* Color-specific soft glows */
-.base-red.active-turn {
-    --glow-color: rgba(255, 71, 87, 0.3);
-    background: linear-gradient(135deg,
-            rgba(255, 71, 87, 0.55),
-            rgba(255, 50, 60, 0.45)) !important;
-}
-
-.base-red.active-turn.base-edge::after {
-    box-shadow: 0 0 12px rgba(255, 71, 87, 0.5), 0 0 20px rgba(255, 71, 87, 0.25);
-}
-
-.base-green.active-turn {
-    --glow-color: rgba(0, 210, 106, 0.3);
-    background: linear-gradient(135deg,
-            rgba(0, 210, 106, 0.55),
-            rgba(0, 180, 90, 0.45)) !important;
-}
-
-.base-green.active-turn.base-edge::after {
-    box-shadow: 0 0 12px rgba(0, 210, 106, 0.5), 0 0 20px rgba(0, 210, 106, 0.25);
-}
-
-.base-yellow.active-turn {
-    --glow-color: rgba(255, 190, 11, 0.3);
-    background: linear-gradient(135deg,
-            rgba(255, 190, 11, 0.55),
-            rgba(255, 160, 0, 0.45)) !important;
-}
-
-.base-yellow.active-turn.base-edge::after {
-    box-shadow: 0 0 12px rgba(255, 190, 11, 0.5), 0 0 20px rgba(255, 190, 11, 0.25);
-}
-
-.base-blue.active-turn {
-    --glow-color: rgba(58, 134, 255, 0.3);
-    background: linear-gradient(135deg,
-            rgba(58, 134, 255, 0.55),
-            rgba(40, 100, 220, 0.45)) !important;
-}
-
-.base-blue.active-turn.base-edge::after {
-    box-shadow: 0 0 12px rgba(58, 134, 255, 0.5), 0 0 20px rgba(58, 134, 255, 0.25);
-}
-
-@keyframes edge-glow {
-
-    0%,
     100% {
-        opacity: 0.5;
-    }
-
-    50% {
-        opacity: 0.9;
+        opacity: 0.3;
     }
 }
 
-/* Home Stretch Active Highlight - SUBTLE */
-.home-path-active {
-    filter: brightness(1.15);
-    transition: all 0.3s ease;
-}
-
-/* ============================================
-   START POSITIONS (entry points)
-   ============================================ */
-
-.start-red,
-.start-green,
-.start-yellow,
-.start-blue {
-    border-radius: 3px;
-    position: relative;
-}
-
-.start-red {
-    background: linear-gradient(135deg, rgba(255, 71, 87, 0.6), rgba(255, 50, 60, 0.5));
-    box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
-    border: 1px solid rgba(255, 71, 87, 0.5);
-}
-
-.start-green {
-    background: linear-gradient(135deg, rgba(0, 210, 106, 0.6), rgba(0, 180, 90, 0.5));
-    box-shadow: 0 0 15px rgba(0, 210, 106, 0.4);
-    border: 1px solid rgba(0, 210, 106, 0.5);
-}
-
-.start-yellow {
-    background: linear-gradient(135deg, rgba(255, 190, 11, 0.6), rgba(255, 160, 0, 0.5));
-    box-shadow: 0 0 15px rgba(255, 190, 11, 0.4);
-    border: 1px solid rgba(255, 190, 11, 0.5);
-}
-
-.start-blue {
-    background: linear-gradient(135deg, rgba(58, 134, 255, 0.6), rgba(40, 100, 220, 0.5));
-    box-shadow: 0 0 15px rgba(58, 134, 255, 0.4);
-    border: 1px solid rgba(58, 134, 255, 0.5);
-}
-
-/* Star on start cells */
-.start-red::after,
-.start-green::after,
-.start-yellow::after,
-.start-blue::after {
-    content: '★';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
-    font-size: clamp(8px, 1.5vw, 12px);
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 0 8px currentColor;
-    pointer-events: none;
-    transition: transform 0.5s ease;
-    animation: star-shimmer 3s infinite ease-in-out;
-}
-
-/* ============================================
-   HOME STRETCH (colored paths to center)
-   ============================================ */
-
-.home-red {
-    background: linear-gradient(90deg, rgba(255, 71, 87, 0.5), rgba(255, 50, 60, 0.4));
-    border: 1px solid rgba(255, 71, 87, 0.3);
-    border-radius: 3px;
-}
-
-.home-green {
-    background: linear-gradient(180deg, rgba(0, 210, 106, 0.5), rgba(0, 180, 90, 0.4));
-    border: 1px solid rgba(0, 210, 106, 0.3);
-    border-radius: 3px;
-}
-
-.home-yellow {
-    background: linear-gradient(270deg, rgba(255, 190, 11, 0.5), rgba(255, 160, 0, 0.4));
-    border: 1px solid rgba(255, 190, 11, 0.3);
-    border-radius: 3px;
-}
-
-.home-blue {
-    background: linear-gradient(0deg, rgba(58, 134, 255, 0.5), rgba(40, 100, 220, 0.4));
-    border: 1px solid rgba(58, 134, 255, 0.3);
-    border-radius: 3px;
-}
-
-/* ============================================
-   CENTER AREA (goal)
-   ============================================ */
-
+/* Center Crown */
 .center {
-    background: conic-gradient(from 45deg,
-            rgba(255, 71, 87, 0.6) 0deg 90deg,
-            rgba(0, 210, 106, 0.6) 90deg 180deg,
-            rgba(255, 190, 11, 0.6) 180deg 270deg,
-            rgba(58, 134, 255, 0.6) 270deg 360deg);
-    border-radius: 3px;
+    background: linear-gradient(135deg, rgba(255, 62, 62, 0.2), rgba(0, 255, 136, 0.2), rgba(255, 204, 0, 0.2), rgba(0, 162, 255, 0.2));
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@keyframes crown-float {
-
-    0%,
-    100% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(0);
-    }
-
-    50% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(-5px);
-    }
-}
-
-/* Crown in exact center */
 .board-cell.center[data-row="7"][data-col="7"]::after {
     content: '👑';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
-    font-size: clamp(16px, 4vw, 32px);
-    filter: drop-shadow(0 0 10px rgba(255, 190, 11, 0.8));
-    pointer-events: none;
-    z-index: 5;
-    transition: transform 0.5s ease;
-    animation: crown-float 4s infinite ease-in-out;
+    font-size: 32px;
+    filter: drop-shadow(0 0 20px var(--accent-gold));
+    animation: float-crown 3s infinite ease-in-out;
 }
 
-/* ============================================
-   BLOCKADE INDICATOR
-   ============================================ */
-
-.board-cell.has-blockade {
-    box-shadow: inset 0 0 0 2px #ff007a, 0 0 15px rgba(255, 0, 122, 0.5);
-}
-
-.board-cell.has-blockade::before {
-    content: '🚫';
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    font-size: 12px;
-    z-index: 100;
-}
-
-/* ============================================
-   DEBUG OVERLAY
-   ============================================ */
-
-.debug-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 8px;
-    font-weight: 800;
-    color: #ffffff;
-    pointer-events: none;
-    z-index: 100;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 1px 3px;
-    border-radius: 3px;
-    white-space: nowrap;
-}
-
-.debug-alert {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: linear-gradient(135deg, #ff007a, #8b5cf6);
-    color: white;
-    padding: 6px 12px;
-    font-size: 11px;
-    font-weight: bold;
-    border-radius: 8px;
-    pointer-events: none;
-    z-index: 9999;
-    box-shadow: 0 4px 15px rgba(255, 0, 122, 0.4);
-}
-
-/* ============================================
-   RESPONSIVE SIZING
-   ============================================ */
-
-@media (max-width: 768px) {
-    .ludo-board {
-        padding: 5px;
-        border-radius: 16px;
+@keyframes float-crown {
+    0% {
+        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(0);
     }
 
-    .token-layer {
-        top: 5px;
-        left: 5px;
-        right: 5px;
-        bottom: 5px;
+    50% {
+        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(-5px) scale(1.1);
     }
 
-    .safe::after,
-    .start-red::after,
-    .start-green::after,
-    .start-yellow::after,
-    .start-blue::after {
-        font-size: 8px;
-    }
-
-    .board-cell.center[data-row="7"][data-col="7"]::after {
-        font-size: 14px;
+    100% {
+        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(0);
     }
 }
 
 @media (max-width: 480px) {
     .ludo-board {
         padding: 4px;
-        border-radius: 12px;
+        gap: 0;
     }
 
-    .token-layer {
-        top: 4px;
-        left: 4px;
-        right: 4px;
-        bottom: 4px;
-    }
-
-    .spawn-point {
-        margin: 8%;
+    .board-cell {
+        border-radius: 1px;
     }
 }

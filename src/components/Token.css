@@ -1,5 +1,5 @@
 /* ============================================
-   TOKEN STYLING - Premium AAA Gaming
+   TOKEN STYLING - Phase 4 Liquid Glass AAA
    ============================================ */
 
 .token {
@@ -8,270 +8,148 @@
     align-items: center;
     pointer-events: auto;
     cursor: default;
-    transition: transform 0.15s ease, filter 0.15s ease;
-    transform: rotate(var(--rotation, 0deg));
     position: relative;
+    --token-glow: currentColor;
 }
 
 .token.stacked {
-    transform:
-        rotate(var(--rotation, 0deg)) translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
-}
-
-.token.animating {
-    z-index: 50 !important;
+    transform: translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
 }
 
 /* ============================================
-   TOKEN INNER - 3D PIN STYLE (Ludo King)
+   TOKEN INNER - LIQUID GLASS STYLE
    ============================================ */
 
 .token-inner {
-    width: 80%;
-    height: 80%;
+    width: 85%;
+    height: 85%;
     border-radius: 50%;
     position: relative;
-    /* Multi-layer 3D effect with depth */
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
     box-shadow:
-        /* Outer glow - Web3 style */
-        0 0 8px currentColor,
-        /* Drop shadow for depth */
-        0 6px 12px rgba(0, 0, 0, 0.6),
-        0 3px 6px rgba(0, 0, 0, 0.4),
-        /* Inner lighting - top highlight */
-        inset 0 6px 12px rgba(255, 255, 255, 0.35),
-        /* Inner shadow - bottom depth */
-        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
-    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* 3D raised effect */
-    transform: translateY(-2px);
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 4px 8px rgba(255, 255, 255, 0.3),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    overflow: hidden;
 }
 
-/* Top shine - creates metallic look */
+.token-center-dot {
+    position: absolute;
+    inset: 30%;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 10px white;
+    opacity: 0.8;
+}
+
 .token-shine {
     position: absolute;
-    top: 8%;
-    left: 12%;
-    width: 45%;
-    height: 45%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%,
-            rgba(255, 255, 255, 0.95),
-            rgba(255, 255, 255, 0.4) 40%,
-            transparent 65%);
-    pointer-events: none;
+    top: 5%;
+    left: 15%;
+    width: 50%;
+    height: 30%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
+    border-radius: 50% / 100% 100% 0 0;
+    transform: rotate(-15deg);
 }
 
-/* Secondary shine for extra depth */
-.token-inner::after {
-    content: '';
+/* Impact Shockwave */
+.token-impact-wave {
     position: absolute;
-    bottom: 15%;
-    right: 15%;
-    width: 20%;
-    height: 20%;
+    inset: -50%;
+    border: 2px solid var(--token-glow);
     border-radius: 50%;
-    background: radial-gradient(circle,
-            rgba(255, 255, 255, 0.15),
-            transparent 60%);
     pointer-events: none;
+    filter: blur(2px);
 }
 
-/* Premium glow ring with sharper animation */
-.token-glow-ring {
+/* Glow Aura for active moves */
+.token-glow-aura {
     position: absolute;
-    inset: -12%;
-    border: 3px solid currentColor;
+    inset: -25%;
     border-radius: 50%;
-    filter: blur(4px);
-    pointer-events: none;
-    box-shadow: 0 0 15px currentColor;
-}
-
-/* Landing ripple effect */
-.token-landing-ripple {
-    position: absolute;
-    inset: -5%;
-    border-radius: 50%;
-    border: 2px solid currentColor;
-    opacity: 0;
-    animation: landing-ripple 0.4s ease-out forwards;
-    pointer-events: none;
-}
-
-@keyframes landing-ripple {
-    0% {
-        transform: scale(0.8);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(1.5);
-        opacity: 0;
-    }
-}
-
-/* Movement trail effect */
-.token-trail {
-    position: absolute;
-    inset: 5%;
-    border-radius: 50%;
-    background: currentColor;
+    background: radial-gradient(circle, var(--token-glow) 0%, transparent 70%);
     opacity: 0.4;
-    pointer-events: none;
+    filter: blur(8px);
+    z-index: 1;
 }
 
 /* ============================================
-   TOKEN COLORS - 3D Pin Style (Ludo King)
+   TOKEN COLORS - Iridescent Gradients
    ============================================ */
 
-/* RED - Rich ruby gradient */
 .token-red .token-inner {
-    background:
-        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(255, 200, 200, 0.9), transparent 50%),
-        radial-gradient(circle at 50% 50%, #ff4757 0%, #e83545 40%, #c41e30 70%, #8b0a1a 100%);
-    border: 2px solid rgba(255, 100, 110, 0.7);
+    background: radial-gradient(circle at 30% 30%, #ff5e5e, #c41e3a);
+    --token-glow: #ff3e3e;
 }
 
-.token-red {
-    color: #ff4757;
-}
-
-/* GREEN - Emerald gem */
 .token-green .token-inner {
-    background:
-        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(180, 255, 200, 0.9), transparent 50%),
-        radial-gradient(circle at 50% 50%, #00d26a 0%, #00b85c 40%, #00914a 70%, #006030 100%);
-    border: 2px solid rgba(100, 220, 150, 0.7);
+    background: radial-gradient(circle at 30% 30%, #10ff9c, #00874e);
+    --token-glow: #00ff88;
 }
 
-.token-green {
-    color: #00d26a;
-}
-
-/* YELLOW - Golden amber */
 .token-yellow .token-inner {
-    background:
-        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(255, 255, 200, 0.95), transparent 50%),
-        radial-gradient(circle at 50% 50%, #ffd000 0%, #f5b800 40%, #d4a000 70%, #a07800 100%);
-    border: 2px solid rgba(255, 210, 100, 0.7);
+    background: radial-gradient(circle at 30% 30%, #ffdf40, #b29000);
+    --token-glow: #ffcc00;
 }
 
-.token-yellow {
-    color: #ffbe0b;
-}
-
-/* BLUE - Sapphire depth */
 .token-blue .token-inner {
-    background:
-        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(180, 220, 255, 0.9), transparent 50%),
-        radial-gradient(circle at 50% 50%, #4a9eff 0%, #3a86ff 40%, #2060d0 70%, #103080 100%);
-    border: 2px solid rgba(100, 160, 255, 0.7);
-}
-
-.token-blue {
-    color: #3a86ff;
+    background: radial-gradient(circle at 30% 30%, #4da6ff, #1e4bb2);
+    --token-glow: #00a2ff;
 }
 
 /* ============================================
-   STATES - Interactive Feedback
+   ANIMATION & INTERACTION
    ============================================ */
 
-.token.clickable {
-    cursor: pointer;
+.token.clickable:hover {
+    z-index: 100 !important;
 }
 
-.token.clickable:hover .token-inner {
-    filter: brightness(1.1);
-    transform: translateY(-4px) scale(1.05);
-    box-shadow:
-        0 0 12px currentColor,
-        0 10px 20px rgba(0, 0, 0, 0.5),
-        inset 0 6px 12px rgba(255, 255, 255, 0.4),
-        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+.token.impacted .token-inner {
+    animation: impact-flicker 0.3s var(--ease-premium);
 }
 
-/* Highlighted = selectable move */
-.token.highlighted .token-inner {
-    animation: token-pulse 1.2s infinite ease-in-out;
-    box-shadow:
-        0 0 15px currentColor,
-        0 0 30px currentColor,
-        0 8px 16px rgba(0, 0, 0, 0.5),
-        inset 0 6px 12px rgba(255, 255, 255, 0.4),
-        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
-}
+@keyframes impact-flicker {
+    0% {
+        filter: brightness(2) contrast(1.5);
+    }
 
-@keyframes token-pulse {
-
-    0%,
     100% {
-        transform: translateY(-2px) scale(1);
-        filter: brightness(1);
-    }
-
-    50% {
-        transform: translateY(-5px) scale(1.08);
-        filter: brightness(1.15);
+        filter: brightness(1) contrast(1);
     }
 }
 
-/* Tokens in yard - slightly smaller, less prominent */
+/* Particles Trail */
+.token-trail-particles {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+}
+
+.particle {
+    width: 4px;
+    height: 4px;
+    background: var(--token-glow);
+    border-radius: 50%;
+}
+
+/* Yard state: Subdued but glass */
 .token.in-yard .token-inner {
-    width: 65%;
-    height: 65%;
-    opacity: 0.9;
-    transform: translateY(0);
+    width: 70%;
+    height: 70%;
+    opacity: 0.7;
+    filter: saturate(0.8);
 }
-
-/* Animating token - elevated during movement */
-.token.animating .token-inner {
-    transform: translateY(-6px);
-    box-shadow:
-        0 0 20px currentColor,
-        0 12px 24px rgba(0, 0, 0, 0.6),
-        inset 0 6px 12px rgba(255, 255, 255, 0.4),
-        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
 
 @media (max-width: 480px) {
     .token-inner {
-        box-shadow:
-            0 0 8px currentColor,
-            0 2px 4px rgba(0, 0, 0, 0.4),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.4);
-    }
-
-    .token-shine {
-        width: 35%;
-        height: 35%;
-    }
-
-    .token-glow-ring {
-        inset: -10%;
-        border-width: 2px;
-    }
-}
-
-/* ============================================
-   REDUCED MOTION SUPPORT
-   ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-
-    .token,
-    .token-inner,
-    .token-glow-ring {
-        animation: none !important;
-        transition: none !important;
-    }
-
-    .token-landing-ripple,
-    .token-trail {
-        display: none;
+        width: 80%;
+        height: 80%;
     }
 }

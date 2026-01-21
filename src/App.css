@@ -122,26 +122,44 @@ body {
     opacity: 1;
     filter: none;
     border-color: var(--pod-glow-color, rgba(255, 255, 255, 0.3));
+    background: rgba(255, 255, 255, 0.08);
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.3),
         0 0 20px var(--pod-glow-color);
+    transform: scale(1.05);
+}
+
+.player-pod.active::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 24px;
+    background: linear-gradient(90deg, transparent, var(--pod-glow-color), transparent);
+    background-size: 200% 100%;
+    animation: flow-border 2s linear infinite;
+    z-index: -1;
+}
+
+@keyframes flow-border {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 /* Color glow definitions */
 .player-pod.red {
-    --pod-glow-color: rgba(255, 71, 87, 0.5);
+    --pod-glow-color: var(--color-red);
 }
 
 .player-pod.green {
-    --pod-glow-color: rgba(0, 210, 106, 0.5);
+    --pod-glow-color: var(--color-green);
 }
 
 .player-pod.yellow {
-    --pod-glow-color: rgba(255, 190, 11, 0.5);
+    --pod-glow-color: var(--color-yellow);
 }
 
 .player-pod.blue {
-    --pod-glow-color: rgba(58, 134, 255, 0.5);
+    --pod-glow-color: var(--color-blue);
 }
 
 /* Pod Positions - CORNERS, not overlapping board */
@@ -222,13 +240,16 @@ body {
 
 /* Player name - Truncated */
 .pod-name {
-    font-size: 12px;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
     color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 70px;
+    max-width: 80px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 /* Status text - Only shown for active */
@@ -301,14 +322,15 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 45px;
-    background: linear-gradient(to top, rgba(15, 12, 41, 0.95), transparent);
+    height: 60px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 12px;
     padding-bottom: env(safe-area-inset-bottom);
     z-index: 50;
+    border-top: 1px solid rgba(34, 211, 238, 0.1);
 }
 
 /* Game Ticker (Commentator) */
@@ -393,21 +415,30 @@ body {
 
 /* Turn Timer */
 .turn-timer {
-    font-size: 14px;
+    font-family: var(--font-display);
+    font-size: 16px;
     font-weight: 800;
-    color: #4ade80;
-    background: rgba(74, 222, 128, 0.15);
-    padding: 6px 14px;
-    border-radius: 16px;
-    border: 2px solid rgba(74, 222, 128, 0.4);
+    color: var(--accent-cyan);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 8px 20px;
+    border-radius: 4px;
+    border: 1px solid var(--accent-cyan);
     white-space: nowrap;
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
 }
 
 .turn-timer.urgent {
-    color: #ff4757;
-    background: rgba(255, 71, 87, 0.2);
-    border-color: #ff4757;
-    animation: pulse-urgent 0.5s infinite;
+    color: var(--color-red);
+    border-color: var(--color-red);
+    box-shadow: 0 0 20px rgba(255, 62, 62, 0.4);
+    animation: urgent-pulse 0.4s infinite alternate var(--ease-premium);
+}
+
+@keyframes urgent-pulse {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0.8; transform: scale(1.1); }
 }
 
 @keyframes pulse-urgent {

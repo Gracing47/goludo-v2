@@ -1,0 +1,77 @@
+.commentator-pill {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+    border-radius: 40px;
+    min-width: 320px;
+    max-width: 90vw;
+    z-index: 100;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--accent-cyan);
+}
+
+.bot-avatar {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.bot-eye {
+    position: absolute;
+    top: 8px;
+    width: 20px;
+    height: 4px;
+    background: white;
+    border-radius: 2px;
+    opacity: 0.3;
+}
+
+.quip-container {
+    flex: 1;
+    overflow: hidden;
+}
+
+.quip-text {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: white;
+    font-family: var(--font-body);
+}
+
+.quip-text.win {
+    color: var(--accent-gold);
+}
+
+.quip-text.captured {
+    color: var(--color-red);
+}
+
+.quip-text.six_roll {
+    color: var(--color-green);
+}
+
+@media (max-width: 480px) {
+    .commentator-pill {
+        bottom: 80px;
+        /* Above bottom bar on mobile */
+        min-width: 280px;
+        padding: 6px 16px;
+    }
+
+    .quip-text {
+        font-size: 12px;
+    }
+}

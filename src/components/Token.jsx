@@ -1,14 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import './Token.css';
 
 function getStackOffset(stackIndex, stackSize) {
     if (stackSize <= 1) return { x: 0, y: 0, scale: 1 };
     const offsets = [
-        { x: -20, y: -20 }, { x: 20, y: -20 },
-        { x: -20, y: 20 }, { x: 20, y: 20 }
+        { x: -18, y: -18 }, { x: 18, y: -18 },
+        { x: -18, y: 18 }, { x: 18, y: 18 }
     ];
-    const scale = stackSize === 2 ? 0.8 : 0.65;
+    const scale = stackSize === 2 ? 0.82 : 0.68;
     return { ...offsets[stackIndex % 4], scale };
 }
 
@@ -28,6 +28,7 @@ const Token = ({
     const controls = useAnimation();
     const prevPos = useRef({ row, col });
     const [isAnimating, setIsAnimating] = useState(false);
+    const [showImpact, setShowImpact] = useState(false);
 
     // Animate when position changes
     useEffect(() => {
@@ -36,17 +37,20 @@ const Token = ({
         if (hasPositionChanged && !inYard) {
             setIsAnimating(true);
 
-            // Smooth hop animation with elegant spring curve
+            // Weighted "Heavy" Hop Animation
             controls.start({
-                y: [0, -15, 0], // Subtle hop
-                scale: [1, 1.08, 1], // Gentle scale during hop
+                y: [0, -25, 0], // Higher jump
+                scale: [1, 1.15, 0.95, 1], // Compression on landing
+                rotate: [0, 5, -5, 0], // Subtle mid-air wobble
                 transition: {
-                    duration: 0.45, // Slightly longer for smoothness
-                    ease: [0.25, 0.1, 0.25, 1], // Smooth cubic-bezier (ease-out-back)
-                    times: [0, 0.4, 1] // Peak earlier for snappier landing
+                    duration: 0.4,
+                    times: [0, 0.4, 0.8, 1],
+                    ease: "easeOut"
                 }
             }).then(() => {
                 setIsAnimating(false);
+                setShowImpact(true);
+                setTimeout(() => setShowImpact(false), 300);
             });
         }
 
@@ -60,15 +64,16 @@ const Token = ({
         inYard && 'in-yard',
         onClick && 'clickable',
         stackSize > 1 && 'stacked',
-        isAnimating && 'animating'
+        isAnimating && 'animating',
+        showImpact && 'impacted'
     ].filter(Boolean).join(' ');
 
     return (
         <motion.div
             className={classes}
             animate={controls}
-            layout // Enable layout animation for smooth grid transitions
-            layoutId={`token-${color}-${stackIndex}`} // Unique ID for layout animation
+            layout
+            layoutId={`token-${color}-${stackIndex}`}
             style={{
                 gridRow: row + 1,
                 gridColumn: col + 1,
@@ -76,46 +81,71 @@ const Token = ({
                 '--stack-y': `${offset.y}%`,
                 '--stack-scale': offset.scale,
                 '--rotation': `${rotation}deg`,
-                zIndex: isHighlighted ? 100 : isAnimating ? 50 : 10 + stackIndex
+                zIndex: isHighlighted ? 100 : isAnimating || showImpact ? 50 : 10 + stackIndex
             }}
             initial={false}
             transition={{
                 layout: {
                     type: "spring",
-                    stiffness: 300,
-                    damping: 25,
-                    duration: 0.4
+                    stiffness: 400,
+                    damping: 30
                 }
             }}
-            whileHover={onClick ? { scale: 1.15, filter: 'brightness(1.2)' } : {}}
-            whileTap={onClick ? { scale: 0.9 } : {}}
+            whileHover={onClick ? {
+                scale: 1.2,
+                rotate: 5,
+                boxShadow: "0 0 25px var(--token-glow)"
+            } : {}}
+            whileTap={onClick ? { scale: 0.85 } : {}}
             onClick={onClick}
         >
-            <div className="token-inner">
+            <div className={`token-inner liquid-glass ${color}`}>
                 <div className="token-shine" />
-                {/* Landing ripple effect */}
-                {isAnimating && <div className="token-landing-ripple" />}
+                <div className="token-center-dot" />
+
+                {/* Landing Shockwave */}
+                <AnimatePresence>
+                    {showImpact && (
+                        <motion.div
+                            className="token-impact-wave"
+                            initial={{ scale: 0.5, opacity: 1 }}
+                            animate={{ scale: 2.5, opacity: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                        />
+                    )}
+                </AnimatePresence>
             </div>
 
             {isHighlighted && (
                 <motion.div
-                    className="token-glow-ring"
+                    className="token-glow-aura"
                     animate={{
-                        opacity: [0.4, 1, 0.4],
-                        scale: [0.95, 1.15, 0.95]
+                        opacity: [0.3, 0.7, 0.3],
+                        scale: [1, 1.3, 1],
+                        rotate: [0, 180]
                     }}
-                    transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
+                    transition={{
+                        repeat: Infinity,
+                        duration: 2,
+                        ease: "linear"
+                    }}
                 />
             )}
 
-            {/* Movement trail effect */}
+            {/* Movement Particles (Simplified) */}
             {isAnimating && (
-                <motion.div
-                    className="token-trail"
-                    initial={{ opacity: 0.6, scale: 1 }}
-                    animate={{ opacity: 0, scale: 0.5 }}
-                    transition={{ duration: 0.3 }}
-                />
+                <div className="token-trail-particles">
+                    {[1, 2, 3].map(i => (
+                        <motion.div
+                            key={i}
+                            className="particle"
+                            initial={{ opacity: 0.8, scale: 0.8 }}
+                            animate={{ opacity: 0, scale: 0, y: 10 }}
+                            transition={{ duration: 0.4, delay: i * 0.05 }}
+                        />
+                    ))}
+                </div>
             )}
         </motion.div>
     );

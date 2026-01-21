@@ -25,6 +25,11 @@ import soundManager from './services/SoundManager';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
+
+// Phase 4 Polish Components
+import Commentator from './components/Commentator';
+import WarpTransition from './components/WarpTransition';
+
 import './App.css';
 
 // Zustand Store
@@ -805,30 +810,34 @@ function App() {
     // Game loading state - show when game state isn't ready yet
     if (!gameState || !gameConfig) {
         return (
-            <div className="app-loading">
-                <div className="loading-spinner">↻</div>
-                <p>Establishing Connection...</p>
-                {/* Debug info in case it gets stuck */}
-                <div className="loading-debug-info">
-                    <p>Room: {gameId?.substring(0, 10)}...</p>
-                    <p>Socket: {socketRef.current?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
-                    <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
+            <WarpTransition mode={gameConfig?.mode === 'web3' ? 'literal' : 'subtle'}>
+                <div className="app-loading" style={{ background: 'transparent' }}>
+                    <div className="loading-spinner">↻</div>
+                    <p style={{ fontFamily: 'var(--font-display)', letterSpacing: '2px' }}>
+                        Establishing Connection...
+                    </p>
+                    {/* Debug info in case it gets stuck */}
+                    <div className="loading-debug-info">
+                        <p>Room: {gameId?.substring(0, 10)}...</p>
+                        <p>Socket: {socketRef.current?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
+                        <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
+                    </div>
+                    <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
+                        Return to Lobby
+                    </button>
+                    {/* Version Display */}
+                    <div style={{
+                        position: 'fixed',
+                        bottom: '5px',
+                        left: '5px',
+                        fontSize: '9px',
+                        color: 'rgba(255,255,255,0.2)',
+                        pointerEvents: 'none'
+                    }}>
+                        {BUILD_VERSION}
+                    </div>
                 </div>
-                <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
-                    Return to Lobby
-                </button>
-                {/* Version Display */}
-                <div style={{
-                    position: 'fixed',
-                    bottom: '5px',
-                    left: '5px',
-                    fontSize: '9px',
-                    color: 'rgba(255,255,255,0.2)',
-                    pointerEvents: 'none'
-                }}>
-                    {BUILD_VERSION}
-                </div>
-            </div>
+            </WarpTransition>
         );
     }
 
@@ -994,9 +1003,15 @@ function App() {
                     </div>
                 )}
 
-                {/* D. BOTTOM CONTROLS (Minimal) */}
+                {/* D. BOTTOM CONTROLS (Commentator & Sports Ticker) */}
                 <div className="bottom-controls">
-                    <div className="game-ticker">{getTickerText()}</div>
+                    <div className="sports-ticker">
+                        <div className="ticker-content">
+                            {BUILD_VERSION} • GOLUDO MULTIPLAYER WEB3 • STAKE: {gameConfig.stake || 0} • ROOM: {gameConfig.roomId || 'LOCAL'} •
+                            {BUILD_VERSION} • GOLUDO MULTIPLAYER WEB3 • STAKE: {gameConfig.stake || 0} • ROOM: {gameConfig.roomId || 'LOCAL'} •
+                        </div>
+                    </div>
+                    <Commentator />
                 </div>
 
                 {/* E. FLOATING MENU BUTTON */}
