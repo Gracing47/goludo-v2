@@ -155,16 +155,32 @@ function App() {
         aiActionInProgress.current = false;
 
         if (config.mode === 'web3') {
-            // Cleanup existing socket if any
-            if (socketRef.current) {
-                socketRef.current.disconnect();
+            // Check if we already have a functional socket for this room
+            const currentSocket = socketRef.current;
+            const isCorrectSocket = currentSocket &&
+                currentSocket.connected &&
+                currentSocket._targetRoom === config.roomId &&
+                currentSocket._targetAddr === (account?.address || 'anonymous');
+
+            if (isCorrectSocket) {
+                console.log('✅ Socket already connected and correct. Skipping re-init.');
+                return;
+            }
+
+            // Cleanup existing WRONG/DISCONNECTED socket if any
+            if (currentSocket) {
+                console.log('🔌 Cleaning up old/incorrect socket before reconnect...');
+                currentSocket.disconnect();
             }
 
             console.log('🌐 Web3 Match: Connecting to socket...');
             aiActionInProgress.current = false;
 
             const socket = io(SOCKET_URL, {
-                query: { roomId: config.roomId, userAddress: account?.address || 'anonymous' }
+                query: { roomId: config.roomId, userAddress: account?.address || 'anonymous' },
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
             });
 
             // Tag socket for persistence checks
@@ -381,11 +397,22 @@ function App() {
 
         if (gameConfig?.mode === 'web3') {
             console.log('🎲 Web3 Dice Roll - Socket connected:', !!socketRef.current?.connected);
-            console.log('🎲 Rolling for room:', gameConfig.roomId);
 
             if (!socketRef.current?.connected) {
-                console.error('❌ Cannot roll: Socket not connected!');
-                alert('Connection lost. Please refresh the page.');
+                console.warn('⚠️ Socket disconnected during roll! Attempting emergency reconnect...');
+                setServerMsg("📡 Reconnecting...");
+                onGameStart(gameConfig);
+
+                // Try again in 1s or show hint
+                setTimeout(() => {
+                    if (socketRef.current?.connected) {
+                        setServerMsg("✅ Reconnected! Try rolling again.");
+                        setTimeout(() => setServerMsg(null), 3000);
+                    } else {
+                        setServerMsg("❌ Connection failed. Please check internet.");
+                        setTimeout(() => setServerMsg(null), 3000);
+                    }
+                }, 1500);
                 return;
             }
 
