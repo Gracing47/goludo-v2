@@ -213,6 +213,11 @@ function App() {
                 setTurnTimer(Math.floor(timeoutMs / 1000));
             });
 
+            socket.on('turn_timer_update', ({ remainingMs, remainingSeconds }) => {
+                const seconds = remainingSeconds || Math.floor(remainingMs / 1000);
+                setTurnTimer(seconds);
+            });
+
             socket.on('game_started', (room) => {
                 const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
                 const activeColors = room.players.map(p => colorMap[p.color]);
@@ -320,22 +325,38 @@ function App() {
             }
         }
 
-        // Case 2: Web3 room needs socket connection
-        // This triggers when:
-        // - gameId looks like a Web3 room ID (> 20 chars)
-        // - We don't have an active socket connection
-        // - We have a gameConfig with mode 'web3' OR we're detecting Web3 from URL
-        if (gameId.length > 20 && !socketRef.current) {
-            console.log('🌐 Detected Web3 room from URL, initializing connection...');
+        // Case 2: Web3 room needs socket connection (detected from URL)
+        // Re-run if account changes (e.g. loads after refresh)
+        if (gameId?.length > 20) {
+            const hasExistingValidSocket = socketRef.current &&
+                socketRef.current.query?.userAddress === (account?.address || 'anonymous');
 
-            // If we have config from store, use it; otherwise create minimal config
-            const config = gameConfig?.mode === 'web3' && gameConfig.roomId === gameId
-                ? gameConfig
-                : { mode: 'web3', roomId: gameId };
+            if (!hasExistingValidSocket) {
+                console.log('🌐 Web3 Room detected, initializing/refreshing connection...');
 
-            onGameStart(config);
+                // If we have config from store, use it; otherwise create minimal config
+                const config = gameConfig?.mode === 'web3' && gameConfig.roomId === gameId
+                    ? gameConfig
+                    : { mode: 'web3', roomId: gameId };
+
+                onGameStart(config);
+            }
         }
-    }, [gameId, appState, gameConfig, onGameStart]);
+    }, [gameId, appState, gameConfig, onGameStart, account?.address]);
+
+    // 2. Web3 Socket Initialization Hook
+    // This ensures socket is connected when we have a web3 config but no socket
+    useEffect(() => {
+        if (gameConfig?.mode === 'web3' && gameConfig.roomId) {
+            const hasExistingValidSocket = socketRef.current &&
+                socketRef.current.query?.userAddress === (account?.address || 'anonymous');
+
+            if (!hasExistingValidSocket) {
+                console.log('🔌 Web3 mode detected, ensuring socket connection...');
+                onGameStart(gameConfig);
+            }
+        }
+    }, [gameConfig, onGameStart, account?.address]);
 
     // 2. Persistence Hook: Auto-save (Local/AI only)
     useEffect(() => {
@@ -748,12 +769,14 @@ function App() {
         return (
             <div className="app-loading">
                 <div className="loading-spinner">↻</div>
-                <p>Loading Game State...</p>
+                <p>Establishing Connection...</p>
                 {/* Debug info in case it gets stuck */}
-                <small style={{ opacity: 0.5, fontSize: 10 }}>
-                    State: {gameState ? 'OK' : 'MISSING'} | Config: {gameConfig ? 'OK' : 'MISSING'}
-                </small>
-                <button onClick={handleBackToLobby} style={{ marginTop: 20 }}>
+                <div className="loading-debug-info">
+                    <p>Room: {gameId?.substring(0, 10)}...</p>
+                    <p>Socket: {socketRef.current?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
+                    <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
+                </div>
+                <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
                     Return to Lobby
                 </button>
             </div>
@@ -833,6 +856,22 @@ function App() {
 
             {/* 2. HUD LAYER (Overlay) */}
             <div className="game-hud">
+
+                {/* Turn Timer - Top Center */}
+                {gameState.gamePhase !== 'WIN' && turnTimer > 0 && (
+                    <div className="turn-timer-container" style={{
+                        position: 'absolute',
+                        top: '15px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 100,
+                        pointerEvents: 'none'
+                    }}>
+                        <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
+                            ⏱️ {turnTimer}s
+                        </div>
+                    </div>
+                )}
 
                 {/* A. PLAYER PODS (Compact Pills) */}
                 {gameConfig.players.map((p, idx) => {
