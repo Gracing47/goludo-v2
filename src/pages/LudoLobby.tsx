@@ -30,16 +30,14 @@ const LudoLobby: React.FC = () => {
         // Set config FIRST
         setConfig(config);
 
-        // For LOCAL/AI games: Initialize game state immediately
-        if (config.mode !== 'web3') {
-            // Map player colors to indices
-            const colorMap: Record<string, number> = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-            const activeColors = config.players.map((p: any) => colorMap[p.color]);
+        // Map player colors to indices
+        const colorMap: Record<string, number> = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+        const activeColors = config.players.map((p: any) => colorMap[p.color]);
 
-            // Create initial game state
-            const initialState = createInitialState(config.playerCount, activeColors);
-            setState(initialState);
-        }
+        // Create initial game state for ALL game modes
+        // For Web3: This provides initial state; server updates will override via socket
+        const initialState = createInitialState(config.playerCount, activeColors);
+        setState(initialState);
 
         // Set app to game mode
         setAppState('game');
