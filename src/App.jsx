@@ -16,6 +16,8 @@ import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
 import MiniDice from './components/MiniDice';
+
+const BUILD_VERSION = "v4.3 - Robust Reconnect";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
@@ -368,6 +370,20 @@ function App() {
             }
         }
     }, [gameId, appState, gameConfig, onGameStart, account?.address]);
+
+    // 2. CONNECTION WATCHDOG: Ensure socket stays alive in Web3 matches
+    useEffect(() => {
+        if (gameConfig?.mode !== 'web3') return;
+
+        const interval = setInterval(() => {
+            if (!socketRef.current?.connected) {
+                console.warn("🛡️ Watchdog: Socket disconnected! Triggering reconnect...");
+                onGameStart(gameConfig);
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [gameConfig, onGameStart]);
 
     // 2. Persistence Hook: Auto-save (Local/AI only)
     useEffect(() => {
@@ -801,6 +817,17 @@ function App() {
                 <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
                     Return to Lobby
                 </button>
+                {/* Version Display */}
+                <div style={{
+                    position: 'fixed',
+                    bottom: '5px',
+                    left: '5px',
+                    fontSize: '9px',
+                    color: 'rgba(255,255,255,0.2)',
+                    pointerEvents: 'none'
+                }}>
+                    {BUILD_VERSION}
+                </div>
             </div>
         );
     }
@@ -989,6 +1016,18 @@ function App() {
                     )}
                 </div>
 
+                {/* Version Display */}
+                <div style={{
+                    position: 'fixed',
+                    bottom: '5px',
+                    left: '5px',
+                    fontSize: '9px',
+                    color: 'rgba(255,255,255,0.2)',
+                    pointerEvents: 'none',
+                    zIndex: 999
+                }}>
+                    {BUILD_VERSION}
+                </div>
             </div>
         </div>
     );
