@@ -53,7 +53,7 @@ body {
 }
 
 /* ============================================
-   1. BOARD LAYER (Full Size, Centered)
+   1. BOARD LAYER (Centered, Protected Space)
    ============================================ */
 
 .board-layer {
@@ -63,8 +63,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Padding for player pods at corners */
-    padding: 80px 8px 60px;
+    /* Clear space for pods: top header + pod height, bottom pods */
+    padding: 110px 8px 80px;
 }
 
 /* ============================================
@@ -87,115 +87,98 @@ body {
 }
 
 /* ============================================
-   PLAYER PODS - Glassmorphism Cards
+   PLAYER PODS - Compact Pill Design
+   No overlap with board, corners only
    ============================================ */
 
 .player-pod {
     position: absolute;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 16px;
-    /* Glassmorphism base */
-    background: rgba(20, 25, 45, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 24px;
+    /* Pill shape */
+    height: 40px;
+    max-width: 160px;
+
+    /* Glassmorphism */
+    background: rgba(20, 25, 45, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+
     transition: all 0.3s ease;
     z-index: 20;
+
+    /* Inactive state by default */
+    opacity: 0.5;
+    filter: grayscale(0.3);
 }
 
+/* Active player - Full visibility */
 .player-pod.active {
-    border-color: rgba(255, 255, 255, 0.25);
+    opacity: 1;
+    filter: none;
+    border-color: var(--pod-glow-color, rgba(255, 255, 255, 0.3));
     box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.4),
-        0 0 30px var(--pod-glow-color, rgba(255, 255, 255, 0.2));
-    animation: pod-pulse 2s infinite ease-in-out;
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 20px var(--pod-glow-color);
 }
 
-@keyframes pod-pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px var(--pod-glow-color);
-    }
-
-    50% {
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 40px var(--pod-glow-color);
-    }
-}
-
-/* Color-specific glow */
+/* Color glow definitions */
 .player-pod.red {
-    --pod-glow-color: rgba(255, 71, 87, 0.4);
+    --pod-glow-color: rgba(255, 71, 87, 0.5);
 }
 
 .player-pod.green {
-    --pod-glow-color: rgba(0, 210, 106, 0.4);
+    --pod-glow-color: rgba(0, 210, 106, 0.5);
 }
 
 .player-pod.yellow {
-    --pod-glow-color: rgba(255, 190, 11, 0.4);
+    --pod-glow-color: rgba(255, 190, 11, 0.5);
 }
 
 .player-pod.blue {
-    --pod-glow-color: rgba(58, 134, 255, 0.4);
+    --pod-glow-color: rgba(58, 134, 255, 0.5);
 }
 
-/* Active color tint on background */
-.player-pod.red.active {
-    background: rgba(255, 71, 87, 0.15);
-}
-
-.player-pod.green.active {
-    background: rgba(0, 210, 106, 0.15);
-}
-
-.player-pod.yellow.active {
-    background: rgba(255, 190, 11, 0.15);
-}
-
-.player-pod.blue.active {
-    background: rgba(58, 134, 255, 0.15);
-}
-
-/* Pod Positions - Corners of screen */
+/* Pod Positions - CORNERS, not overlapping board */
 .pod-red {
-    top: 60px;
+    top: 55px;
     left: 8px;
 }
 
 .pod-green {
-    top: 60px;
+    top: 55px;
     right: 8px;
     flex-direction: row-reverse;
 }
 
 .pod-yellow {
-    bottom: 55px;
+    bottom: 8px;
     right: 8px;
     flex-direction: row-reverse;
 }
 
 .pod-blue {
-    bottom: 55px;
+    bottom: 8px;
     left: 8px;
 }
 
-/* Avatar in Pod */
+/* Avatar - Compact */
 .pod-avatar {
-    width: 44px;
-    height: 44px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    position: relative;
+    font-size: 14px;
     flex-shrink: 0;
+    position: relative;
 }
 
 .pod-avatar.red {
@@ -214,92 +197,98 @@ body {
     background: var(--color-blue);
 }
 
-.player-pod.active .pod-avatar {
-    box-shadow: 0 0 15px currentColor;
-}
-
-/* Turn indicator ripple */
+/* Turn indicator */
 .pod-turn-indicator {
     position: absolute;
-    inset: -4px;
+    inset: -3px;
     border-radius: 50%;
     border: 2px solid currentColor;
-    animation: ripple-out 1.5s infinite;
+    animation: ripple-pulse 1.5s infinite;
 }
 
-@keyframes ripple-out {
-    0% {
-        transform: scale(0.9);
+@keyframes ripple-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
         opacity: 1;
     }
 
-    100% {
-        transform: scale(1.4);
-        opacity: 0;
+    50% {
+        transform: scale(1.2);
+        opacity: 0.5;
     }
 }
 
-/* Player Info Section */
-.pod-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 70px;
-}
-
+/* Player name - Truncated */
 .pod-name {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 600;
     color: white;
-    line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 80px;
+    max-width: 70px;
 }
 
+/* Status text - Only shown for active */
 .pod-status {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
+    display: none;
 }
 
 .player-pod.active .pod-status {
+    display: block;
+    font-size: 9px;
     color: var(--neon-gold);
 }
 
-/* Dice Section in Pod */
+/* Dice container - ONLY visible for active player */
 .pod-dice-container {
+    display: none;
+}
+
+.player-pod.active .pod-dice-container {
+    display: block;
     position: relative;
-    margin-left: auto;
+    z-index: 1000;
+    /* HIGHEST PRIORITY */
+    pointer-events: auto !important;
 }
 
-/* RIGHT side pods need dice on left */
-.pod-green .pod-dice-container,
-.pod-yellow .pod-dice-container {
-    margin-left: 0;
-    margin-right: auto;
-}
-
-/* Mobile: Compact pods */
+/* Mobile: Even more compact */
 @media (max-width: 480px) {
     .player-pod {
-        padding: 8px 10px;
-        gap: 8px;
+        padding: 4px 10px;
+        height: 36px;
+        max-width: 140px;
+        gap: 6px;
     }
 
     .pod-avatar {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
     }
 
     .pod-name {
         font-size: 11px;
-        max-width: 60px;
+        max-width: 55px;
     }
 
-    .pod-info {
-        min-width: 50px;
+    .pod-red {
+        top: 52px;
+    }
+
+    .pod-green {
+        top: 52px;
+    }
+
+    .pod-yellow {
+        bottom: 6px;
+    }
+
+    .pod-blue {
+        bottom: 6px;
     }
 }
 

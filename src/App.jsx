@@ -812,7 +812,7 @@ function App() {
             {/* 2. HUD LAYER (Overlay) */}
             <div className="game-hud">
 
-                {/* A. PLAYER PODS (Glassmorphism Cards) */}
+                {/* A. PLAYER PODS (Compact Pills) */}
                 {gameConfig.players.map((p, idx) => {
                     const isActive = gameState.activePlayer === idx;
                     const color = PLAYER_COLORS[idx];
@@ -822,6 +822,9 @@ function App() {
                     const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
                         (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
 
+                    // Truncate name
+                    const displayName = p.name.length > 8 ? p.name.slice(0, 7) + '…' : p.name;
+
                     return (
                         <div key={idx} className={`player-pod pod-${color} ${color} ${isActive ? 'active' : ''}`}>
                             {/* Avatar */}
@@ -830,29 +833,24 @@ function App() {
                                 {isActive && <div className="pod-turn-indicator" />}
                             </div>
 
-                            {/* Player Info */}
-                            <div className="pod-info">
-                                <span className="pod-name">
-                                    {p.name}{isMe && ' (You)'}
-                                </span>
-                                <span className="pod-status">
-                                    {isActive
-                                        ? (isRolling ? 'Rolling...' : isMoving ? 'Moving...' : 'Your turn!')
-                                        : 'Waiting...'}
-                                </span>
-                            </div>
+                            {/* Name only */}
+                            <span className="pod-name">
+                                {displayName}{isMe && ' •'}
+                            </span>
 
-                            {/* Dice */}
-                            <div className="pod-dice-container">
-                                <MiniDice
-                                    value={gameState.diceValue}
-                                    isActive={isActive}
-                                    isRolling={isRolling && isActive}
-                                    onClick={canThisPlayerRoll ? handleRoll : null}
-                                    disabled={!canThisPlayerRoll}
-                                    color={color}
-                                />
-                            </div>
+                            {/* Dice - ONLY for active player */}
+                            {isActive && (
+                                <div className="pod-dice-container">
+                                    <MiniDice
+                                        value={gameState.diceValue}
+                                        isActive={true}
+                                        isRolling={isRolling}
+                                        onClick={canThisPlayerRoll ? handleRoll : null}
+                                        disabled={!canThisPlayerRoll}
+                                        color={color}
+                                    />
+                                </div>
+                            )}
                         </div>
                     );
                 })}
