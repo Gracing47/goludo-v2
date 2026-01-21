@@ -171,10 +171,20 @@ function App() {
             setSocket(socket);
 
             socket.on('connect', () => {
+                console.log('✅ Socket connected! ID:', socket.id);
+                console.log('📤 Emitting join_match for room:', config.roomId);
                 socket.emit('join_match', {
                     roomId: config.roomId,
                     playerAddress: account?.address
                 });
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('❌ Socket connection error:', error.message);
+            });
+
+            socket.on('disconnect', (reason) => {
+                console.warn('🔌 Socket disconnected:', reason);
             });
 
             socket.on('dice_rolled', ({ value, playerIndex }) => {
@@ -354,8 +364,17 @@ function App() {
         if (!gameState || gameState.gamePhase !== 'ROLL_DICE' || isRolling || isMoving) return;
 
         if (gameConfig?.mode === 'web3') {
+            console.log('🎲 Web3 Dice Roll - Socket connected:', !!socketRef.current?.connected);
+            console.log('🎲 Rolling for room:', gameConfig.roomId);
+
+            if (!socketRef.current?.connected) {
+                console.error('❌ Cannot roll: Socket not connected!');
+                alert('Connection lost. Please refresh the page.');
+                return;
+            }
+
             setIsRolling(true);
-            socketRef.current?.emit('roll_dice', {
+            socketRef.current.emit('roll_dice', {
                 roomId: gameConfig.roomId,
                 playerAddress: account?.address
             });
