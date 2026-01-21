@@ -34,20 +34,16 @@ const Token = ({
         const hasPositionChanged = prevPos.current.row !== row || prevPos.current.col !== col;
 
         if (hasPositionChanged && !inYard) {
-            // Calculate movement delta in grid units
-            const deltaRow = row - prevPos.current.row;
-            const deltaCol = col - prevPos.current.col;
-
             setIsAnimating(true);
 
-            // Hop animation sequence - start from old position
+            // Smooth hop animation with elegant spring curve
             controls.start({
-                y: [0, -20, 0], // Hop up then down
-                scale: [1, 1.1, 1], // Slight scale during hop
+                y: [0, -15, 0], // Subtle hop
+                scale: [1, 1.08, 1], // Gentle scale during hop
                 transition: {
-                    duration: 0.35,
-                    ease: [0.34, 1.56, 0.64, 1], // Spring-like bounce
-                    times: [0, 0.5, 1]
+                    duration: 0.45, // Slightly longer for smoothness
+                    ease: [0.25, 0.1, 0.25, 1], // Smooth cubic-bezier (ease-out-back)
+                    times: [0, 0.4, 1] // Peak earlier for snappier landing
                 }
             }).then(() => {
                 setIsAnimating(false);

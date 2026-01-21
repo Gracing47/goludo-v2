@@ -63,16 +63,24 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-bottom: 80px;
-    /* Offset for bottom dock */
+    /* Offset for bottom dock - ensures no scroll needed */
+    padding: 60px 10px 90px;
     transition: transform 0.5s ease;
-    transform: scale(0.92);
+    transform: scale(0.88);
 }
 
 /* Tablet+ */
 @media (min-width: 768px) {
     .board-layer {
-        padding-bottom: 60px;
+        padding: 50px 20px 70px;
+        transform: scale(0.82);
+    }
+}
+
+/* Small mobile phones */
+@media (max-width: 400px) {
+    .board-layer {
+        padding: 50px 6px 85px;
         transform: scale(0.85);
     }
 }
@@ -120,25 +128,25 @@ body {
 
 /* Screen Positions (0=BL, 1=TL, 2=TR, 3=BR) - Safe margin from edges */
 .pos-0 {
-    bottom: 110px;
-    left: 12px;
+    bottom: 85px;
+    left: 10px;
 }
 
 .pos-1 {
-    top: 12px;
-    left: 12px;
+    top: 10px;
+    left: 10px;
 }
 
 .pos-2 {
-    top: 12px;
-    right: 12px;
+    top: 10px;
+    right: 10px;
     flex-direction: row-reverse;
     text-align: right;
 }
 
 .pos-3 {
-    bottom: 110px;
-    right: 12px;
+    bottom: 85px;
+    right: 10px;
     flex-direction: row-reverse;
     text-align: right;
 }
@@ -269,12 +277,21 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 85px;
-    background: linear-gradient(to top, rgba(15, 12, 41, 0.95), transparent);
+    height: 80px;
+    background: linear-gradient(to top, rgba(15, 12, 41, 0.98), transparent);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 15px 10px;
+    padding: 0 12px 8px;
+    /* Safe area for phones with home indicators */
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 400px) {
+    .bottom-dock {
+        height: 75px;
+        padding: 0 8px 6px;
+    }
 }
 
 .dock-left,

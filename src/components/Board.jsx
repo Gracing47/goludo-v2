@@ -20,12 +20,14 @@ import {
 } from '../engine/constants';
 
 const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
-    // Calculate responsive board size - Mobile First
+    // Calculate responsive board size - Mobile First, Compact to prevent scroll
     const getBoardSize = () => {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        if (vw < 768) return Math.min(vw - 24, vh * 0.6, 500);
-        return Math.min(vw * 0.5, vh - 100, 600);
+        // Mobile: Fit within viewport minus dock (80px) and header space
+        if (vw < 768) return Math.min(vw - 20, vh - 180, 420);
+        // Tablet and up
+        return Math.min(vw * 0.5, vh - 140, 550);
     };
 
     const [boardSize, setBoardSize] = useState(getBoardSize());

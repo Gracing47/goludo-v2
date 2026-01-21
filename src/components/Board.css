@@ -157,127 +157,108 @@
     margin: 14%;
 }
 
-/* Breathing Pulse Animation for Active Turn */
-@keyframes pulse-glow {
-    0% {
-        box-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color);
-        opacity: 0.8;
-    }
-
-    50% {
-        box-shadow: 0 0 15px var(--glow-color), 0 0 25px var(--glow-color);
-        opacity: 1;
-    }
-
-    100% {
-        box-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color);
-        opacity: 0.8;
-    }
-}
-
-/* Active Base - Premium AAA Breathing Glow Effect */
-.active-turn.base-inner {
-    filter: brightness(1.1);
-    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-}
-
-.active-turn.base-edge {
-    position: relative;
-    overflow: visible;
-    filter: brightness(1.25);
-    z-index: 5;
-}
-
-/* Intense inner glow overlay - Restricted to edge for character */
-.active-turn.base-edge::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.2) 0%,
-            transparent 40%,
-            rgba(255, 255, 255, 0.15) 50%,
-            transparent 60%,
-            rgba(255, 255, 255, 0.1) 100%);
-    background-size: 200% 200%;
-    animation: active-shimmer 3s infinite ease-in-out;
-    pointer-events: none;
+/* Active Base - Premium Soft Glow Effect (Full Area) */
+.active-turn {
+    filter: brightness(1.2);
     z-index: 2;
-    border-radius: inherit;
 }
 
-/* Outer pulsing glow ring - ONLY on edges */
-.active-turn.base-edge::after {
+/* Soft glow overlay on ALL active base cells */
+.active-turn::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    border-radius: inherit;
+    inset: -1px;
+    background: radial-gradient(ellipse 120% 120% at 50% 50%,
+            rgba(255, 255, 255, 0.15) 0%,
+            rgba(255, 255, 255, 0.05) 60%,
+            transparent 100%);
     pointer-events: none;
-    z-index: 0;
-    animation: breathing-glow 2s infinite ease-in-out;
+    border-radius: inherit;
+    animation: soft-breathe 2.5s infinite ease-in-out;
 }
 
-/* Color-specific intense glows (Edge only) */
-.base-red.active-turn.base-edge {
-    background: linear-gradient(135deg, rgba(255, 71, 87, 0.7), rgba(255, 50, 60, 0.6)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-}
-
-.base-red.active-turn.base-edge::after {
-    box-shadow: 0 0 15px rgba(255, 71, 87, 0.8), 0 0 30px rgba(255, 71, 87, 0.4);
-}
-
-.base-green.active-turn.base-edge {
-    background: linear-gradient(135deg, rgba(0, 210, 106, 0.7), rgba(0, 180, 90, 0.6)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-}
-
-.base-green.active-turn.base-edge::after {
-    box-shadow: 0 0 15px rgba(0, 210, 106, 0.8), 0 0 30px rgba(0, 210, 106, 0.4);
-}
-
-.base-yellow.active-turn.base-edge {
-    background: linear-gradient(135deg, rgba(255, 190, 11, 0.7), rgba(255, 160, 0, 0.6)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-}
-
-.base-yellow.active-turn.base-edge::after {
-    box-shadow: 0 0 15px rgba(255, 190, 11, 0.8), 0 0 30px rgba(255, 190, 11, 0.4);
-}
-
-.base-blue.active-turn.base-edge {
-    background: linear-gradient(135deg, rgba(58, 134, 255, 0.7), rgba(40, 100, 220, 0.6)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.4) !important;
-}
-
-.base-blue.active-turn.base-edge::after {
-    box-shadow: 0 0 15px rgba(58, 134, 255, 0.8), 0 0 30px rgba(58, 134, 255, 0.4);
-}
-
-/* Keyframes for premium active base */
-@keyframes active-shimmer {
+@keyframes soft-breathe {
 
     0%,
     100% {
-        background-position: 0% 0%;
+        opacity: 0.6;
     }
 
     50% {
-        background-position: 100% 100%;
+        opacity: 1;
     }
 }
 
-@keyframes breathing-glow {
+/* Edge cells get subtle border glow */
+.active-turn.base-edge {
+    position: relative;
+    overflow: visible;
+}
+
+.active-turn.base-edge::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    animation: edge-glow 2.5s infinite ease-in-out;
+}
+
+/* Color-specific soft glows */
+.base-red.active-turn {
+    --glow-color: rgba(255, 71, 87, 0.3);
+    background: linear-gradient(135deg,
+            rgba(255, 71, 87, 0.55),
+            rgba(255, 50, 60, 0.45)) !important;
+}
+
+.base-red.active-turn.base-edge::after {
+    box-shadow: 0 0 12px rgba(255, 71, 87, 0.5), 0 0 20px rgba(255, 71, 87, 0.25);
+}
+
+.base-green.active-turn {
+    --glow-color: rgba(0, 210, 106, 0.3);
+    background: linear-gradient(135deg,
+            rgba(0, 210, 106, 0.55),
+            rgba(0, 180, 90, 0.45)) !important;
+}
+
+.base-green.active-turn.base-edge::after {
+    box-shadow: 0 0 12px rgba(0, 210, 106, 0.5), 0 0 20px rgba(0, 210, 106, 0.25);
+}
+
+.base-yellow.active-turn {
+    --glow-color: rgba(255, 190, 11, 0.3);
+    background: linear-gradient(135deg,
+            rgba(255, 190, 11, 0.55),
+            rgba(255, 160, 0, 0.45)) !important;
+}
+
+.base-yellow.active-turn.base-edge::after {
+    box-shadow: 0 0 12px rgba(255, 190, 11, 0.5), 0 0 20px rgba(255, 190, 11, 0.25);
+}
+
+.base-blue.active-turn {
+    --glow-color: rgba(58, 134, 255, 0.3);
+    background: linear-gradient(135deg,
+            rgba(58, 134, 255, 0.55),
+            rgba(40, 100, 220, 0.45)) !important;
+}
+
+.base-blue.active-turn.base-edge::after {
+    box-shadow: 0 0 12px rgba(58, 134, 255, 0.5), 0 0 20px rgba(58, 134, 255, 0.25);
+}
+
+@keyframes edge-glow {
 
     0%,
     100% {
         opacity: 0.5;
-        transform: scale(1);
     }
 
     50% {
-        opacity: 1;
-        transform: scale(1.01);
+        opacity: 0.9;
     }
 }
 

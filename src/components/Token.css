@@ -23,33 +23,57 @@
 }
 
 /* ============================================
-   TOKEN INNER SPHERE - Premium 3D Effect
+   TOKEN INNER - 3D PIN STYLE (Ludo King)
    ============================================ */
 
 .token-inner {
-    width: 85%;
-    height: 85%;
+    width: 80%;
+    height: 80%;
     border-radius: 50%;
     position: relative;
+    /* Multi-layer 3D effect with depth */
     box-shadow:
-        0 0 12px currentColor,
-        0 4px 8px rgba(0, 0, 0, 0.5),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.5),
-        inset 0 4px 8px rgba(255, 255, 255, 0.25);
-    transition: box-shadow 0.2s ease;
+        /* Outer glow - Web3 style */
+        0 0 8px currentColor,
+        /* Drop shadow for depth */
+        0 6px 12px rgba(0, 0, 0, 0.6),
+        0 3px 6px rgba(0, 0, 0, 0.4),
+        /* Inner lighting - top highlight */
+        inset 0 6px 12px rgba(255, 255, 255, 0.35),
+        /* Inner shadow - bottom depth */
+        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* 3D raised effect */
+    transform: translateY(-2px);
 }
 
+/* Top shine - creates metallic look */
 .token-shine {
     position: absolute;
-    top: 10%;
-    left: 15%;
-    width: 40%;
-    height: 40%;
+    top: 8%;
+    left: 12%;
+    width: 45%;
+    height: 45%;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%,
-            rgba(255, 255, 255, 1),
-            rgba(255, 255, 255, 0.5) 30%,
-            transparent 70%);
+    background: radial-gradient(circle at 35% 35%,
+            rgba(255, 255, 255, 0.95),
+            rgba(255, 255, 255, 0.4) 40%,
+            transparent 65%);
+    pointer-events: none;
+}
+
+/* Secondary shine for extra depth */
+.token-inner::after {
+    content: '';
+    position: absolute;
+    bottom: 15%;
+    right: 15%;
+    width: 20%;
+    height: 20%;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+            rgba(255, 255, 255, 0.15),
+            transparent 60%);
     pointer-events: none;
 }
 
@@ -98,39 +122,51 @@
 }
 
 /* ============================================
-   TOKEN COLORS - Vibrant & Premium
+   TOKEN COLORS - 3D Pin Style (Ludo King)
    ============================================ */
 
+/* RED - Rich ruby gradient */
 .token-red .token-inner {
-    background: radial-gradient(circle at 30% 30%, #ffb3b8, #ff4757 45%, #b8001c 100%);
-    border: 2px solid rgba(255, 71, 87, 0.8);
+    background:
+        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(255, 200, 200, 0.9), transparent 50%),
+        radial-gradient(circle at 50% 50%, #ff4757 0%, #e83545 40%, #c41e30 70%, #8b0a1a 100%);
+    border: 2px solid rgba(255, 100, 110, 0.7);
 }
 
 .token-red {
     color: #ff4757;
 }
 
+/* GREEN - Emerald gem */
 .token-green .token-inner {
-    background: radial-gradient(circle at 30% 30%, #90ffb8, #00d26a 45%, #008040 100%);
-    border: 2px solid rgba(0, 210, 106, 0.8);
+    background:
+        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(180, 255, 200, 0.9), transparent 50%),
+        radial-gradient(circle at 50% 50%, #00d26a 0%, #00b85c 40%, #00914a 70%, #006030 100%);
+    border: 2px solid rgba(100, 220, 150, 0.7);
 }
 
 .token-green {
     color: #00d26a;
 }
 
+/* YELLOW - Golden amber */
 .token-yellow .token-inner {
-    background: radial-gradient(circle at 30% 30%, #fff5a0, #ffbe0b 45%, #cc9600 100%);
-    border: 2px solid rgba(255, 190, 11, 0.8);
+    background:
+        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(255, 255, 200, 0.95), transparent 50%),
+        radial-gradient(circle at 50% 50%, #ffd000 0%, #f5b800 40%, #d4a000 70%, #a07800 100%);
+    border: 2px solid rgba(255, 210, 100, 0.7);
 }
 
 .token-yellow {
     color: #ffbe0b;
 }
 
+/* BLUE - Sapphire depth */
 .token-blue .token-inner {
-    background: radial-gradient(circle at 30% 30%, #a0d4ff, #3a86ff 45%, #1a50cc 100%);
-    border: 2px solid rgba(58, 134, 255, 0.8);
+    background:
+        radial-gradient(ellipse 80% 50% at 30% 20%, rgba(180, 220, 255, 0.9), transparent 50%),
+        radial-gradient(circle at 50% 50%, #4a9eff 0%, #3a86ff 40%, #2060d0 70%, #103080 100%);
+    border: 2px solid rgba(100, 160, 255, 0.7);
 }
 
 .token-blue {
@@ -146,44 +182,56 @@
 }
 
 .token.clickable:hover .token-inner {
-    filter: brightness(1.15);
-}
-
-.token.highlighted .token-inner {
+    filter: brightness(1.1);
+    transform: translateY(-4px) scale(1.05);
     box-shadow:
-        0 0 20px currentColor,
-        0 0 40px currentColor,
-        0 4px 8px rgba(0, 0, 0, 0.5),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.4),
-        inset 0 4px 8px rgba(255, 255, 255, 0.3);
-    animation: highlighted-pulse 1s infinite ease-in-out;
+        0 0 12px currentColor,
+        0 10px 20px rgba(0, 0, 0, 0.5),
+        inset 0 6px 12px rgba(255, 255, 255, 0.4),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
 }
 
-@keyframes highlighted-pulse {
+/* Highlighted = selectable move */
+.token.highlighted .token-inner {
+    animation: token-pulse 1.2s infinite ease-in-out;
+    box-shadow:
+        0 0 15px currentColor,
+        0 0 30px currentColor,
+        0 8px 16px rgba(0, 0, 0, 0.5),
+        inset 0 6px 12px rgba(255, 255, 255, 0.4),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes token-pulse {
 
     0%,
     100% {
+        transform: translateY(-2px) scale(1);
         filter: brightness(1);
     }
 
     50% {
-        filter: brightness(1.2);
+        transform: translateY(-5px) scale(1.08);
+        filter: brightness(1.15);
     }
 }
 
+/* Tokens in yard - slightly smaller, less prominent */
 .token.in-yard .token-inner {
-    width: 70%;
-    height: 70%;
-    opacity: 0.85;
+    width: 65%;
+    height: 65%;
+    opacity: 0.9;
+    transform: translateY(0);
 }
 
-/* Animating token gets shadow boost */
+/* Animating token - elevated during movement */
 .token.animating .token-inner {
+    transform: translateY(-6px);
     box-shadow:
         0 0 20px currentColor,
-        0 8px 16px rgba(0, 0, 0, 0.6),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.5),
-        inset 0 4px 8px rgba(255, 255, 255, 0.25);
+        0 12px 24px rgba(0, 0, 0, 0.6),
+        inset 0 6px 12px rgba(255, 255, 255, 0.4),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* ============================================
