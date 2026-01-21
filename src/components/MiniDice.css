@@ -1,99 +1,123 @@
 /* ============================================
-   MINI DICE - Compact Player Dice
+   MINI DICE - Player Pod Dice (Larger)
    ============================================ */
 
 .mini-dice {
-    width: 36px;
-    height: 36px;
-    background: rgba(20, 24, 38, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 4px;
+    width: 48px;
+    height: 48px;
+    background: rgba(20, 24, 38, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 6px;
     cursor: default;
-    perspective: 500px;
+    perspective: 600px;
     position: relative;
-    transition: all 0.2s ease;
-    opacity: 0.5;
+    transition: all 0.25s ease;
+    opacity: 0.4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .mini-dice.active {
     opacity: 1;
     cursor: pointer;
-    border-color: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-    animation: mini-dice-glow 2s infinite ease-in-out;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.4),
+        0 0 20px var(--dice-glow, rgba(255, 255, 255, 0.3));
+    animation: dice-wobble 2s infinite ease-in-out;
+}
+
+@keyframes dice-wobble {
+
+    0%,
+    100% {
+        transform: rotate(-2deg);
+    }
+
+    50% {
+        transform: rotate(2deg);
+    }
 }
 
 .mini-dice.active:hover:not(.disabled) {
-    transform: scale(1.1);
-    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1) rotate(0deg);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow:
+        0 6px 24px rgba(0, 0, 0, 0.5),
+        0 0 30px var(--dice-glow);
 }
 
 .mini-dice.disabled {
     cursor: not-allowed;
-    opacity: 0.3;
+    opacity: 0.25;
+    animation: none;
 }
 
-/* Color-coded borders */
+/* Color-coded glow */
+.mini-dice.red {
+    --dice-glow: rgba(255, 71, 87, 0.5);
+}
+
+.mini-dice.green {
+    --dice-glow: rgba(0, 210, 106, 0.5);
+}
+
+.mini-dice.yellow {
+    --dice-glow: rgba(255, 190, 11, 0.5);
+}
+
+.mini-dice.blue {
+    --dice-glow: rgba(58, 134, 255, 0.5);
+}
+
+/* Color tinted border for active */
 .mini-dice.red.active {
     border-color: rgba(255, 71, 87, 0.6);
-    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
 }
 
 .mini-dice.green.active {
     border-color: rgba(0, 210, 106, 0.6);
-    box-shadow: 0 0 10px rgba(0, 210, 106, 0.3);
 }
 
 .mini-dice.yellow.active {
     border-color: rgba(255, 190, 11, 0.6);
-    box-shadow: 0 0 10px rgba(255, 190, 11, 0.3);
 }
 
 .mini-dice.blue.active {
     border-color: rgba(58, 134, 255, 0.6);
-    box-shadow: 0 0 10px rgba(58, 134, 255, 0.3);
-}
-
-@keyframes mini-dice-glow {
-
-    0%,
-    100% {
-        opacity: 0.9;
-    }
-
-    50% {
-        opacity: 1;
-    }
 }
 
 /* ============================================
-   MINI DICE CUBE
+   MINI DICE CUBE (Larger)
    ============================================ */
 
 .mini-dice-cube {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     position: relative;
     transform-style: preserve-3d;
-    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .mini-dice.rolling .mini-dice-cube {
-    animation: mini-roll 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: mini-roll 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes mini-roll {
     0% {
-        transform: rotateX(0deg) rotateY(0deg);
+        transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
     }
 
-    50% {
-        transform: rotateX(360deg) rotateY(180deg);
+    33% {
+        transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg);
+    }
+
+    66% {
+        transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg);
     }
 
     100% {
-        transform: rotateX(720deg) rotateY(360deg);
+        transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg);
     }
 }
 
@@ -123,48 +147,48 @@
 }
 
 /* ============================================
-   MINI FACES
+   MINI FACES (Larger)
    ============================================ */
 
 .mini-face {
     position: absolute;
-    width: 28px;
-    height: 28px;
-    background: linear-gradient(145deg, #2a2e40, #1a1d28);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(145deg, #2a2e42, #1a1d2a);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
     display: grid;
-    padding: 4px;
+    padding: 5px;
     box-sizing: border-box;
 }
 
 .mini-face.face-1 {
-    transform: translateZ(14px);
+    transform: translateZ(18px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
 .mini-face.face-2 {
-    transform: rotateY(90deg) translateZ(14px);
+    transform: rotateY(90deg) translateZ(18px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
 .mini-face.face-3 {
-    transform: rotateY(180deg) translateZ(14px);
+    transform: rotateY(180deg) translateZ(18px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
 .mini-face.face-4 {
-    transform: rotateY(-90deg) translateZ(14px);
+    transform: rotateY(-90deg) translateZ(18px);
     grid-template: 1fr 1fr / 1fr 1fr;
 }
 
 .mini-face.face-5 {
-    transform: rotateX(90deg) translateZ(14px);
+    transform: rotateX(90deg) translateZ(18px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr 1fr;
 }
 
 .mini-face.face-6 {
-    transform: rotateX(-90deg) translateZ(14px);
+    transform: rotateX(-90deg) translateZ(18px);
     grid-template: 1fr 1fr 1fr / 1fr 1fr;
 }
 
@@ -258,11 +282,11 @@
    ============================================ */
 
 .mini-dot {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     background: radial-gradient(circle at 30% 30%, #ff4d94, #c026d3);
     border-radius: 50%;
     justify-self: center;
     align-self: center;
-    box-shadow: 0 0 3px rgba(225, 29, 140, 0.5);
+    box-shadow: 0 0 4px rgba(225, 29, 140, 0.6);
 }

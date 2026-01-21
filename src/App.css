@@ -63,12 +63,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Minimal padding - board takes maximum space */
-    padding: 8px;
-    padding-top: 60px;
-    /* Space for header */
-    padding-bottom: 50px;
-    /* Space for minimal controls */
+    /* Padding for player pods at corners */
+    padding: 80px 8px 60px;
 }
 
 /* ============================================
@@ -86,127 +82,149 @@ body {
 }
 
 /* Enable clicks on HUD elements */
-.player-corner,
-.bottom-dock,
-.modal-overlay,
-.center-toast,
 .game-ticker {
     pointer-events: auto;
 }
 
 /* ============================================
-   CORNER AVATARS - Positioned on Board
+   PLAYER PODS - Glassmorphism Cards
    ============================================ */
 
-.player-corner {
+.player-pod {
     position: absolute;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    /* Glassmorphism base */
+    background: rgba(20, 25, 45, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     transition: all 0.3s ease;
-    opacity: 0.7;
     z-index: 20;
 }
 
-.player-corner.active {
-    opacity: 1;
-    transform: scale(1.05);
+.player-pod.active {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.4),
+        0 0 30px var(--pod-glow-color, rgba(255, 255, 255, 0.2));
+    animation: pod-pulse 2s infinite ease-in-out;
 }
 
-/* Screen Positions based on player color (corners of board) */
-/* Red = Top-Left, Green = Top-Right, Yellow = Bottom-Right, Blue = Bottom-Left */
-.pos-red {
-    top: 65px;
-    left: 12px;
-}
-
-.pos-green {
-    top: 65px;
-    right: 12px;
-    flex-direction: row-reverse;
-}
-
-.pos-yellow {
-    bottom: 55px;
-    right: 12px;
-    flex-direction: row-reverse;
-}
-
-.pos-blue {
-    bottom: 55px;
-    left: 12px;
-}
-
-/* Avatar + Dice Container */
-.avatar-dice-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-
-/* Avatar Circle - Compact */
-.avatar-ring {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-/* Color-specific backgrounds */
-.avatar-ring.red {
-    background: var(--color-red);
-    border-color: #c0392b;
-}
-
-.avatar-ring.green {
-    background: var(--color-green);
-    border-color: #27ae60;
-}
-
-.avatar-ring.yellow {
-    background: var(--color-yellow);
-    border-color: #f39c12;
-}
-
-.avatar-ring.blue {
-    background: var(--color-blue);
-    border-color: #2980b9;
-}
-
-/* Active Turn Glow */
-.player-corner.active .avatar-ring {
-    border-width: 2px;
-    box-shadow: 0 0 15px currentColor;
-    animation: avatar-pulse 1.5s infinite ease-in-out;
-}
-
-@keyframes avatar-pulse {
+@keyframes pod-pulse {
 
     0%,
     100% {
-        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px var(--pod-glow-color);
     }
 
     50% {
-        transform: scale(1.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 40px var(--pod-glow-color);
     }
 }
 
-/* Turn Ripple Animation */
-.turn-ripple {
+/* Color-specific glow */
+.player-pod.red {
+    --pod-glow-color: rgba(255, 71, 87, 0.4);
+}
+
+.player-pod.green {
+    --pod-glow-color: rgba(0, 210, 106, 0.4);
+}
+
+.player-pod.yellow {
+    --pod-glow-color: rgba(255, 190, 11, 0.4);
+}
+
+.player-pod.blue {
+    --pod-glow-color: rgba(58, 134, 255, 0.4);
+}
+
+/* Active color tint on background */
+.player-pod.red.active {
+    background: rgba(255, 71, 87, 0.15);
+}
+
+.player-pod.green.active {
+    background: rgba(0, 210, 106, 0.15);
+}
+
+.player-pod.yellow.active {
+    background: rgba(255, 190, 11, 0.15);
+}
+
+.player-pod.blue.active {
+    background: rgba(58, 134, 255, 0.15);
+}
+
+/* Pod Positions - Corners of screen */
+.pod-red {
+    top: 60px;
+    left: 8px;
+}
+
+.pod-green {
+    top: 60px;
+    right: 8px;
+    flex-direction: row-reverse;
+}
+
+.pod-yellow {
+    bottom: 55px;
+    right: 8px;
+    flex-direction: row-reverse;
+}
+
+.pod-blue {
+    bottom: 55px;
+    left: 8px;
+}
+
+/* Avatar in Pod */
+.pod-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.pod-avatar.red {
+    background: var(--color-red);
+}
+
+.pod-avatar.green {
+    background: var(--color-green);
+}
+
+.pod-avatar.yellow {
+    background: var(--color-yellow);
+}
+
+.pod-avatar.blue {
+    background: var(--color-blue);
+}
+
+.player-pod.active .pod-avatar {
+    box-shadow: 0 0 15px currentColor;
+}
+
+/* Turn indicator ripple */
+.pod-turn-indicator {
     position: absolute;
-    inset: -6px;
+    inset: -4px;
     border-radius: 50%;
     border: 2px solid currentColor;
     animation: ripple-out 1.5s infinite;
-    z-index: -1;
 }
 
 @keyframes ripple-out {
@@ -216,75 +234,72 @@ body {
     }
 
     100% {
-        transform: scale(1.5);
+        transform: scale(1.4);
         opacity: 0;
     }
 }
 
-/* Player Name Badge - Hidden on small screens */
-.player-info {
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(6px);
-    padding: 4px 10px;
-    border-radius: 10px;
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-    max-width: 90px;
+/* Player Info Section */
+.pod-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 70px;
 }
 
-.player-corner.active .player-info {
-    opacity: 1;
-}
-
-.p-name {
-    display: block;
+.pod-name {
+    font-size: 13px;
     font-weight: 700;
-    font-size: 11px;
+    color: white;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 80px;
 }
 
-.p-status {
-    display: block;
-    font-size: 9px;
-    opacity: 0.8;
+.pod-status {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.player-pod.active .pod-status {
     color: var(--neon-gold);
 }
 
-/* MOBILE: Hide names, only show avatar + dice */
+/* Dice Section in Pod */
+.pod-dice-container {
+    position: relative;
+    margin-left: auto;
+}
+
+/* RIGHT side pods need dice on left */
+.pod-green .pod-dice-container,
+.pod-yellow .pod-dice-container {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* Mobile: Compact pods */
 @media (max-width: 480px) {
-    .player-info {
-        display: none;
+    .player-pod {
+        padding: 8px 10px;
+        gap: 8px;
     }
 
-    .avatar-ring {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+    .pod-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
     }
 
-    .pos-red {
-        top: 58px;
-        left: 8px;
+    .pod-name {
+        font-size: 11px;
+        max-width: 60px;
     }
 
-    .pos-green {
-        top: 58px;
-        right: 8px;
-    }
-
-    .pos-yellow {
-        bottom: 50px;
-        right: 8px;
-    }
-
-    .pos-blue {
-        bottom: 50px;
-        left: 8px;
+    .pod-info {
+        min-width: 50px;
     }
 }
 
