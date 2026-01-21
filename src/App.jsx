@@ -15,7 +15,7 @@ import { ethers } from 'ethers';
 import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
-import Dice from './components/Dice';
+import MiniDice from './components/MiniDice';
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
@@ -812,20 +812,31 @@ function App() {
             {/* 2. HUD LAYER (Overlay) */}
             <div className="game-hud">
 
-                {/* A. CORNER AVATARS */}
+                {/* A. CORNER AVATARS WITH MINI DICE */}
                 {gameConfig.players.map((p, idx) => {
                     const isActive = gameState.activePlayer === idx;
                     const color = PLAYER_COLORS[idx];
-                    const visualPos = getVisualPositionIndex(idx);
                     const isMe = gameConfig.mode === 'web3'
                         ? p.address?.toLowerCase() === account?.address?.toLowerCase()
                         : !p.isAI && idx === 0;
+                    const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
+                        (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
 
                     return (
-                        <div key={idx} className={`player-corner pos-${visualPos} ${isActive ? 'active' : ''}`}>
-                            <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
-                                {p.isAI ? '🤖' : '👤'}
-                                {isActive && <div className="turn-ripple" />}
+                        <div key={idx} className={`player-corner pos-${color} ${isActive ? 'active' : ''}`}>
+                            <div className="avatar-dice-group">
+                                <div className={`avatar-ring ${color}`} style={{ color: `var(--color-${color})` }}>
+                                    {p.isAI ? '🤖' : '👤'}
+                                    {isActive && <div className="turn-ripple" />}
+                                </div>
+                                <MiniDice
+                                    value={gameState.diceValue}
+                                    isActive={isActive}
+                                    isRolling={isRolling && isActive}
+                                    onClick={canThisPlayerRoll ? handleRoll : null}
+                                    disabled={!canThisPlayerRoll}
+                                    color={color}
+                                />
                             </div>
                             <div className="player-info">
                                 <span className="p-name">
@@ -870,47 +881,26 @@ function App() {
                     </div>
                 )}
 
-                {/* D. BOTTOM DOCK (Controls) */}
-                <div className="bottom-dock">
+                {/* D. BOTTOM CONTROLS (Minimal) */}
+                <div className="bottom-controls">
+                    <div className="game-ticker">{getTickerText()}</div>
+                </div>
 
-                    {/* Left: Timer */}
-                    <div className="dock-left">
-                        {turnTimer !== null && turnTimer > 0 && (
-                            <div className={`turn-timer ${turnTimer <= 5 ? 'urgent' : ''}`}>
-                                ⏱ {turnTimer}s
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Center: Dice & Ticker */}
-                    <div className="dock-center">
-                        <div className="game-ticker">{getTickerText()}</div>
-                        <Dice
-                            value={gameState.diceValue}
-                            onRoll={handleRoll}
-                            disabled={!canRoll}
-                            isRolling={isRolling}
-                        />
-                    </div>
-
-                    {/* Right: Menu */}
-                    <div className="dock-right">
-                        <div className="menu-dropdown-container">
-                            <button className="menu-btn" onClick={() => setMenuOpen(!menuOpen)}>
-                                ☰
+                {/* E. FLOATING MENU BUTTON */}
+                <div className="menu-dropdown-container">
+                    <button className="menu-btn-floating" onClick={() => setMenuOpen(!menuOpen)}>
+                        ☰
+                    </button>
+                    {menuOpen && (
+                        <div className="menu-dropdown" style={{ bottom: '95px', right: '10px' }}>
+                            <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
+                                {isMuted ? '🔇 Unmute' : '🔊 Mute'}
                             </button>
-                            {menuOpen && (
-                                <div className="menu-dropdown">
-                                    <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
-                                        {isMuted ? '🔇 Unmute' : '🔊 Mute'}
-                                    </button>
-                                    <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
-                                        🚪 Leave Game
-                                    </button>
-                                </div>
-                            )}
+                            <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
+                                🚪 Leave Game
+                            </button>
                         </div>
-                    </div>
+                    )}
                 </div>
 
             </div>
