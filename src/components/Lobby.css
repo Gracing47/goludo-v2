@@ -19,9 +19,8 @@
     /* Vertical stack */
     justify-content: flex-start;
     align-items: center;
-    /* Start from top to allow scrolling */
-    /* Slightly reduced padding since title is gone */
-    padding: 160px 16px 80px;
+    /* Pushed down to clear global header and create centered space */
+    padding: 100px 16px 40px;
     box-sizing: border-box;
     overflow-y: auto;
     background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0d1b2a 100%);
@@ -51,37 +50,39 @@
 .lobby-header {
     text-align: center;
     flex-shrink: 0;
-    padding-bottom: 24px;
-    margin-bottom: 0;
+    /* Increased padding and margin to center subtitle in the large gap */
+    padding: 40px 0;
+    margin-bottom: 40px;
     width: 100%;
     max-width: 480px;
-}
-
-.lobby-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: clamp(28px, 6vw, 36px);
-    /* Reduced size */
-    font-weight: 800;
-    margin: 0;
-    letter-spacing: 2px;
-    line-height: 1.2;
-    /* Better line height */
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .lobby-subtitle {
     font-family: 'Exo 2', sans-serif;
     font-size: 12px;
-    /* Smaller subtitle */
-    color: rgba(255, 255, 255, 0.5);
-    margin: 4px 0 0 0;
-    font-weight: 500;
-    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.lobby-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(28px, 6vw, 36px);
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
 }
 
 @keyframes gradient-flow {
@@ -1025,7 +1026,7 @@
 @media (min-width: 768px) {
     .lobby {
         align-items: center;
-        padding-top: 80px;
+        padding-top: 100px;
     }
 
     .lobby-container {

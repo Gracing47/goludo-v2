@@ -93,14 +93,7 @@ body {
   background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
 }
 
-.lobby-header {
-  padding: 12px 16px;
-  background: transparent;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 100;
-}
+/* Legacy lobby header removed to avoid conflict with component styles */
 
 .btn-back-lobby {
   background: rgba(255, 255, 255, 0.1);
