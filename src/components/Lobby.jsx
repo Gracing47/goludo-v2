@@ -179,12 +179,38 @@ const Lobby = ({ onStartGame }) => {
         try {
             const player = players[0];
 
-            // Final check: is color still free?
-            if (selectedRoom.players.some(p => p.color === player.color)) {
-                return alert("This color was just taken by another player. Please pick a different one.");
+            // IMPORTANT: Fetch fresh room data before joining to avoid race conditions
+            const freshRes = await fetch(`${API_URL}/api/rooms`);
+            const freshRooms = await freshRes.json();
+            const freshRoom = freshRooms.find(r => r.id === selectedRoom.id);
+
+            if (!freshRoom) {
+                alert("This room no longer exists. Please select another.");
+                setSelectedRoom(null);
+                return;
             }
 
-            const result = await handleJoinGame(selectedRoom.id, selectedRoom.stake, player.name, player.color);
+            // Update selectedRoom with fresh data
+            setSelectedRoom(freshRoom);
+
+            // Check if our color is still available
+            const takenColors = freshRoom.players.map(p => p.color);
+            let finalColor = player.color;
+
+            if (takenColors.includes(player.color)) {
+                // Our color was taken! Auto-switch to first available
+                const availableColor = COLORS.find(c => !takenColors.includes(c));
+                if (!availableColor) {
+                    alert("This room is full. Please select another.");
+                    setSelectedRoom(null);
+                    return;
+                }
+                finalColor = availableColor;
+                setPlayers(prev => prev.map((p, i) => i === 0 ? { ...p, color: finalColor } : p));
+                // Don't alert, just use the new color silently
+            }
+
+            const result = await handleJoinGame(selectedRoom.id, selectedRoom.stake, player.name, finalColor);
 
             // Result.room contains full player list
             if (result && result.room) {
@@ -197,6 +223,12 @@ const Lobby = ({ onStartGame }) => {
             }
         } catch (err) {
             console.error(err);
+            // Show user-friendly error
+            if (err.message && err.message.includes("Color already taken")) {
+                alert("The color you selected was just taken by another player. Please try again with a different color.");
+            } else {
+                alert("Failed to join room: " + (err.message || "Unknown error"));
+            }
         }
     };
 
