@@ -167,6 +167,10 @@ function App() {
                 query: { roomId: config.roomId, userAddress: account?.address || 'anonymous' }
             });
 
+            // Tag socket for persistence checks
+            socket._targetRoom = config.roomId;
+            socket._targetAddr = account?.address || 'anonymous';
+
             socketRef.current = socket;
             setSocket(socket);
 
@@ -325,38 +329,29 @@ function App() {
             }
         }
 
-        // Case 2: Web3 room needs socket connection (detected from URL)
-        // Re-run if account changes (e.g. loads after refresh)
-        if (gameId?.length > 20) {
-            const hasExistingValidSocket = socketRef.current &&
-                socketRef.current.query?.userAddress === (account?.address || 'anonymous');
+        // Case 2: Web3 room needs socket connection (detected from URL or Config)
+        if (gameId?.length > 20 || gameConfig?.mode === 'web3') {
+            const roomId = gameId || gameConfig?.roomId;
+            if (!roomId) return;
 
-            if (!hasExistingValidSocket) {
-                console.log('🌐 Web3 Room detected, initializing/refreshing connection...');
+            // Check if we already have a socket for THIS room and THIS account
+            const currentSocket = socketRef.current;
+            const isCorrectSocket = currentSocket &&
+                currentSocket.connected &&
+                currentSocket._targetRoom === roomId &&
+                currentSocket._targetAddr === (account?.address || 'anonymous');
 
-                // If we have config from store, use it; otherwise create minimal config
-                const config = gameConfig?.mode === 'web3' && gameConfig.roomId === gameId
+            if (!isCorrectSocket) {
+                console.log('🌐 Web3 Session: Initializing/Refreshing connection...', { roomId, account: account?.address });
+
+                const config = (gameConfig?.mode === 'web3' && gameConfig.roomId === roomId)
                     ? gameConfig
-                    : { mode: 'web3', roomId: gameId };
+                    : { mode: 'web3', roomId: roomId };
 
                 onGameStart(config);
             }
         }
     }, [gameId, appState, gameConfig, onGameStart, account?.address]);
-
-    // 2. Web3 Socket Initialization Hook
-    // This ensures socket is connected when we have a web3 config but no socket
-    useEffect(() => {
-        if (gameConfig?.mode === 'web3' && gameConfig.roomId) {
-            const hasExistingValidSocket = socketRef.current &&
-                socketRef.current.query?.userAddress === (account?.address || 'anonymous');
-
-            if (!hasExistingValidSocket) {
-                console.log('🔌 Web3 mode detected, ensuring socket connection...');
-                onGameStart(gameConfig);
-            }
-        }
-    }, [gameConfig, onGameStart, account?.address]);
 
     // 2. Persistence Hook: Auto-save (Local/AI only)
     useEffect(() => {
