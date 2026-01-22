@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore, selectGameState, selectIsRolling } from '../store/useGameStore';
+import { useShallow } from 'zustand/shallow';
 import './Commentator.css';
 
 const QUIPS = {
@@ -43,50 +44,54 @@ const QUIPS = {
 const Commentator = () => {
     const [msg, setMsg] = useState("Welcome to GoLudo. Try not to lose too fast.");
     const [quipType, setQuipType] = useState('IDLE');
-    const { state, isRolling, isMoving } = useGameStore(s => ({
-        state: s.state,
-        isRolling: s.isRolling,
-        isMoving: s.isMoving
-    }));
+
+    // Use atomic selectors to prevent infinite re-renders
+    const diceValue = useGameStore((s) => s.state?.diceValue);
+    const activePlayer = useGameStore((s) => s.state?.activePlayer);
+    const gamePhase = useGameStore((s) => s.state?.gamePhase);
+    const isRolling = useGameStore(selectIsRolling);
 
     const lastDice = useRef(0);
     const lastActive = useRef(0);
     const lowRollCount = useRef(0);
 
     useEffect(() => {
-        if (!state) return;
+        // Only react to actual dice value changes
+        if (diceValue !== undefined && diceValue !== lastDice.current && !isRolling) {
+            lastDice.current = diceValue;
 
-        // Reactive logic for quips
-        if (state.diceValue !== lastDice.current && !isRolling) {
-            lastDice.current = state.diceValue;
-
-            if (state.diceValue === 6) {
+            if (diceValue === 6) {
                 triggerQuip('SIX_ROLL');
                 lowRollCount.current = 0;
-            } else if (state.diceValue <= 2) {
+            } else if (diceValue <= 2) {
                 lowRollCount.current++;
                 if (lowRollCount.current >= 3) {
                     setMsg("Three low rolls in a row? This is tragic.");
+                    setQuipType('LOW_ROLL');
                 } else {
                     triggerQuip('LOW_ROLL');
                 }
             }
         }
+    }, [diceValue, isRolling]);
 
-        if (state.gamePhase === 'WIN') {
+    useEffect(() => {
+        if (gamePhase === 'WIN') {
             triggerQuip('WIN');
         }
+    }, [gamePhase]);
 
-        if (state.activePlayer !== lastActive.current) {
-            lastActive.current = state.activePlayer;
-            // Maybe an idle quip on turn change
-            if (Math.random() > 0.7) triggerQuip('IDLE');
+    useEffect(() => {
+        if (activePlayer !== undefined && activePlayer !== lastActive.current) {
+            lastActive.current = activePlayer;
+            // Random idle quip
+            if (Math.random() > 0.8) triggerQuip('IDLE');
         }
-
-    }, [state, isRolling]);
+    }, [activePlayer]);
 
     const triggerQuip = (type) => {
         const list = QUIPS[type];
+        if (!list) return;
         const randomQuip = list[Math.floor(Math.random() * list.length)];
         setMsg(randomQuip);
         setQuipType(type);
