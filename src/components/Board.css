@@ -1,5 +1,5 @@
 /* ============================================
-   LUDO BOARD - Phase 4 Liquid Glass & Web3 Premium
+   LUDO BOARD - Mobile-Optimized Sizing
    ============================================ */
 
 .board-wrapper {
@@ -7,7 +7,9 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    padding: 20px;
+    width: 100%;
+    height: 100%;
+    padding: 0;
 }
 
 .ludo-board {
@@ -16,36 +18,36 @@
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
 
-    width: var(--board-size);
-    height: var(--board-size);
+    /* Mobile: Board fills available space, max 95% of viewport width */
+    width: min(95vw, calc(100dvh - 200px), 500px);
+    height: min(95vw, calc(100dvh - 200px), 500px);
     aspect-ratio: 1;
 
-    background: rgba(10, 10, 26, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    padding: 8px;
-    gap: 1px;
+    background: rgba(10, 10, 26, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 4px;
+    gap: 0;
 
-    /* AAA Liquid Glass Border */
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     box-shadow:
-        0 30px 90px rgba(0, 0, 0, 0.8),
-        inset 0 0 40px rgba(255, 255, 255, 0.05);
+        0 16px 48px rgba(0, 0, 0, 0.6),
+        inset 0 0 24px rgba(255, 255, 255, 0.03);
 }
 
 .ludo-board::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%, rgba(255, 255, 255, 0.02) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
     border-radius: inherit;
     pointer-events: none;
 }
 
 .token-layer {
     position: absolute;
-    inset: 8px;
+    inset: 4px;
     display: grid;
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
@@ -62,90 +64,178 @@
    ============================================ */
 
 .board-cell {
-    background: rgba(255, 255, 255, 0.03);
-    border: 0.5px solid rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border: 0.5px solid rgba(255, 255, 255, 0.03);
+    border-radius: 2px;
+}
+
+.empty {
+    background: transparent;
+    border: none;
 }
 
 .path {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(100, 120, 150, 0.2);
+    border-color: rgba(100, 120, 150, 0.1);
 }
 
 .safe {
-    background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(34, 211, 238, 0.05));
-    border-color: rgba(34, 211, 238, 0.3);
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 180, 0, 0.08));
+    border-color: rgba(255, 215, 0, 0.2);
 }
 
 .safe::after {
-    content: '✦';
+    content: '★';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
-    color: var(--accent-gold);
-    font-size: 18px;
-    text-shadow: 0 0 10px var(--accent-gold);
-    animation: shimmer 2s infinite alternate ease-in-out;
+    color: #ffd700;
+    font-size: clamp(8px, 2vw, 14px);
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.6);
+    pointer-events: none;
 }
 
 /* ============================================
-   BASES - Iridescent Glass
+   BASES - Colored Corners (Restored)
    ============================================ */
 
 .base-red {
-    background: rgba(255, 62, 62, 0.15);
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.35), rgba(200, 50, 60, 0.25));
+    border-color: rgba(255, 71, 87, 0.2);
 }
 
 .base-green {
-    background: rgba(0, 255, 136, 0.15);
+    background: linear-gradient(135deg, rgba(46, 213, 115, 0.35), rgba(30, 180, 90, 0.25));
+    border-color: rgba(46, 213, 115, 0.2);
 }
 
 .base-yellow {
-    background: rgba(255, 204, 0, 0.15);
+    background: linear-gradient(135deg, rgba(255, 165, 2, 0.35), rgba(200, 130, 0, 0.25));
+    border-color: rgba(255, 165, 2, 0.2);
 }
 
 .base-blue {
-    background: rgba(0, 162, 255, 0.15);
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.35), rgba(40, 120, 180, 0.25));
+    border-color: rgba(52, 152, 219, 0.2);
 }
 
+/* Spawn Points */
 .spawn-point {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-radius: 50%;
-    margin: 15%;
-    border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+    position: relative;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 50% !important;
+    margin: 12% !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Active Highlight */
+/* Active Base Glow */
 .active-turn {
-    background: rgba(255, 255, 255, 0.1);
+    filter: brightness(1.3);
+}
+
+.base-red.active-turn {
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.5), rgba(200, 50, 60, 0.4)) !important;
+    box-shadow: inset 0 0 20px rgba(255, 71, 87, 0.3);
+}
+
+.base-green.active-turn {
+    background: linear-gradient(135deg, rgba(46, 213, 115, 0.5), rgba(30, 180, 90, 0.4)) !important;
+    box-shadow: inset 0 0 20px rgba(46, 213, 115, 0.3);
+}
+
+.base-yellow.active-turn {
+    background: linear-gradient(135deg, rgba(255, 165, 2, 0.5), rgba(200, 130, 0, 0.4)) !important;
+    box-shadow: inset 0 0 20px rgba(255, 165, 2, 0.3);
+}
+
+.base-blue.active-turn {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.5), rgba(40, 120, 180, 0.4)) !important;
+    box-shadow: inset 0 0 20px rgba(52, 152, 219, 0.3);
+}
+
+/* ============================================
+   HOME STRETCH
+   ============================================ */
+
+.home-red {
+    background: linear-gradient(90deg, rgba(255, 71, 87, 0.4), rgba(255, 71, 87, 0.2));
+    border-color: rgba(255, 71, 87, 0.2);
+}
+
+.home-green {
+    background: linear-gradient(180deg, rgba(46, 213, 115, 0.4), rgba(46, 213, 115, 0.2));
+    border-color: rgba(46, 213, 115, 0.2);
+}
+
+.home-yellow {
+    background: linear-gradient(270deg, rgba(255, 165, 2, 0.4), rgba(255, 165, 2, 0.2));
+    border-color: rgba(255, 165, 2, 0.2);
+}
+
+.home-blue {
+    background: linear-gradient(0deg, rgba(52, 152, 219, 0.4), rgba(52, 152, 219, 0.2));
+    border-color: rgba(52, 152, 219, 0.2);
+}
+
+/* ============================================
+   START POSITIONS
+   ============================================ */
+
+.start-red,
+.start-green,
+.start-yellow,
+.start-blue {
     position: relative;
 }
 
-.active-turn::before {
-    content: '';
+.start-red {
+    background: linear-gradient(135deg, rgba(255, 71, 87, 0.5), rgba(255, 50, 60, 0.4));
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+}
+
+.start-green {
+    background: linear-gradient(135deg, rgba(46, 213, 115, 0.5), rgba(30, 180, 90, 0.4));
+    box-shadow: 0 0 10px rgba(46, 213, 115, 0.3);
+}
+
+.start-yellow {
+    background: linear-gradient(135deg, rgba(255, 165, 2, 0.5), rgba(200, 130, 0, 0.4));
+    box-shadow: 0 0 10px rgba(255, 165, 2, 0.3);
+}
+
+.start-blue {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.5), rgba(40, 120, 180, 0.4));
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+}
+
+.start-red::after,
+.start-green::after,
+.start-yellow::after,
+.start-blue::after {
+    content: '★';
     position: absolute;
-    inset: 0;
-    box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
-    animation: pulse-breathing 2s infinite ease-in-out;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
+    font-size: clamp(6px, 1.5vw, 10px);
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 4px currentColor;
+    pointer-events: none;
 }
 
-@keyframes pulse-breathing {
-    0% {
-        opacity: 0.3;
-    }
+/* ============================================
+   CENTER / GOAL
+   ============================================ */
 
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0.3;
-    }
-}
-
-/* Center Crown */
 .center {
-    background: linear-gradient(135deg, rgba(255, 62, 62, 0.2), rgba(0, 255, 136, 0.2), rgba(255, 204, 0, 0.2), rgba(0, 162, 255, 0.2));
+    background: conic-gradient(from 45deg,
+            rgba(255, 71, 87, 0.4) 0deg 90deg,
+            rgba(46, 213, 115, 0.4) 90deg 180deg,
+            rgba(255, 165, 2, 0.4) 180deg 270deg,
+            rgba(52, 152, 219, 0.4) 270deg 360deg);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -155,32 +245,41 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
-    font-size: 32px;
-    filter: drop-shadow(0 0 20px var(--accent-gold));
-    animation: float-crown 3s infinite ease-in-out;
+    font-size: clamp(16px, 4vw, 28px);
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.6));
+    pointer-events: none;
+    animation: crown-float 3s infinite ease-in-out;
 }
 
-@keyframes float-crown {
-    0% {
+@keyframes crown-float {
+
+    0%,
+    100% {
         transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(0);
     }
 
     50% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(-5px) scale(1.1);
-    }
-
-    100% {
-        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(0);
+        transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(-3px);
     }
 }
 
-@media (max-width: 480px) {
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (min-width: 768px) {
     .ludo-board {
-        padding: 4px;
-        gap: 0;
+        width: min(70vw, calc(100vh - 180px), 550px);
+        height: min(70vw, calc(100vh - 180px), 550px);
+        padding: 6px;
+        border-radius: 20px;
     }
 
-    .board-cell {
-        border-radius: 1px;
+    .token-layer {
+        inset: 6px;
+    }
+
+    .safe::after {
+        font-size: 16px;
     }
 }

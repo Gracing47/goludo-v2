@@ -920,48 +920,79 @@ function App() {
                     </div>
                 )}
 
-                {/* A. PLAYER PODS (Compact Pills) */}
-                {gameConfig.players.map((p, idx) => {
-                    const isActive = gameState.activePlayer === idx;
-                    const color = PLAYER_COLORS[idx];
-                    const isMe = gameConfig.mode === 'web3'
-                        ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                        : !p.isAI && idx === 0;
-                    const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
-                        (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
+                {/* A. PLAYER PODS - Top Row (Red + Green) */}
+                <div className="pods-row-top">
+                    {gameConfig.players.filter((_, idx) => idx === 0 || idx === 1).map((p, mapIdx) => {
+                        const idx = mapIdx === 0 ? 0 : 1; // Red=0, Green=1
+                        const isActive = gameState.activePlayer === idx;
+                        const color = PLAYER_COLORS[idx];
+                        const isMe = gameConfig.mode === 'web3'
+                            ? p.address?.toLowerCase() === account?.address?.toLowerCase()
+                            : !p.isAI && idx === 0;
+                        const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
+                            (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
+                        const displayName = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
 
-                    // Truncate name
-                    const displayName = p.name.length > 8 ? p.name.slice(0, 7) + '…' : p.name;
-
-                    return (
-                        <div key={idx} className={`player-pod pod-${color} ${color} ${isActive ? 'active' : ''}`}>
-                            {/* Avatar */}
-                            <div className={`pod-avatar ${color}`} style={{ color: `var(--color-${color})` }}>
-                                {p.isAI ? '🤖' : '👤'}
-                                {isActive && <div className="pod-turn-indicator" />}
-                            </div>
-
-                            {/* Name only */}
-                            <span className="pod-name">
-                                {displayName}{isMe && ' •'}
-                            </span>
-
-                            {/* Dice - ONLY for active player */}
-                            {isActive && (
-                                <div className="pod-dice-container">
-                                    <MiniDice
-                                        value={gameState.diceValue}
-                                        isActive={true}
-                                        isRolling={isRolling}
-                                        onClick={canThisPlayerRoll ? handleRoll : null}
-                                        disabled={!canThisPlayerRoll}
-                                        color={color}
-                                    />
+                        return (
+                            <div key={idx} className={`player-pod ${color} ${isActive ? 'active' : ''}`}>
+                                <div className={`pod-avatar ${color}`}>
+                                    {p.isAI ? '🤖' : '👤'}
+                                    {isActive && <div className="pod-turn-indicator" />}
                                 </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                <span className="pod-name">{displayName}{isMe && ' •'}</span>
+                                {isActive && (
+                                    <div className="pod-dice-container">
+                                        <MiniDice
+                                            value={gameState.diceValue}
+                                            isActive={true}
+                                            isRolling={isRolling}
+                                            onClick={canThisPlayerRoll ? handleRoll : null}
+                                            disabled={!canThisPlayerRoll}
+                                            color={color}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* A. PLAYER PODS - Bottom Row (Blue + Yellow) */}
+                <div className="pods-row-bottom">
+                    {gameConfig.players.filter((_, idx) => idx === 3 || idx === 2).map((p, mapIdx) => {
+                        const idx = mapIdx === 0 ? 3 : 2; // Blue=3, Yellow=2
+                        const isActive = gameState.activePlayer === idx;
+                        const color = PLAYER_COLORS[idx];
+                        const isMe = gameConfig.mode === 'web3'
+                            ? p.address?.toLowerCase() === account?.address?.toLowerCase()
+                            : !p.isAI && idx === 0;
+                        const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
+                            (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
+                        const displayName = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+
+                        return (
+                            <div key={idx} className={`player-pod ${color} ${isActive ? 'active' : ''}`}>
+                                <div className={`pod-avatar ${color}`}>
+                                    {p.isAI ? '🤖' : '👤'}
+                                    {isActive && <div className="pod-turn-indicator" />}
+                                </div>
+                                <span className="pod-name">{displayName}{isMe && ' •'}</span>
+                                {isActive && (
+                                    <div className="pod-dice-container">
+                                        <MiniDice
+                                            value={gameState.diceValue}
+                                            isActive={true}
+                                            isRolling={isRolling}
+                                            onClick={canThisPlayerRoll ? handleRoll : null}
+                                            disabled={!canThisPlayerRoll}
+                                            color={color}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
 
                 {/* B. SERVER MESSAGE TOAST */}
                 {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}

@@ -1,41 +1,33 @@
+/* Commentator - Compact Mobile Design */
+
 .commentator-pill {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 20px;
-    border-radius: 40px;
-    min-width: 320px;
-    max-width: 90vw;
-    z-index: 100;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--accent-cyan);
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    max-width: 280px;
+    background: rgba(15, 15, 30, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .bot-avatar {
-    position: relative;
-    width: 32px;
-    height: 32px;
-    background: var(--accent-gradient);
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #22d3ee, #8b5cf6);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 12px;
     flex-shrink: 0;
 }
 
 .bot-eye {
-    position: absolute;
-    top: 8px;
-    width: 20px;
-    height: 4px;
-    background: white;
-    border-radius: 2px;
-    opacity: 0.3;
+    display: none;
 }
 
 .quip-container {
@@ -45,33 +37,34 @@
 
 .quip-text {
     margin: 0;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 500;
-    color: white;
-    font-family: var(--font-body);
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .quip-text.win {
-    color: var(--accent-gold);
+    color: #ffd700;
 }
 
 .quip-text.captured {
-    color: var(--color-red);
+    color: #ff4757;
 }
 
 .quip-text.six_roll {
-    color: var(--color-green);
+    color: #2ed573;
 }
 
-@media (max-width: 480px) {
+@media (min-width: 768px) {
     .commentator-pill {
-        bottom: 80px;
-        /* Above bottom bar on mobile */
-        min-width: 280px;
-        padding: 6px 16px;
+        max-width: 360px;
+        padding: 8px 16px;
     }
 
     .quip-text {
-        font-size: 12px;
+        font-size: 13px;
+        white-space: normal;
     }
 }
