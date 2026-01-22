@@ -162,21 +162,23 @@ function App() {
         aiActionInProgress.current = false;
 
         if (config.mode === 'web3') {
-            // Check if we already have a functional socket for this room
+            const roomId = config.roomId;
+            const targetAddr = account?.address || 'anonymous';
             const currentSocket = socketRef.current;
-            const isCorrectSocket = currentSocket &&
-                currentSocket.connected &&
-                currentSocket._targetRoom === config.roomId &&
-                currentSocket._targetAddr === (account?.address || 'anonymous');
 
-            if (isCorrectSocket) {
-                console.log('✅ Socket already connected and correct. Skipping re-init.');
+            const isMatchingSocket = currentSocket &&
+                currentSocket._targetRoom === roomId &&
+                currentSocket._targetAddr === targetAddr;
+
+            // If we already have a matching socket, don't re-init
+            if (isMatchingSocket) {
+                console.log('✅ Socket already matching. Skipping re-init.');
                 return;
             }
 
-            // Cleanup existing WRONG/DISCONNECTED socket if any
+            // Cleanup existing WRONG or permanently DEAD socket if any
             if (currentSocket) {
-                console.log('🔌 Cleaning up old/incorrect socket before reconnect...');
+                console.log('🔌 Cleaning up old/dead socket before reconnect...');
                 currentSocket.disconnect();
             }
 
@@ -296,21 +298,20 @@ function App() {
                 socket.disconnect();
                 socketRef.current = null;
             };
+        } else {
+            // ============================================
+            // LOCAL/AI MODE: Initialize immediately
+            // ============================================
+            console.log('🎮 Local mode: Initializing game...');
+            setGameConfig(config);
+
+            const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+            const activeColors = config.players.map(p => colorMap[p.color]);
+
+            setGameState(createInitialState(config.playerCount, activeColors));
+            setAppState('game');
+            setBoardRotation(0);
         }
-
-        // ============================================
-        // LOCAL/AI MODE: Initialize immediately
-        // ============================================
-        console.log('🎮 Local mode: Initializing game...');
-
-        setGameConfig(config);
-
-        const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-        const activeColors = config.players.map(p => colorMap[p.color]);
-
-        setGameState(createInitialState(config.playerCount, activeColors));
-        setAppState('game');
-        setBoardRotation(0);
     }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer, updateState]);
 
     // Handle Start from Lobby
@@ -352,20 +353,21 @@ function App() {
             }
         }
 
-        // Case 2: Web3 room needs socket connection (detected from URL or Config)
+        // Case 2: Web3 room needs socket connection
         if (gameId?.length > 20 || gameConfig?.mode === 'web3') {
             const roomId = gameId || gameConfig?.roomId;
             if (!roomId) return;
 
-            // Check if we already have a socket for THIS room and THIS account
+            const targetAddr = account?.address || 'anonymous';
             const currentSocket = socketRef.current;
-            const isCorrectSocket = currentSocket &&
-                currentSocket.connected &&
-                currentSocket._targetRoom === roomId &&
-                currentSocket._targetAddr === (account?.address || 'anonymous');
 
-            if (!isCorrectSocket) {
-                console.log('🌐 Web3 Session: Initializing/Refreshing connection...', { roomId, account: account?.address });
+            const isMatchingSocket = currentSocket &&
+                currentSocket._targetRoom === roomId &&
+                currentSocket._targetAddr === targetAddr;
+
+            // Sync check: only init if we don't have a socket object for this room at all
+            if (!isMatchingSocket) {
+                console.log('🌐 Web3 Session: Initializing connection...', { roomId, account: targetAddr });
 
                 const config = (gameConfig?.mode === 'web3' && gameConfig.roomId === roomId)
                     ? gameConfig
@@ -376,19 +378,7 @@ function App() {
         }
     }, [gameId, appState, gameConfig, onGameStart, account?.address]);
 
-    // 2. CONNECTION WATCHDOG: Ensure socket stays alive in Web3 matches
-    useEffect(() => {
-        if (gameConfig?.mode !== 'web3') return;
-
-        const interval = setInterval(() => {
-            if (!socketRef.current?.connected) {
-                console.warn("🛡️ Watchdog: Socket disconnected! Triggering reconnect...");
-                onGameStart(gameConfig);
-            }
-        }, 3000);
-
-        return () => clearInterval(interval);
-    }, [gameConfig, onGameStart]);
+    // Note: Connection watchdog removed. Socket.IO built-in reconnection is sufficient.
 
     // 2. Persistence Hook: Auto-save (Local/AI only)
     useEffect(() => {
@@ -803,7 +793,6 @@ function App() {
         const phase = gameState.gamePhase;
         const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
         const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
-        console.log('🎲 canRoll:', { phase, isLocalPlayerTurn, result });
         return result;
     }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
