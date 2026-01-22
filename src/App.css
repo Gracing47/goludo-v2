@@ -294,55 +294,65 @@ body {
    MENU BUTTON
    ============================================ */
 
-.menu-btn-floating {
+.menu-dropdown-container {
     position: absolute;
-    top: calc(var(--header-height) + var(--pod-height) + 8px);
+    top: calc(var(--header-height) + 4px);
     right: 8px;
+    z-index: 100;
+}
+
+.menu-btn-floating {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 50;
     pointer-events: auto;
 }
 
 .menu-dropdown {
     position: absolute;
-    top: 44px;
+    top: 36px;
     right: 0;
-    background: rgba(20, 20, 40, 0.95);
-    backdrop-filter: blur(12px);
+    background: rgba(15, 15, 30, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 12px;
-    padding: 8px;
+    padding: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 120px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    min-width: 140px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     z-index: 200;
+    pointer-events: auto;
 }
 
 .menu-dropdown button {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
     border: none;
     color: white;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 11px;
+    font-family: 'Orbitron', sans-serif;
     cursor: pointer;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
 }
 
 .menu-dropdown button:active {
-    background: rgba(255, 0, 122, 0.3);
+    background: rgba(255, 0, 122, 0.4);
 }
 
 /* ============================================
@@ -351,18 +361,19 @@ body {
 
 .server-toast {
     position: absolute;
-    top: calc(var(--header-height) + var(--pod-height) + 8px);
+    top: calc(var(--header-height) + var(--pod-height) + 4px);
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255, 71, 87, 0.9);
+    background: rgba(255, 71, 87, 0.95);
     color: white;
-    padding: 8px 16px;
-    border-radius: 12px;
+    padding: 6px 16px;
+    border-radius: 20px;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11px;
     z-index: 200;
     pointer-events: auto;
     animation: slide-down 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
 }
 
 @keyframes slide-down {

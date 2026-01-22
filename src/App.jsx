@@ -149,10 +149,17 @@ function App() {
         window.removeEventListener('click', handleInteraction);
     }, []);
 
-    // Initialize Audio (BGM)
+    // Initialize Audio & Global Events
     useEffect(() => {
+        const handleGlobalClick = () => {
+            setMenuOpen(false);
+        };
         window.addEventListener('click', handleInteraction);
-        return () => window.removeEventListener('click', handleInteraction);
+        window.addEventListener('click', handleGlobalClick);
+        return () => {
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('click', handleGlobalClick);
+        };
     }, [handleInteraction]);
 
     // ============================================
@@ -1036,11 +1043,14 @@ function App() {
 
                 {/* E. FLOATING MENU BUTTON */}
                 <div className="menu-dropdown-container">
-                    <button className="menu-btn-floating" onClick={() => setMenuOpen(!menuOpen)}>
+                    <button className="menu-btn-floating" onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(!menuOpen);
+                    }}>
                         ☰
                     </button>
                     {menuOpen && (
-                        <div className="menu-dropdown" style={{ bottom: '95px', right: '10px' }}>
+                        <div className="menu-dropdown">
                             <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
                                 {isMuted ? '🔇 Unmute' : '🔊 Mute'}
                             </button>

@@ -19,8 +19,8 @@
     grid-template-rows: repeat(15, 1fr);
 
     /* Mobile: Board fills available space, max 95% of viewport width */
-    width: min(95vw, calc(100dvh - 200px), 500px);
-    height: min(95vw, calc(100dvh - 200px), 500px);
+    width: min(92vw, calc(100dvh - 240px), 500px);
+    height: min(92vw, calc(100dvh - 240px), 500px);
     aspect-ratio: 1;
 
     background: rgba(10, 10, 26, 0.6);
