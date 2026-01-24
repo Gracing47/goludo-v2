@@ -90,7 +90,10 @@ const Lobby = ({ onStartGame }) => {
 
                 if (step === 'waiting' && waitingRoomId) {
                     const room = data.find(r => r.id === waitingRoomId);
-                    if (room && room.status === "ACTIVE") {
+                    // CRITICAL FIX: Connect socket as soon as room status is STARTING or ACTIVE
+                    // This ensures we connect DURING the countdown, not after
+                    if (room && (room.status === "STARTING" || room.status === "ACTIVE")) {
+                        console.log(`🚀 Room status is ${room.status} - Connecting immediately!`);
                         handleStart(room);
                     }
                 }
@@ -100,7 +103,8 @@ const Lobby = ({ onStartGame }) => {
         };
 
         fetchRooms();
-        const interval = setInterval(fetchRooms, 3000);
+        // Poll faster during waiting (1.5s instead of 3s)
+        const interval = setInterval(fetchRooms, step === 'waiting' ? 1500 : 3000);
         return () => clearInterval(interval);
     }, [step, waitingRoomId]);
 
