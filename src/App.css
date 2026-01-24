@@ -73,17 +73,18 @@ body {
     align-items: center;
     justify-content: center;
     z-index: var(--z-board);
-    padding: 20px;
-    padding-top: 60px;
-    /* Push board down to make room for top pods */
+    padding: 8px;
+    padding-top: 45px;
+    padding-bottom: 8px;
+    /* Tighter spacing for more board visibility */
     overflow: visible;
 }
 
 /* Container for pods that anchors them to board corners */
 .player-pods-container {
     position: absolute;
-    /* Center it specifically in the board region */
-    top: 50%;
+    /* Center it specifically in the board region, offset for header */
+    top: calc(50% + 20px);
     left: 50%;
     transform: translate(-50%, -50%);
     /* Match board size calculation from Board.css */
@@ -105,56 +106,55 @@ body {
 
 /* Corner Positions (relative to board corners) */
 /* 0: Top Left, 1: Top Right, 2: Bottom Right, 3: Bottom Left */
-/* Pods sit OUTSIDE the board on desktop */
+/* Pods sit OUTSIDE the board - pushed further out to avoid header overlap */
 .pos-0 {
-    top: -45px;
-    left: -5px;
+    top: -38px;
+    left: 5px;
     justify-content: flex-start;
 }
 
 .pos-1 {
-    top: -45px;
-    right: -5px;
+    top: -38px;
+    right: 5px;
     justify-content: flex-end;
 }
 
 .pos-2 {
-    bottom: -45px;
-    right: -5px;
+    bottom: -38px;
+    right: 5px;
     justify-content: flex-end;
 }
 
 .pos-3 {
-    bottom: -45px;
-    left: -5px;
+    bottom: -38px;
+    left: 5px;
     justify-content: flex-start;
 }
 
 /* Mobile: Pods further above/below the board */
 @media (max-width: 480px) {
     .board-layer {
-        padding-top: 70px;
-        /* More space for top pods on mobile */
-        padding-bottom: 50px;
+        padding-top: 40px;
+        padding-bottom: 10px;
     }
 
     .pos-0 {
-        top: -52px;
+        top: -36px;
         left: 0;
     }
 
     .pos-1 {
-        top: -52px;
+        top: -36px;
         right: 0;
     }
 
     .pos-2 {
-        bottom: -50px;
+        bottom: -36px;
         right: 0;
     }
 
     .pos-3 {
-        bottom: -50px;
+        bottom: -36px;
         left: 0;
     }
 }
@@ -314,10 +314,11 @@ body {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 50;
+    z-index: 60;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
+    padding-bottom: 80px;
 }
 
 /* Dice wrapper handles positioning and animation */
@@ -327,36 +328,36 @@ body {
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* IDLE STATE: Bottom-left corner (near player's base) */
+/* IDLE STATE: Centered at bottom of board area */
 .dice-wrapper.idle {
-    bottom: 15%;
-    left: 10%;
+    position: relative;
     transform: scale(1);
 }
 
-/* THROWING STATE: Animate to center */
+/* THROWING STATE: Scale up in place */
 .dice-wrapper.throwing {
-    bottom: 50%;
-    left: 50%;
-    transform: translate(-50%, 50%) scale(1.2);
-    animation: dice-throw-to-center 0.4s ease-out forwards;
+    position: relative;
+    transform: scale(1.15);
+    animation: dice-shake 0.5s ease-out;
 }
 
-@keyframes dice-throw-to-center {
-    0% {
-        bottom: 15%;
-        left: 10%;
-        transform: scale(1) rotate(0deg);
+@keyframes dice-shake {
+
+    0%,
+    100% {
+        transform: scale(1.15) rotate(0deg);
+    }
+
+    25% {
+        transform: scale(1.2) rotate(-5deg);
     }
 
     50% {
-        transform: scale(1.4) rotate(180deg);
+        transform: scale(1.15) rotate(5deg);
     }
 
-    100% {
-        bottom: 50%;
-        left: 50%;
-        transform: translate(-50%, 50%) scale(1.2) rotate(360deg);
+    75% {
+        transform: scale(1.2) rotate(-3deg);
     }
 }
 
@@ -486,14 +487,17 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
     border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: auto;
+    transition: background 0.2s ease;
 }
 
 .menu-dropdown {

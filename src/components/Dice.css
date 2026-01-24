@@ -38,7 +38,7 @@
     box-shadow:
         0 16px 40px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.1),
-        0 0 30px rgba(168, 85, 247, 0.15),
+        0 0 30px rgba(0, 243, 255, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     animation: none;
 }
@@ -47,7 +47,7 @@
     transform: translateY(-2px) scale(0.98);
     box-shadow:
         0 4px 16px rgba(0, 0, 0, 0.4),
-        0 0 20px rgba(168, 85, 247, 0.3);
+        0 0 20px rgba(0, 243, 255, 0.3);
 }
 
 .dice-button.disabled {
@@ -55,6 +55,11 @@
     opacity: 0.35;
     filter: grayscale(0.3);
     animation: none;
+}
+
+.dice-button:focus-visible {
+    outline: 2px solid rgba(0, 243, 255, 0.8);
+    outline-offset: 3px;
 }
 
 /* Rolling state - intense shake */
@@ -363,8 +368,8 @@
 .dice-bonus-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(168, 85, 247, 0.95);
-    color: white;
+    background: rgba(0, 243, 255, 0.95);
+    color: #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -372,7 +377,7 @@
     font-weight: 800;
     border-radius: 8px;
     z-index: 100;
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
     animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 

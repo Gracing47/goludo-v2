@@ -990,9 +990,9 @@ function App() {
                     </div>
                 )}
 
-                {/* D. CENTRAL DICE (AAA Throw Animation) */}
-                <div className="central-dice-area">
-                    {(gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL' || isRolling) && (
+                {/* D. CENTRAL DICE (Always visible during game) */}
+                {gameState.gamePhase !== 'WIN' && (
+                    <div className="central-dice-area">
                         <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
                             <Dice
                                 value={gameState.diceValue}
@@ -1001,14 +1001,8 @@ function App() {
                                 isRolling={isRolling}
                             />
                         </div>
-                    )}
-                    {/* Show result after roll for SELECT_TOKEN phase */}
-                    {(gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') && gameState.diceValue > 0 && (
-                        <div className="dice-result-display">
-                            <span className="dice-result-value">{gameState.diceValue}</span>
-                        </div>
-                    )}
-                </div>
+                    </div>
+                )}
 
                 {/* E. FLOATING MENU BUTTON */}
                 <div className="menu-dropdown-container">
@@ -1030,18 +1024,7 @@ function App() {
                     )}
                 </div>
 
-                {/* Version Display */}
-                <div style={{
-                    position: 'fixed',
-                    bottom: '5px',
-                    left: '5px',
-                    fontSize: '9px',
-                    color: 'rgba(255,255,255,0.2)',
-                    pointerEvents: 'none',
-                    zIndex: 999
-                }}>
-                    {BUILD_VERSION}
-                </div>
+                {/* Version Display - Hidden during gameplay */}
             </div>
         </div>
     );
