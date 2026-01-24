@@ -81,7 +81,7 @@ export const useLudoWeb3 = () => {
                 color
             });
 
-            alert("Room created successfully!");
+            console.log("✅ Room created successfully!", roomId);
             refetchBalance();
             return roomId;
         } catch (error) {
@@ -120,7 +120,7 @@ export const useLudoWeb3 = () => {
                 color
             });
 
-            alert(`Successfully joined room!`);
+            console.log("✅ Successfully joined room:", result);
             refetchBalance();
             return result;
 
