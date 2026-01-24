@@ -505,7 +505,7 @@ app.post('/api/rooms/join', (req, res) => {
     }
 
     // Check if color is taken
-    if (room.players.find(p => p.color === color)) {
+    if (room.players.find(p => p && p.color === color)) {
         return res.status(400).json({ error: "Color already taken" });
     }
 

@@ -169,7 +169,7 @@ const Lobby = ({ onStartGame }) => {
         const player = players[0];
 
         // Auto-switch color if taken in the room
-        const takenColors = room.players.map(p => p.color);
+        const takenColors = room.players.filter(p => p).map(p => p.color);
         if (takenColors.includes(player.color)) {
             const availableColor = COLORS.find(c => !takenColors.includes(c));
             if (availableColor) {
@@ -198,7 +198,7 @@ const Lobby = ({ onStartGame }) => {
             setSelectedRoom(freshRoom);
 
             // Check if our color is still available
-            const takenColors = freshRoom.players.map(p => p.color);
+            const takenColors = freshRoom.players.filter(p => p).map(p => p.color);
             let finalColor = player.color;
 
             if (takenColors.includes(player.color)) {
@@ -256,7 +256,7 @@ const Lobby = ({ onStartGame }) => {
                 roomId: roomData.id,
                 stake: roomData.stake,
                 playerCount: roomData.maxPlayers,
-                players: roomData.players.map((p) => ({
+                players: roomData.players.filter(p => p).map((p) => ({
                     name: p.name,
                     color: p.color,
                     address: p.address,
@@ -390,7 +390,7 @@ const Lobby = ({ onStartGame }) => {
                                     <div key={room.id} className="room-card">
                                         <div className="room-details">
                                             <span className="room-stake">💰 {room.stake} {balanceSymbol || '$GO'}</span>
-                                            <span className="room-players">👤 {room.players.length}/{room.maxPlayers}</span>
+                                            <span className="room-players">👤 {room.players.filter(p => p).length}/{room.maxPlayers}</span>
                                         </div>
                                         <button
                                             className="join-btn"
@@ -414,7 +414,7 @@ const Lobby = ({ onStartGame }) => {
                 {step === 'waiting' && (() => {
                     // Find current room data from polled rooms
                     const currentRoom = openRooms.find(r => r.id === waitingRoomId);
-                    const playerCount = currentRoom?.players?.length || 1;
+                    const playerCount = currentRoom?.players?.filter(p => p).length || 1;
                     const maxPlayers = currentRoom?.maxPlayers || 2;
 
                     return (
@@ -435,11 +435,11 @@ const Lobby = ({ onStartGame }) => {
                                 </div>
 
                                 {/* Joined Players List */}
-                                {currentRoom?.players && currentRoom.players.length > 0 && (
+                                {currentRoom?.players && currentRoom.players.filter(p => p).length > 0 && (
                                     <div className="waiting-players-list">
                                         <p className="waiting-players-title">Players Joined:</p>
                                         <div className="waiting-players">
-                                            {currentRoom.players.map((p, idx) => (
+                                            {currentRoom.players.filter(p => p).map((p, idx) => (
                                                 <div key={idx} className={`waiting-player ${p.color}`}>
                                                     <span className={`color-dot ${p.color}`}></span>
                                                     <span className="player-name">{p.name}</span>
@@ -647,9 +647,9 @@ const Lobby = ({ onStartGame }) => {
                                         );
                                     })}
                                 </div>
-                                {selectedRoom.players.length > 0 && (
+                                {selectedRoom.players.filter(p => p).length > 0 && (
                                     <p className="modal-hint">
-                                        Taken: {selectedRoom.players.map(p => p.name).join(', ')}
+                                        Taken: {selectedRoom.players.filter(p => p).map(p => p.name).join(', ')}
                                     </p>
                                 )}
                             </div>
