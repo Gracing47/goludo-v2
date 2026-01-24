@@ -5,10 +5,10 @@ import './Token.css';
 function getStackOffset(stackIndex, stackSize) {
     if (stackSize <= 1) return { x: 0, y: 0, scale: 1 };
     const offsets = [
-        { x: -18, y: -18 }, { x: 18, y: -18 },
-        { x: -18, y: 18 }, { x: 18, y: 18 }
+        { x: -22, y: -22 }, { x: 22, y: -22 },
+        { x: -22, y: 22 }, { x: 22, y: 22 }
     ];
-    const scale = stackSize === 2 ? 0.82 : 0.68;
+    const scale = stackSize === 2 ? 0.78 : 0.65;
     return { ...offsets[stackIndex % 4], scale };
 }
 
@@ -102,6 +102,13 @@ const Token = ({
             <div className={`token-inner liquid-glass ${color}`}>
                 <div className="token-shine" />
                 <div className="token-center-dot" />
+
+                {/* Stack Count Badge */}
+                {stackSize > 1 && stackIndex === stackSize - 1 && (
+                    <div className="token-stack-badge">
+                        {stackSize}
+                    </div>
+                )}
 
                 {/* Landing Shockwave */}
                 <AnimatePresence>

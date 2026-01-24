@@ -16,6 +16,36 @@
     transform: translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
 }
 
+.token-stack-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+@media (max-width: 480px) {
+    .token-stack-badge {
+        font-size: 11px;
+        min-width: 16px;
+        height: 16px;
+    }
+}
+
 /* ============================================
    TOKEN INNER - LIQUID GLASS STYLE
    ============================================ */

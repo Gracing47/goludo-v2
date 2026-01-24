@@ -993,14 +993,7 @@ function App() {
 
                 {/* Turn Timer - Top Center */}
                 {gameState.gamePhase !== 'WIN' && turnTimer > 0 && (
-                    <div className="turn-timer-container" style={{
-                        position: 'absolute',
-                        top: '15px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 100,
-                        pointerEvents: 'none'
-                    }}>
+                    <div className="turn-timer-container">
                         <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
                             ⏱️ {turnTimer}s
                         </div>

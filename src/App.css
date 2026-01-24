@@ -297,7 +297,7 @@ body {
 
 .central-dice-area {
     position: fixed;
-    bottom: 100px;
+    bottom: 90px;
     left: 50%;
     transform: translateX(-50%);
     pointer-events: none;
@@ -371,7 +371,8 @@ body {
 /* Mobile adjustments for dice position */
 @media (max-width: 480px) {
     .central-dice-area {
-        bottom: 80px;
+        bottom: 50px;
+        /* Reduced from 80px to move it further down */
     }
 }
 
@@ -438,7 +439,8 @@ body {
 /* Turn Timer - Positioned in HUD */
 .turn-timer-container {
     position: absolute;
-    top: calc(var(--header-height) + 4px);
+    top: calc(var(--header-height) + 20px);
+    /* Increased from +4px to clear header area */
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
