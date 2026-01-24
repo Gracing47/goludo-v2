@@ -307,13 +307,14 @@ body {
     justify-content: center;
 }
 
-/* Desktop: Move dice to right side of board */
+/* Desktop: Move dice to right side of board (closer to board, not screen edge) */
 @media (min-width: 768px) {
     .central-dice-area {
         bottom: auto;
         top: 50%;
-        left: auto;
-        right: 60px;
+        /* Position relative to center: board is ~500px max, so offset by half + margin */
+        left: calc(50% + min(35vw, 280px));
+        right: auto;
         transform: translateY(-50%);
     }
 }
