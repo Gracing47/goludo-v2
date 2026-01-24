@@ -380,7 +380,7 @@ io.on('connection', (socket) => {
     });
 });
 
-app.get('/', (req, res) => res.json({ message: "GoLudo Backend v2 (Bot Enabled)" }));
+app.get('/', (req, res) => res.json({ message: "GoLudo Backend v3 (Countdown Enabled)", timestamp: new Date().toISOString() }));
 
 app.post('/api/payout/sign', async (req, res) => {
     // ... same as before
