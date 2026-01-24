@@ -9,7 +9,10 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    /* Changed from center to allow custom padding */
+    padding-top: 20vh;
+    /* Push content down towards the board area */
     justify-content: center;
     z-index: 9999;
 }

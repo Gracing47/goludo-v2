@@ -439,8 +439,8 @@ body {
 /* Turn Timer - Positioned in HUD */
 .turn-timer-container {
     position: absolute;
-    top: calc(var(--header-height) + 20px);
-    /* Increased from +4px to clear header area */
+    top: calc(var(--header-height) + 50px);
+    /* Moved further down to clear header/wallet UI */
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;

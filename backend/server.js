@@ -512,8 +512,8 @@ app.post('/api/rooms/join', (req, res) => {
     if (room.players.length >= room.maxPlayers) {
         room.status = "STARTING";
 
-        // CRITICAL FIX: activeColors must be sequential [0, 1] or [0, 1, 2] or [0, 1, 2, 3]
-        const activeColors = room.players.map((_, index) => index);
+        // ✅ CORRECT FIX: Map player color strings to their engine indices (0=Red, 1=Green, 2=Yellow, 3=Blue)
+        const activeColors = room.players.map(p => COLOR_MAP[p.color.toLowerCase()]);
 
         // Initialize Engine
         room.gameState = createInitialState(room.players.length, activeColors);
