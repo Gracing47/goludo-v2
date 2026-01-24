@@ -306,54 +306,132 @@ body {
     letter-spacing: 0.5px;
 }
 
-.pod-dice-container {
-    display: none;
-    /* Hidden by default */
-    align-items: center;
-    justify-content: center;
-    margin-left: 4px;
-    width: 44px;
-    height: 44px;
-}
-
-.player-pod.active .pod-dice-container {
-    display: flex;
-    pointer-events: auto;
-    animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes bounce-in {
-    from {
-        transform: scale(0);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
 /* ============================================
-   BOTTOM CONTROLS - Grid Row 5
+   CENTRAL DICE - AAA Throw Animation
    ============================================ */
 
-.bottom-controls {
-    grid-row: 5;
+.central-dice-area {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 8px;
-    background: rgba(0, 0, 0, 0.6);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    pointer-events: auto;
-    gap: 8px;
 }
 
-.bottom-controls .sports-ticker {
-    display: none;
-    /* Hidden on mobile */
+/* Dice wrapper handles positioning and animation */
+.dice-wrapper {
+    pointer-events: auto;
+    position: absolute;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* IDLE STATE: Bottom-left corner (near player's base) */
+.dice-wrapper.idle {
+    bottom: 15%;
+    left: 10%;
+    transform: scale(1);
+}
+
+/* THROWING STATE: Animate to center */
+.dice-wrapper.throwing {
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%) scale(1.2);
+    animation: dice-throw-to-center 0.4s ease-out forwards;
+}
+
+@keyframes dice-throw-to-center {
+    0% {
+        bottom: 15%;
+        left: 10%;
+        transform: scale(1) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(1.4) rotate(180deg);
+    }
+
+    100% {
+        bottom: 50%;
+        left: 50%;
+        transform: translate(-50%, 50%) scale(1.2) rotate(360deg);
+    }
+}
+
+/* Opponent's turn - show in center immediately, smaller */
+.dice-wrapper.opponent-turn.idle {
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%) scale(0.9);
+    opacity: 0.7;
+}
+
+.dice-wrapper.opponent-turn.throwing {
+    opacity: 1;
+    transform: translate(-50%, 50%) scale(1.1);
+}
+
+/* Result Display (after roll, during token selection) */
+.dice-result-display {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    background: rgba(15, 15, 30, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 16px;
+    padding: 16px 24px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(255, 215, 0, 0.2);
+    animation: result-pulse 1.5s infinite ease-in-out;
+    pointer-events: none;
+}
+
+.dice-result-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes result-pulse {
+
+    0%,
+    100% {
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.5),
+            0 0 40px rgba(255, 215, 0, 0.2);
+    }
+
+    50% {
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.5),
+            0 0 60px rgba(255, 215, 0, 0.4);
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+    .dice-wrapper.idle {
+        bottom: 12%;
+        left: 8%;
+    }
+
+    .dice-result-value {
+        font-size: 36px;
+    }
+
+    .dice-result-display {
+        padding: 12px 20px;
+    }
+}
+
 
 /* Turn Timer - Positioned in HUD */
 .turn-timer-container {

@@ -15,7 +15,7 @@ import { ethers } from 'ethers';
 import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
-import MiniDice from './components/MiniDice';
+import Dice from './components/Dice';
 
 const BUILD_VERSION = "v4.3 - Robust Reconnect";
 import CaptureExplosion from './components/CaptureExplosion';
@@ -26,8 +26,6 @@ import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
-// Phase 4 Polish Components
-import Commentator from './components/Commentator';
 import WarpTransition from './components/WarpTransition';
 
 import './App.css';
@@ -957,18 +955,6 @@ function App() {
                                         {isActive && <div className="pod-turn-indicator" />}
                                     </div>
                                     <span className="pod-name">{displayName}{isMe && ' •'}</span>
-                                    {isActive && (
-                                        <div className="pod-dice-container">
-                                            <MiniDice
-                                                value={gameState.diceValue}
-                                                isActive={true}
-                                                isRolling={isRolling}
-                                                onClick={canThisPlayerRoll ? handleRoll : null}
-                                                disabled={!canThisPlayerRoll}
-                                                color={color}
-                                            />
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -1004,15 +990,24 @@ function App() {
                     </div>
                 )}
 
-                {/* D. BOTTOM CONTROLS (Commentator & Sports Ticker) */}
-                <div className="bottom-controls">
-                    <div className="sports-ticker">
-                        <div className="ticker-content">
-                            {BUILD_VERSION} • $GOLUDO MULTIPLAYER WEB3 • STAKE: {gameConfig.stake || 0} • ROOM: {gameConfig.roomId || 'LOCAL'} •
-                            {BUILD_VERSION} • $GOLUDO MULTIPLAYER WEB3 • STAKE: {gameConfig.stake || 0} • ROOM: {gameConfig.roomId || 'LOCAL'} •
+                {/* D. CENTRAL DICE (AAA Throw Animation) */}
+                <div className="central-dice-area">
+                    {(gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL' || isRolling) && (
+                        <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
+                            <Dice
+                                value={gameState.diceValue}
+                                onRoll={canRoll ? handleRoll : null}
+                                disabled={!canRoll}
+                                isRolling={isRolling}
+                            />
                         </div>
-                    </div>
-                    <Commentator />
+                    )}
+                    {/* Show result after roll for SELECT_TOKEN phase */}
+                    {(gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') && gameState.diceValue > 0 && (
+                        <div className="dice-result-display">
+                            <span className="dice-result-value">{gameState.diceValue}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* E. FLOATING MENU BUTTON */}
