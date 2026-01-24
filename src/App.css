@@ -84,78 +84,68 @@ body {
 .player-pods-container {
     position: absolute;
     /* Center it specifically in the board region, offset for header */
-    top: calc(50% + 20px);
+    top: calc(50% + 15px);
     left: 50%;
     transform: translate(-50%, -50%);
-    /* Match board size calculation from Board.css */
-    width: min(92vw, calc(100dvh - 240px), 500px);
-    height: min(92vw, calc(100dvh - 240px), 500px);
+    /* Slightly LARGER than board to position pods outside */
+    width: calc(min(92vw, calc(100dvh - 240px), 500px) + 20px);
+    height: calc(min(92vw, calc(100dvh - 240px), 500px) + 100px);
     pointer-events: none;
     z-index: var(--z-hud);
 }
 
 .pod-anchor {
     position: absolute;
-    width: 36px;
-    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
 }
 
-/* Corner Positions (relative to board corners) */
+/* Corner Positions - OUTSIDE the board edges */
 /* 0: Top Left, 1: Top Right, 2: Bottom Right, 3: Bottom Left */
-/* Pods sit OUTSIDE the board - pushed further out to avoid header overlap */
 .pos-0 {
-    top: -38px;
-    left: 5px;
+    top: 0;
+    left: 0;
     justify-content: flex-start;
 }
 
 .pos-1 {
-    top: -38px;
-    right: 5px;
+    top: 0;
+    right: 0;
     justify-content: flex-end;
 }
 
 .pos-2 {
-    bottom: -38px;
-    right: 5px;
+    bottom: 0;
+    right: 0;
     justify-content: flex-end;
 }
 
 .pos-3 {
-    bottom: -38px;
-    left: 5px;
+    bottom: 0;
+    left: 0;
     justify-content: flex-start;
 }
 
-/* Mobile: Pods further above/below the board */
+/* Desktop: Push pods further out */
+@media (min-width: 768px) {
+    .player-pods-container {
+        width: calc(min(70vw, calc(100vh - 180px), 550px) + 40px);
+        height: calc(min(70vw, calc(100vh - 180px), 550px) + 120px);
+    }
+}
+
+/* Mobile: Tighter spacing */
 @media (max-width: 480px) {
     .board-layer {
         padding-top: 40px;
         padding-bottom: 10px;
     }
 
-    .pos-0 {
-        top: -36px;
-        left: 0;
-    }
-
-    .pos-1 {
-        top: -36px;
-        right: 0;
-    }
-
-    .pos-2 {
-        bottom: -36px;
-        right: 0;
-    }
-
-    .pos-3 {
-        bottom: -36px;
-        left: 0;
+    .player-pods-container {
+        width: calc(92vw + 10px);
+        height: calc(min(92vw, calc(100dvh - 240px), 500px) + 80px);
     }
 }
 
