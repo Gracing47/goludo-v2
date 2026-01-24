@@ -27,6 +27,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
+import GameCountdown from './components/GameCountdown';
 
 import './App.css';
 
@@ -110,6 +111,10 @@ function App() {
 
     // Local state for claiming (not needed in global store)
     const [isClaiming, setIsClaiming] = useState(false);
+
+    // Countdown state for pre-game animation
+    const [showCountdown, setShowCountdown] = useState(false);
+    const [countdown, setCountdown] = useState(5);
 
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
@@ -250,6 +255,55 @@ function App() {
             socket.on('turn_timer_update', ({ remainingMs, remainingSeconds }) => {
                 const seconds = remainingSeconds || Math.floor(remainingMs / 1000);
                 setTurnTimer(seconds);
+            });
+
+            // ============================================
+            // PRE-GAME COUNTDOWN EVENTS
+            // ============================================
+            socket.on('pre_game_countdown', ({ room, countdownSeconds, message }) => {
+                console.log('🎬 Pre-game countdown starting:', countdownSeconds, 's');
+                setCountdown(countdownSeconds);
+                setShowCountdown(true);
+                setServerMsg(message);
+
+                // Pre-configure game during countdown
+                const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+                setGameConfig({
+                    mode: 'web3',
+                    roomId: room.id,
+                    stake: room.stake,
+                    playerCount: room.players.length,
+                    players: room.players.map((p, idx) => ({
+                        id: idx,
+                        name: p.name,
+                        color: p.color,
+                        address: p.address,
+                        type: 'human',
+                        isAI: false
+                    }))
+                });
+
+                // Set board rotation to player's perspective during countdown
+                if (account) {
+                    const myIdx = room.players.findIndex(p =>
+                        p.address?.toLowerCase() === account.address?.toLowerCase()
+                    );
+                    if (myIdx !== -1) {
+                        setBoardRotation((3 - myIdx) * 90);
+                    }
+                }
+            });
+
+            socket.on('countdown_tick', ({ remaining, connectedPlayers, totalPlayers }) => {
+                console.log(`⏳ Countdown: ${remaining}s | Players: ${connectedPlayers}/${totalPlayers}`);
+                setCountdown(remaining);
+
+                if (remaining <= 0) {
+                    // Countdown finished - hide after brief delay for "GO!" animation
+                    setTimeout(() => {
+                        setShowCountdown(false);
+                    }, 800);
+                }
             });
 
             socket.on('game_started', (room) => {
@@ -1028,6 +1082,27 @@ function App() {
 
                 {/* Version Display - Hidden during gameplay */}
             </div>
+
+            {/* 3. COUNTDOWN OVERLAY (Web3 Pre-Game) */}
+            {showCountdown && gameConfig && (
+                <GameCountdown
+                    countdown={countdown}
+                    playerName={
+                        account
+                            ? gameConfig.players?.find(p =>
+                                p.address?.toLowerCase() === account.address?.toLowerCase()
+                            )?.name
+                            : undefined
+                    }
+                    playerColor={
+                        account
+                            ? gameConfig.players?.find(p =>
+                                p.address?.toLowerCase() === account.address?.toLowerCase()
+                            )?.color
+                            : 'cyan'
+                    }
+                />
+            )}
         </div>
     );
 }
