@@ -537,7 +537,7 @@ app.post('/api/rooms/join', (req, res) => {
         room.gameState = createInitialState(newPlayerCount, activeColors);
 
         console.log(`🎮 Room Full: ${roomId} - Waiting for socket connections...`);
-        console.log(`📋 Players:`, room.players.map((p, i) => `Player ${i}: ${p.name} (${p.color})`));
+        console.log(`📋 Players:`, room.players.filter(p => p).map((p, i) => `Slot ${p.color}: ${p.name}`));
 
         // ============================================
         // STEP 1: WAIT for ALL socket connections (up to 30 seconds)
@@ -548,13 +548,13 @@ app.post('/api/rooms/join', (req, res) => {
 
         const waitForSockets = setInterval(() => {
             waitAttempts++;
-            const connectedPlayers = room.players.filter(p => p.socketId).length;
-            const totalPlayers = room.players.length;
+            const connectedPlayers = room.players.filter(p => p && p.socketId).length;
+            const totalPlayersNeeded = room.players.filter(p => p).length;
 
-            console.log(`⏳ Waiting for sockets: ${connectedPlayers}/${totalPlayers} (attempt ${waitAttempts}/${maxWaitAttempts})`);
+            console.log(`⏳ Waiting for sockets: ${connectedPlayers}/${totalPlayersNeeded} (attempt ${waitAttempts}/${maxWaitAttempts})`);
 
             // ✅ Only start countdown when ALL players are connected
-            if (connectedPlayers >= totalPlayers) {
+            if (connectedPlayers >= totalPlayersNeeded) {
                 clearInterval(waitForSockets);
                 console.log(`✅ All ${connectedPlayers} socket(s) connected - Starting countdown!`);
                 startGameCountdown(io, room, roomId);
@@ -565,7 +565,7 @@ app.post('/api/rooms/join', (req, res) => {
             if (waitAttempts >= maxWaitAttempts) {
                 clearInterval(waitForSockets);
                 if (connectedPlayers >= 1) {
-                    console.log(`⚠️ Timeout! Only ${connectedPlayers}/${totalPlayers} connected. Starting anyway...`);
+                    console.log(`⚠️ Timeout! Only ${connectedPlayers}/${totalPlayersNeeded} connected. Starting anyway...`);
                     startGameCountdown(io, room, roomId);
                 } else {
                     console.log(`❌ No sockets connected after ${waitAttempts}s. Cancelling room.`);

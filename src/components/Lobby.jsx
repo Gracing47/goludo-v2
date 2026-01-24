@@ -541,7 +541,7 @@ const Lobby = ({ onStartGame }) => {
                                                 {COLORS.map((c, cIdx) => {
                                                     let isTaken = false;
                                                     if (gameMode === 'web3') {
-                                                        isTaken = selectedRoom ? selectedRoom.players.some(p => p.color === c) : false;
+                                                        isTaken = selectedRoom ? selectedRoom.players.some(p => p && p.color === c) : false;
                                                     } else {
                                                         isTaken = players.slice(0, playerCount).some((p, pIdx) => pIdx !== index && p.color === c);
                                                     }
@@ -630,7 +630,7 @@ const Lobby = ({ onStartGame }) => {
                                 <label className="setup-label">Wähle deine Farbe</label>
                                 <div className="color-picker modal-picker">
                                     {COLORS.map((c, cIdx) => {
-                                        const isTaken = selectedRoom.players.some(p => p.color === c);
+                                        const isTaken = selectedRoom.players.some(p => p && p.color === c);
                                         const isSelected = players[0].color === c;
 
                                         return (
@@ -639,7 +639,7 @@ const Lobby = ({ onStartGame }) => {
                                                 className={`color-swatch ${c} ${isSelected ? 'selected' : ''} ${isTaken ? 'taken' : ''}`}
                                                 onClick={() => !isTaken && handlePlayerChange(0, 'color', c)}
                                                 disabled={isTaken}
-                                                title={isTaken ? `Taken by ${selectedRoom.players.find(p => p.color === c).name}` : COLOR_NAMES[cIdx]}
+                                                title={isTaken ? `Taken by ${selectedRoom.players.find(p => p && p.color === c)?.name}` : COLOR_NAMES[cIdx]}
                                             >
                                                 {isSelected && <span className="checkmark">✓</span>}
                                                 {isTaken && <span className="taken-icon">❌</span>}
