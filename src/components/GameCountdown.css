@@ -10,9 +10,8 @@
     -webkit-backdrop-filter: blur(20px);
     display: flex;
     align-items: flex-start;
-    /* Changed from center to allow custom padding */
-    padding-top: 20vh;
-    /* Push content down towards the board area */
+    padding-top: 25vh;
+    /* Pushed significantly lower to sit just above the board */
     justify-content: center;
     z-index: 9999;
 }

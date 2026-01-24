@@ -458,13 +458,24 @@ app.post('/api/rooms/create', (req, res) => {
     const { roomId, stake, maxPlayers, creatorName, creatorAddress } = req.body;
     if (activeRooms.find(r => r.id === roomId)) return res.status(400).json({ error: "Room exists" });
 
+    const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+    const creatorColorIndex = colorMap[req.body.color?.toLowerCase() || 'red'];
+
     const newRoom = {
         id: roomId,
         stake,
         maxPlayers: parseInt(maxPlayers),
-        players: [{ name: creatorName, address: creatorAddress, color: req.body.color || 'red' }],
+        // Initialize with 4 empty slots to match board colors (0-Red, 1-Green, 2-Yellow, 3-Blue)
+        players: [null, null, null, null],
         gameState: null,
         status: "WAITING"
+    };
+
+    // Place creator in their chosen color slot
+    newRoom.players[creatorColorIndex] = {
+        name: creatorName,
+        address: creatorAddress,
+        color: req.body.color || 'red'
     };
 
     activeRooms.push(newRoom);
@@ -481,14 +492,15 @@ app.post('/api/rooms/join', (req, res) => {
     }
 
     // Check if player already in room (by address)
-    const existingPlayer = room.players.find(p => p.address?.toLowerCase() === playerAddress?.toLowerCase());
+    const existingPlayer = room.players.find(p => p && p.address?.toLowerCase() === playerAddress?.toLowerCase());
     if (existingPlayer) {
         console.log(`✅ Player ${playerName} already in room, not adding duplicate`);
         return res.json({ success: true, room });
     }
 
-    // Check if room is full
-    if (room.players.length >= room.maxPlayers) {
+    // Check if room is full (counting non-null slots)
+    const playerCount = room.players.filter(p => p !== null).length;
+    if (playerCount >= room.maxPlayers) {
         return res.status(400).json({ error: "Room is full" });
     }
 
@@ -497,26 +509,32 @@ app.post('/api/rooms/join', (req, res) => {
         return res.status(400).json({ error: "Color already taken" });
     }
 
-    // Add player
-    room.players.push({
+    // Add player to the specific color slot
+    const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+    const colorIndex = colorMap[color.toLowerCase()];
+
+    room.players[colorIndex] = {
         name: playerName,
         address: playerAddress,
         color: color
-    });
+    };
 
+    const newPlayerCount = room.players.filter(p => p !== null).length;
     console.log(`➕ Player ${playerName} (${color}) joined room ${roomId}`);
-    console.log(`📋 Room now has ${room.players.length}/${room.maxPlayers} players:`,
-        room.players.map(p => `${p.name} (${p.color})`));
+    console.log(`📋 Room now has ${newPlayerCount}/${room.maxPlayers} players:`,
+        room.players.filter(p => p).map(p => `${p.name} (${p.color})`));
 
     // Check if room is now full
-    if (room.players.length >= room.maxPlayers) {
+    if (newPlayerCount >= room.maxPlayers) {
         room.status = "STARTING";
 
-        // ✅ CORRECT FIX: Map player color strings to their engine indices (0=Red, 1=Green, 2=Yellow, 3=Blue)
-        const activeColors = room.players.map(p => COLOR_MAP[p.color.toLowerCase()]);
+        // activeColors must be the actual board indices (e.g., [0, 3] for Red vs Blue)
+        const activeColors = room.players
+            .map((p, idx) => p ? idx : null)
+            .filter(idx => idx !== null);
 
         // Initialize Engine
-        room.gameState = createInitialState(room.players.length, activeColors);
+        room.gameState = createInitialState(newPlayerCount, activeColors);
 
         console.log(`🎮 Room Full: ${roomId} - Waiting for socket connections...`);
         console.log(`📋 Players:`, room.players.map((p, i) => `Player ${i}: ${p.name} (${p.color})`));

@@ -291,14 +291,14 @@ function App() {
                     roomId: room.id,
                     stake: room.stake,
                     playerCount: room.players.length,
-                    players: room.players.map((p, idx) => ({
+                    players: room.players.map((p, idx) => p ? ({
                         id: idx,
                         name: p.name,
                         color: p.color,
                         address: p.address,
                         type: 'human',
                         isAI: false
-                    }))
+                    }) : null)
                 });
 
                 // Set board rotation to player's perspective during countdown
@@ -336,14 +336,14 @@ function App() {
                     roomId: room.id,
                     stake: room.stake,
                     playerCount: room.players.length,
-                    players: room.players.map((p, idx) => ({
+                    players: room.players.map((p, idx) => p ? ({
                         id: idx,
                         name: p.name,
                         color: p.color,
                         address: p.address,
                         type: 'human',
                         isAI: false
-                    }))
+                    }) : null)
                 });
 
                 setGameState(createInitialState(room.players.length, activeColors));
@@ -1003,7 +1003,9 @@ function App() {
                 {/* A. PLAYER POD CORNER ANCHORS */}
                 <div className="player-pods-container">
                     {gameConfig.players.map((p, idx) => {
+                        if (!p) return null; // Skip empty slots in Web3 sparse array
                         const visualPos = getVisualPositionIndex(idx);
+                        // ... rest remains same
                         const isActive = gameState.activePlayer === idx;
                         const color = PLAYER_COLORS[idx];
                         const isMe = gameConfig.mode === 'web3'
