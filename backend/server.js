@@ -245,11 +245,10 @@ io.on('connection', (socket) => {
                 player.socketId = socket.id;
                 console.log(`🔗 Linked Socket ${socket.id} to Player ${player.name} (${player.color})`);
 
-                // CRITICAL FIX: Send immediate state sync if game is active
-                // This handles refreshes/reconnections where the client missed previous updates
-                if (room.gameState) {
+                // CRITICAL FIX: Only send full state sync if game is ACTIVE (not during countdown)
+                if (room.gameState && room.status === "ACTIVE") {
                     console.log(`🔄 Sending immediate state sync to ${player.name}`);
-                    // We may need to re-emit game_started so the client enters the 'game' AppState if they were in lobby
+                    // Re-emit game_started so the client enters the 'game' AppState if they were in lobby
                     socket.emit('game_started', room);
 
                     // Send current board state
@@ -260,6 +259,13 @@ io.on('connection', (socket) => {
                         lastDice: room.gameState.diceValue,
                         msg: room.gameState.message || "Reconnected"
                     });
+                } else if (room.status === "STARTING") {
+                    // During countdown, just confirm connection but don't enable rolling
+                    console.log(`⏳ Player ${player.name} connected during countdown - waiting for game start`);
+                    socket.emit('state_update', {
+                        gamePhase: 'COUNTDOWN',
+                        msg: 'Waiting for countdown...'
+                    });
                 }
             }
         }
@@ -269,6 +275,13 @@ io.on('connection', (socket) => {
         try {
             const room = activeRooms.find(r => r.id === roomId);
             if (!room || !room.gameState) return;
+
+            // CRITICAL: Block rolling during countdown phase
+            if (room.status === "STARTING") {
+                console.log(`⏳ Roll blocked - game still in countdown phase`);
+                socket.emit('game_error', { message: 'Wait for countdown to finish!' });
+                return;
+            }
 
             const activePlayerIdx = room.gameState.activePlayer;
             const activePlayerObj = room.players[activePlayerIdx];
