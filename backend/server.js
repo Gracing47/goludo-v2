@@ -83,7 +83,7 @@ function startTurnTimer(io, room, playerIndex, phase) {
     const startTime = Date.now();
     let remainingSeconds = Math.floor(TURN_TIMEOUT_MS / 1000);
 
-    console.log(`⏰ Starting ${remainingSeconds}s timer for ${currentPlayer.name} (Phase: ${phase})`);
+    console.log(`⏰ Starting ${remainingSeconds}s timer for ${currentPlayer?.name || 'Unknown'} (Phase: ${phase})`);
 
     // Broadcast initial timer start
     io.to(room.id).emit('turn_timer_start', {
@@ -154,7 +154,7 @@ function handleTurnTimeout(io, room, playerIndex, phase) {
         room.gameState.activePlayer = nextPlayerIdx;
         room.gameState.consecutiveSixes = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Turn skipped.`);
+        broadcastState(room, `⏰ ${currentPlayer?.name || 'Player'} timed out. Turn skipped.`);
         handleNextTurn(io, room);
     } else if (phase === GAME_PHASE.SELECT_TOKEN || phase === GAME_PHASE.BONUS_MOVE) {
         // They didn't select a token - forfeit move and pass turn
@@ -183,7 +183,7 @@ function handleNextTurn(io, room) {
 
     // Check if player is connected
     if (currentPlayer && currentPlayer.socketId) {
-        console.log(`👤 Waiting for Human Player ${currentPlayer.name} (Socket ${currentPlayer.socketId})`);
+        console.log(`👤 Waiting for Human Player ${currentPlayer?.name || 'Player'} (Socket ${currentPlayer.socketId})`);
 
         // Start timer for current game phase
         startTurnTimer(io, room, currentPlayerIndex, room.gameState.gamePhase);
@@ -198,7 +198,7 @@ function handleNextTurn(io, room) {
 
     setTimeout(() => {
         // Check if anyone is actually still connected before checking next turn
-        const anyHumanConnected = room.players.some(p => p.socketId);
+        const anyHumanConnected = room.players.some(p => p && p.socketId);
         if (!anyHumanConnected) {
             console.log(`⏹️ No human players connected in Room ${room.id}. Pausing turn logic.`);
             return;
@@ -245,13 +245,14 @@ function startGameCountdown(io, room, roomId) {
     const countdownInterval = setInterval(() => {
         countdown--;
 
-        const connectedNow = room.players.filter(p => p.socketId).length;
-        console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedNow}/${room.players.length}`);
+        const connectedNow = room.players.filter(p => p && p.socketId).length;
+        const totalPlayersNeeded = room.players.filter(p => p).length;
+        console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedNow}/${totalPlayersNeeded}`);
 
-        io.to(roomId).emit('countdown_tick', {
+        io.to(room.id).emit('countdown_tick', {
             remaining: countdown,
             connectedPlayers: connectedNow,
-            totalPlayers: room.players.length
+            totalPlayers: totalPlayersNeeded
         });
 
         if (countdown <= 0) {
@@ -260,7 +261,7 @@ function startGameCountdown(io, room, roomId) {
             // STEP 3: Start the game
             room.status = "ACTIVE";
             console.log(`🎮 Game Starting: Room ${roomId}`);
-            console.log(`📋 Socket states:`, room.players.map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
+            console.log(`📋 Socket states:`, room.players.filter(p => p).map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
 
             io.to(roomId).emit('game_started', room);
             broadcastState(room, "Game Started!");
@@ -288,7 +289,7 @@ io.on('connection', (socket) => {
         // Map Socket ID to Player
         const room = activeRooms.find(r => r.id === roomId);
         if (room && playerAddress) {
-            const player = room.players.find(p => p.address?.toLowerCase() === playerAddress.toLowerCase());
+            const player = room.players.find(p => p && p.address?.toLowerCase() === playerAddress.toLowerCase());
             if (player) {
                 player.socketId = socket.id;
                 console.log(`🔗 Linked Socket ${socket.id} to Player ${player.name} (${player.color})`);
@@ -430,7 +431,7 @@ io.on('connection', (socket) => {
         console.log(`🔌 User disconnected: ${socket.id}`);
         // Optional: Remove socketId from player to turn them into Bot?
         activeRooms.forEach(room => {
-            const player = room.players.find(p => p.socketId === socket.id);
+            const player = room.players.find(p => p && p.socketId === socket.id);
             if (player) {
                 player.socketId = null;
                 console.log(`⚠️ Player ${player.name} disconnected -> Switched to Bot Mode`);
