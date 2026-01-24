@@ -317,7 +317,10 @@ function App() {
 
             setGameState(createInitialState(config.playerCount, activeColors));
             setAppState('game');
-            setBoardRotation(0);
+
+            // Rotate board so human player's base (player 0) appears at bottom-left
+            const humanColorIndex = colorMap[config.players[0].color];
+            setBoardRotation((3 - humanColorIndex) * 90);
         }
     }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer, updateState]);
 
