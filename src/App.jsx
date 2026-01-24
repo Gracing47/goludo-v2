@@ -1013,6 +1013,9 @@ function App() {
                     </button>
                     {menuOpen && (
                         <div className="menu-dropdown">
+                            <button onClick={() => { setMenuOpen(false); window.location.href = '/lobby'; }}>
+                                🏠 Lobby
+                            </button>
                             <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
                                 {isMuted ? '🔇 Unmute' : '🔊 Mute'}
                             </button>
