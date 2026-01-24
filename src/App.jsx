@@ -945,7 +945,6 @@ function App() {
                             : !p.isAI && idx === 0;
                         const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
                             (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
-                        const displayName = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
 
                         return (
                             <div key={idx} className={`pod-anchor pos-${visualPos}`}>
@@ -954,7 +953,7 @@ function App() {
                                         {p.isAI ? '🤖' : '👤'}
                                         {isActive && <div className="pod-turn-indicator" />}
                                     </div>
-                                    <span className="pod-name">{displayName}{isMe && ' •'}</span>
+                                    <span className="pod-name">{p.name}{isMe && ' •'}</span>
                                 </div>
                             </div>
                         );

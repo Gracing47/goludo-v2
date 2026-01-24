@@ -172,12 +172,10 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 8px;
+    padding: 4px 12px 4px 8px;
     border-radius: 22px;
     height: 32px;
-    /* Slightly more compact */
     min-width: 80px;
-    max-width: 140px;
     pointer-events: auto;
 
     background: rgba(15, 15, 30, 0.9);
@@ -289,9 +287,6 @@ body {
     font-weight: 600;
     color: white;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 60px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -310,6 +305,17 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* Desktop: Move dice to right side of board */
+@media (min-width: 768px) {
+    .central-dice-area {
+        bottom: auto;
+        top: 50%;
+        left: auto;
+        right: 60px;
+        transform: translateY(-50%);
+    }
 }
 
 /* Dice wrapper handles positioning and animation */
