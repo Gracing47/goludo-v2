@@ -42,7 +42,7 @@ const QUIPS = {
 };
 
 const Commentator = () => {
-    const [msg, setMsg] = useState("Welcome to GoLudo. Try not to lose too fast.");
+    const [msg, setMsg] = useState("Welcome to $GOLudo. Try not to lose too fast.");
     const [quipType, setQuipType] = useState('IDLE');
 
     // Use atomic selectors to prevent infinite re-renders

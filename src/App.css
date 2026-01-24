@@ -63,30 +63,101 @@ body {
 }
 
 /* ============================================
-   BOARD LAYER - Centered in Grid Row
+   BOARD LAYER - Centered with Anchors
    ============================================ */
 
 .board-layer {
-    grid-row: 3;
+    grid-row: 2 / span 3;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: var(--z-board);
-    padding: 4px;
-    overflow: hidden;
+    padding: 20px;
+    overflow: visible;
+}
+
+/* Container for pods that anchors them to board corners */
+.player-pods-container {
+    position: absolute;
+    /* Center it specifically in the board region */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Match board size calculation from Board.css */
+    width: min(92vw, calc(100dvh - 240px), 500px);
+    height: min(92vw, calc(100dvh - 240px), 500px);
+    pointer-events: none;
+    z-index: var(--z-hud);
+}
+
+.pod-anchor {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Corner Positions (relative to board corners) */
+/* 0: Top Left, 1: Top Right, 2: Bottom Right, 3: Bottom Left */
+.pos-0 {
+    top: -10px;
+    left: -10px;
+    justify-content: flex-start;
+}
+
+.pos-1 {
+    top: -10px;
+    right: -10px;
+    justify-content: flex-end;
+}
+
+.pos-2 {
+    bottom: -10px;
+    right: -10px;
+    justify-content: flex-end;
+}
+
+.pos-3 {
+    bottom: -10px;
+    left: -10px;
+    justify-content: flex-start;
+}
+
+@media (max-width: 480px) {
+    .pos-0 {
+        top: -15px;
+        left: 5px;
+    }
+
+    .pos-1 {
+        top: -15px;
+        right: 5px;
+    }
+
+    .pos-2 {
+        bottom: -5px;
+        right: 5px;
+    }
+
+    .pos-3 {
+        bottom: -5px;
+        left: 5px;
+    }
 }
 
 /* ============================================
-   HUD LAYER - Overlay on Grid
+   HUD LAYER (Overlay)
    ============================================ */
 
 .game-hud {
     position: absolute;
     inset: 0;
-    inset-block-start: var(--safe-area-top);
-    inset-block-end: var(--safe-area-bottom);
-    z-index: var(--z-hud);
     pointer-events: none;
+    z-index: var(--z-hud);
     display: grid;
     grid-template-rows:
         var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--bottom-bar-height);
@@ -101,10 +172,12 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-radius: 22px;
-    height: 36px;
-    max-width: 130px;
+    height: 32px;
+    /* Slightly more compact */
+    min-width: 80px;
+    max-width: 140px;
     pointer-events: auto;
 
     background: rgba(15, 15, 30, 0.9);
@@ -224,12 +297,31 @@ body {
 }
 
 .pod-dice-container {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    width: 44px;
+    /* Fix width to prevent layout jump */
+    height: 44px;
 }
 
 .player-pod.active .pod-dice-container {
-    display: block;
+    display: flex;
     pointer-events: auto;
+    animation: bounce-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bounce-in {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* ============================================

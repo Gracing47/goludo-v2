@@ -176,7 +176,7 @@ const LandingPage: React.FC = () => {
 
                     {/* Title with Orbitron font */}
                     <motion.h1 className="hero-title" variants={itemVariants}>
-                        <span className="gradient-text">GoLudo</span>
+                        <span className="gradient-text">$GOLudo</span>
                     </motion.h1>
 
                     {/* Tagline with animation */}
@@ -268,7 +268,7 @@ const LandingPage: React.FC = () => {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                 >
-                    Why GoLudo?
+                    Why $GOLudo?
                 </motion.h2>
                 <div className="features-grid">
                     {FEATURES.map((feature, index) => (
@@ -294,7 +294,7 @@ const LandingPage: React.FC = () => {
             {/* Footer */}
             <footer className="landing-footer">
                 <div className="footer-content">
-                    <p>© 2026 GoLudo. Built with ❤️ on Flare Network.</p>
+                    <p>© 2026 $GOLudo. Built with ❤️ on Flare Network.</p>
                     <div className="footer-links">
                         <a href="#" className="footer-link">Docs</a>
                         <a href="#" className="footer-link">Twitter</a>

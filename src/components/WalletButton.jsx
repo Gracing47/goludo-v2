@@ -18,11 +18,11 @@ const WalletButton = ({ onConnect, onDisconnect }) => {
                 chains={supportedChains}
                 connectModal={{
                     size: "compact",
-                    title: "GoLudo Wallet",
+                    title: "$GOLudo Wallet",
                     showThirdwebBranding: false
                 }}
                 appMetadata={{
-                    name: "GoLudo",
+                    name: "$GOLudo",
                     url: "https://goludo.app",
                     description: "Play Ludo on the Flare Network",
                     logoUrl: "/logo.png"

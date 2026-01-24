@@ -57,27 +57,27 @@ export function extractRoomId(path: string): string | null {
 
 export const ROUTE_META = {
     [ROUTES.LANDING]: {
-        title: 'GoLudo - Play & Earn with Web3 Ludo',
+        title: '$GOLudo - Play & Earn with Web3 Ludo',
         description: 'The ultimate Web3 Ludo experience. Play against friends, stake crypto, and win big!',
         index: true,
     },
     [ROUTES.APP]: {
-        title: 'Games - GoLudo',
+        title: 'Games - $GOLudo',
         description: 'Browse and play crypto games. Stake, compete, and earn.',
         index: true,
     },
     [ROUTES.LUDO_LOBBY]: {
-        title: 'Ludo Lobby - GoLudo',
+        title: 'Ludo Lobby - $GOLudo',
         description: 'Create or join a Ludo match. Play with friends or stake crypto.',
         index: true,
     },
     [ROUTES.LUDO_LOCAL]: {
-        title: 'Local Play - GoLudo',
+        title: 'Local Play - $GOLudo',
         description: 'Play Ludo offline against AI or with friends on one device.',
         index: false,
     },
     [ROUTES.GAME]: {
-        title: 'Game Room - GoLudo',
+        title: 'Game Room - $GOLudo',
         description: 'Active game session.',
         index: false, // Game rooms should not be indexed
     },
