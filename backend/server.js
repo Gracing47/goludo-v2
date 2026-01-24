@@ -225,6 +225,54 @@ function getNextPlayer(current, activeColors) {
     return activeColors[nextIndex];
 }
 
+/**
+ * Handles the pre-game countdown and transitions the room to ACTIVE
+ */
+function startGameCountdown(io, room, roomId) {
+    // Prevent double starts
+    if (room._countdownStarted) return;
+    room._countdownStarted = true;
+
+    let countdown = 5;
+
+    // Emit initial countdown
+    io.to(roomId).emit('pre_game_countdown', {
+        room: room,
+        countdownSeconds: countdown,
+        message: "Get Ready!"
+    });
+
+    const countdownInterval = setInterval(() => {
+        countdown--;
+
+        const connectedNow = room.players.filter(p => p.socketId).length;
+        console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedNow}/${room.players.length}`);
+
+        io.to(roomId).emit('countdown_tick', {
+            remaining: countdown,
+            connectedPlayers: connectedNow,
+            totalPlayers: room.players.length
+        });
+
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+
+            // STEP 3: Start the game
+            room.status = "ACTIVE";
+            console.log(`🎮 Game Starting: Room ${roomId}`);
+            console.log(`📋 Socket states:`, room.players.map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
+
+            io.to(roomId).emit('game_started', room);
+            broadcastState(room, "Game Started!");
+
+            // STEP 4: Begin turn logic
+            setTimeout(() => {
+                handleNextTurn(io, room);
+            }, 1000);
+        }
+    }, 1000);
+}
+
 
 io.on('connection', (socket) => {
     console.log(`🔌 User connected: ${socket.id}`);
@@ -474,70 +522,40 @@ app.post('/api/rooms/join', (req, res) => {
         console.log(`📋 Players:`, room.players.map((p, i) => `Player ${i}: ${p.name} (${p.color})`));
 
         // ============================================
-        // STEP 1: WAIT for at least 1 socket connection (up to 15 seconds)
+        // STEP 1: WAIT for ALL socket connections (up to 30 seconds)
+        // This gives clients time to navigate and establish WebSocket connections
         // ============================================
         let waitAttempts = 0;
-        const maxWaitAttempts = 30; // 15 seconds (30 * 500ms)
+        const maxWaitAttempts = 30; // 30 seconds total
 
         const waitForSockets = setInterval(() => {
             waitAttempts++;
             const connectedPlayers = room.players.filter(p => p.socketId).length;
+            const totalPlayers = room.players.length;
 
-            console.log(`⏳ Waiting for sockets: ${connectedPlayers}/${room.players.length} (attempt ${waitAttempts}/${maxWaitAttempts})`);
+            console.log(`⏳ Waiting for sockets: ${connectedPlayers}/${totalPlayers} (attempt ${waitAttempts}/${maxWaitAttempts})`);
 
-            // Start countdown when at least 1 player is connected OR timeout
-            if (connectedPlayers >= 1 || waitAttempts >= maxWaitAttempts) {
+            // ✅ Only start countdown when ALL players are connected
+            if (connectedPlayers >= totalPlayers) {
                 clearInterval(waitForSockets);
-
-                if (connectedPlayers === 0) {
-                    console.log(`⚠️ No sockets connected after ${waitAttempts * 500}ms. Starting anyway...`);
-                } else {
-                    console.log(`✅ ${connectedPlayers} socket(s) connected - Starting countdown!`);
-                }
-
-                // ============================================
-                // STEP 2: Start the actual countdown (5 seconds)
-                // ============================================
-                let countdown = 5;
-
-                // Emit initial countdown
-                io.to(roomId).emit('pre_game_countdown', {
-                    room: room,
-                    countdownSeconds: countdown,
-                    message: "Get Ready!"
-                });
-
-                const countdownInterval = setInterval(() => {
-                    countdown--;
-
-                    const connectedNow = room.players.filter(p => p.socketId).length;
-                    console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedNow}/${room.players.length}`);
-
-                    io.to(roomId).emit('countdown_tick', {
-                        remaining: countdown,
-                        connectedPlayers: connectedNow,
-                        totalPlayers: room.players.length
-                    });
-
-                    if (countdown <= 0) {
-                        clearInterval(countdownInterval);
-
-                        // STEP 3: Start the game
-                        room.status = "ACTIVE";
-                        console.log(`🎮 Game Starting: Room ${roomId}`);
-                        console.log(`📋 Socket states:`, room.players.map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
-
-                        io.to(roomId).emit('game_started', room);
-                        broadcastState(room, "Game Started!");
-
-                        // STEP 4: Begin turn logic
-                        setTimeout(() => {
-                            handleNextTurn(io, room);
-                        }, 1000);
-                    }
-                }, 1000);
+                console.log(`✅ All ${connectedPlayers} socket(s) connected - Starting countdown!`);
+                startGameCountdown(io, room, roomId);
+                return;
             }
-        }, 500); // Check every 500ms
+
+            // ⚠️ Timeout Fallback
+            if (waitAttempts >= maxWaitAttempts) {
+                clearInterval(waitForSockets);
+                if (connectedPlayers >= 1) {
+                    console.log(`⚠️ Timeout! Only ${connectedPlayers}/${totalPlayers} connected. Starting anyway...`);
+                    startGameCountdown(io, room, roomId);
+                } else {
+                    console.log(`❌ No sockets connected after ${waitAttempts}s. Cancelling room.`);
+                    room.status = "CANCELLED";
+                    io.to(roomId).emit('game_error', { message: 'Match cancelled: No players connected.' });
+                }
+            }
+        }, 1000); // Check every 1 second
     }
 
     res.json({ success: true, room });

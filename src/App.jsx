@@ -220,10 +220,20 @@ function App() {
 
             socket.on('connect_error', (error) => {
                 console.error('❌ Socket connection error:', error.message);
+                setServerMsg(`📡 Connection error: ${error.message}`);
+            });
+
+            socket.on('game_error', (error) => {
+                console.error('❌ Game error:', error.message);
+                setServerMsg(`❌ ${error.message}`);
+                setTimeout(() => setServerMsg(null), 5000);
             });
 
             socket.on('disconnect', (reason) => {
                 console.warn('🔌 Socket disconnected:', reason);
+                if (reason === "io server disconnect" || reason === "transport close") {
+                    setServerMsg("🔌 Connection lost. Reconnecting...");
+                }
             });
 
             socket.on('dice_rolled', ({ value, playerIndex }) => {
