@@ -97,7 +97,7 @@ function App() {
 
     // React Router hooks
     const navigate = useNavigate();
-    const { gameId } = useParams();
+    const { roomId: gameId } = useParams();
 
     // Ref to prevent double AI actions
     const aiActionInProgress = useRef(false);
@@ -418,11 +418,12 @@ function App() {
     // ============================================
     // 1. Persistence Hook: Re-entry (Lobby -> Game) OR Web3 Connection
     useEffect(() => {
-        if (!gameId) return;
+        const roomId = gameId; // Use the room ID from URL params
+        if (!roomId) return;
 
         // Case 1: Resume from localStorage (local/AI games)
         if (appState === 'lobby') {
-            const savedData = localStorage.getItem(`ludo_game_${gameId}`);
+            const savedData = localStorage.getItem(`ludo_game_${roomId}`);
             if (savedData) {
                 try {
                     const { config, state } = JSON.parse(savedData);
@@ -437,10 +438,7 @@ function App() {
         }
 
         // Case 2: Web3 room needs socket connection
-        if (gameId?.length > 20 || gameConfig?.mode === 'web3') {
-            const roomId = gameId || gameConfig?.roomId;
-            if (!roomId) return;
-
+        if (roomId?.length > 20 || gameConfig?.mode === 'web3') {
             const targetAddr = account?.address || 'anonymous';
             const currentSocket = socketRef.current;
 
