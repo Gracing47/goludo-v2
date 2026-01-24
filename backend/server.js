@@ -452,55 +452,79 @@ app.post('/api/rooms/join', (req, res) => {
         room.status = "STARTING";
 
         // CRITICAL FIX: activeColors must be sequential [0, 1] or [0, 1, 2] or [0, 1, 2, 3]
-        // The engine uses these as player indices, NOT as color IDs
-        // We store the actual colors in room.players[i].color for visual display
         const activeColors = room.players.map((_, index) => index);
 
         // Initialize Engine
         room.gameState = createInitialState(room.players.length, activeColors);
 
-        console.log(`🎮 Room Full: ${roomId} - Starting countdown sequence`);
+        console.log(`🎮 Room Full: ${roomId} - Waiting for socket connections...`);
         console.log(`📋 Players:`, room.players.map((p, i) => `Player ${i}: ${p.name} (${p.color})`));
 
-        // STEP 1: Emit pre-game countdown to give clients time to prepare
-        io.to(roomId).emit('pre_game_countdown', {
-            room: room,
-            countdownSeconds: 5,
-            message: "Get Ready!"
-        });
+        // ============================================
+        // STEP 1: WAIT for at least 1 socket connection (up to 15 seconds)
+        // ============================================
+        let waitAttempts = 0;
+        const maxWaitAttempts = 30; // 15 seconds (30 * 500ms)
 
-        // STEP 2: Wait for socket connections with countdown
-        let countdown = 5;
-        const countdownInterval = setInterval(() => {
-            countdown--;
-
-            // Check socket status
+        const waitForSockets = setInterval(() => {
+            waitAttempts++;
             const connectedPlayers = room.players.filter(p => p.socketId).length;
-            console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedPlayers}/${room.players.length}`);
 
-            io.to(roomId).emit('countdown_tick', {
-                remaining: countdown,
-                connectedPlayers,
-                totalPlayers: room.players.length
-            });
+            console.log(`⏳ Waiting for sockets: ${connectedPlayers}/${room.players.length} (attempt ${waitAttempts}/${maxWaitAttempts})`);
 
-            if (countdown <= 0) {
-                clearInterval(countdownInterval);
+            // Start countdown when at least 1 player is connected OR timeout
+            if (connectedPlayers >= 1 || waitAttempts >= maxWaitAttempts) {
+                clearInterval(waitForSockets);
 
-                // STEP 3: Start the game
-                room.status = "ACTIVE";
-                console.log(`🎮 Game Starting: Room ${roomId}`);
-                console.log(`📋 Socket states:`, room.players.map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
+                if (connectedPlayers === 0) {
+                    console.log(`⚠️ No sockets connected after ${waitAttempts * 500}ms. Starting anyway...`);
+                } else {
+                    console.log(`✅ ${connectedPlayers} socket(s) connected - Starting countdown!`);
+                }
 
-                io.to(roomId).emit('game_started', room);
-                broadcastState(room, "Game Started!");
+                // ============================================
+                // STEP 2: Start the actual countdown (5 seconds)
+                // ============================================
+                let countdown = 5;
 
-                // STEP 4: Begin turn logic after brief delay for animations
-                setTimeout(() => {
-                    handleNextTurn(io, room);
+                // Emit initial countdown
+                io.to(roomId).emit('pre_game_countdown', {
+                    room: room,
+                    countdownSeconds: countdown,
+                    message: "Get Ready!"
+                });
+
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+
+                    const connectedNow = room.players.filter(p => p.socketId).length;
+                    console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedNow}/${room.players.length}`);
+
+                    io.to(roomId).emit('countdown_tick', {
+                        remaining: countdown,
+                        connectedPlayers: connectedNow,
+                        totalPlayers: room.players.length
+                    });
+
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+
+                        // STEP 3: Start the game
+                        room.status = "ACTIVE";
+                        console.log(`🎮 Game Starting: Room ${roomId}`);
+                        console.log(`📋 Socket states:`, room.players.map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
+
+                        io.to(roomId).emit('game_started', room);
+                        broadcastState(room, "Game Started!");
+
+                        // STEP 4: Begin turn logic
+                        setTimeout(() => {
+                            handleNextTurn(io, room);
+                        }, 1000);
+                    }
                 }, 1000);
             }
-        }, 1000);
+        }, 500); // Check every 500ms
     }
 
     res.json({ success: true, room });
