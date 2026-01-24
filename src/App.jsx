@@ -261,7 +261,15 @@ function App() {
             // PRE-GAME COUNTDOWN EVENTS
             // ============================================
             socket.on('pre_game_countdown', ({ room, countdownSeconds, message }) => {
-                console.log('🎬 Pre-game countdown starting:', countdownSeconds, 's');
+                console.log('🎬 Pre-game countdown received:', countdownSeconds, 's');
+
+                // Only show countdown if the game hasn't started yet
+                // This prevents showing countdown on late reconnects
+                if (gameState) {
+                    console.log('⏭️ Ignoring countdown - game already in progress');
+                    return;
+                }
+
                 setCountdown(countdownSeconds);
                 setShowCountdown(true);
                 setServerMsg(message);
@@ -295,6 +303,9 @@ function App() {
             });
 
             socket.on('countdown_tick', ({ remaining, connectedPlayers, totalPlayers }) => {
+                // Ignore countdown ticks if game already started
+                if (gameState) return;
+
                 console.log(`⏳ Countdown: ${remaining}s | Players: ${connectedPlayers}/${totalPlayers}`);
                 setCountdown(remaining);
 
