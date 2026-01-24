@@ -218,7 +218,10 @@ const Lobby = ({ onStartGame }) => {
 
             // Result.room contains full player list
             if (result && result.room) {
-                if (result.room.status === "ACTIVE") {
+                // CRITICAL FIX: Connect socket immediately for STARTING or ACTIVE
+                // This ensures the joiner connects during the countdown phase
+                if (result.room.status === "STARTING" || result.room.status === "ACTIVE") {
+                    console.log(`🚀 Joiner: Room status is ${result.room.status} - Connecting immediately!`);
                     handleStart(result.room);
                 } else {
                     setWaitingRoomId(selectedRoom.id);
