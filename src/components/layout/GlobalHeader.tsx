@@ -25,7 +25,7 @@ const GlobalHeader: React.FC = () => {
             <div className="header-container">
                 <div className="header-left" onClick={() => navigate(ROUTES.LANDING)}>
                     <div className="logo-container">
-                        <span className="logo-text">Go<span className="accent">Ludo</span></span>
+                        <span className="logo-text">$GO<span className="accent">Ludo</span></span>
                     </div>
                 </div>
 

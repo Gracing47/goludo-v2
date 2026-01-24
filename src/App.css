@@ -74,6 +74,8 @@ body {
     justify-content: center;
     z-index: var(--z-board);
     padding: 20px;
+    padding-top: 60px;
+    /* Push board down to make room for top pods */
     overflow: visible;
 }
 
@@ -103,49 +105,57 @@ body {
 
 /* Corner Positions (relative to board corners) */
 /* 0: Top Left, 1: Top Right, 2: Bottom Right, 3: Bottom Left */
+/* Pods sit OUTSIDE the board on desktop */
 .pos-0 {
-    top: -10px;
-    left: -10px;
+    top: -45px;
+    left: -5px;
     justify-content: flex-start;
 }
 
 .pos-1 {
-    top: -10px;
-    right: -10px;
+    top: -45px;
+    right: -5px;
     justify-content: flex-end;
 }
 
 .pos-2 {
-    bottom: -10px;
-    right: -10px;
+    bottom: -45px;
+    right: -5px;
     justify-content: flex-end;
 }
 
 .pos-3 {
-    bottom: -10px;
-    left: -10px;
+    bottom: -45px;
+    left: -5px;
     justify-content: flex-start;
 }
 
+/* Mobile: Pods further above/below the board */
 @media (max-width: 480px) {
+    .board-layer {
+        padding-top: 70px;
+        /* More space for top pods on mobile */
+        padding-bottom: 50px;
+    }
+
     .pos-0 {
-        top: -15px;
-        left: 5px;
+        top: -52px;
+        left: 0;
     }
 
     .pos-1 {
-        top: -15px;
-        right: 5px;
+        top: -52px;
+        right: 0;
     }
 
     .pos-2 {
-        bottom: -5px;
-        right: 5px;
+        bottom: -50px;
+        right: 0;
     }
 
     .pos-3 {
-        bottom: -5px;
-        left: 5px;
+        bottom: -50px;
+        left: 0;
     }
 }
 
@@ -297,12 +307,12 @@ body {
 }
 
 .pod-dice-container {
-    display: flex;
+    display: none;
+    /* Hidden by default */
     align-items: center;
     justify-content: center;
     margin-left: 4px;
     width: 44px;
-    /* Fix width to prevent layout jump */
     height: 44px;
 }
 
