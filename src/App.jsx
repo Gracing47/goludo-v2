@@ -290,7 +290,7 @@ function App() {
                     mode: 'web3',
                     roomId: room.id,
                     stake: room.stake,
-                    playerCount: room.players.length,
+                    playerCount: room.players.filter(p => p).length,
                     players: room.players.map((p, idx) => p ? ({
                         id: idx,
                         name: p.name,
@@ -329,13 +329,13 @@ function App() {
 
             socket.on('game_started', (room) => {
                 const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-                const activeColors = room.players.map(p => colorMap[p.color]);
+                const activeColors = room.players.filter(p => p).map(p => colorMap[p.color]);
 
                 setGameConfig({
                     mode: 'web3',
                     roomId: room.id,
                     stake: room.stake,
-                    playerCount: room.players.length,
+                    playerCount: room.players.filter(p => p).length,
                     players: room.players.map((p, idx) => p ? ({
                         id: idx,
                         name: p.name,
@@ -346,7 +346,7 @@ function App() {
                     }) : null)
                 });
 
-                setGameState(createInitialState(room.players.length, activeColors));
+                setGameState(createInitialState(4, activeColors));
                 setAppState('game');
 
                 if (account) {
@@ -388,7 +388,8 @@ function App() {
             const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
             const activeColors = config.players.map(p => colorMap[p.color]);
 
-            setGameState(createInitialState(config.playerCount, activeColors));
+            // Initialize with 4 slots for board consistency, matching the server
+            setGameState(createInitialState(4, activeColors));
             setAppState('game');
 
             // Rotate board so human player's base (player 0) appears at bottom-left
@@ -516,15 +517,13 @@ function App() {
                 playerAddress: account?.address
             });
 
-            // TIMEOUT SAFETY: If server doesn't respond in 2.5s, unlock UI
+            // TIMEOUT SAFETY: If server doesn't respond in 4s, unlock UI
             setTimeout(() => {
-                if (isRollingRef.current) { // Need ref to check current state in timeout? 
-                    // Actually, just checking if we still haven't received state update
-                    // We can just reset isRolling. If event comes later, it handles itself.
+                if (isRollingRef.current) {
                     setIsRolling(false);
                     console.warn("⚠️ Network slow? Resetting roll state to allow retry.");
                 }
-            }, 2500);
+            }, 4000);
             return;
         }
 
@@ -1035,7 +1034,7 @@ function App() {
                 {gameState.gamePhase === 'WIN' && (
                     <VictoryCelebration
                         winner={gameState.winner}
-                        playerName={gameConfig.players[gameState.winner]?.name}
+                        playerName={gameConfig.players[gameState.winner]?.name || `Player ${gameState.winner + 1}`}
                         isWeb3Match={gameConfig.mode === 'web3'}
                         onClose={handleBackToLobby}
                     />

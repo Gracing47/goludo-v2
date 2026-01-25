@@ -191,29 +191,37 @@ function handleNextTurn(io, room) {
     }
 
     // Player is NOT connected (disconnected mid-game)
-    console.log(`⚠️ Player ${currentPlayerIndex} (${currentPlayer?.name || 'Unknown'}) is disconnected. Skipping turn...`);
-
-    // Auto-skip disconnected players - with small delay to prevent rapid-fire recursion
-    broadcastState(room, `⚠️ ${currentPlayer?.name || 'Player'} disconnected. Turn skipped.`);
+    // Give 2 seconds grace period for reconnection before skipping
+    console.log(`⚠️ Player ${currentPlayerIndex} (${currentPlayer?.name || 'Unknown'}) is disconnected. Waiting 2s for recovery...`);
 
     setTimeout(() => {
-        // Check if anyone is actually still connected before checking next turn
-        const anyHumanConnected = room.players.some(p => p && p.socketId);
-        if (!anyHumanConnected) {
-            console.log(`⏹️ No human players connected in Room ${room.id}. Pausing turn logic.`);
-            return;
+        // Check again after grace period
+        const roomRefreshed = activeRooms.find(r => r.id === room.id);
+        const playerRefreshed = roomRefreshed?.players[currentPlayerIndex];
+
+        if (playerRefreshed && !playerRefreshed.socketId) {
+            console.log(`⏰ Recovery timeout: Skipping turn for ${playerRefreshed.name}`);
+            broadcastState(room, `⚠️ ${playerRefreshed.name} disconnected. Turn skipped.`);
+
+            // Proceed to next
+            const nextPlayerIdx = getNextPlayer(currentPlayerIndex, room.gameState.activeColors);
+            room.gameState.activePlayer = nextPlayerIdx;
+            room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
+            room.gameState.validMoves = []; // Clear any pending moves
+            room.gameState.diceValue = null;
+            room.gameState.consecutiveSixes = 0;
+            room.gameState.bonusMoves = 0;
+
+            broadcastState(room); // Update state after skipping
+            handleNextTurn(io, room);
+        } else {
+            console.log(`✅ Player recovered during grace period. Continuing turn.`);
+            // If player reconnected, restart their turn timer
+            if (playerRefreshed && playerRefreshed.socketId) {
+                startTurnTimer(io, room, currentPlayerIndex, room.gameState.gamePhase);
+            }
         }
-
-        const nextPlayerIdx = getNextPlayer(currentPlayerIndex, room.gameState.activeColors);
-        room.gameState.activePlayer = nextPlayerIdx;
-        room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
-        room.gameState.validMoves = [];
-        room.gameState.diceValue = null;
-        room.gameState.consecutiveSixes = 0;
-        room.gameState.bonusMoves = 0;
-
-        handleNextTurn(io, room);
-    }, 2000); // 2 second delay between skips to prevent stack overflow and give user time to see message
+    }, 2000);
 }
 
 // Helper function to get next player
@@ -534,8 +542,8 @@ app.post('/api/rooms/join', (req, res) => {
             .map((p, idx) => p ? idx : null)
             .filter(idx => idx !== null);
 
-        // Initialize Engine
-        room.gameState = createInitialState(newPlayerCount, activeColors);
+        // Initialize Engine with 4 total slots (matching indices 0-3)
+        room.gameState = createInitialState(4, activeColors);
 
         console.log(`🎮 Room Full: ${roomId} - Waiting for socket connections...`);
         console.log(`📋 Players:`, room.players.filter(p => p).map((p, i) => `Slot ${p.color}: ${p.name}`));
