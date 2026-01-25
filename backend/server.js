@@ -12,6 +12,9 @@ import { fileURLToPath } from 'url';
 import { createInitialState, rollDice, moveToken, completeMoveAnimation } from '../src/engine/gameLogic.js';
 import { GAME_PHASE } from '../src/engine/constants.js';
 
+// Room Lifecycle Manager (prevents memory leaks at scale)
+import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob } from './roomManager.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -280,6 +283,9 @@ function startGameCountdown(io, room, roomId) {
             }, 1000);
         }
     }, 1000);
+
+    // Register interval for cleanup
+    registerRoomTimer(roomId, 'countdownInterval', countdownInterval);
 }
 
 
@@ -416,6 +422,12 @@ io.on('connection', (socket) => {
                 msg = `🎉 Player ${newState.winner + 1} Wins!`;
                 // Clear all timers on game end
                 clearRoomTimers(room.id);
+                clearAllRoomTimers(room.id); // Also clear lifecycle timers
+
+                // Schedule room cleanup after 5 minutes (give time for payout claims)
+                setTimeout(() => {
+                    cleanupRoom(room.id, activeRooms);
+                }, 5 * 60 * 1000);
             } else if (newState.gamePhase === GAME_PHASE.BONUS_MOVE) {
                 msg = "Bonus Turn! Move again.";
             } else if (newState.diceValue === 6 && newState.gamePhase === GAME_PHASE.ROLL_DICE) {
@@ -477,7 +489,8 @@ app.post('/api/rooms/create', (req, res) => {
         // Initialize with 4 empty slots to match board colors (0-Red, 1-Green, 2-Yellow, 3-Blue)
         players: [null, null, null, null],
         gameState: null,
-        status: "WAITING"
+        status: "WAITING",
+        createdAt: Date.now() // Track creation time for cleanup
     };
 
     // Place creator in their chosen color slot
@@ -488,7 +501,7 @@ app.post('/api/rooms/create', (req, res) => {
     };
 
     activeRooms.push(newRoom);
-    console.log(`🏠 Room Created: ${roomId}`);
+    console.log(`🏠 Room Created: ${roomId} (Total active: ${activeRooms.length})`);
     res.json({ success: true, room: newRoom });
 });
 
@@ -580,9 +593,14 @@ app.post('/api/rooms/join', (req, res) => {
                     console.log(`❌ No sockets connected after ${waitAttempts}s. Cancelling room.`);
                     room.status = "CANCELLED";
                     io.to(roomId).emit('game_error', { message: 'Match cancelled: No players connected.' });
+                    // Cleanup cancelled room after 1 minute
+                    setTimeout(() => cleanupRoom(roomId, activeRooms), 60000);
                 }
             }
         }, 1000); // Check every 1 second
+
+        // Register interval for cleanup
+        registerRoomTimer(roomId, 'socketWaitInterval', waitForSockets);
     }
 
     res.json({ success: true, room });
@@ -590,4 +608,8 @@ app.post('/api/rooms/join', (req, res) => {
 
 server.listen(PORT, () => {
     console.log(`🚀 GoLudo Backend running on http://localhost:${PORT}`);
+
+    // Start periodic cleanup job (runs every 60s)
+    startCleanupJob(activeRooms);
+    console.log(`🧹 Room cleanup job started (runs every 60s)`);
 });
