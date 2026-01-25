@@ -137,9 +137,8 @@ export function isBlockedByBlockade(state, movingPlayer, position) {
     if (position >= HOME_STRETCH_START) return false;
     if (position === POSITION.IN_YARD) return false;
 
-    const { playerCount } = state;
-
-    for (let player = 0; player < playerCount; player++) {
+    const playersToCheck = state.activeColors || [0, 1, 2, 3];
+    for (const player of playersToCheck) {
         // Blockades are formed by ANY player (opponents usually, sometimes own)
         // Let's assume ANY blockade stops movement.
         let tokensAtPos = 0;
@@ -162,9 +161,8 @@ export function getCapturesAt(state, movingPlayer, position) {
     if (SAFE_POSITIONS.includes(position)) return captures;
     if (position >= HOME_STRETCH_START) return captures;
 
-    const { playerCount } = state;
-
-    for (let player = 0; player < playerCount; player++) {
+    const playersToCheck = state.activeColors || [0, 1, 2, 3];
+    for (const player of playersToCheck) {
         if (player === movingPlayer) continue;
 
         state.tokens[player].forEach((pos, tokenIndex) => {

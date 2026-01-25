@@ -296,13 +296,15 @@ export function completeMoveAnimation(state) {
 // ============================================
 
 function checkWinner(state) {
-    const { playerCount } = state;
+    const { activeColors } = state;
 
-    for (let player = 0; player < playerCount; player++) {
-        const allFinished = state.tokens[player].every(
+    if (!activeColors) return null;
+
+    for (const playerIdx of activeColors) {
+        const allFinished = state.tokens[playerIdx].every(
             pos => pos === POSITION.FINISHED
         );
-        if (allFinished) return player;
+        if (allFinished) return playerIdx;
     }
     return null;
 }

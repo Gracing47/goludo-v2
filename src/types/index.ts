@@ -269,7 +269,7 @@ export interface Room {
 
 export interface SocketEvents {
     // Client -> Server
-    'join_match': { roomId: string; playerAddress: string };
+    'join_match': { roomId: string; playerAddress: string; playerColor?: string };
     'roll_dice': { roomId: string; playerAddress: string };
     'move_token': { roomId: string; playerAddress: string; tokenIndex: number };
 
@@ -401,6 +401,8 @@ export interface GameStoreState {
 
     /** Payout proof for Web3 claims */
     payoutProof: PayoutProof | null;
+    /** User selected color from lobby */
+    mySelectedColor: PlayerColor | null;
 
     /** Actions */
     setAppState: (appState: 'lobby' | 'game') => void;
@@ -416,6 +418,7 @@ export interface GameStoreState {
     setSocket: (socket: any) => void;
     setMyPlayerIndex: (index: number | null) => void;
     setPayoutProof: (proof: PayoutProof | null) => void;
+    setMySelectedColor: (color: PlayerColor | null) => void;
     reset: () => void;
 }
 

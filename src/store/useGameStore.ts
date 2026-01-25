@@ -68,6 +68,8 @@ export const useGameStore = create<GameStoreState>()(
 
             /** Payout proof for Web3 claims */
             payoutProof: null,
+            /** User selected color from lobby */
+            mySelectedColor: null,
 
             // ============================================
             // ACTIONS
@@ -121,6 +123,8 @@ export const useGameStore = create<GameStoreState>()(
 
             /** Set payout proof for Web3 claims */
             setPayoutProof: (proof) => set({ payoutProof: proof }, false, 'setPayoutProof'),
+            /** Set user selected color */
+            setMySelectedColor: (color) => set({ mySelectedColor: color }, false, 'setMySelectedColor'),
 
             /** Reset all state to initial values */
             reset: () => set({
@@ -135,6 +139,7 @@ export const useGameStore = create<GameStoreState>()(
                 socket: null,
                 myPlayerIndex: null,
                 payoutProof: null,
+                mySelectedColor: null,
             }, false, 'reset'),
         })),
         {
