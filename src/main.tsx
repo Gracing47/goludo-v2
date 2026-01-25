@@ -5,6 +5,7 @@
  * - Thirdweb for Web3 functionality
  * - React Query for data fetching
  * - React Router for URL-based navigation
+ * - Service Worker for offline resilience
  */
 
 import React from 'react';
@@ -29,3 +30,31 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </QueryClientProvider>
     </React.StrictMode>
 );
+
+// ============================================
+// SERVICE WORKER REGISTRATION
+// Enables offline play and faster loading
+// ============================================
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('✅ Service Worker registered:', registration.scope);
+
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('🔄 New version available! Refresh to update.');
+                            }
+                        });
+                    }
+                });
+            })
+            .catch((error) => {
+                console.warn('⚠️ Service Worker registration failed:', error);
+            });
+    });
+}

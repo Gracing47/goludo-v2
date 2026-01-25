@@ -100,44 +100,35 @@ setInterval(() => {
 - [x] Room lifecycle manager integrated
 - [x] Automatic cleanup job running
 - [x] Timer registry implemented
-- [ ] Add health check endpoint: `GET /health`
-- [ ] Add metrics endpoint: `GET /metrics`
-- [ ] Set NODE_ENV=production
-- [ ] Configure max memory limit (512MB recommended)
+- [x] Health check endpoint: `GET /health`
+- [x] Metrics endpoint: `GET /metrics`
+- [x] NODE_ENV=production (set in railway.json)
+- [x] Health check configured (railway.json)
 
 ### Netlify Frontend
 - [x] Web3 state sync fixed
 - [x] Client-side memory management
-- [ ] Add service worker for offline resilience
-- [ ] Configure CDN caching headers
+- [x] Service worker for offline resilience (public/sw.js)
+- [x] CDN caching headers (netlify.toml)
+- [x] Security headers (X-Frame-Options, etc.)
 
-### Monitoring (Recommended)
+### Monitoring ✅ IMPLEMENTED
 ```javascript
-// Add to server.js
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
-    activeRooms: activeRooms.length,
-    memory: process.memoryUsage()
-  });
-});
+// GET /health - Container health check
+{
+  "status": "ok",
+  "uptime": 12345.67,
+  "activeRooms": 42,
+  "memory": { "heapUsed": "25MB", "heapTotal": "50MB", "rss": "75MB" }
+}
 
-app.get('/metrics', (req, res) => {
-  res.json({
-    rooms: {
-      total: activeRooms.length,
-      waiting: activeRooms.filter(r => r.status === 'WAITING').length,
-      starting: activeRooms.filter(r => r.status === 'STARTING').length,
-      active: activeRooms.filter(r => r.status === 'ACTIVE').length,
-      finished: activeRooms.filter(r => r.gameState?.gamePhase === 'WIN').length
-    },
-    timers: {
-      turn: activeTurnTimers.size,
-      lifecycle: roomTimers.size
-    }
-  });
-});
+// GET /metrics - Detailed monitoring stats
+{
+  "server": { "uptime": 12345, "env": "production", "memory": {...} },
+  "rooms": { "total": 42, "waiting": 5, "starting": 2, "active": 30, "finished": 5 },
+  "timers": { "turn": 30, "lifecycle": 42 },
+  "sockets": { "connected": 84 }
+}
 ```
 
 ## 🎯 Stability Guarantees

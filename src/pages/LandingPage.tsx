@@ -186,11 +186,7 @@ const LandingPage: React.FC = () => {
                         <span className="tag-word">Win.</span>
                     </motion.p>
 
-                    <motion.p className="hero-subtitle" variants={itemVariants}>
-                        The ultimate Web3 Ludo experience on Flare Network.
-                        <br />
-                        Compete with friends, stake crypto, earn real rewards.
-                    </motion.p>
+
 
                     {/* CTA Button */}
                     <motion.div variants={itemVariants} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

@@ -5,7 +5,7 @@
  */
 
 // Store all active intervals/timeouts per room for cleanup
-const roomTimers = new Map(); // roomId -> { turnTimer, countdownInterval, socketWaitInterval }
+export const roomTimers = new Map(); // roomId -> { turnTimer, countdownInterval, socketWaitInterval }
 
 /**
  * Register a timer for a room

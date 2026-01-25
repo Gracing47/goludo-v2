@@ -462,7 +462,66 @@ io.on('connection', (socket) => {
     });
 });
 
-app.get('/', (req, res) => res.json({ message: "GoLudo Backend v3 (Countdown Enabled)", timestamp: new Date().toISOString() }));
+// ============================================
+// PRODUCTION MONITORING ENDPOINTS
+// ============================================
+
+app.get('/', (req, res) => res.json({
+    message: "GoLudo Backend v4 (Production Ready)",
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development'
+}));
+
+/**
+ * Health Check Endpoint
+ * Used by Railway/Docker for container health monitoring
+ */
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        activeRooms: activeRooms.length,
+        memory: {
+            heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+            heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB',
+            rss: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB'
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
+/**
+ * Metrics Endpoint
+ * Detailed stats for monitoring dashboards (Grafana, DataDog, etc.)
+ */
+app.get('/metrics', (req, res) => {
+    // Import roomTimers dynamically to avoid circular deps
+    const { roomTimers } = require('./roomManager.js');
+
+    res.json({
+        server: {
+            uptime: process.uptime(),
+            env: process.env.NODE_ENV || 'development',
+            memory: process.memoryUsage()
+        },
+        rooms: {
+            total: activeRooms.length,
+            waiting: activeRooms.filter(r => r.status === 'WAITING').length,
+            starting: activeRooms.filter(r => r.status === 'STARTING').length,
+            active: activeRooms.filter(r => r.status === 'ACTIVE').length,
+            finished: activeRooms.filter(r => r.gameState?.gamePhase === 'WIN').length,
+            cancelled: activeRooms.filter(r => r.status === 'CANCELLED').length
+        },
+        timers: {
+            turn: activeTurnTimers.size,
+            lifecycle: roomTimers.size
+        },
+        sockets: {
+            connected: io.sockets.sockets.size
+        },
+        timestamp: new Date().toISOString()
+    });
+});
 
 app.post('/api/payout/sign', async (req, res) => {
     // ... same as before
