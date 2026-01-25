@@ -3,13 +3,25 @@ import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import './Token.css';
 
 function getStackOffset(stackIndex, stackSize) {
-    if (stackSize <= 1) return { x: 0, y: 0, scale: 1 };
-    const offsets = [
-        { x: -22, y: -22 }, { x: 22, y: -22 },
-        { x: -22, y: 22 }, { x: 22, y: 22 }
-    ];
-    const scale = stackSize === 2 ? 0.78 : 0.65;
-    return { ...offsets[stackIndex % 4], scale };
+    if (stackSize <= 1) return { x: 0, y: 0, scale: 1, zOffset: 0 };
+
+    // Stack tokens vertically like a tower using PERCENTAGE for responsiveness
+    // Each higher token is slightly offset up (negative Y) and right (X)
+    const verticalStep = -25; // % of token size up per token
+    const horizontalStep = 8; // % of token size right for depth effect
+
+    const y = stackIndex * verticalStep;
+    const x = stackIndex * horizontalStep;
+
+    // Small scale reduction for perspective
+    const scale = 1 - (stackIndex * 0.05);
+
+    return {
+        x,
+        y,
+        scale: Math.max(0.75, scale),
+        zOffset: stackIndex * 10
+    };
 }
 
 const Token = ({
@@ -81,7 +93,7 @@ const Token = ({
                 '--stack-y': `${offset.y}%`,
                 '--stack-scale': offset.scale,
                 '--rotation': `${rotation}deg`,
-                zIndex: isHighlighted ? 100 : isAnimating || showImpact ? 50 : 10 + stackIndex
+                zIndex: isHighlighted ? 100 : isAnimating || showImpact ? 50 : 10 + (offset.zOffset || 0) + stackIndex
             }}
             initial={false}
             transition={{

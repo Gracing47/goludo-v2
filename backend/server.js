@@ -436,9 +436,15 @@ io.on('connection', (socket) => {
 
             broadcastState(room, msg);
 
-            // TRIGGER NEXT TURN (only if game not won)
-            if (newState.gamePhase !== 'WIN' &&
-                (room.gameState.gamePhase === GAME_PHASE.ROLL_DICE || room.gameState.gamePhase === GAME_PHASE.BONUS_MOVE)) {
+            // TRIGGER NEXT TURN OR BONUS MOVE
+            if (newState.gamePhase === 'WIN') {
+                // Game over - do nothing
+            } else if (newState.gamePhase === GAME_PHASE.BONUS_MOVE) {
+                // Bonus move - same player, start timer for token selection
+                console.log(`🎁 Bonus move activated for Player ${activePlayerIdx}`);
+                startTurnTimer(io, room, activePlayerIdx, GAME_PHASE.BONUS_MOVE);
+            } else if (newState.gamePhase === GAME_PHASE.ROLL_DICE) {
+                // Normal turn end or roll-again after 6
                 handleNextTurn(io, room);
             }
         } catch (error) {
