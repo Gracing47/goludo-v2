@@ -112,8 +112,7 @@ export function rollDice(state, forcedValue = null) {
 
     // Triple-6 penalty check
     if (RULES.TRIPLE_SIX_PENALTY && newState.consecutiveSixes >= 3) {
-        soundManager.play('penalty');
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        // NOTE: Sound & haptic feedback handled in App.jsx, not in engine
 
         return {
             ...newState,

@@ -246,7 +246,20 @@ function App() {
             });
 
             socket.on('state_update', (update) => {
-                console.log('📡 Socket Event: state_update', { phase: update.gamePhase, activePlayer: update.activePlayer });
+                console.log('📡 Socket Event: state_update', {
+                    phase: update.gamePhase,
+                    activePlayer: update.activePlayer,
+                    validMoves: update.validMoves?.length || 0,
+                    diceValue: update.diceValue
+                });
+
+                // Log validMoves in detail if present
+                if (update.validMoves && update.validMoves.length > 0) {
+                    console.log('🎯 Valid moves received:', update.validMoves.map(m =>
+                        `Token ${m.tokenIndex}: ${m.fromPosition} → ${m.toPosition}${m.isSpawn ? ' (SPAWN)' : ''}`
+                    ));
+                }
+
                 if (update.msg) setServerMsg(update.msg);
                 updateState(update);
 
@@ -534,9 +547,10 @@ function App() {
             setGameState(newState);
             setIsRolling(false);
 
-            // Handle Triple-6 penalty with visual feedback
+            // Handle Triple-6 penalty with visual & haptic feedback
             if (newState.message && newState.message.includes('Triple 6')) {
-                soundManager.play('capture'); // Penalty sound
+                soundManager.play('penalty'); // Use penalty sound
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 setServerMsg(newState.message);
                 setTimeout(() => setServerMsg(null), 2500);
             }
@@ -549,26 +563,43 @@ function App() {
     const executeMove = useCallback((move) => {
         if (!gameState || (gameState.gamePhase !== 'SELECT_TOKEN' && gameState.gamePhase !== 'BONUS_MOVE')) return;
 
+        // ============================================
+        // WEB3 MODE: Server is authoritative - only emit and wait
+        // ============================================
         if (gameConfig?.mode === 'web3') {
+            console.log('📤 Emitting move_token to server:', { tokenIndex: move.tokenIndex, toPosition: move.toPosition });
+
             socketRef.current?.emit('move_token', {
                 roomId: gameConfig.roomId,
                 playerAddress: account?.address,
                 tokenIndex: move.tokenIndex
             });
-            // Note: We don't advance locally, we wait for state_update or another event?
-            // Actually, we SHOULD advance locally for smooth UI, but only if we trust the outcome.
-            // But with capture logic, it might be safer to wait for server update.
-            // Let's do local update for UI and let server correct if needed.
+
+            // Play sounds immediately for feedback
+            if (move.isSpawn) {
+                soundManager.play('spawn');
+            } else if (move.captures && move.captures.length > 0) {
+                soundManager.play('capture');
+                if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+            } else if (move.isHome) {
+                soundManager.play('home');
+            } else {
+                soundManager.play('move');
+            }
+
+            // DON'T update local state - wait for state_update from server
+            // This prevents state desync between client and server
+            setIsMoving(true);
+            setTimeout(() => setIsMoving(false), 500);
+            return;
         }
+
+        // ============================================
+        // LOCAL/AI MODE: Full local state management
+        // ============================================
 
         // 🌟 Spawn Sparkle
         if (move.isSpawn) {
-            const coords = PLAYER_START_POSITIONS[gameState.activePlayer];
-            // Correct mapping for spawn point
-            const gridPos = PLAYER_START_POSITIONS[gameState.activePlayer]; // Wait, this is position index
-            // I need the actual Row/Col for the start position
-            // It's in boardMap or constants. PLAYER_START_POSITIONS are indices.
-            // Let's use the MASTER_LOOP to get coords for startPos
             const startPos = PLAYER_START_POSITIONS[gameState.activePlayer];
             const startCoords = MASTER_LOOP[startPos];
 
@@ -589,7 +620,6 @@ function App() {
 
         // 💥 Capture Explosion: Trigger if this move has captures
         if (move.captures && move.captures.length > 0) {
-            // ... (rest of capture logic)
             let coords = null;
             const toPos = move.toPosition;
             if (toPos >= 0 && toPos < MASTER_LOOP.length) {
@@ -860,15 +890,22 @@ function App() {
 
         // For Web3 mode: compare addresses
         if (gameConfig.mode === 'web3') {
-            if (!currentPlayer || !account?.address) return false;
+            if (!currentPlayer || !account?.address) {
+                console.log('🔒 isLocalPlayerTurn: false (no currentPlayer or account)', { currentPlayer, account: account?.address });
+                return false;
+            }
             const currentAddr = currentPlayer?.address?.toLowerCase();
             const myAddr = account.address.toLowerCase();
-            return currentAddr === myAddr;
+            const isTurn = currentAddr === myAddr;
+            if (isTurn) {
+                console.log('✅ isLocalPlayerTurn: TRUE', { currentAddr, myAddr, phase: gameState?.gamePhase });
+            }
+            return isTurn;
         }
 
         // For Local/AI mode: human can always play (when not AI turn)
         return !isAITurn;
-    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn]);
+    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.gamePhase]);
 
     const canRoll = useMemo(() => {
         if (!gameState) return false;
@@ -939,11 +976,12 @@ function App() {
             <div className="board-layer">
                 <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
                     {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
-                        const isValid = gameState.validMoves.some(m => m.tokenIndex === tokenIdx);
+                        const isValid = gameState.validMoves?.some(m => m.tokenIndex === tokenIdx) || false;
                         const isHighlighted = isValid &&
                             playerIdx === gameState.activePlayer &&
                             (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
-                            !isAITurn;
+                            !isAITurn &&
+                            isLocalPlayerTurn; // Also check if it's OUR turn!
 
                         return (
                             <Token
