@@ -488,7 +488,6 @@ const Lobby = ({ onStartGame }) => {
                         )}
 
                         {/* Player Count */}
-                        {/* Player Count */}
                         <div className="setup-section">
                             <label className="setup-label">Number of Players</label>
                             <div className={`player-count-buttons ${selectedRoom ? 'disabled' : ''}`}>

@@ -35,7 +35,9 @@ let activeRooms = [];
 app.use(cors());
 app.use(bodyParser.json());
 
+// Basic request logger for production monitoring
 app.use((req, res, next) => {
+    if (req.url === '/health' || req.url === '/metrics') return next();
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
@@ -298,7 +300,6 @@ io.on('connection', (socket) => {
         const playerAddress = (typeof data === 'object') ? data.playerAddress : null;
 
         socket.join(roomId);
-        console.log(`👤 Socket ${socket.id} joined Room ${roomId}`);
 
         // Map Socket ID to Player
         const room = activeRooms.find(r => r.id === roomId);
@@ -455,7 +456,6 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log(`🔌 User disconnected: ${socket.id}`);
-        // Optional: Remove socketId from player to turn them into Bot?
         activeRooms.forEach(room => {
             const player = room.players.find(p => p && p.socketId === socket.id);
             if (player) {
@@ -530,7 +530,6 @@ app.get('/metrics', (req, res) => {
 });
 
 app.post('/api/payout/sign', async (req, res) => {
-    // ... same as before
     const { roomId, winner, amount } = req.body;
     try {
         const payoutProof = await signPayout(roomId, winner, amount);

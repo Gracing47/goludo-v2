@@ -1,12 +1,6 @@
 /**
- * MAIN APP COMPONENT - GoLudo (v2 - Zustand State Management)
- * 
- * Features:
- * - Lobby → Game flow
- * - Intelligent AI with priority-based decisions
- * - Token stacking for multiple tokens on same cell
- * - USA Standard Rules
- * - Unified Zustand state management
+ * MAIN APP COMPONENT - GoLudo
+ * Central game container managing state transitions, socket events, and engine integration.
  */
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
@@ -182,7 +176,6 @@ function App() {
 
             // If we already have a matching socket, don't re-init
             if (isMatchingSocket) {
-                console.log('✅ Socket already matching. Skipping re-init.');
                 return;
             }
 
@@ -246,20 +239,6 @@ function App() {
             });
 
             socket.on('state_update', (update) => {
-                console.log('📡 Socket Event: state_update', {
-                    phase: update.gamePhase,
-                    activePlayer: update.activePlayer,
-                    validMoves: update.validMoves?.length || 0,
-                    diceValue: update.diceValue
-                });
-
-                // Log validMoves in detail if present
-                if (update.validMoves && update.validMoves.length > 0) {
-                    console.log('🎯 Valid moves received:', update.validMoves.map(m =>
-                        `Token ${m.tokenIndex}: ${m.fromPosition} → ${m.toPosition}${m.isSpawn ? ' (SPAWN)' : ''}`
-                    ));
-                }
-
                 if (update.msg) setServerMsg(update.msg);
                 updateState(update);
 
@@ -862,9 +841,7 @@ function App() {
         return allTokens;
     }, [gameState]);
 
-    // 🔥 PERFORMANCE FIX: Memoize expensive calculations BEFORE any returns
-    // These must be called unconditionally (React Rules of Hooks)
-    // 🔥 PERFORMANCE FIX: Memoize expensive calculations
+    // Memoize expensive calculations for performance
     const tokensWithCoords = useMemo(() => {
         return getTokensWithCoords();
     }, [getTokensWithCoords]);
@@ -1044,14 +1021,11 @@ function App() {
                     {gameConfig.players.map((p, idx) => {
                         if (!p) return null; // Skip empty slots in Web3 sparse array
                         const visualPos = getVisualPositionIndex(idx);
-                        // ... rest remains same
                         const isActive = gameState.activePlayer === idx;
                         const color = PLAYER_COLORS[idx];
                         const isMe = gameConfig.mode === 'web3'
                             ? p.address?.toLowerCase() === account?.address?.toLowerCase()
                             : !p.isAI && idx === 0;
-                        const canThisPlayerRoll = isActive && isLocalPlayerTurn && !isRolling && !isMoving &&
-                            (gameState.gamePhase === 'ROLL_DICE' || gameState.gamePhase === 'WAITING_FOR_ROLL');
 
                         return (
                             <div key={idx} className={`pod-anchor pos-${visualPos}`}>
