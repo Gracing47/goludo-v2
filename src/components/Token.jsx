@@ -18,15 +18,49 @@ const Token = ({
     stackSize = 1,
     rotation = 0
 }) => {
-    // Increase stagger spread for better visibility of mixed colors
-    const step = 25;
-    const halfTotalOffset = ((stackSize - 1) * step) / 2;
-    const offset = stackSize <= 1 ? { x: 0, y: 0, scale: 1, zIndex: 10 } : {
-        x: `${(stackIndex * step) - halfTotalOffset}%`,
-        y: `${(stackIndex * step) - halfTotalOffset}%`,
-        scale: 0.85,
-        zIndex: 20 + stackIndex
+    // Grid-based positioning for stacked tokens
+    const getStackOffset = (index, total) => {
+        if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
+
+        if (total === 2) {
+            // Horizontal split
+            return {
+                x: index === 0 ? '-22%' : '22%',
+                y: 0,
+                scale: 0.72,
+                zIndex: 20 + index
+            };
+        }
+
+        if (total === 3) {
+            // Triangle layout
+            const positions = [
+                { x: '-22%', y: '-22%' },
+                { x: '22%', y: '-22%' },
+                { x: '0%', y: '24%' }
+            ];
+            return {
+                ...positions[index],
+                scale: 0.62,
+                zIndex: 20 + index
+            };
+        }
+
+        // 4+ tokens: 2x2 grid
+        const positions = [
+            { x: '-24%', y: '-24%' },
+            { x: '24%', y: '-24%' },
+            { x: '-24%', y: '24%' },
+            { x: '24%', y: '24%' }
+        ];
+        return {
+            ...positions[index % 4],
+            scale: 0.54,
+            zIndex: 20 + index
+        };
     };
+
+    const offset = getStackOffset(stackIndex, stackSize);
 
     const controls = useAnimation();
     const prevPos = useRef({ row, col });
@@ -106,13 +140,6 @@ const Token = ({
             <div className={`token-inner liquid-glass ${color}`}>
                 <div className="token-shine" />
                 <div className="token-center-dot" />
-
-                {/* Stack Count Badge - Only show if more than one and it's the top token */}
-                {stackSize > 1 && stackIndex === stackSize - 1 && (
-                    <div className="token-stack-badge">
-                        {stackSize}
-                    </div>
-                )}
 
                 {/* Landing Shockwave */}
                 <AnimatePresence>
