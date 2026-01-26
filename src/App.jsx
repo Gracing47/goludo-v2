@@ -986,6 +986,8 @@ function App() {
                         return (
                             <Token
                                 key={`${playerIdx}-${tokenIdx}`}
+                                playerIndex={playerIdx}
+                                tokenIndex={tokenIdx}
                                 color={PLAYER_COLORS[playerIdx]}
                                 row={coords.r}
                                 col={coords.c}

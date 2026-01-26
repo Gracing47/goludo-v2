@@ -13,11 +13,8 @@
 }
 
 .token.stacked {
-    /* Responsive tower stacking using % offsets */
-    transform: translate(var(--stack-x, 0), var(--stack-y, 0)) scale(var(--stack-scale, 1));
-    /* Enhanced depth with drop shadow */
+    /* Depth enhancement for stacked tokens */
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
-    transition: transform 0.4s var(--ease-premium), z-index 0.3s ease;
 }
 
 .token-stack-badge {

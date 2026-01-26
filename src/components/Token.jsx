@@ -2,29 +2,11 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import './Token.css';
 
-function getStackOffset(stackIndex, stackSize) {
-    if (stackSize <= 1) return { x: 0, y: 0, scale: 1, zOffset: 0 };
 
-    // Stack tokens vertically like a tower using PERCENTAGE for responsiveness
-    // Each higher token is slightly offset up (negative Y) and right (X)
-    const verticalStep = -25; // % of token size up per token
-    const horizontalStep = 8; // % of token size right for depth effect
-
-    const y = stackIndex * verticalStep;
-    const x = stackIndex * horizontalStep;
-
-    // Small scale reduction for perspective
-    const scale = 1 - (stackIndex * 0.05);
-
-    return {
-        x,
-        y,
-        scale: Math.max(0.75, scale),
-        zOffset: stackIndex * 10
-    };
-}
 
 const Token = ({
+    playerIndex,
+    tokenIndex,
     color,
     row,
     col,
@@ -36,7 +18,16 @@ const Token = ({
     stackSize = 1,
     rotation = 0
 }) => {
-    const offset = getStackOffset(stackIndex, stackSize);
+    // Increase stagger spread for better visibility of mixed colors
+    const step = 25;
+    const halfTotalOffset = ((stackSize - 1) * step) / 2;
+    const offset = stackSize <= 1 ? { x: 0, y: 0, scale: 1, zIndex: 10 } : {
+        x: `${(stackIndex * step) - halfTotalOffset}%`,
+        y: `${(stackIndex * step) - halfTotalOffset}%`,
+        scale: 0.85,
+        zIndex: 20 + stackIndex
+    };
+
     const controls = useAnimation();
     const prevPos = useRef({ row, col });
     const [isAnimating, setIsAnimating] = useState(false);
@@ -83,17 +74,19 @@ const Token = ({
     return (
         <motion.div
             className={classes}
-            animate={controls}
+            animate={{
+                ...controls,
+                x: offset.x,
+                y: isAnimating ? undefined : offset.y,
+                scale: isAnimating ? undefined : offset.scale
+            }}
             layout
-            layoutId={`token-${color}-${stackIndex}`}
+            layoutId={`token-${playerIndex}-${tokenIndex}`} // Stable layout ID
             style={{
                 gridRow: row + 1,
                 gridColumn: col + 1,
-                '--stack-x': `${offset.x}%`,
-                '--stack-y': `${offset.y}%`,
-                '--stack-scale': offset.scale,
                 '--rotation': `${rotation}deg`,
-                zIndex: isHighlighted ? 100 : isAnimating || showImpact ? 50 : 10 + (offset.zOffset || 0) + stackIndex
+                zIndex: isHighlighted ? 100 : isAnimating || showImpact ? 50 : offset.zIndex
             }}
             initial={false}
             transition={{
@@ -108,14 +101,13 @@ const Token = ({
                 rotate: 5,
                 boxShadow: "0 0 25px var(--token-glow)"
             } : {}}
-            whileTap={onClick ? { scale: 0.85 } : {}}
             onClick={onClick}
         >
             <div className={`token-inner liquid-glass ${color}`}>
                 <div className="token-shine" />
                 <div className="token-center-dot" />
 
-                {/* Stack Count Badge */}
+                {/* Stack Count Badge - Only show if more than one and it's the top token */}
                 {stackSize > 1 && stackIndex === stackSize - 1 && (
                     <div className="token-stack-badge">
                         {stackSize}
