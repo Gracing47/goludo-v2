@@ -723,6 +723,29 @@ function App() {
         }
     }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
 
+    // ============================================
+    // AUTO-MOVE LOGIC (UX Improvement)
+    // Automatically executes a move if only 1 option exists
+    // ============================================
+    useEffect(() => {
+        if (!gameState || !isLocalPlayerTurn || isRolling || isMoving) return;
+
+        const phase = gameState.gamePhase;
+        if (phase !== 'SELECT_TOKEN' && phase !== 'BONUS_MOVE') return;
+
+        // Only auto-move if there is exactly one valid move
+        if (gameState.validMoves?.length === 1) {
+            const move = gameState.validMoves[0];
+
+            // 600ms delay gives player time to see the dice result
+            const timer = setTimeout(() => {
+                executeMove(move);
+            }, 600);
+
+            return () => clearTimeout(timer);
+        }
+    }, [gameState?.validMoves, gameState?.gamePhase, isLocalPlayerTurn, isRolling, isMoving, executeMove]);
+
     // Web3 Payout Proof Handler & Win Sound
     useEffect(() => {
         if (appState === 'game' && gameState?.gamePhase === 'WIN') {
