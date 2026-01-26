@@ -107,7 +107,8 @@ async function cacheFirst(request) {
 
     try {
         const response = await fetch(request);
-        if (response.ok) {
+        const url = new URL(request.url);
+        if (response.ok && request.method === 'GET' && (url.protocol === 'http:' || url.protocol === 'https:')) {
             const cache = await caches.open(STATIC_CACHE);
             cache.put(request, response.clone());
         }
@@ -126,7 +127,8 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
     try {
         const response = await fetch(request);
-        if (response.ok) {
+        const url = new URL(request.url);
+        if (response.ok && request.method === 'GET' && (url.protocol === 'http:' || url.protocol === 'https:')) {
             const cache = await caches.open(CACHE_NAME);
             cache.put(request, response.clone());
         }

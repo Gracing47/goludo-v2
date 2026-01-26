@@ -113,6 +113,133 @@ function App() {
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
 
+    // ============================================
+    // DATA DERIVATION (Memos & Helpers)
+    // ============================================
+
+    // Get token coordinates with stacking info
+    const getTokensWithCoords = useCallback(() => {
+        if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
+            return [];
+        }
+
+        // 1. Group by grid position
+        const cellMap = new Map();
+
+        gameState.tokens.forEach((playerTokens, playerIdx) => {
+            if (!Array.isArray(playerTokens)) return;
+            playerTokens.forEach((position, tokenIdx) => {
+                let coords = null;
+                let inYard = false;
+
+                if (position === POSITION.IN_YARD) {
+                    coords = YARD_COORDS[playerIdx][tokenIdx];
+                    inYard = true;
+                } else if (position === POSITION.FINISHED) {
+                    // Anchor to player's corner in the goal area
+                    const goalCoords = [
+                        { r: 6, c: 6 }, // Red (Top Left)
+                        { r: 6, c: 8 }, // Green (Top Right)
+                        { r: 8, c: 8 }, // Yellow (Bottom Right)
+                        { r: 8, c: 6 }  // Blue (Bottom Left)
+                    ];
+                    coords = goalCoords[playerIdx];
+                } else if (position >= 100 && position < 106) {
+                    coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
+                } else if (position >= 0 && position < MASTER_LOOP.length) {
+                    coords = MASTER_LOOP[position];
+                }
+
+                if (!coords) return;
+
+                const posKey = inYard ? `yard-${playerIdx}-${tokenIdx}` : `${coords.r}-${coords.c}`;
+                if (!cellMap.has(posKey)) cellMap.set(posKey, new Map());
+
+                // Nest group by playerIdx to collapse same colors
+                const playersInCell = cellMap.get(posKey);
+                if (!playersInCell.has(playerIdx)) {
+                    playersInCell.set(playerIdx, {
+                        playerIdx,
+                        tokenIndices: [],
+                        coords,
+                        inYard,
+                        position
+                    });
+                }
+                playersInCell.get(playerIdx).tokenIndices.push(tokenIdx);
+            });
+        });
+
+        // 2. Flatten into visual tokens
+        const visualTokens = [];
+        cellMap.forEach((playersInCell) => {
+            const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
+            const stackSize = playerIndices.length;
+
+            playerIndices.forEach((playerIdx, stackIndex) => {
+                const group = playersInCell.get(playerIdx);
+                visualTokens.push({
+                    playerIdx: group.playerIdx,
+                    // Use the first tokenIdx for the stable key/animation, but we'll show a badge
+                    tokenIdx: group.tokenIndices[0],
+                    tokenCount: group.tokenIndices.length,
+                    coords: group.coords,
+                    inYard: group.inYard,
+                    stackIndex,
+                    stackSize,
+                    allTokenIndices: group.tokenIndices // For interaction logic
+                });
+            });
+        });
+
+        return visualTokens;
+    }, [gameState]);
+
+    // Memoize expensive calculations for performance
+    const tokensWithCoords = useMemo(() => {
+        return getTokensWithCoords();
+    }, [getTokensWithCoords]);
+
+    const currentPlayer = useMemo(() => {
+        if (!gameState || !gameConfig?.players) return null;
+        return gameConfig.players[gameState.activePlayer] || null;
+    }, [gameConfig?.players, gameState?.activePlayer]);
+
+    const currentColor = useMemo(() => {
+        if (!gameState) return null;
+        return PLAYER_COLORS[gameState.activePlayer];
+    }, [gameState?.activePlayer]);
+
+    const isAITurn = useMemo(() =>
+        currentPlayer?.isAI || false,
+        [currentPlayer]
+    );
+
+    // Turn Logic - MEMOIZED to prevent loop
+    const isLocalPlayerTurn = useMemo(() => {
+        if (!gameConfig) return false;
+
+        // For Web3 mode: compare addresses
+        if (gameConfig.mode === 'web3') {
+            if (!currentPlayer || !account?.address) {
+                return false;
+            }
+            const currentAddr = currentPlayer?.address?.toLowerCase();
+            const myAddr = account.address.toLowerCase();
+            return currentAddr === myAddr;
+        }
+
+        // For Local/AI mode: human can always play (when not AI turn)
+        return !isAITurn;
+    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.gamePhase]);
+
+    const canRoll = useMemo(() => {
+        if (!gameState) return false;
+        const phase = gameState.gamePhase;
+        const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
+        return canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
+    }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
+
     // Effect: Haptic feedback on rolling a 6
     useEffect(() => {
         if (gameState?.diceValue === 6 && !isRolling) {
@@ -798,138 +925,7 @@ function App() {
         }
     }, [payoutProof, isClaiming, handleClaimPayout]);
 
-    // Get token coordinates with stacking info
-    const getTokensWithCoords = useCallback(() => {
-        if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
-            return [];
-        }
 
-        // 1. Group by grid position
-        const cellMap = new Map();
-
-        gameState.tokens.forEach((playerTokens, playerIdx) => {
-            if (!Array.isArray(playerTokens)) return;
-            playerTokens.forEach((position, tokenIdx) => {
-                let coords = null;
-                let inYard = false;
-
-                if (position === POSITION.IN_YARD) {
-                    coords = YARD_COORDS[playerIdx][tokenIdx];
-                    inYard = true;
-                } else if (position === POSITION.FINISHED) {
-                    // Anchor to player's corner in the goal area
-                    const goalCoords = [
-                        { r: 6, c: 6 }, // Red (Top Left)
-                        { r: 6, c: 8 }, // Green (Top Right)
-                        { r: 8, c: 8 }, // Yellow (Bottom Right)
-                        { r: 8, c: 6 }  // Blue (Bottom Left)
-                    ];
-                    coords = goalCoords[playerIdx];
-                } else if (position >= 100 && position < 106) {
-                    coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
-                } else if (position >= 0 && position < MASTER_LOOP.length) {
-                    coords = MASTER_LOOP[position];
-                }
-
-                if (!coords) return;
-
-                const posKey = inYard ? `yard-${playerIdx}-${tokenIdx}` : `${coords.r}-${coords.c}`;
-                if (!cellMap.has(posKey)) cellMap.set(posKey, new Map());
-
-                // Nest group by playerIdx to collapse same colors
-                const playersInCell = cellMap.get(posKey);
-                if (!playersInCell.has(playerIdx)) {
-                    playersInCell.set(playerIdx, {
-                        playerIdx,
-                        tokenIndices: [],
-                        coords,
-                        inYard,
-                        position
-                    });
-                }
-                playersInCell.get(playerIdx).tokenIndices.push(tokenIdx);
-            });
-        });
-
-        // 2. Flatten into visual tokens
-        const visualTokens = [];
-        cellMap.forEach((playersInCell) => {
-            const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
-            const stackSize = playerIndices.length;
-
-            playerIndices.forEach((playerIdx, stackIndex) => {
-                const group = playersInCell.get(playerIdx);
-                visualTokens.push({
-                    playerIdx: group.playerIdx,
-                    // Use the first tokenIdx for the stable key/animation, but we'll show a badge
-                    tokenIdx: group.tokenIndices[0],
-                    tokenCount: group.tokenIndices.length,
-                    coords: group.coords,
-                    inYard: group.inYard,
-                    stackIndex,
-                    stackSize,
-                    allTokenIndices: group.tokenIndices // For interaction logic
-                });
-            });
-        });
-
-        return visualTokens;
-    }, [gameState]);
-
-    // Memoize expensive calculations for performance
-    const tokensWithCoords = useMemo(() => {
-        return getTokensWithCoords();
-    }, [getTokensWithCoords]);
-
-    const currentPlayer = useMemo(() => {
-        if (!gameState || !gameConfig?.players) return null;
-        return gameConfig.players[gameState.activePlayer] || null;
-    }, [gameConfig?.players, gameState?.activePlayer]);
-
-    const currentColor = useMemo(() => {
-        if (!gameState) return null;
-        return PLAYER_COLORS[gameState.activePlayer];
-    }, [gameState?.activePlayer]);
-
-    const isAITurn = useMemo(() =>
-        currentPlayer?.isAI || false,
-        [currentPlayer]
-    );
-
-    // Turn Logic - MEMOIZED to prevent loop
-    const isLocalPlayerTurn = useMemo(() => {
-        if (!gameConfig) return false;
-
-        // For Web3 mode: compare addresses
-        if (gameConfig.mode === 'web3') {
-            if (!currentPlayer || !account?.address) {
-                console.log('🔒 isLocalPlayerTurn: false (no currentPlayer or account)', { currentPlayer, account: account?.address });
-                return false;
-            }
-            const currentAddr = currentPlayer?.address?.toLowerCase();
-            const myAddr = account.address.toLowerCase();
-            const isTurn = currentAddr === myAddr;
-            if (isTurn) {
-                console.log('✅ isLocalPlayerTurn: TRUE', { currentAddr, myAddr, phase: gameState?.gamePhase });
-            }
-            return isTurn;
-        }
-
-        // For Local/AI mode: human can always play (when not AI turn)
-        return !isAITurn;
-    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.gamePhase]);
-
-    const canRoll = useMemo(() => {
-        if (!gameState) return false;
-        const phase = gameState.gamePhase;
-        const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
-        const result = canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
-
-        // Debug turn status in development
-        if (result) console.log('🎲 [GoLudo] Local player can roll!');
-
-        return result;
-    }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
     // Game loading state - show when game state isn't ready yet
     if (!gameState || !gameConfig) {
