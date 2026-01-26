@@ -777,16 +777,14 @@ function App() {
 
     // Get token coordinates with stacking info
     const getTokensWithCoords = useCallback(() => {
-        // Defensive check: ensure gameState and tokens array exist
         if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
             return [];
         }
 
-        // Group tokens by position to detect stacking
-        const positionMap = new Map();
+        // 1. Group by grid position
+        const cellMap = new Map();
 
         gameState.tokens.forEach((playerTokens, playerIdx) => {
-            // Skip if playerTokens is not an array
             if (!Array.isArray(playerTokens)) return;
             playerTokens.forEach((position, tokenIdx) => {
                 let coords = null;
@@ -796,8 +794,14 @@ function App() {
                     coords = YARD_COORDS[playerIdx][tokenIdx];
                     inYard = true;
                 } else if (position === POSITION.FINISHED) {
-                    const offsets = [{ r: 6, c: 6 }, { r: 6, c: 8 }, { r: 8, c: 6 }, { r: 8, c: 8 }];
-                    coords = offsets[tokenIdx % 4];
+                    // Anchor to player's corner in the goal area
+                    const goalCoords = [
+                        { r: 6, c: 6 }, // Red (Top Left)
+                        { r: 6, c: 8 }, // Green (Top Right)
+                        { r: 8, c: 8 }, // Yellow (Bottom Right)
+                        { r: 8, c: 6 }  // Blue (Bottom Left)
+                    ];
+                    coords = goalCoords[playerIdx];
                 } else if (position >= 100 && position < 106) {
                     coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
                 } else if (position >= 0 && position < MASTER_LOOP.length) {
@@ -806,39 +810,47 @@ function App() {
 
                 if (!coords) return;
 
-                // Create position key for stacking
-                const posKey = inYard
-                    ? `yard-${playerIdx}-${tokenIdx}` // Yard tokens don't stack
-                    : `${coords.r}-${coords.c}`;
+                const posKey = inYard ? `yard-${playerIdx}-${tokenIdx}` : `${coords.r}-${coords.c}`;
+                if (!cellMap.has(posKey)) cellMap.set(posKey, new Map());
 
-                if (!positionMap.has(posKey)) {
-                    positionMap.set(posKey, []);
+                // Nest group by playerIdx to collapse same colors
+                const playersInCell = cellMap.get(posKey);
+                if (!playersInCell.has(playerIdx)) {
+                    playersInCell.set(playerIdx, {
+                        playerIdx,
+                        tokenIndices: [],
+                        coords,
+                        inYard,
+                        position
+                    });
                 }
-
-                positionMap.get(posKey).push({
-                    playerIdx,
-                    tokenIdx,
-                    position,
-                    coords,
-                    inYard
-                });
+                playersInCell.get(playerIdx).tokenIndices.push(tokenIdx);
             });
         });
 
-        // Flatten with stack info
-        const allTokens = [];
-        positionMap.forEach((tokensAtPos) => {
-            const stackSize = tokensAtPos.length;
-            tokensAtPos.forEach((token, stackIndex) => {
-                allTokens.push({
-                    ...token,
+        // 2. Flatten into visual tokens
+        const visualTokens = [];
+        cellMap.forEach((playersInCell) => {
+            const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
+            const stackSize = playerIndices.length;
+
+            playerIndices.forEach((playerIdx, stackIndex) => {
+                const group = playersInCell.get(playerIdx);
+                visualTokens.push({
+                    playerIdx: group.playerIdx,
+                    // Use the first tokenIdx for the stable key/animation, but we'll show a badge
+                    tokenIdx: group.tokenIndices[0],
+                    tokenCount: group.tokenIndices.length,
+                    coords: group.coords,
+                    inYard: group.inYard,
                     stackIndex,
-                    stackSize
+                    stackSize,
+                    allTokenIndices: group.tokenIndices // For interaction logic
                 });
             });
         });
 
-        return allTokens;
+        return visualTokens;
     }, [gameState]);
 
     // Memoize expensive calculations for performance
@@ -952,23 +964,31 @@ function App() {
             {/* 1. BOARD LAYER (Centered) */}
             <div className="board-layer">
                 <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
-                    {tokensWithCoords.map(({ playerIdx, tokenIdx, coords, inYard, stackIndex, stackSize }) => {
-                        const isValid = gameState.validMoves?.some(m => m.tokenIndex === tokenIdx) || false;
+                    {tokensWithCoords.map(({ playerIdx, tokenIdx, tokenCount, coords, inYard, stackIndex, stackSize, allTokenIndices }) => {
+                        const isValid = allTokenIndices.some(idx =>
+                            gameState.validMoves?.some(m => m.tokenIndex === idx)
+                        );
                         const isHighlighted = isValid &&
                             playerIdx === gameState.activePlayer &&
                             (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
                             !isAITurn &&
-                            isLocalPlayerTurn; // Also check if it's OUR turn!
+                            isLocalPlayerTurn;
 
                         return (
                             <Token
                                 key={`${playerIdx}-${tokenIdx}`}
                                 playerIndex={playerIdx}
                                 tokenIndex={tokenIdx}
+                                tokenCount={tokenCount}
                                 color={PLAYER_COLORS[playerIdx]}
                                 row={coords.r}
                                 col={coords.c}
-                                onClick={isHighlighted ? () => handleTokenClick(playerIdx, tokenIdx) : null}
+                                onClick={isHighlighted ? () => {
+                                    // If multiple tokens can move, the engine usually picks one for the player
+                                    // or we could show a mini-selector. For Ludo, usually any valid token works.
+                                    const move = gameState.validMoves.find(m => allTokenIndices.includes(m.tokenIndex));
+                                    if (move) handleTokenClick(playerIdx, move.tokenIndex);
+                                } : null}
                                 isHighlighted={isHighlighted}
                                 isMoving={isMoving && isHighlighted}
                                 inYard={inYard}

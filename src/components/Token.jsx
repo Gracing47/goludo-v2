@@ -7,6 +7,7 @@ import './Token.css';
 const Token = ({
     playerIndex,
     tokenIndex,
+    tokenCount = 1,
     color,
     row,
     col,
@@ -140,6 +141,13 @@ const Token = ({
             <div className={`token-inner liquid-glass ${color}`}>
                 <div className="token-shine" />
                 <div className="token-center-dot" />
+
+                {/* 🔢 Stack Count Badge (for same color collapse) */}
+                {tokenCount > 1 && (
+                    <div className="token-stack-badge">
+                        {tokenCount}
+                    </div>
+                )}
 
                 {/* Landing Shockwave */}
                 <AnimatePresence>
