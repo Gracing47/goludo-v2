@@ -19,16 +19,16 @@ const Token = ({
     stackSize = 1,
     rotation = 0
 }) => {
-    // Grid-based positioning for stacked tokens
+    // Grid-based positioning for stacked tokens (Different Players)
     const getStackOffset = (index, total) => {
         if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
 
         if (total === 2) {
-            // Horizontal split
+            // Horizontal split - Extreme offsets for visibility
             return {
-                x: index === 0 ? '-22%' : '22%',
-                y: 0,
-                scale: 0.72,
+                x: index === 0 ? '-30%' : '30%',
+                y: '-5%', // Split slightly vertically too
+                scale: 0.65,
                 zIndex: 20 + index
             };
         }
@@ -36,27 +36,27 @@ const Token = ({
         if (total === 3) {
             // Triangle layout
             const positions = [
-                { x: '-22%', y: '-22%' },
-                { x: '22%', y: '-22%' },
-                { x: '0%', y: '24%' }
+                { x: '-28%', y: '-28%' },
+                { x: '28%', y: '-28%' },
+                { x: '0%', y: '28%' }
             ];
             return {
-                ...positions[index],
-                scale: 0.62,
+                ...positions[index % 3],
+                scale: 0.58,
                 zIndex: 20 + index
             };
         }
 
-        // 4+ tokens: 2x2 grid
+        // 4 tokens: 2x2 grid
         const positions = [
-            { x: '-24%', y: '-24%' },
-            { x: '24%', y: '-24%' },
-            { x: '-24%', y: '24%' },
-            { x: '24%', y: '24%' }
+            { x: '-28%', y: '-28%' },
+            { x: '28%', y: '-28%' },
+            { x: '-28%', y: '28%' },
+            { x: '28%', y: '28%' }
         ];
         return {
             ...positions[index % 4],
-            scale: 0.54,
+            scale: 0.52,
             zIndex: 20 + index
         };
     };
@@ -132,9 +132,10 @@ const Token = ({
                 }
             }}
             whileHover={onClick ? {
-                scale: 1.2,
-                rotate: 5,
-                boxShadow: "0 0 25px var(--token-glow)"
+                scale: offset.scale * 1.25,
+                y: offset.y - 10,
+                zIndex: 200,
+                transition: { type: "spring", stiffness: 300 }
             } : {}}
             onClick={onClick}
         >

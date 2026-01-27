@@ -134,9 +134,8 @@
    ANIMATION & INTERACTION
    ============================================ */
 
-.token.clickable:hover {
-    transform: scale(1.15) translateY(-5px);
-    z-index: 100 !important;
+.token.clickable {
+    cursor: pointer;
 }
 
 /* Floating animation for tokens that are ready to move */
@@ -149,13 +148,20 @@
     0%,
     100% {
         transform: translateY(0);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
     50% {
         transform: translateY(-8px);
-        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
     }
+}
+
+/* Enhanced stacking visibility - Horizontal Tilt */
+.token.stacked {
+    filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.4));
+}
+
+.token.stacked .token-inner {
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
 }
 
 /* Shadow that pulses while token is floating */
