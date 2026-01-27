@@ -110,6 +110,9 @@ function App() {
     const [showCountdown, setShowCountdown] = useState(false);
     const [countdown, setCountdown] = useState(5);
 
+    // Screen Shake effect
+    const [isShaking, setIsShaking] = useState(false);
+
     // Web3 Hook
     const { account, handleClaimPayout } = useLudoWeb3();
 
@@ -254,6 +257,9 @@ function App() {
 
     // Spawn sparkle effect state: { id, color, row, col }[]
     const [spawnEffects, setSpawnEffects] = useState([]);
+
+    // Land impact effect state: { id, color, row, col }[]
+    const [landEffects, setLandEffects] = useState([]);
 
     // Sound Mute State
     const [isMuted, setIsMuted] = useState(soundManager.isMuted());
@@ -470,7 +476,7 @@ function App() {
 
                 if (account) {
                     const myIdx = room.players.findIndex(p =>
-                        p.address?.toLowerCase() === account.address?.toLowerCase()
+                        p?.address?.toLowerCase() === account.address?.toLowerCase()
                     );
                     if (myIdx !== -1) {
                         setBoardRotation((3 - myIdx) * 90);
@@ -752,6 +758,10 @@ function App() {
                 navigator.vibrate([50, 30, 50]);
             }
             soundManager.play('capture');
+
+            // 🎬 ADDED: Screen Shake
+            setIsShaking(true);
+            setTimeout(() => setIsShaking(false), 500);
         } else if (move.isHome) {
             soundManager.play('home');
         } else {
@@ -768,6 +778,29 @@ function App() {
 
                 // Audio feedback based on outcome
                 soundManager.play('land');
+
+                // 🔊 ADDED: Land Impact Effect
+                const toPos = move.toPosition;
+                let coords = null;
+                if (toPos >= 0 && toPos < MASTER_LOOP.length) {
+                    coords = MASTER_LOOP[toPos];
+                } else if (toPos >= 100 && toPos < 106) {
+                    coords = HOME_STRETCH_COORDS[gameState.activePlayer]?.[toPos - 100];
+                }
+
+                if (coords) {
+                    const newLandEffect = {
+                        id: Date.now(),
+                        color: PLAYER_COLORS[gameState.activePlayer],
+                        row: coords.r,
+                        col: coords.c
+                    };
+                    setLandEffects(prev => [...prev, newLandEffect]);
+                    setTimeout(() => {
+                        setLandEffects(prev => prev.filter(e => e.id !== newLandEffect.id));
+                    }, 500);
+                }
+
                 if (newState.bonusMoves > 0) {
                     soundManager.play('bonus');
                 }
@@ -886,7 +919,7 @@ function App() {
                 const requestPayoutSignature = async () => {
                     try {
                         console.log("🏆 Game Won! Requesting signature...");
-                        const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.players.length)).toString();
+                        const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.playerCount)).toString();
 
                         const response = await fetch(`${API_URL}/api/payout/sign`, {
                             method: 'POST',
@@ -978,7 +1011,7 @@ function App() {
     };
 
     return (
-        <div className="app aaa-layout">
+        <div className={`app aaa-layout ${isShaking ? 'shake-active' : ''}`}>
 
             {/* 1. BOARD LAYER (Centered) */}
             <div className="board-layer">
@@ -1039,7 +1072,20 @@ function App() {
                             }}
                             onComplete={() => { }}
                         />
-                    ))}
+                    {/* 🌊 Land Impact Ripples */ }
+                    {
+                            landEffects.map(effect => (
+                                <div
+                                    key={effect.id}
+                                    className="land-ripple"
+                                    style={{
+                                        gridRow: effect.row + 1,
+                                        gridColumn: effect.col + 1,
+                                        '--ripple-color': effect.color
+                                    }}
+                                />
+                            ))
+                        }
                 </Board>
             </div>
 
@@ -1156,14 +1202,14 @@ function App() {
                     playerName={
                         account
                             ? gameConfig.players?.find(p =>
-                                p.address?.toLowerCase() === account.address?.toLowerCase()
+                                p?.address?.toLowerCase() === account.address?.toLowerCase()
                             )?.name
                             : undefined
                     }
                     playerColor={
                         account
                             ? gameConfig.players?.find(p =>
-                                p.address?.toLowerCase() === account.address?.toLowerCase()
+                                p?.address?.toLowerCase() === account.address?.toLowerCase()
                             )?.color
                             : 'cyan'
                     }

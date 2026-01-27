@@ -23,17 +23,32 @@
     height: min(92vw, calc(100dvh - 240px), 500px);
     aspect-ratio: 1;
 
-    background: rgba(10, 10, 26, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 16px;
-    padding: 4px;
+    background: rgba(10, 10, 26, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 6px;
     gap: 0;
 
-    border: 2px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow:
-        0 16px 48px rgba(0, 0, 0, 0.6),
-        inset 0 0 24px rgba(255, 255, 255, 0.03);
+        0 20px 60px rgba(0, 0, 0, 0.7),
+        inset 0 0 30px rgba(255, 255, 255, 0.05),
+        0 0 20px rgba(0, 243, 255, 0.1);
+    animation: board-ambient-pulse 8s infinite ease-in-out;
+}
+
+@keyframes board-ambient-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 243, 255, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 243, 255, 0.2);
+    }
+}
 }
 
 .ludo-board::before {
@@ -161,23 +176,29 @@
    ============================================ */
 
 .home-red {
-    background: linear-gradient(90deg, rgba(255, 71, 87, 0.4), rgba(255, 71, 87, 0.2));
-    border-color: rgba(255, 71, 87, 0.2);
+    background: linear-gradient(90deg, rgba(255, 71, 87, 0.45) 0%, rgba(255, 71, 87, 0.1) 100%);
+    border-color: rgba(255, 71, 87, 0.25);
 }
 
 .home-green {
-    background: linear-gradient(180deg, rgba(46, 213, 115, 0.4), rgba(46, 213, 115, 0.2));
-    border-color: rgba(46, 213, 115, 0.2);
+    background: linear-gradient(180deg, rgba(46, 213, 115, 0.45) 0%, rgba(46, 213, 115, 0.1) 100%);
+    border-color: rgba(46, 213, 115, 0.25);
 }
 
 .home-yellow {
-    background: linear-gradient(270deg, rgba(255, 165, 2, 0.4), rgba(255, 165, 2, 0.2));
-    border-color: rgba(255, 165, 2, 0.2);
+    background: linear-gradient(270deg, rgba(255, 165, 2, 0.45) 0%, rgba(255, 165, 2, 0.1) 100%);
+    border-color: rgba(255, 165, 2, 0.25);
 }
 
 .home-blue {
-    background: linear-gradient(0deg, rgba(52, 152, 219, 0.4), rgba(52, 152, 219, 0.2));
-    border-color: rgba(52, 152, 219, 0.2);
+    background: linear-gradient(0deg, rgba(52, 152, 219, 0.45) 0%, rgba(52, 152, 219, 0.1) 100%);
+    border-color: rgba(52, 152, 219, 0.25);
+}
+
+.home-path-active {
+    box-shadow: inset 0 0 10px currentColor;
+    filter: brightness(1.4);
+    z-index: 2;
 }
 
 /* ============================================
@@ -260,6 +281,39 @@
 
     50% {
         transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg))) translateY(-3px);
+    }
+}
+
+/* ============================================
+   IMPACT EFFECTS
+   ============================================ */
+
+.land-ripple {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.land-ripple::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid var(--ripple-color);
+    border-radius: 50%;
+    animation: land-ripple-out 0.5s ease-out forwards;
+}
+
+@keyframes land-ripple-out {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
     }
 }
 

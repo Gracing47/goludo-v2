@@ -7,75 +7,53 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #000;
-}
-
-.warp-container.subtle {
-    background: radial-gradient(circle at center, #1a1b2f 0%, #0d0d0d 100%);
-}
-
-.iridescent-pulse {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg,
-            rgba(34, 211, 238, 0.05),
-            rgba(139, 92, 246, 0.05),
-            rgba(255, 0, 122, 0.05));
-    animation: iridescent 4s linear infinite;
-    pointer-events: none;
-}
-
-@keyframes iridescent {
-    0% {
-        filter: hue-rotate(0deg) brightness(1);
-    }
-
-    50% {
-        filter: hue-rotate(180deg) brightness(1.5);
-    }
-
-    100% {
-        filter: hue-rotate(360deg) brightness(1);
-    }
-}
-
-.star-field {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-}
-
-.star {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    background: white;
-    border-radius: 50%;
-    box-shadow: 0 0 10px white;
+    background: radial-gradient(circle at center, #020617 0%, #000 100%);
 }
 
 .warp-vortex {
     position: absolute;
-    width: 200vw;
-    height: 200vw;
-    background: radial-gradient(circle, transparent 20%, rgba(34, 211, 238, 0.1) 40%, transparent 70%);
-    animation: rotate-vortex 10s linear infinite;
-    pointer-events: none;
+    width: 250vw;
+    height: 250vw;
+    background:
+        radial-gradient(circle at center, transparent 0%, rgba(34, 211, 238, 0.05) 30%, rgba(139, 92, 246, 0.05) 50%, transparent 70%),
+        repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255, 255, 255, 0.02) 15deg 30deg);
+    animation: rotate-vortex 20s linear infinite;
+    filter: blur(40px);
 }
 
 @keyframes rotate-vortex {
     from {
-        transform: rotate(0deg);
+        transform: rotate(0deg) scale(1.5);
     }
 
     to {
-        transform: rotate(360deg);
+        transform: rotate(360deg) scale(1);
     }
 }
 
 .warp-content {
     position: relative;
-    z-index: 2;
+    z-index: 10;
     text-align: center;
-    color: white;
+    animation: content-flicker 4s infinite alternate;
+}
+
+@keyframes content-flicker {
+    from {
+        opacity: 0.9;
+    }
+
+    to {
+        opacity: 1;
+        filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.3));
+    }
+}
+
+.loading-spinner {
+    font-size: 40px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #00f3ff, #ff007a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
 }
