@@ -17,6 +17,7 @@ import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
 import { useGameVFX } from './hooks/useGameVFX';
 import { useGameAI } from './hooks/useGameAI';
+import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
