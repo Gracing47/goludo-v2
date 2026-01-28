@@ -65,6 +65,7 @@ function App() {
         turnTimer, setTurnTimer,
         payoutProof, setPayoutProof,
         socket, setSocket,
+        isShaking, setIsShaking,
         reset: resetStore,
     } = useGameStore(useShallow((s) => ({
         appState: s.appState,
@@ -87,6 +88,7 @@ function App() {
         payoutProof: s.payoutProof,
         setPayoutProof: s.setPayoutProof,
         isShaking: s.isShaking,
+        setIsShaking: s.setIsShaking,
         reset: s.reset,
     })));
 
