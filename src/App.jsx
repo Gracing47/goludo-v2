@@ -66,6 +66,8 @@ function App() {
         payoutProof, setPayoutProof,
         socket, setSocket,
         isShaking, setIsShaking,
+        showCountdown, setShowCountdown,
+        gameCountdown, setGameCountdown,
         reset: resetStore,
     } = useGameStore(useShallow((s) => ({
         appState: s.appState,
@@ -89,6 +91,10 @@ function App() {
         setPayoutProof: s.setPayoutProof,
         isShaking: s.isShaking,
         setIsShaking: s.setIsShaking,
+        showCountdown: s.showCountdown,
+        setShowCountdown: s.setShowCountdown,
+        gameCountdown: s.gameCountdown,
+        setGameCountdown: s.setGameCountdown,
         reset: s.reset,
     })));
 
@@ -300,27 +306,30 @@ function App() {
     const onGameStart = useCallback((config) => {
         aiActionInProgress.current = false;
 
-        if (config.mode === 'web3') {
-            socketConnect();
-        } else {
-            // ============================================
-            // LOCAL/AI MODE: Initialize immediately
-            // ============================================
-            console.log('🎮 Local mode: Initializing game...');
-            setGameConfig(config);
+        // Initialize state regardless of mode
+        const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+        const activeColors = config.players?.map(p => p ? colorMap[p.color] : null).filter(c => c !== null) || [0, 1, 2, 3];
 
-            const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-            const activeColors = config.players.map(p => colorMap[p.color]);
+        setGameConfig(config);
+        setGameState(createInitialState(4, activeColors));
 
-            // Initialize with 4 slots for board consistency, matching the server
-            setGameState(createInitialState(4, activeColors));
-            setAppState('game');
-
-            // Rotate board so human player's base (player 0) appears at bottom-left
+        // Perspective rotation
+        if (config.players?.[0]) {
             const humanColorIndex = colorMap[config.players[0].color];
             setBoardRotation((3 - humanColorIndex) * 90);
         }
-    }, [socketConnect, setGameConfig, setGameState, setAppState, setBoardRotation]);
+
+        // Trigger Countdown for all modes
+        setGameCountdown(5);
+        setShowCountdown(true);
+
+        if (config.mode === 'web3') {
+            socketConnect();
+        } else {
+            console.log('🎮 Local mode: Initializing game transition...');
+            // App state will switch to 'game' after countdown in the effect
+        }
+    }, [socketConnect, setGameConfig, setGameState, setShowCountdown, setGameCountdown, setBoardRotation]);
 
     // Handle Start from Lobby
     const handleStartGame = useCallback((config) => {
@@ -396,6 +405,22 @@ function App() {
             }));
         }
     }, [gameId, gameState, gameConfig, appState]);
+
+    // 3. Countdown Ticker Hook (Universal)
+    useEffect(() => {
+        if (showCountdown && gameCountdown > 0) {
+            const timer = setTimeout(() => {
+                setGameCountdown(gameCountdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (showCountdown && gameCountdown === 0) {
+            // Countdown finished - reveal game or trigger socket start
+            setShowCountdown(false);
+            if (appState !== 'game') {
+                setAppState('game');
+            }
+        }
+    }, [showCountdown, gameCountdown, appState, setGameCountdown, setShowCountdown, setAppState]);
 
     // Return to lobby
     const handleBackToLobby = useCallback(() => {
@@ -899,23 +924,23 @@ function App() {
                 {/* Version Display - Hidden during gameplay */}
             </div>
 
-            {/* 3. COUNTDOWN OVERLAY (Web3 Pre-Game) */}
+            {/* 3. COUNTDOWN OVERLAY (Global) */}
             {showCountdown && gameConfig && (
                 <GameCountdown
-                    countdown={countdown}
+                    countdown={gameCountdown}
                     playerName={
-                        account
+                        gameConfig.mode === 'web3' && account
                             ? gameConfig.players?.find(p =>
                                 p?.address?.toLowerCase() === account.address?.toLowerCase()
                             )?.name
-                            : undefined
+                            : gameConfig.players?.[0]?.name
                     }
                     playerColor={
-                        account
+                        gameConfig.mode === 'web3' && account
                             ? gameConfig.players?.find(p =>
                                 p?.address?.toLowerCase() === account.address?.toLowerCase()
                             )?.color
-                            : 'cyan'
+                            : gameConfig.players?.[0]?.color || 'cyan'
                     }
                 />
             )}

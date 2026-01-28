@@ -66,6 +66,10 @@ export const useGameStore = create<GameStoreState>()(
             /** Screen shake effect */
             isShaking: false,
 
+            /** Countdown states */
+            showCountdown: false,
+            gameCountdown: 5,
+
             /** Local player index in multiplayer match */
             myPlayerIndex: null,
 
@@ -124,6 +128,12 @@ export const useGameStore = create<GameStoreState>()(
             /** Set screen shake state */
             setIsShaking: (isShaking) => set({ isShaking }, false, 'setIsShaking'),
 
+            /** Set countdown visibility */
+            setShowCountdown: (show) => set({ showCountdown: show }, false, 'setShowCountdown'),
+
+            /** Set countdown number */
+            setGameCountdown: (countdown) => set({ gameCountdown: countdown }, false, 'setGameCountdown'),
+
             /** Set local player index */
             setMyPlayerIndex: (index) => set({ myPlayerIndex: index }, false, 'setMyPlayerIndex'),
 
@@ -147,6 +157,8 @@ export const useGameStore = create<GameStoreState>()(
                 payoutProof: null,
                 mySelectedColor: null,
                 isShaking: false,
+                showCountdown: false,
+                gameCountdown: 5,
             }, false, 'reset'),
         })),
         {

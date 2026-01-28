@@ -407,6 +407,10 @@ export interface GameStoreState {
     /** Screen shake state */
     isShaking: boolean;
 
+    /** Countdown states */
+    showCountdown: boolean;
+    gameCountdown: number;
+
     /** Actions */
     setAppState: (appState: 'lobby' | 'game') => void;
     setConfig: (config: GameConfig | null) => void;
@@ -423,6 +427,8 @@ export interface GameStoreState {
     setPayoutProof: (proof: PayoutProof | null) => void;
     setMySelectedColor: (color: PlayerColor | null) => void;
     setIsShaking: (isShaking: boolean) => void;
+    setShowCountdown: (show: boolean) => void;
+    setGameCountdown: (countdown: number) => void;
     reset: () => void;
 }
 
