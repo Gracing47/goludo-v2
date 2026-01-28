@@ -1,0 +1,96 @@
+.aaa-countdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.aaa-countdown-card {
+    position: relative;
+    width: 320px;
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.aaa-countdown-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150px;
+    height: 150px;
+    background: #00f3ff;
+    filter: blur(80px);
+    opacity: 0.2;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    border-radius: 50%;
+}
+
+.aaa-countdown-content h3 {
+    font-family: 'var(--font-display)', 'system-ui', sans-serif;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+}
+
+.aaa-countdown-timer-wrapper {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aaa-countdown-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.aaa-timer-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 4;
+}
+
+.aaa-timer-progress {
+    fill: none;
+    stroke: #00f3ff;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.aaa-countdown-number {
+    font-family: 'var(--font-display)', 'system-ui', sans-serif;
+    font-size: 5rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 0 30px currentColor;
+    perspective: 1000px;
+}
+
+.aaa-countdown-content p {
+    font-family: 'var(--font-body)', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+}

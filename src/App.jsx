@@ -22,7 +22,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
-import GameCountdown from './components/GameCountdown';
+import AAACountdown from './components/AAACountdown';
+import soundManager from './services/SoundManager';
 
 import './App.css';
 
@@ -68,6 +69,7 @@ function App() {
         isShaking, setIsShaking,
         showCountdown, setShowCountdown,
         gameCountdown, setGameCountdown,
+        isMuted, setIsMuted,
         reset: resetStore,
     } = useGameStore(useShallow((s) => ({
         appState: s.appState,
@@ -475,12 +477,12 @@ function App() {
             emitMove(move.tokenIndex);
 
             // Immediate visual/audio feedback
-            if (move.isSpawn) soundManager.play('spawn');
+            if (move.isSpawn) playSound('spawn');
             else if (move.captures && move.captures.length > 0) {
-                soundManager.play('capture');
+                playSound('capture');
                 if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-            } else if (move.isHome) soundManager.play('home');
-            else soundManager.play('move');
+            } else if (move.isHome) playSound('home');
+            else playSound('move');
 
             setIsMoving(true);
             setTimeout(() => setIsMoving(false), 500);
@@ -561,31 +563,12 @@ function App() {
                 const newState = completeMoveAnimation(stateAfterMove);
 
                 // FINAL LANDING EFFECTS
-                soundManager.play('land');
+                playSound('move');
 
                 const toPos = move.toPosition;
-                let coords = null;
-                if (toPos >= 0 && toPos < MASTER_LOOP.length) {
-                    coords = MASTER_LOOP[toPos];
-                } else if (toPos >= 100 && toPos < 106) {
-                    coords = HOME_STRETCH_COORDS[gameState.activePlayer]?.[toPos - 100];
-                }
-
-                if (coords) {
-                    const newLandEffect = {
-                        id: Date.now(),
-                        color: PLAYER_COLORS[gameState.activePlayer],
-                        row: coords.r,
-                        col: coords.c
-                    };
-                    setLandEffects(prev => [...prev, newLandEffect]);
-                    setTimeout(() => {
-                        setLandEffects(prev => prev.filter(e => e.id !== newLandEffect.id));
-                    }, 500);
-                }
 
                 if (newState.bonusMoves > 0) {
-                    soundManager.play('bonus');
+                    playSound('bonus');
                 }
 
                 return newState;
@@ -594,7 +577,7 @@ function App() {
             setIsMoving(false);
             aiActionInProgress.current = false;
         }, path.length * hopDuration + 100);
-    }, [gameState, gameConfig, account]);
+    }, [gameState, gameConfig, account, playSound, triggerCapture, triggerSpawn]);
 
     // Human token click
     const handleTokenClick = useCallback((playerIndex, tokenIndex) => {
@@ -701,249 +684,245 @@ function App() {
 
 
 
-    // Game loading state - show when game state isn't ready yet
-    if (!gameState || !gameConfig) {
-        return (
-            <WarpTransition mode={gameConfig?.mode === 'web3' ? 'literal' : 'subtle'}>
-                <div className="app-loading" style={{ background: 'transparent' }}>
-                    <div className="loading-spinner">↻</div>
-                    <p style={{ fontFamily: 'var(--font-display)', letterSpacing: '2px' }}>
-                        Establishing Connection...
-                    </p>
-                    {/* Debug info in case it gets stuck */}
-                    <div className="loading-debug-info">
-                        <p>Room: {gameId?.substring(0, 10)}...</p>
-                        <p>Socket: {socketRef.current?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
-                        <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
-                    </div>
-                    <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
-                        Return to Lobby
-                    </button>
-                    {/* Version Display */}
-                    <div style={{
-                        position: 'fixed',
-                        bottom: '5px',
-                        left: '5px',
-                        fontSize: '9px',
-                        color: 'rgba(255,255,255,0.2)',
-                        pointerEvents: 'none'
-                    }}>
-                        {BUILD_VERSION}
-                    </div>
-                </div>
-            </WarpTransition>
-        );
-    }
-
-    // Helper: Calculate visual position based on board rotation
-    const getVisualPositionIndex = (playerIndex) => {
-        const rotationSteps = boardRotation / 90;
-        return (playerIndex + rotationSteps) % 4;
-    };
-
-    // Helper: Get ticker text
-    const getTickerText = () => {
-        if (gameState.gamePhase === 'WIN') return "🎉 Game Over!";
-        if (canRoll) return "🎲 Tap to Roll!";
-        if (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') {
-            return isLocalPlayerTurn ? "👆 Select Token" : `${currentPlayer?.name}'s Turn`;
-        }
-        return `${currentPlayer?.name || 'Player'}'s Turn`;
-    };
+    // ============================================
+    // RENDER LOGIC
+    // ============================================
 
     return (
-        <div className={`app aaa-layout ${isShaking ? 'shake-active' : ''}`}>
-
-            {/* 1. BOARD LAYER (Centered) */}
-            <div className="board-layer">
-                <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
-                    {tokensWithCoords.map(({ playerIdx, tokenIdx, tokenCount, coords, inYard, stackIndex, stackSize, allTokenIndices }) => {
-                        const isValid = allTokenIndices.some(idx =>
-                            gameState.validMoves?.some(m => m.tokenIndex === idx)
-                        );
-                        const isHighlighted = isValid &&
-                            playerIdx === gameState.activePlayer &&
-                            (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
-                            !isAITurn &&
-                            isLocalPlayerTurn;
-
-                        return (
-                            <Token
-                                key={`${playerIdx}-${tokenIdx}`}
-                                playerIndex={playerIdx}
-                                tokenIndex={tokenIdx}
-                                tokenCount={tokenCount}
-                                color={PLAYER_COLORS[playerIdx]}
-                                row={coords.r}
-                                col={coords.c}
-                                onClick={isHighlighted ? () => {
-                                    // If multiple tokens can move, the engine usually picks one for the player
-                                    // or we could show a mini-selector. For Ludo, usually any valid token works.
-                                    const move = gameState.validMoves.find(m => allTokenIndices.includes(m.tokenIndex));
-                                    if (move) handleTokenClick(playerIdx, move.tokenIndex);
-                                } : null}
-                                isHighlighted={isHighlighted}
-                                isMoving={isMoving && isHighlighted}
-                                inYard={inYard}
-                                stackIndex={stackIndex}
-                                stackSize={stackSize}
-                                rotation={-boardRotation}
-                                isBonusMove={activeMovingToken?.tokenIdx === tokenIdx && activeMovingToken?.playerIdx === playerIdx && activeMovingToken?.isBonus}
-                            />
-                        );
-                    })}
-
-                    {/* 💥 Capture Explosions */}
-                    {captureEffects.map(effect => (
-                        <CaptureExplosion
-                            key={effect.id}
-                            color={effect.color}
-                            row={effect.row}
-                            col={effect.col}
-                        />
-                    ))}
-
-                    {/* ✨ Spawn Sparkles */}
-                    {spawnEffects.map(effect => (
-                        <SpawnSparkle
-                            key={effect.id}
-                            color={effect.color}
-                            position={{
-                                x: (effect.col + 0.5) * (100 / 15) + '%',
-                                y: (effect.row + 0.5) * (100 / 15) + '%'
-                            }}
-                            onComplete={() => { }}
-                        />
-                    ))}
-                </Board>
-            </div>
-
-            {/* 2. HUD LAYER (Overlay) */}
-            <div className="game-hud">
-
-                {/* Turn Timer - Top Center */}
-                {gameState.gamePhase !== 'WIN' && turnTimer > 0 && (
-                    <div className="turn-timer-container">
-                        <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
-                            ⏱️ {turnTimer}s
-                        </div>
-                    </div>
-                )}
-
-                {/* A. PLAYER POD CORNER ANCHORS */}
-                <div className="player-pods-container">
-                    {gameConfig.players.map((p, idx) => {
-                        if (!p) return null; // Skip empty slots in Web3 sparse array
-                        const visualPos = getVisualPositionIndex(idx);
-                        const isActive = gameState.activePlayer === idx;
-                        const color = PLAYER_COLORS[idx];
-                        const isMe = gameConfig.mode === 'web3'
-                            ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                            : !p.isAI && idx === 0;
-
-                        return (
-                            <div key={idx} className={`pod-anchor pos-${visualPos}`}>
-                                <div className={`player-pod ${color} ${isActive ? 'active' : ''}`}>
-                                    <div className={`pod-avatar ${color}`}>
-                                        {p.isAI ? '🤖' : '👤'}
-                                        {isActive && <div className="pod-turn-indicator" />}
-                                    </div>
-                                    <span className="pod-name">{p.name}{isMe && ' •'}</span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* B. SERVER MESSAGE TOAST */}
-                {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
-
-                {/* C. WIN SCREEN (Premium Victory Celebration) */}
-                {gameState.gamePhase === 'WIN' && (
-                    <VictoryCelebration
-                        winner={gameState.winner}
-                        playerName={gameConfig.players[gameState.winner]?.name || `Player ${gameState.winner + 1}`}
-                        isWeb3Match={gameConfig.mode === 'web3'}
-                        onClose={handleBackToLobby}
+        <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
+            {/* 0. PREMIUM COUNTDOWN LAYER */}
+            <AnimatePresence>
+                {showCountdown && gameConfig && (
+                    <AAACountdown
+                        countdown={gameCountdown}
+                        playerName={
+                            gameConfig.mode === 'web3' && account
+                                ? gameConfig.players?.find(p =>
+                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                )?.name
+                                : gameConfig.players?.[0]?.name
+                        }
+                        playerColor={
+                            gameConfig.mode === 'web3' && account
+                                ? gameConfig.players?.find(p =>
+                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                )?.color
+                                : gameConfig.players?.[0]?.color || 'cyan'
+                        }
                     />
                 )}
+            </AnimatePresence>
 
-                {/* Web3 Claim Button (shown alongside victory) */}
-                {gameState.gamePhase === 'WIN' && gameConfig.mode === 'web3' && (
-                    <div className="web3-claim-overlay">
-                        {payoutProof ? (
-                            <button className="btn-claim-payout" onClick={onClaimClick} disabled={isClaiming}>
-                                {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
-                            </button>
-                        ) : (
-                            <div className="payout-verifying">
-                                <span className="spinner">⏳</span>
-                                Verifying on Blockchain...
+            {/* 1. LOBBY VIEW */}
+            {appState === 'lobby' && (
+                <WarpTransition>
+                    <div className="lobby-background">
+                        <Lobby onStartGame={handleStartGame} />
+
+                        {/* Audio Toggle (Lobby Overlay) */}
+                        <div className="audio-control-lobby" onClick={handleToggleMute} style={{ position: 'fixed', top: 20, right: 20, cursor: 'pointer', zIndex: 100 }}>
+                            {isMuted ? '🔇' : '🔊'}
+                        </div>
+
+                        {/* Version Overlay */}
+                        <div className="version-tag" style={{ position: 'fixed', bottom: 5, right: 5, opacity: 0.3, fontSize: 10 }}>{BUILD_VERSION}</div>
+                    </div>
+                </WarpTransition>
+            )}
+
+            {/* 2. LOADING VIEW */}
+            {appState === 'game' && (!gameState || !gameConfig) && (
+                <WarpTransition mode={gameConfig?.mode === 'web3' ? 'literal' : 'subtle'}>
+                    <div className="app-loading" style={{ background: 'transparent' }}>
+                        <div className="loading-spinner">↻</div>
+                        <p style={{ fontFamily: 'var(--font-display)', letterSpacing: '2px' }}>
+                            Establishing Connection...
+                        </p>
+                        <div className="loading-debug-info">
+                            <p>Room: {gameId?.substring(0, 10)}...</p>
+                            <p>Socket: {socketRef?.current?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
+                            <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
+                        </div>
+                        <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
+                            Return to Lobby
+                        </button>
+                    </div>
+                </WarpTransition>
+            )}
+
+            {/* 3. GAME VIEW */}
+            {appState === 'game' && gameState && gameConfig && (
+                <div className={`app aaa-layout ${isShaking ? 'shake-active' : ''}`}>
+
+                    {/* 1. BOARD LAYER (Centered) */}
+                    <div className="board-layer">
+                        <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
+                            {tokensWithCoords.map(({ playerIdx, tokenIdx, tokenCount, coords, inYard, stackIndex, stackSize, allTokenIndices }) => {
+                                const isValid = allTokenIndices.some(idx =>
+                                    gameState.validMoves?.some(m => m.tokenIndex === idx)
+                                );
+                                const isHighlighted = isValid &&
+                                    playerIdx === gameState.activePlayer &&
+                                    (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
+                                    !isAITurn &&
+                                    isLocalPlayerTurn;
+
+                                return (
+                                    <Token
+                                        key={`${playerIdx}-${tokenIdx}`}
+                                        playerIndex={playerIdx}
+                                        tokenIndex={tokenIdx}
+                                        tokenCount={tokenCount}
+                                        color={PLAYER_COLORS[playerIdx]}
+                                        row={coords.r}
+                                        col={coords.c}
+                                        onClick={isHighlighted ? () => {
+                                            const move = gameState.validMoves.find(m => allTokenIndices.includes(m.tokenIndex));
+                                            if (move) handleTokenClick(playerIdx, move.tokenIndex);
+                                        } : null}
+                                        isHighlighted={isHighlighted}
+                                        isMoving={isMoving && isHighlighted}
+                                        inYard={inYard}
+                                        stackIndex={stackIndex}
+                                        stackSize={stackSize}
+                                        rotation={-boardRotation}
+                                        isBonusMove={activeMovingToken?.tokenIdx === tokenIdx && activeMovingToken?.playerIdx === playerIdx && activeMovingToken?.isBonus}
+                                    />
+                                );
+                            })}
+
+                            {/* 💥 Capture Explosions */}
+                            {captureEffects.map(effect => (
+                                <CaptureExplosion
+                                    key={effect.id}
+                                    color={effect.color}
+                                    row={effect.row}
+                                    col={effect.col}
+                                />
+                            ))}
+
+                            {/* ✨ Spawn Sparkles */}
+                            {spawnEffects.map(effect => (
+                                <SpawnSparkle
+                                    key={effect.id}
+                                    color={effect.color}
+                                    position={{
+                                        x: (effect.col + 0.5) * (100 / 15) + '%',
+                                        y: (effect.row + 0.5) * (100 / 15) + '%'
+                                    }}
+                                    onComplete={() => { }}
+                                />
+                            ))}
+                        </Board>
+                    </div>
+
+                    {/* 2. HUD LAYER (Overlay) */}
+                    <div className="game-hud">
+
+                        {/* Turn Timer - Top Center */}
+                        {gameState.gamePhase !== 'WIN' && turnTimer > 0 && (
+                            <div className="turn-timer-container">
+                                <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
+                                    ⏱️ {turnTimer}s
+                                </div>
                             </div>
                         )}
-                    </div>
-                )}
 
-                {/* D. CENTRAL DICE (Always visible during game) */}
-                {gameState.gamePhase !== 'WIN' && (
-                    <div className="central-dice-area">
-                        <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
-                            <Dice
-                                value={gameState.diceValue}
-                                onRoll={canRoll ? handleRoll : null}
-                                disabled={!canRoll}
-                                isRolling={isRolling}
+                        {/* A. PLAYER POD CORNER ANCHORS */}
+                        <div className="player-pods-container">
+                            {gameConfig.players.map((p, idx) => {
+                                if (!p) return null;
+                                const visualPos = getVisualPositionIndex(idx);
+                                const isActive = gameState.activePlayer === idx;
+                                const color = PLAYER_COLORS[idx];
+                                const isMe = gameConfig.mode === 'web3'
+                                    ? p.address?.toLowerCase() === account?.address?.toLowerCase()
+                                    : !p.isAI && idx === 0;
+
+                                return (
+                                    <div key={idx} className={`pod-anchor pos-${visualPos}`}>
+                                        <div className={`player-pod ${color} ${isActive ? 'active' : ''}`}>
+                                            <div className={`pod-avatar ${color}`}>
+                                                {p.isAI ? '🤖' : '👤'}
+                                                {isActive && <div className="pod-turn-indicator" />}
+                                            </div>
+                                            <span className="pod-name">{p.name}{isMe && ' •'}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* B. SERVER MESSAGE TOAST */}
+                        {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
+
+                        {/* C. WIN SCREEN */}
+                        {gameState.gamePhase === 'WIN' && (
+                            <VictoryCelebration
+                                winner={gameState.winner}
+                                playerName={gameConfig.players[gameState.winner]?.name || `Player ${gameState.winner + 1}`}
+                                isWeb3Match={gameConfig.mode === 'web3'}
+                                onClose={handleBackToLobby}
                             />
+                        )}
+
+                        {/* Web3 Claim Button */}
+                        {gameState.gamePhase === 'WIN' && gameConfig.mode === 'web3' && (
+                            <div className="web3-claim-overlay">
+                                {payoutProof ? (
+                                    <button className="btn-claim-payout" onClick={onClaimClick} disabled={isClaiming}>
+                                        {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
+                                    </button>
+                                ) : (
+                                    <div className="payout-verifying">
+                                        <span className="spinner">⏳</span>
+                                        Verifying on Blockchain...
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* D. CENTRAL DICE */}
+                        {gameState.gamePhase !== 'WIN' && (
+                            <div className="central-dice-area">
+                                <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
+                                    <Dice
+                                        value={gameState.diceValue}
+                                        onRoll={canRoll ? handleRoll : null}
+                                        disabled={!canRoll}
+                                        isRolling={isRolling}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* E. FLOATING MENU BUTTON */}
+                        <div className="menu-dropdown-container">
+                            <button className="menu-btn-floating" onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuOpen(!menuOpen);
+                            }}>
+                                ☰
+                            </button>
+                            {menuOpen && (
+                                <div className="menu-dropdown">
+                                    <button onClick={() => { setMenuOpen(false); window.location.href = '/lobby'; }}>
+                                        🏠 Lobby
+                                    </button>
+                                    <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
+                                        {isMuted ? '🔇 Unmute' : '🔊 Mute'}
+                                    </button>
+                                    <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
+                                        🚪 Leave Game
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                )}
-
-                {/* E. FLOATING MENU BUTTON */}
-                <div className="menu-dropdown-container">
-                    <button className="menu-btn-floating" onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(!menuOpen);
-                    }}>
-                        ☰
-                    </button>
-                    {menuOpen && (
-                        <div className="menu-dropdown">
-                            <button onClick={() => { setMenuOpen(false); window.location.href = '/lobby'; }}>
-                                🏠 Lobby
-                            </button>
-                            <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
-                                {isMuted ? '🔇 Unmute' : '🔊 Mute'}
-                            </button>
-                            <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
-                                🚪 Leave Game
-                            </button>
-                        </div>
-                    )}
                 </div>
-
-                {/* Version Display - Hidden during gameplay */}
-            </div>
-
-            {/* 3. COUNTDOWN OVERLAY (Global) */}
-            {showCountdown && gameConfig && (
-                <GameCountdown
-                    countdown={gameCountdown}
-                    playerName={
-                        gameConfig.mode === 'web3' && account
-                            ? gameConfig.players?.find(p =>
-                                p?.address?.toLowerCase() === account.address?.toLowerCase()
-                            )?.name
-                            : gameConfig.players?.[0]?.name
-                    }
-                    playerColor={
-                        gameConfig.mode === 'web3' && account
-                            ? gameConfig.players?.find(p =>
-                                p?.address?.toLowerCase() === account.address?.toLowerCase()
-                            )?.color
-                            : gameConfig.players?.[0]?.color || 'cyan'
-                    }
-                />
             )}
+
+            {/* 4. CHAT/SOCIAL OVERLAY (Future) */}
         </div>
     );
 }
