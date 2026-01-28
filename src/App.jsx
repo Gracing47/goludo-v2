@@ -1072,20 +1072,20 @@ function App() {
                             }}
                             onComplete={() => { }}
                         />
-                    {/* 🌊 Land Impact Ripples */ }
-                    {
-                            landEffects.map(effect => (
-                                <div
-                                    key={effect.id}
-                                    className="land-ripple"
-                                    style={{
-                                        gridRow: effect.row + 1,
-                                        gridColumn: effect.col + 1,
-                                        '--ripple-color': effect.color
-                                    }}
-                                />
-                            ))
-                        }
+                    ))}
+
+                    {/* 🌊 Land Impact Ripples */}
+                    {landEffects.map(effect => (
+                        <div
+                            key={effect.id}
+                            className="land-ripple"
+                            style={{
+                                gridRow: effect.row + 1,
+                                gridColumn: effect.col + 1,
+                                '--ripple-color': effect.color
+                            }}
+                        />
+                    ))}
                 </Board>
             </div>
 
