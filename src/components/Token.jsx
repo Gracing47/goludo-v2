@@ -24,11 +24,11 @@ const Token = ({
         if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
 
         if (total === 2) {
-            // Horizontal split - Extreme offsets for visibility
+            // High-separation horizontal split
             return {
-                x: index === 0 ? '-30%' : '30%',
-                y: '-5%', // Split slightly vertically too
-                scale: 0.65,
+                x: index === 0 ? '-38%' : '38%',
+                y: 1,
+                scale: 0.55,
                 zIndex: 20 + index
             };
         }
@@ -36,27 +36,27 @@ const Token = ({
         if (total === 3) {
             // Triangle layout
             const positions = [
-                { x: '-28%', y: '-28%' },
-                { x: '28%', y: '-28%' },
-                { x: '0%', y: '28%' }
+                { x: '-34%', y: '-34%' },
+                { x: '34%', y: '-34%' },
+                { x: '0%', y: '34%' }
             ];
             return {
                 ...positions[index % 3],
-                scale: 0.58,
+                scale: 0.52,
                 zIndex: 20 + index
             };
         }
 
         // 4 tokens: 2x2 grid
         const positions = [
-            { x: '-28%', y: '-28%' },
-            { x: '28%', y: '-28%' },
-            { x: '-28%', y: '28%' },
-            { x: '28%', y: '28%' }
+            { x: '-34%', y: '-34%' },
+            { x: '34%', y: '-34%' },
+            { x: '-34%', y: '34%' },
+            { x: '34%', y: '34%' }
         ];
         return {
             ...positions[index % 4],
-            scale: 0.52,
+            scale: 0.5,
             zIndex: 20 + index
         };
     };
@@ -143,7 +143,7 @@ const Token = ({
                 <div className="token-shine" />
                 <div className="token-center-dot" />
 
-                {/* 🔢 Stack Count Badge (for same color collapse) */}
+                {/* 🔢 Stack Count Badge (moved to corner for visibility) */}
                 {tokenCount > 1 && (
                     <div className="token-stack-badge">
                         {tokenCount}

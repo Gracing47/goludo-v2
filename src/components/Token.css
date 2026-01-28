@@ -19,24 +19,28 @@
 
 .token-stack-badge {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.85);
+    top: -5px;
+    right: -5px;
+    background: rgba(0, 0, 0, 0.9);
     color: #fff;
     font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
-    font-weight: 800;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 900;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
-    border: 1.5px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
     z-index: 10;
+}
+
+/* Separation for multi-player overlaps */
+.token.stacked .token-inner {
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
 
 @media (max-width: 480px) {
