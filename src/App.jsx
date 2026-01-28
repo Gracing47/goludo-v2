@@ -273,8 +273,6 @@ function App() {
         }
     }, [gameState?.diceValue, isRolling]);
 
-    // Sound Mute State
-    const [isMuted, setIsMuted] = useState(false); // Updated to use simple local state for mute toggle
 
     // Menu Dropdown State
     const [menuOpen, setMenuOpen] = useState(false);

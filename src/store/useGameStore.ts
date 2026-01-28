@@ -60,6 +60,9 @@ export const useGameStore = create<GameStoreState>()(
             /** Server message toast */
             serverMsg: null,
 
+            /** Mute state */
+            isMuted: false,
+
             /** Socket.io instance for multiplayer */
             socket: null,
 
@@ -141,6 +144,9 @@ export const useGameStore = create<GameStoreState>()(
             setPayoutProof: (proof) => set({ payoutProof: proof }, false, 'setPayoutProof'),
             /** Set user selected color */
             setMySelectedColor: (color) => set({ mySelectedColor: color }, false, 'setMySelectedColor'),
+
+            /** Set sound mute state */
+            setIsMuted: (isMuted) => set({ isMuted }, false, 'setIsMuted'),
 
             /** Reset all state to initial values */
             reset: () => set({
