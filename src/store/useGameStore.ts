@@ -142,8 +142,7 @@ export const useGameStore = create<GameStoreState>()(
 
             /** Set payout proof for Web3 claims */
             setPayoutProof: (proof) => set({ payoutProof: proof }, false, 'setPayoutProof'),
-            /** Set user selected color */
-            setMySelectedColor: (color) => set({ mySelectedColor: color }, false, 'setMySelectedColor'),
+
 
             /** Set sound mute state */
             setIsMuted: (isMuted) => set({ isMuted }, false, 'setIsMuted'),
