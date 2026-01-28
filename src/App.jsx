@@ -790,6 +790,13 @@ function App() {
         const isBonus = gameState.gamePhase === 'BONUS_MOVE';
         const hopDuration = isBonus ? 160 : 320;
 
+        // 🎬 START ANIMATION TRACKING (For UI flags like isBonusMove)
+        setActiveMovingToken({
+            playerIdx: gameState.activePlayer,
+            tokenIdx: move.tokenIndex,
+            isBonus: isBonus
+        });
+
         // 🎬 STEP-BY-STEP ANIMATION LOOP
         path.forEach((pos, index) => {
             setTimeout(() => {

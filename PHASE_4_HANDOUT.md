@@ -19,8 +19,9 @@ This project follows the **Antigravity AI Orchestrator** protocol.
 1.  **Web3 Session Persistence:** Implemented a robust "Watchdog" system in `App.jsx` that automatically re-establishes the socket connection.
 2.  **Sparse Array & Win Fix:** Corrected `checkWinner` and App logic to handle `[null, null, null, null]` player arrays, ensuring Blue can win even if Red is missing.
 3.  **AAA Juice (Visual Polish):** 
-    *   **Token Stacking 2.0:** Dynamic offsets for multiple colors on one cell (1-4 tokens) and collapse badges for same-color stacks.
-    *   **Shaders & Effects:** Added "Liquid Glass" token style, floating animations for active tokens, and landing ripple effects.
+    *   **"Hoppy" Animations:** Tokens now jump step-by-step through each cell on their path instead of flying. Bonus moves (+10/+20) trigger a 2x faster hopping speed.
+    *   **Token Stacking 3.0:** Refined side-by-side stacking (38% offset) ONLY active on **Safe Zones (Stars)**. On normal cells, tokens are grouped with a centered count-badge.
+    *   **Z-Index Intelligence:** The active player's tokens now always float on the highest layer (z-index) to ensure they are clickable even when shared with opponents.
     *   **Combat Feedback:** Implemented a high-impact **Screen Shake** effect and capture explosions.
     *   **Cinematic Warp:** Upgraded the "Establishing Connection" wait to a cinematic vortex transition.
 4.  **UI Refinement:** Automated MOVE-UX (auto-executes if only 1 move exists) and refined `gameConfig` synchronization.

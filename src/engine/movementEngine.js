@@ -103,63 +103,7 @@ export function calculateDestinationWithPath(state, playerIndex, currentPos, ste
     return { destination: path[targetIndex], path: traversePath };
 }
 
-export function calculateDestination(state, playerIndex, currentPos, steps) {
-    const path = PLAYER_PATHS[playerIndex];
-    if (!path) {
-        console.error("Missing path for player", playerIndex);
-        return null;
-    }
 
-    // Find current index in the pre-calculated path array
-    const currentIndex = path.indexOf(currentPos);
-
-    if (currentIndex === -1) {
-        console.error(`Token at invalid position ${currentPos} for Player ${playerIndex}`);
-        return null;
-    }
-
-    // Target index in the path array
-    const targetIndex = currentIndex + steps;
-
-    // CHECK: Overshot Goal
-    if (targetIndex >= path.length) {
-        // Strict exact-entry rule
-        if (RULES.EXACT_HOME_ENTRY) {
-            // If we land EXACTLY on the last index (which is goal-1 usually? No, let's check path gen)
-            // generatePath includes 100-105. 105 is the last one.
-            // If targetIndex == path.length - 1, we are on the Goal Cell (105).
-            // If targetIndex > path.length - 1, we Overshot.
-            logMove(`Overshot goal. Req: ${path.length - 1 - currentIndex}, Rolled: ${steps}`);
-            return null;
-        } else {
-            return POSITION.FINISHED;
-        }
-    }
-
-    // CHECK: Landed on Goal (Last Path Cell)
-    // Assuming the last cell in PLAYER_PATHS is the final goal tile (105)
-    // If we land on it, we are FINISHED.
-    if (targetIndex === path.length - 1) {
-        return POSITION.FINISHED;
-    }
-
-    // CHECK: Path Blockades
-    // We must check every step from (currentIndex + 1) up to targetIndex
-    for (let i = currentIndex + 1; i <= targetIndex; i++) {
-        const stepPos = path[i];
-
-        // Blockade check
-        // Note: You cannot pass OR land on a blockade of opponents?
-        // Standard Ludo: A blockade (2 tokens) blocks ALL passing.
-        // Even your own? Usually yes.
-        if (isBlockedByBlockade(state, playerIndex, stepPos)) {
-            logMove(`Blocked at ${stepPos} by blockade`);
-            return null;
-        }
-    }
-
-    return path[targetIndex];
-}
 
 export function isBlockedByBlockade(state, movingPlayer, position) {
     if (!RULES.BLOCKADE_STRICT) return false;

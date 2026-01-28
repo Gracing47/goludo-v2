@@ -2,8 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import './Token.css';
 
-
-
 const Token = ({
     playerIndex,
     tokenIndex,
