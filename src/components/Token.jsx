@@ -17,7 +17,8 @@ const Token = ({
     inYard,
     stackIndex = 0,
     stackSize = 1,
-    rotation = 0
+    rotation = 0,
+    isBonusMove = false
 }) => {
     // Grid-based positioning for stacked tokens (Different Players)
     const getStackOffset = (index, total) => {
@@ -81,7 +82,7 @@ const Token = ({
                 scale: [1, 1.15, 0.95, 1], // Compression on landing
                 rotate: [0, 5, -5, 0], // Subtle mid-air wobble
                 transition: {
-                    duration: 0.4,
+                    duration: isBonusMove ? 0.15 : 0.35,
                     times: [0, 0.4, 0.8, 1],
                     ease: "easeOut"
                 }

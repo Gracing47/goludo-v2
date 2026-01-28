@@ -39,6 +39,7 @@ export function calculateMove(state, playerIndex, tokenIndex, steps) {
                 fromPosition: position,
                 toPosition: startPos,
                 isSpawn: true,
+                traversePath: [startPos], // Spawn is a single hop
                 captures: getCapturesAt(state, playerIndex, startPos)
             };
         }
@@ -51,22 +52,55 @@ export function calculateMove(state, playerIndex, tokenIndex, steps) {
     }
 
     // 3. Calculate Board Destination
-    const destination = calculateDestination(state, playerIndex, position, steps);
+    const result = calculateDestinationWithPath(state, playerIndex, position, steps);
 
-    if (destination === null) {
+    if (result === null) {
         return null;
     }
 
     return {
         tokenIndex,
         fromPosition: position,
-        toPosition: destination,
+        toPosition: result.destination,
+        traversePath: result.path,
         isSpawn: false,
-        isHome: destination === POSITION.FINISHED,
-        captures: (destination >= 0 && destination < MAIN_PATH_LENGTH)
-            ? getCapturesAt(state, playerIndex, destination)
+        isHome: result.destination === POSITION.FINISHED,
+        captures: (result.destination >= 0 && result.destination < MAIN_PATH_LENGTH)
+            ? getCapturesAt(state, playerIndex, result.destination)
             : []
     };
+}
+
+export function calculateDestinationWithPath(state, playerIndex, currentPos, steps) {
+    const path = PLAYER_PATHS[playerIndex];
+    if (!path) return null;
+
+    const currentIndex = path.indexOf(currentPos);
+    if (currentIndex === -1) return null;
+
+    const targetIndex = currentIndex + steps;
+    const traversePath = [];
+
+    // CHECK: Overshot Goal
+    if (targetIndex >= path.length) {
+        if (RULES.EXACT_HOME_ENTRY) return null;
+        else {
+            // Fill path up to goal
+            for (let i = currentIndex + 1; i < path.length; i++) {
+                traversePath.push(path[i]);
+            }
+            return { destination: POSITION.FINISHED, path: traversePath };
+        }
+    }
+
+    // CHECK: Path Blockades & Fill Traverse Path
+    for (let i = currentIndex + 1; i <= targetIndex; i++) {
+        const stepPos = path[i];
+        if (isBlockedByBlockade(state, playerIndex, stepPos)) return null;
+        traversePath.push(stepPos);
+    }
+
+    return { destination: path[targetIndex], path: traversePath };
 }
 
 export function calculateDestination(state, playerIndex, currentPos, steps) {

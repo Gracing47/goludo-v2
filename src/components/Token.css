@@ -19,8 +19,9 @@
 
 .token-stack-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background: rgba(0, 0, 0, 0.9);
     color: #fff;
     font-family: 'Orbitron', sans-serif;
@@ -32,7 +33,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
     z-index: 10;
 }
@@ -69,9 +70,13 @@
     overflow: hidden;
 }
 
-/* Removed center dot for standard look */
 .token-center-dot {
-    display: none;
+    position: absolute;
+    inset: 32%;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 10px white;
+    opacity: 0.6;
 }
 
 .token-shine {

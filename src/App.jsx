@@ -250,6 +250,9 @@ function App() {
         return canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
     }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
+    // Moving token path state: { playerIdx, tokenIdx, path: [] } | null
+    const [activeMovingToken, setActiveMovingToken] = useState(null);
+
     // Effect: Haptic feedback on rolling a 6
     useEffect(() => {
         if (gameState?.diceValue === 6 && !isRolling) {
@@ -777,16 +780,42 @@ function App() {
         }
 
         setIsMoving(true);
-        setGameState(prev => moveToken(prev, move));
 
+        const path = move.traversePath || [move.toPosition];
+        const playerIdx = gameState.activePlayer;
+        const tokenIdx = move.tokenIndex;
+
+        // Dynamic speed: Bonus moves are 2x faster
+        const isBonus = gameState.gamePhase === 'BONUS_MOVE';
+        const hopDuration = isBonus ? 160 : 320;
+
+        // 🎬 STEP-BY-STEP ANIMATION LOOP
+        path.forEach((pos, index) => {
+            setTimeout(() => {
+                setGameState(prev => {
+                    const newTokens = prev.tokens.map(arr => [...arr]);
+                    newTokens[playerIdx][tokenIdx] = pos;
+
+                    // Audio tick for each step (except last)
+                    if (index < path.length - 1) {
+                        soundManager.play('move');
+                    }
+
+                    return { ...prev, tokens: newTokens };
+                });
+            }, index * hopDuration);
+        });
+
+        // 🏁 FINAL COMPLETION (Capture, Bonus, Finish)
         setTimeout(() => {
             setGameState(prev => {
-                const newState = completeMoveAnimation(prev);
+                // moveToken handles actual captures and toPosition state
+                const stateAfterMove = moveToken(prev, move);
+                const newState = completeMoveAnimation(stateAfterMove);
 
-                // Audio feedback based on outcome
+                // FINAL LANDING EFFECTS
                 soundManager.play('land');
 
-                // 🔊 ADDED: Land Impact Effect
                 const toPos = move.toPosition;
                 let coords = null;
                 if (toPos >= 0 && toPos < MASTER_LOOP.length) {
@@ -814,9 +843,10 @@ function App() {
 
                 return newState;
             });
+
             setIsMoving(false);
             aiActionInProgress.current = false;
-        }, 400);
+        }, path.length * hopDuration + 100);
     }, [gameState, gameConfig, account]);
 
     // Human token click
@@ -1054,6 +1084,7 @@ function App() {
                                 stackIndex={stackIndex}
                                 stackSize={stackSize}
                                 rotation={-boardRotation}
+                                isBonusMove={activeMovingToken?.tokenIdx === tokenIdx && activeMovingToken?.playerIdx === playerIdx && activeMovingToken?.isBonus}
                             />
                         );
                     })}
