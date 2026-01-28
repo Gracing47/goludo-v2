@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useGameSocket } from './hooks/useGameSocket';
 import { ethers } from 'ethers';
 import Lobby from './components/Lobby';
