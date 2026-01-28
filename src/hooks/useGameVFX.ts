@@ -68,7 +68,11 @@ export const useGameVFX = () => {
      * Sound wrapper for common actions
      */
     const playSound = useCallback((type) => {
-        soundManager.play(type);
+        try {
+            soundManager.play(type);
+        } catch (error) {
+            console.warn(`[VFX] Failed to play sound '${type}':`, error);
+        }
     }, []);
 
     /**

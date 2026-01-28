@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VictoryConfetti } from './ParticleEffects';
-import soundManager from '../services/SoundManager';
+import { useGameVFX } from '../hooks/useGameVFX';
 import './VictoryCelebration.css';
 
 // Color map
@@ -25,13 +25,14 @@ export default function VictoryCelebration({
 }) {
     const [showContent, setShowContent] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const { playSound } = useGameVFX();
 
     const winnerData = PLAYER_COLORS[winner] || PLAYER_COLORS[0];
 
     useEffect(() => {
         if (winner !== null && winner !== undefined) {
             // Play victory sound
-            soundManager.play('win');
+            playSound('win');
 
             // Staggered reveal
             setTimeout(() => setShowContent(true), 200);

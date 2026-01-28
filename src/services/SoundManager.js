@@ -282,6 +282,33 @@ class SoundManager {
     isMuted() {
         return this.muted;
     }
+
+    /**
+     * Explicitly set mute state (for syncing with global store)
+     * @param {boolean} isMuted 
+     */
+    setMuted(isMuted) {
+        if (this.muted === isMuted) return; // No change
+
+        this.muted = isMuted;
+        localStorage.setItem('goludo_muted', this.muted);
+
+        if (this.muted) {
+            if (this.bgm) this.bgm.pause();
+            if (this.audioCtx.state === 'running') {
+                this.audioCtx.suspend().catch(e => console.warn('Audio suspend failed', e));
+            }
+        } else {
+            if (this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume().catch(e => console.warn('Audio resume failed', e));
+            }
+            if (this.bgm) {
+                this.bgm.play().catch(e => console.log('BGM Play failed:', e));
+            } else {
+                this.playBGM();
+            }
+        }
+    }
 }
 
 // Export a single instance

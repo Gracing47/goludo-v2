@@ -11,7 +11,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 
-const BUILD_VERSION = "v4.3 - Robust Reconnect";
+const BUILD_VERSION = "v4.3.1 - Robust Audio Fixed";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
@@ -23,7 +23,7 @@ import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
 import AAACountdown from './components/AAACountdown';
-import soundManager from './services/SoundManager';
+import AAACountdown from './components/AAACountdown';
 
 import './App.css';
 
@@ -279,10 +279,24 @@ function App() {
     // Menu Dropdown State
     const [menuOpen, setMenuOpen] = useState(false);
 
+    // Sync Mute State with SoundManager
+    useEffect(() => {
+        // We import soundManager dynamically or just use the hook context if we refactored fully
+        // But since SoundManager is a singleton, we can just access the global instance
+        // via the useGameVFX hook or import it inside the effect if strictly needed.
+        // Or better: Let's trust useGameVFX to handle this, OR refactor SoundManager to be a true singleton accessible locally without crash.
+        // Actually, preventing the import at top level avoids the ReferenceError if the file execution order is wrong.
+        // BUT, the ReferenceError was "ReferenceError: soundManager is not defined", which suggests it wasn't initialized.
+
+        import('./services/SoundManager').then(module => {
+            module.default.setMuted(isMuted);
+        }).catch(err => console.warn("SoundManager sync failed", err));
+
+    }, [isMuted]);
+
     const handleToggleMute = useCallback(() => {
-        const newMuted = soundManager.toggleMute();
-        setIsMuted(newMuted);
-    }, []);
+        setIsMuted(prev => !prev);
+    }, [setIsMuted]);
 
     const handleInteraction = useCallback(() => {
         playSound('bgm'); // Assuming we add a bgm case or handle it
@@ -557,25 +571,32 @@ function App() {
 
         // 🏁 FINAL COMPLETION (Capture, Bonus, Finish)
         setTimeout(() => {
-            setGameState(prev => {
-                // moveToken handles actual captures and toPosition state
-                const stateAfterMove = moveToken(prev, move);
-                const newState = completeMoveAnimation(stateAfterMove);
+            try {
+                setGameState(prev => {
+                    // moveToken handles actual captures and toPosition state
+                    const stateAfterMove = moveToken(prev, move);
+                    const newState = completeMoveAnimation(stateAfterMove);
 
-                // FINAL LANDING EFFECTS
-                playSound('move');
+                    // FINAL LANDING EFFECTS
+                    playSound('move');
 
-                const toPos = move.toPosition;
+                    const toPos = move.toPosition;
 
-                if (newState.bonusMoves > 0) {
-                    playSound('bonus');
-                }
+                    if (newState.bonusMoves > 0) {
+                        playSound('bonus');
+                    }
 
-                return newState;
-            });
-
-            setIsMoving(false);
-            aiActionInProgress.current = false;
+                    return newState;
+                });
+            } catch (error) {
+                console.error("Move execution error:", error);
+                // Force reset if something blows up
+                setServerMsg("⚠️ Move error recovering...");
+                setTimeout(() => setServerMsg(null), 3000);
+            } finally {
+                setIsMoving(false);
+                aiActionInProgress.current = false;
+            }
         }, path.length * hopDuration + 100);
     }, [gameState, gameConfig, account, playSound, triggerCapture, triggerSpawn]);
 
