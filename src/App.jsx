@@ -702,6 +702,18 @@ function App() {
         }
     }, [payoutProof, isClaiming, handleClaimPayout]);
 
+    /**
+     * Helper: Calculate visual rotation for player pods (0-3)
+     * Adjusts the index based on the board's visual rotation so names match corners.
+     */
+    const getVisualPositionIndex = useCallback((rawIndex) => {
+        // boardRotation is in degrees (0, 90, 180, 270)
+        // Each 90 degrees shifts the perspective by 1 spot
+        const rotationSteps = (boardRotation / 90) % 4;
+        // Formula: (OriginalIndex + RotationSteps) % 4
+        return (rawIndex + rotationSteps + 4) % 4;
+    }, [boardRotation]);
+
 
 
     // ============================================
