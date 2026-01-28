@@ -404,6 +404,9 @@ export interface GameStoreState {
     /** User selected color from lobby */
     mySelectedColor: PlayerColor | null;
 
+    /** Screen shake state */
+    isShaking: boolean;
+
     /** Actions */
     setAppState: (appState: 'lobby' | 'game') => void;
     setConfig: (config: GameConfig | null) => void;
@@ -419,6 +422,7 @@ export interface GameStoreState {
     setMyPlayerIndex: (index: number | null) => void;
     setPayoutProof: (proof: PayoutProof | null) => void;
     setMySelectedColor: (color: PlayerColor | null) => void;
+    setIsShaking: (isShaking: boolean) => void;
     reset: () => void;
 }
 

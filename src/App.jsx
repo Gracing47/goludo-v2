@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { io } from 'socket.io-client';
+import { useGameSocket } from './hooks/useGameSocket';
 import { ethers } from 'ethers';
 import Lobby from './components/Lobby';
 import Board from './components/Board';
@@ -15,8 +15,8 @@ const BUILD_VERSION = "v4.3 - Robust Reconnect";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
-import soundManager from './services/SoundManager';
-import { useLudoWeb3 } from './hooks/useLudoWeb3';
+import { useGameVFX } from './hooks/useGameVFX';
+import { useGameAI } from './hooks/useGameAI';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
@@ -85,8 +85,7 @@ function App() {
         setTurnTimer: s.setTurnTimer,
         payoutProof: s.payoutProof,
         setPayoutProof: s.setPayoutProof,
-        socket: s.socket,
-        setSocket: s.setSocket,
+        isShaking: s.isShaking,
         reset: s.reset,
     })));
 
@@ -94,11 +93,11 @@ function App() {
     const navigate = useNavigate();
     const { roomId: gameId } = useParams();
 
-    // Ref to prevent double AI actions
-    const aiActionInProgress = useRef(false);
+    // Web3 Hooks
+    const { account, handleClaimPayout } = useLudoWeb3();
 
-    // Socket ref for direct access
-    const socketRef = useRef(null);
+    // Socket Hook
+    const { connect: socketConnect, emitRoll, emitMove } = useGameSocket(gameId, account);
 
     // Sync isRolling to ref for safety timeouts
     const isRollingRef = useRef(isRolling);
@@ -107,15 +106,15 @@ function App() {
     // Local state for claiming (not needed in global store)
     const [isClaiming, setIsClaiming] = useState(false);
 
-    // Countdown state for pre-game animation
-    const [showCountdown, setShowCountdown] = useState(false);
-    const [countdown, setCountdown] = useState(5);
-
-    // Screen Shake effect
-    const [isShaking, setIsShaking] = useState(false);
-
-    // Web3 Hook
-    const { account, handleClaimPayout } = useLudoWeb3();
+    // VFX Hook
+    const {
+        captureEffects,
+        spawnEffects,
+        triggerCapture,
+        triggerSpawn,
+        playSound,
+        triggerPenalty
+    } = useGameVFX();
 
     // ============================================
     // DATA DERIVATION (Memos & Helpers)
@@ -263,17 +262,8 @@ function App() {
         }
     }, [gameState?.diceValue, isRolling]);
 
-    // Capture explosion effect state: { id, color, row, col }[]
-    const [captureEffects, setCaptureEffects] = useState([]);
-
-    // Spawn sparkle effect state: { id, color, row, col }[]
-    const [spawnEffects, setSpawnEffects] = useState([]);
-
-    // Land impact effect state: { id, color, row, col }[]
-    const [landEffects, setLandEffects] = useState([]);
-
     // Sound Mute State
-    const [isMuted, setIsMuted] = useState(soundManager.isMuted());
+    const [isMuted, setIsMuted] = useState(false); // Updated to use simple local state for mute toggle
 
     // Menu Dropdown State
     const [menuOpen, setMenuOpen] = useState(false);
@@ -284,11 +274,9 @@ function App() {
     }, []);
 
     const handleInteraction = useCallback(() => {
-        if (!soundManager.isMuted()) {
-            soundManager.playBGM();
-        }
+        playSound('bgm'); // Assuming we add a bgm case or handle it
         window.removeEventListener('click', handleInteraction);
-    }, []);
+    }, [playSound]);
 
     // Initialize Audio & Global Events
     useEffect(() => {
@@ -310,210 +298,7 @@ function App() {
         aiActionInProgress.current = false;
 
         if (config.mode === 'web3') {
-            const roomId = config.roomId;
-            const targetAddr = account?.address || 'anonymous';
-            const currentSocket = socketRef.current;
-
-            const isMatchingSocket = currentSocket &&
-                currentSocket._targetRoom === roomId &&
-                currentSocket._targetAddr === targetAddr;
-
-            // If we already have a matching socket, don't re-init
-            if (isMatchingSocket) {
-                return;
-            }
-
-            // Cleanup existing WRONG or permanently DEAD socket if any
-            if (currentSocket) {
-                console.log('🔌 Cleaning up old/dead socket before reconnect...');
-                currentSocket.disconnect();
-            }
-
-            console.log('🌐 Web3 Match: Connecting to socket...');
-            aiActionInProgress.current = false;
-
-            const socket = io(SOCKET_URL, {
-                query: { roomId: config.roomId, userAddress: account?.address || 'anonymous' },
-                reconnection: true,
-                reconnectionAttempts: Infinity,
-                reconnectionDelay: 1000,
-            });
-
-            // Tag socket for persistence checks
-            socket._targetRoom = config.roomId;
-            socket._targetAddr = account?.address || 'anonymous';
-
-            socketRef.current = socket;
-            setSocket(socket);
-
-            socket.on('connect', () => {
-                console.log('✅ Socket connected! ID:', socket.id);
-                console.log('📤 Emitting join_match for room:', config.roomId);
-                socket.emit('join_match', {
-                    roomId: config.roomId,
-                    playerAddress: account?.address
-                });
-            });
-
-            socket.on('connect_error', (error) => {
-                console.error('❌ Socket connection error:', error.message);
-                setServerMsg(`📡 Connection error: ${error.message}`);
-            });
-
-            socket.on('game_error', (error) => {
-                console.error('❌ Game error:', error.message);
-                setServerMsg(`❌ ${error.message}`);
-                setTimeout(() => setServerMsg(null), 5000);
-            });
-
-            socket.on('disconnect', (reason) => {
-                console.warn('🔌 Socket disconnected:', reason);
-                if (reason === "io server disconnect" || reason === "transport close") {
-                    setServerMsg("🔌 Connection lost. Reconnecting...");
-                }
-            });
-
-            socket.on('dice_rolled', ({ value, playerIndex }) => {
-                console.log(`🎲 Socket Event: dice_rolled value=${value} for player=${playerIndex}`);
-                // Update diceValue immediately so the 3D dice knows where to land after the roll
-                updateState({ diceValue: value });
-                setIsRolling(true);
-                if (value !== 6) setServerMsg(null);
-                setTimeout(() => setIsRolling(false), 700); // 700ms matches Dice.css animation duration
-            });
-
-            socket.on('state_update', (update) => {
-                if (update.msg) setServerMsg(update.msg);
-                updateState(update);
-
-                // Safety: Clear visual locks on every server update
-                // Skip if we are mid-animation for a roll just started
-                if (update.gamePhase !== 'ROLL_DICE') {
-                    setIsRolling(false);
-                }
-                setIsMoving(false);
-            });
-
-            socket.on('turn_timer_start', ({ timeoutMs }) => {
-                setTurnTimer(Math.floor(timeoutMs / 1000));
-            });
-
-            socket.on('turn_timer_update', ({ remainingMs, remainingSeconds }) => {
-                const seconds = remainingSeconds || Math.floor(remainingMs / 1000);
-                setTurnTimer(seconds);
-            });
-
-            // ============================================
-            // PRE-GAME COUNTDOWN EVENTS
-            // ============================================
-            socket.on('pre_game_countdown', ({ room, countdownSeconds, message }) => {
-                console.log('🎬 Pre-game countdown received:', countdownSeconds, 's');
-
-                // Only show countdown if the game hasn't started yet
-                // This prevents showing countdown on late reconnects
-                if (gameState) {
-                    console.log('⏭️ Ignoring countdown - game already in progress');
-                    return;
-                }
-
-                setCountdown(countdownSeconds);
-                setShowCountdown(true);
-                setServerMsg(message);
-
-                // Pre-configure game during countdown
-                const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-                setGameConfig({
-                    mode: 'web3',
-                    roomId: room.id,
-                    stake: room.stake,
-                    playerCount: room.players.filter(p => p).length,
-                    players: room.players.map((p, idx) => p ? ({
-                        id: idx,
-                        name: p.name,
-                        color: p.color,
-                        address: p.address,
-                        type: 'human',
-                        isAI: false
-                    }) : null)
-                });
-
-                // Set board rotation to player's perspective during countdown
-                if (account) {
-                    const myIdx = room.players.findIndex(p =>
-                        p.address?.toLowerCase() === account.address?.toLowerCase()
-                    );
-                    if (myIdx !== -1) {
-                        setBoardRotation((3 - myIdx) * 90);
-                    }
-                }
-            });
-
-            socket.on('countdown_tick', ({ remaining, connectedPlayers, totalPlayers }) => {
-                // Ignore countdown ticks if game already started
-                if (gameState) return;
-
-                console.log(`⏳ Countdown: ${remaining}s | Players: ${connectedPlayers}/${totalPlayers}`);
-                setCountdown(remaining);
-
-                if (remaining <= 0) {
-                    // Countdown finished - hide after brief delay for "GO!" animation
-                    setTimeout(() => {
-                        setShowCountdown(false);
-                    }, 800);
-                }
-            });
-
-            socket.on('game_started', (room) => {
-                const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-                const activeColors = room.players.filter(p => p).map(p => colorMap[p.color]);
-
-                setGameConfig({
-                    mode: 'web3',
-                    roomId: room.id,
-                    stake: room.stake,
-                    playerCount: room.players.filter(p => p).length,
-                    players: room.players.map((p, idx) => p ? ({
-                        id: idx,
-                        name: p.name,
-                        color: p.color,
-                        address: p.address,
-                        type: 'human',
-                        isAI: false
-                    }) : null)
-                });
-
-                setGameState(createInitialState(4, activeColors));
-                setAppState('game');
-
-                if (account) {
-                    const myIdx = room.players.findIndex(p =>
-                        p?.address?.toLowerCase() === account.address?.toLowerCase()
-                    );
-                    if (myIdx !== -1) {
-                        setBoardRotation((3 - myIdx) * 90);
-                    }
-                }
-
-                // Set turn timer if provided by server, otherwise use default
-                const timeout = room.timeoutMs || room.turnTimeout || 30000;
-                setTurnTimer(Math.floor(timeout / 1000));
-            });
-
-            socket.on('turn_timer_update', ({ remainingSeconds }) => {
-                setTurnTimer(remainingSeconds);
-            });
-
-            socket.on('turn_timeout', ({ playerName }) => {
-                setTurnTimer(0);
-                setServerMsg(`⏰ ${playerName} timed out!`);
-                setTimeout(() => setServerMsg(null), 3000);
-            });
-
-            // Cleanup on effect change
-            return () => {
-                socket.disconnect();
-                socketRef.current = null;
-            };
+            socketConnect();
         } else {
             // ============================================
             // LOCAL/AI MODE: Initialize immediately
@@ -532,7 +317,7 @@ function App() {
             const humanColorIndex = colorMap[config.players[0].color];
             setBoardRotation((3 - humanColorIndex) * 90);
         }
-    }, [account, setGameConfig, setGameState, setAppState, setBoardRotation, setIsRolling, setServerMsg, setTurnTimer, updateState]);
+    }, [socketConnect, setGameConfig, setGameState, setAppState, setBoardRotation]);
 
     // Handle Start from Lobby
     const handleStartGame = useCallback((config) => {
@@ -611,10 +396,6 @@ function App() {
 
     // Return to lobby
     const handleBackToLobby = useCallback(() => {
-        if (socketRef.current) {
-            socketRef.current.disconnect();
-            socketRef.current = null;
-        }
         resetStore();
         aiActionInProgress.current = false;
         navigate('/'); // Go back to root
@@ -627,60 +408,33 @@ function App() {
         if (phase !== 'ROLL_DICE' && phase !== 'WAITING_FOR_ROLL') return;
 
         if (gameConfig?.mode === 'web3') {
-            console.log('🎲 Web3 Dice Roll - Socket connected:', !!socketRef.current?.connected);
-
-            if (!socketRef.current?.connected) {
-                console.warn('⚠️ Socket disconnected during roll! Attempting emergency reconnect...');
-                setServerMsg("📡 Reconnecting...");
-                onGameStart(gameConfig);
-
-                // Try again in 1s or show hint
-                setTimeout(() => {
-                    if (socketRef.current?.connected) {
-                        setServerMsg("✅ Reconnected! Try rolling again.");
-                        setTimeout(() => setServerMsg(null), 3000);
-                    } else {
-                        setServerMsg("❌ Connection failed. Please check internet.");
-                        setTimeout(() => setServerMsg(null), 3000);
-                    }
-                }, 1500);
+            const success = emitRoll();
+            if (!success) {
+                setServerMsg("📡 Reconnected! Try rolling again.");
+                socketConnect();
                 return;
             }
-
             setIsRolling(true);
-            socketRef.current.emit('roll_dice', {
-                roomId: gameConfig.roomId,
-                playerAddress: account?.address
-            });
-
-            // TIMEOUT SAFETY: If server doesn't respond in 4s, unlock UI
-            setTimeout(() => {
-                if (isRollingRef.current) {
-                    setIsRolling(false);
-                    console.warn("⚠️ Network slow? Resetting roll state to allow retry.");
-                }
-            }, 4000);
             return;
         }
 
         setIsRolling(true);
-        soundManager.play('roll');
+        playSound('roll');
         setTimeout(() => {
             const newState = rollDice(gameState);
             setGameState(newState);
             setIsRolling(false);
 
-            // Handle Triple-6 penalty with visual & haptic feedback
+            // Handle Triple-6 penalty
             if (newState.message && newState.message.includes('Triple 6')) {
-                soundManager.play('penalty'); // Use penalty sound
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                triggerPenalty();
                 setServerMsg(newState.message);
                 setTimeout(() => setServerMsg(null), 2500);
             }
 
             aiActionInProgress.current = false;
         }, 800);
-    }, [gameState, isRolling, isMoving, gameConfig, account]);
+    }, [gameState, isRolling, isMoving, gameConfig, playSound, triggerPenalty]);
 
     // Execute a move (for both human and AI)
     const executeMove = useCallback((move) => {
@@ -690,28 +444,16 @@ function App() {
         // WEB3 MODE: Server is authoritative - only emit and wait
         // ============================================
         if (gameConfig?.mode === 'web3') {
-            console.log('📤 Emitting move_token to server:', { tokenIndex: move.tokenIndex, toPosition: move.toPosition });
+            emitMove(move.tokenIndex);
 
-            socketRef.current?.emit('move_token', {
-                roomId: gameConfig.roomId,
-                playerAddress: account?.address,
-                tokenIndex: move.tokenIndex
-            });
-
-            // Play sounds immediately for feedback
-            if (move.isSpawn) {
-                soundManager.play('spawn');
-            } else if (move.captures && move.captures.length > 0) {
+            // Immediate visual/audio feedback
+            if (move.isSpawn) soundManager.play('spawn');
+            else if (move.captures && move.captures.length > 0) {
                 soundManager.play('capture');
                 if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-            } else if (move.isHome) {
-                soundManager.play('home');
-            } else {
-                soundManager.play('move');
-            }
+            } else if (move.isHome) soundManager.play('home');
+            else soundManager.play('move');
 
-            // DON'T update local state - wait for state_update from server
-            // This prevents state desync between client and server
             setIsMoving(true);
             setTimeout(() => setIsMoving(false), 500);
             return;
@@ -725,23 +467,12 @@ function App() {
         if (move.isSpawn) {
             const startPos = PLAYER_START_POSITIONS[gameState.activePlayer];
             const startCoords = MASTER_LOOP[startPos];
-
             if (startCoords) {
-                const newSpawn = {
-                    id: Date.now(),
-                    color: PLAYER_COLORS[gameState.activePlayer],
-                    row: startCoords.r,
-                    col: startCoords.c
-                };
-                setSpawnEffects(prev => [...prev, newSpawn]);
-                setTimeout(() => {
-                    setSpawnEffects(prev => prev.filter(e => e.id !== newSpawn.id));
-                }, 600);
+                triggerSpawn(gameState.activePlayer, startCoords.r, startCoords.c);
             }
-            soundManager.play('spawn');
         }
 
-        // 💥 Capture Explosion: Trigger if this move has captures
+        // 💥 Capture Explosion
         if (move.captures && move.captures.length > 0) {
             let coords = null;
             const toPos = move.toPosition;
@@ -752,32 +483,12 @@ function App() {
             }
 
             if (coords) {
-                const newEffect = {
-                    id: Date.now(),
-                    color: PLAYER_COLORS[move.captures[0].player], // Victim's color
-                    row: coords.r,
-                    col: coords.c,
-                };
-                setCaptureEffects(prev => [...prev, newEffect]);
-                setTimeout(() => {
-                    setCaptureEffects(prev => prev.filter(e => e.id !== newEffect.id));
-                }, 500);
+                triggerCapture(move.captures[0].player, coords.r, coords.c);
             }
-
-            // Haptic feedback & Sound
-            if (navigator.vibrate) {
-                navigator.vibrate([50, 30, 50]);
-            }
-            soundManager.play('capture');
-
-            // 🎬 ADDED: Screen Shake
-            setIsShaking(true);
-            setTimeout(() => setIsShaking(false), 500);
         } else if (move.isHome) {
-            soundManager.play('home');
+            playSound('home');
         } else {
-            // Regular move sound
-            soundManager.play('move');
+            playSound('move');
         }
 
         setIsMoving(true);
@@ -806,7 +517,7 @@ function App() {
 
                     // Audio tick for each step (except last)
                     if (index < path.length - 1) {
-                        soundManager.play('move');
+                        playSound('move');
                     }
 
                     return { ...prev, tokens: newTokens };
@@ -869,64 +580,21 @@ function App() {
         const validMove = gameState.validMoves.find(m => m.tokenIndex === tokenIndex);
         if (!validMove) return;
 
-        soundManager.play('click');
+        playSound('click');
         executeMove(validMove);
     }, [gameState, gameConfig, executeMove]);
+
+    // AI Hook
+    const { aiActionInProgress } = useGameAI(handleRoll, executeMove);
+
 
     // Reset game
     const handleReset = useCallback(() => {
         setGameState(createInitialState(gameConfig?.playerCount || 4));
         setIsRolling(false);
         setIsMoving(false);
-        aiActionInProgress.current = false;
-    }, [gameConfig]);
-
-    // AI Turn Handler
-    useEffect(() => {
-        if (!gameState || !gameConfig || appState !== 'game') return;
-        if (isRolling || isMoving) return;
-        if (aiActionInProgress.current) return;
-        if (gameState.gamePhase === 'WIN') return;
-
-        const currentPlayer = gameConfig.players[gameState.activePlayer];
-        if (!currentPlayer?.isAI) return;
-
-        aiActionInProgress.current = true;
-
-        // AI needs to roll
-        if (gameState.gamePhase === 'ROLL_DICE') {
-            const delay = 800 + Math.random() * 500;
-            const timer = setTimeout(() => {
-                handleRoll();
-            }, delay);
-            return () => {
-                clearTimeout(timer);
-                aiActionInProgress.current = false;
-            };
-        }
-
-        // AI needs to select token
-        if ((gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') && gameState.validMoves.length > 0) {
-            const delay = 500 + Math.random() * 500;
-            const timer = setTimeout(() => {
-                const bestMove = calculateAIMove(gameState);
-                if (bestMove) {
-                    executeMove(bestMove);
-                } else {
-                    aiActionInProgress.current = false;
-                }
-            }, delay);
-            return () => {
-                clearTimeout(timer);
-                aiActionInProgress.current = false;
-            };
-        }
-
-        // If turn skipped or no moves, reset lock
-        if (gameState.validMoves.length === 0 && gameState.gamePhase !== 'ROLL_DICE') {
-            aiActionInProgress.current = false;
-        }
-    }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
+        if (aiActionInProgress) aiActionInProgress.current = false;
+    }, [gameConfig, setGameState, setIsRolling, setIsMoving, aiActionInProgress]);
 
     // ============================================
     // AUTO-MOVE LOGIC (UX Improvement)
@@ -955,7 +623,7 @@ function App() {
     useEffect(() => {
         if (appState === 'game' && gameState?.gamePhase === 'WIN') {
             // Play success sound
-            soundManager.play('win');
+            playSound('win');
 
             if (gameConfig?.mode === 'web3' && !payoutProof) {
                 const winner = gameConfig.players[gameState.winner];
@@ -1113,23 +781,10 @@ function App() {
                             key={effect.id}
                             color={effect.color}
                             position={{
-                                x: (effect.col + 0.5) * (100 / 15) + '%', // Assuming 15x15 board
+                                x: (effect.col + 0.5) * (100 / 15) + '%',
                                 y: (effect.row + 0.5) * (100 / 15) + '%'
                             }}
                             onComplete={() => { }}
-                        />
-                    ))}
-
-                    {/* 🌊 Land Impact Ripples */}
-                    {landEffects.map(effect => (
-                        <div
-                            key={effect.id}
-                            className="land-ripple"
-                            style={{
-                                gridRow: effect.row + 1,
-                                gridColumn: effect.col + 1,
-                                '--ripple-color': effect.color
-                            }}
                         />
                     ))}
                 </Board>

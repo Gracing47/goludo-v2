@@ -63,6 +63,9 @@ export const useGameStore = create<GameStoreState>()(
             /** Socket.io instance for multiplayer */
             socket: null,
 
+            /** Screen shake effect */
+            isShaking: false,
+
             /** Local player index in multiplayer match */
             myPlayerIndex: null,
 
@@ -118,6 +121,9 @@ export const useGameStore = create<GameStoreState>()(
             /** Set socket instance */
             setSocket: (socket) => set({ socket }, false, 'setSocket'),
 
+            /** Set screen shake state */
+            setIsShaking: (isShaking) => set({ isShaking }, false, 'setIsShaking'),
+
             /** Set local player index */
             setMyPlayerIndex: (index) => set({ myPlayerIndex: index }, false, 'setMyPlayerIndex'),
 
@@ -140,6 +146,7 @@ export const useGameStore = create<GameStoreState>()(
                 myPlayerIndex: null,
                 payoutProof: null,
                 mySelectedColor: null,
+                isShaking: false,
             }, false, 'reset'),
         })),
         {
