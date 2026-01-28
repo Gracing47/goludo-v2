@@ -69,13 +69,9 @@
     overflow: hidden;
 }
 
+/* Removed center dot for standard look */
 .token-center-dot {
-    position: absolute;
-    inset: 30%;
-    border-radius: 50%;
-    background: white;
-    box-shadow: 0 0 10px white;
-    opacity: 0.8;
+    display: none;
 }
 
 .token-shine {

@@ -177,20 +177,27 @@ function App() {
         const visualTokens = [];
         cellMap.forEach((playersInCell) => {
             const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
-            const stackSize = playerIndices.length;
+            const firstGroup = playersInCell.get(playerIndices[0]);
+
+            // 🛡️ Rule: Only stack side-by-side on Safe Zones (Stars), Yard, or Goal
+            const isSafePos = SAFE_POSITIONS.includes(firstGroup.position);
+            const isYard = firstGroup.inYard;
+            const isGoal = firstGroup.position === POSITION.FINISHED;
+            const allowStacking = isSafePos || isYard || isGoal;
+
+            const stackSize = allowStacking ? playerIndices.length : 1;
 
             playerIndices.forEach((playerIdx, stackIndex) => {
                 const group = playersInCell.get(playerIdx);
                 visualTokens.push({
                     playerIdx: group.playerIdx,
-                    // Use the first tokenIdx for the stable key/animation, but we'll show a badge
                     tokenIdx: group.tokenIndices[0],
                     tokenCount: group.tokenIndices.length,
                     coords: group.coords,
                     inYard: group.inYard,
-                    stackIndex,
+                    stackIndex: allowStacking ? stackIndex : 0,
                     stackSize,
-                    allTokenIndices: group.tokenIndices // For interaction logic
+                    allTokenIndices: group.tokenIndices
                 });
             });
         });
