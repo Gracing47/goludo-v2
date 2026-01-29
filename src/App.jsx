@@ -540,9 +540,9 @@ function App() {
         const playerIdx = gameState.activePlayer;
         const tokenIdx = move.tokenIndex;
 
-        // Dynamic speed: Bonus moves are 2x faster
+        // Dynamic speed: Bonus moves are 2x faster (AAA Speed Upgrade)
         const isBonus = gameState.gamePhase === 'BONUS_MOVE';
-        const hopDuration = isBonus ? 160 : 320;
+        const hopDuration = isBonus ? 100 : 200;
 
         // 🎬 START ANIMATION TRACKING (For UI flags like isBonusMove)
         setActiveMovingToken({

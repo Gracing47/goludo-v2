@@ -100,6 +100,15 @@ export function calculateDestinationWithPath(state, playerIndex, currentPos, ste
         traversePath.push(stepPos);
     }
 
+    // CHECK: Reached Goal (Exact Match)
+    if (targetIndex === path.length - 1) {
+        // Fill path up to goal
+        for (let i = currentIndex + 1; i <= targetIndex; i++) {
+            traversePath.push(path[i]);
+        }
+        return { destination: POSITION.FINISHED, path: traversePath };
+    }
+
     return { destination: path[targetIndex], path: traversePath };
 }
 
