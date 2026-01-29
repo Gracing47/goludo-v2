@@ -12,7 +12,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 
-const BUILD_VERSION = "v4.3.1 - Robust Audio Fixed";
+const BUILD_VERSION = "v4.3.4 - Web3 Socket Fix";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
@@ -109,7 +109,7 @@ function App() {
     const { account, handleClaimPayout } = useLudoWeb3();
 
     // Socket Hook
-    const { connect: socketConnect, emitRoll, emitMove } = useGameSocket(gameId, account);
+    const { socket: matchSocket, connect: socketConnect, emitRoll, emitMove } = useGameSocket(gameId, account);
 
     // Sync isRolling to ref for safety timeouts
     const isRollingRef = useRef(isRolling);
@@ -390,11 +390,11 @@ function App() {
         // Case 2: Web3 room needs socket connection
         if (roomId?.length > 20 || gameConfig?.mode === 'web3') {
             const targetAddr = account?.address || 'anonymous';
-            const currentSocket = socketRef.current;
+            const currentSocket = matchSocket;
 
             const isMatchingSocket = currentSocket &&
-                currentSocket._targetRoom === roomId &&
-                currentSocket._targetAddr === targetAddr;
+                (currentSocket as any)._targetRoom === roomId &&
+                (currentSocket as any)._targetAddr === targetAddr;
 
             // Sync check: only init if we don't have a socket object for this room at all
             if (!isMatchingSocket) {
