@@ -12,33 +12,16 @@ import { createInitialState } from '../engine/gameLogic';
  * Handles event listeners and maps server updates to the Zustand store.
  */
 export const useGameSocket = (roomId: string | undefined, account: any) => {
-    const {
-        setSocket,
-        gameState,
-        gameConfig,
-        updateState,
-        setGameState,
-        setGameConfig,
-        setAppState,
-        setBoardRotation,
-        setServerMsg,
-        setTurnTimer,
-        setIsRolling,
-        setIsMoving,
-    } = useGameStore(useShallow((s) => ({
-        setSocket: s.setSocket,
-        gameState: s.state,
-        gameConfig: s.config,
-        updateState: s.updateState,
-        setGameState: s.setGameState,
-        setGameConfig: s.setGameConfig,
-        setAppState: s.setAppState,
-        setBoardRotation: s.setBoardRotation,
-        setServerMsg: s.setServerMsg,
-        setTurnTimer: s.setTurnTimer,
-        setIsRolling: s.setIsRolling,
-        setIsMoving: s.setIsMoving,
-    })));
+    const setSocket = useGameStore((s) => s.setSocket);
+    const updateState = useGameStore((s) => s.updateState);
+    const setGameState = useGameStore((s) => s.setGameState);
+    const setConfig = useGameStore((s) => s.setConfig);
+    const setAppState = useGameStore((s) => s.setAppState);
+    const setBoardRotation = useGameStore((s) => s.setBoardRotation);
+    const setServerMsg = useGameStore((s) => s.setServerMsg);
+    const setTurnTimer = useGameStore((s) => s.setTurnTimer);
+    const setIsRolling = useGameStore((s) => s.setIsRolling);
+    const setIsMoving = useGameStore((s) => s.setIsMoving);
 
     const socketRef = useRef<Socket | null>(null);
 
@@ -63,6 +46,8 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
             reconnection: true,
             reconnectionAttempts: Infinity,
             reconnectionDelay: 1000,
+            transports: ['websocket', 'polling'], // Force websocket first for better reliability
+            timeout: 20000,
         });
 
         // Tag socket for room persistence
@@ -70,12 +55,13 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
         (socket as any)._targetAddr = targetAddr;
 
         socket.on('connect', () => {
-            console.log('✅ Socket connected! ID:', socket.id);
+            console.log('✅ Socket connected! ID:', socket.id, 'Transport:', socket.io.engine.transport.name);
             socket.emit('join_match', { roomId, playerAddress: targetAddr });
+            setServerMsg(null);
         });
 
         socket.on('connect_error', (error) => {
-            console.error('❌ Socket connection error:', error.message);
+            console.error('❌ Socket connection error:', error.message, 'Transport:', socket.io.engine.transport.name);
             setServerMsg(`📡 Connection error: ${error.message}`);
         });
 
@@ -87,9 +73,19 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
 
         socket.on('disconnect', (reason) => {
             console.warn('🔌 Socket disconnected:', reason);
-            if (reason === "io server disconnect" || reason === "transport close") {
+            if (reason === "io server disconnect" || reason === "transport close" || reason === "ping timeout") {
                 setServerMsg("🔌 Connection lost. Reconnecting...");
             }
+        });
+
+        socket.io.on("reconnect_attempt", (attempt) => {
+            console.log(`📡 Reconnection attempt #${attempt}`);
+        });
+
+        socket.io.on("reconnect", (attempt) => {
+            console.log(`✅ Reconnected on attempt #${attempt}`);
+            setServerMsg("✅ Back online!");
+            setTimeout(() => setServerMsg(null), 2000);
         });
 
         socket.on('dice_rolled', ({ value, playerIndex }) => {
@@ -125,8 +121,9 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
 
             setServerMsg(message);
 
-            setGameConfig({
+            setConfig({
                 mode: 'web3',
+                gameMode: 'classic',
                 roomId: room.id,
                 stake: room.stake,
                 playerCount: room.players.filter(p => p).length,
@@ -137,7 +134,7 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
                     address: p.address,
                     type: 'human',
                     isAI: false
-                }) : null)
+                }) : null) as any
             });
 
             // Perspective rotation
@@ -160,10 +157,11 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
             const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
             const activeColors = room.players
                 .map((p, idx) => p ? idx : null)
-                .filter(idx => idx !== null);
+                .filter(idx => idx !== null) as number[];
 
-            setGameConfig({
+            setConfig({
                 mode: 'web3',
+                gameMode: 'classic',
                 roomId: room.id,
                 stake: room.stake,
                 playerCount: room.players.filter(p => p).length,
@@ -174,10 +172,10 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
                     address: p.address,
                     type: 'human',
                     isAI: false
-                }) : null)
+                }) : null) as any
             });
 
-            setGameState(createInitialState(4, activeColors));
+            setGameState(createInitialState(4, activeColors) as any);
             setAppState('game');
 
             const myIdx = room.players.findIndex(p =>
@@ -205,7 +203,7 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
             socketRef.current = null;
             setSocket(null);
         };
-    }, [roomId, account?.address, setSocket, updateState, setIsRolling, setServerMsg, setIsMoving, setTurnTimer, setGameConfig, setGameState, setAppState, setBoardRotation]);
+    }, [roomId, account?.address, setSocket, updateState, setIsRolling, setServerMsg, setIsMoving, setTurnTimer, setConfig, setGameState, setAppState, setBoardRotation]);
 
     // Cleanup on unmount
     useEffect(() => {

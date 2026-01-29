@@ -24,15 +24,29 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://goludo.netlify.app",
+            "https://goludo-production.up.railway.app"
+        ],
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 const PORT = process.env.PORT || 3333;
 
 let activeRooms = [];
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://goludo.netlify.app",
+        "https://goludo-production.up.railway.app"
+    ],
+    credentials: true
+}));
 app.use(bodyParser.json());
 
 // Basic request logger for production monitoring
@@ -295,6 +309,8 @@ io.on('connection', (socket) => {
     console.log(`🔌 User connected: ${socket.id}`);
 
     socket.on('join_match', (data) => {
+        console.log(`📥 join_match event received:`, JSON.stringify(data));
+
         // Support both old string format and new object format
         const roomId = (typeof data === 'object') ? data.roomId : data;
         const playerAddress = (typeof data === 'object') ? data.playerAddress : null;

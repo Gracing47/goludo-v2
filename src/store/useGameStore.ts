@@ -93,11 +93,11 @@ export const useGameStore = create<GameStoreState>()(
 
             /** 
              * Set full game state
-             * Supports functional updates like setState(prev => ...)
+             * Supports functional updates like setGameState(prev => ...)
              */
-            setState: (stateOrFn) => set((prev) => ({
+            setGameState: (stateOrFn) => set((prev) => ({
                 state: typeof stateOrFn === 'function' ? stateOrFn(prev.state) : stateOrFn
-            }), false, 'setState'),
+            }), false, 'setGameState'),
 
             /** 
              * Update game state partially (merges with existing)
@@ -143,6 +143,9 @@ export const useGameStore = create<GameStoreState>()(
             /** Set payout proof for Web3 claims */
             setPayoutProof: (proof) => set({ payoutProof: proof }, false, 'setPayoutProof'),
 
+            /** Set user selected color */
+            setMySelectedColor: (color) => set({ mySelectedColor: color }, false, 'setMySelectedColor'),
+
 
             /** Set sound mute state */
             setIsMuted: (isMuted) => set({ isMuted }, false, 'setIsMuted'),
@@ -168,7 +171,6 @@ export const useGameStore = create<GameStoreState>()(
         })),
         {
             name: 'game-store',
-            enabled: import.meta.env.DEV,
         }
     )
 );

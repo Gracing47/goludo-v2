@@ -58,7 +58,7 @@ function App() {
     const {
         appState, setAppState,
         config: gameConfig, setConfig: setGameConfig,
-        state: gameState, setState: setGameState,
+        state: gameState, setGameState,
         updateState, // Import updateState action
         isRolling, setIsRolling,
         isMoving, setIsMoving,
@@ -78,7 +78,7 @@ function App() {
         config: s.config,
         setConfig: s.setConfig,
         state: s.state,
-        setState: s.setState,
+        setGameState: s.setGameState,
         updateState: s.updateState, // Map updateState
         isRolling: s.isRolling,
         setIsRolling: s.setIsRolling,
@@ -393,8 +393,8 @@ function App() {
             const currentSocket = matchSocket;
 
             const isMatchingSocket = currentSocket &&
-                (currentSocket as any)._targetRoom === roomId &&
-                (currentSocket as any)._targetAddr === targetAddr;
+                currentSocket._targetRoom === roomId &&
+                currentSocket._targetAddr === targetAddr;
 
             // Sync check: only init if we don't have a socket object for this room at all
             if (!isMatchingSocket) {

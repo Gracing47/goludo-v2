@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
 import { calculateAIMove } from '../engine/aiEngine';
+import { Move } from '../types';
 
 /**
  * useGameAI Hook
@@ -9,7 +10,7 @@ import { calculateAIMove } from '../engine/aiEngine';
  * Manages AI turn logic. Listens for game state transitions where it's 
  * an AI's turn and triggers the appropriate actions with natural delays.
  */
-export const useGameAI = (handleRoll: () => void, executeMove: (move: any) => void) => {
+export const useGameAI = (handleRoll: () => void, executeMove: (move: Move) => void) => {
     const {
         gameState,
         gameConfig,
@@ -36,50 +37,59 @@ export const useGameAI = (handleRoll: () => void, executeMove: (move: any) => vo
         // Prevent double actions
         if (aiActionInProgress.current) return;
 
-        // Stop if game is won
-        if (gameState.gamePhase === 'WIN') return;
+        // Type narrowing for phase
+        const phase = gameState.gamePhase;
+
+        // Stop if game is won or animations/other states are in progress
+        if (phase === 'WIN' || phase === 'ANIMATING') return;
 
         const currentPlayer = gameConfig.players[gameState.activePlayer];
-        if (!currentPlayer?.isAI) return;
+        const isAI = currentPlayer?.type === 'ai' || (currentPlayer as any)?.isAI;
+        if (!isAI) return;
 
         aiActionInProgress.current = true;
 
-        // --- PHASE: ROLL_DICE ---
-        if (gameState.gamePhase === 'ROLL_DICE') {
-            const delay = 800 + Math.random() * 500;
-            const timer = setTimeout(() => {
-                handleRoll();
-            }, delay);
-            return () => {
-                clearTimeout(timer);
-                aiActionInProgress.current = false;
-            };
-        }
+        switch (phase) {
+            case 'ROLL_DICE': {
+                const delay = 800 + Math.random() * 500;
+                const timer = setTimeout(() => {
+                    handleRoll();
+                }, delay);
+                return () => {
+                    clearTimeout(timer);
+                    aiActionInProgress.current = false;
+                };
+            }
 
-        // --- PHASE: SELECT_TOKEN / BONUS_MOVE ---
-        if ((gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
-            gameState.validMoves.length > 0) {
+            case 'SELECT_TOKEN':
+            case 'BONUS_MOVE': {
+                if (gameState.validMoves.length > 0) {
+                    const delay = 500 + Math.random() * 500;
+                    const timer = setTimeout(() => {
+                        const bestMove = calculateAIMove(gameState);
+                        if (bestMove) {
+                            executeMove(bestMove);
+                        } else {
+                            aiActionInProgress.current = false;
+                        }
+                    }, delay);
 
-            const delay = 500 + Math.random() * 500;
-            const timer = setTimeout(() => {
-                const bestMove = calculateAIMove(gameState);
-                if (bestMove) {
-                    executeMove(bestMove);
+                    return () => {
+                        clearTimeout(timer);
+                        aiActionInProgress.current = false;
+                    };
                 } else {
+                    // Phase is SELECT_TOKEN/BONUS_MOVE but no moves (should be handled by engine)
                     aiActionInProgress.current = false;
                 }
-            }, delay);
+                break;
+            }
 
-            return () => {
-                clearTimeout(timer);
+            default: {
+                // For any other unexpected phase
                 aiActionInProgress.current = false;
-            };
-        }
-
-        // --- PHASE: NO MOVES ---
-        // If turn skipped or no moves, reset lock so next turn can proceed
-        if (gameState.validMoves.length === 0 && gameState.gamePhase !== 'ROLL_DICE') {
-            aiActionInProgress.current = false;
+                break;
+            }
         }
     }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
 

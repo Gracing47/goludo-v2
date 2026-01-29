@@ -26,6 +26,9 @@ export interface Player {
     /** Player type (human or AI) */
     type: PlayerType;
 
+    /** Legacy flag for AI (deprecated) */
+    isAI?: boolean;
+
     /** Web3 wallet address (optional, only for web3 mode) */
     address?: string;
 
@@ -120,21 +123,40 @@ export interface GameState {
     message: string;
 }
 
+export interface Capture {
+    /** Index of the player whose token was captured */
+    player: number;
+    /** Index of the token that was captured */
+    tokenIndex: number;
+}
+
 export interface Move {
     /** Token index to move */
     tokenIndex: number;
 
-    /** Starting position */
-    from: TokenPosition;
+    /** Starting position (0-51, 100-105, or constant) */
+    fromPosition: TokenPosition;
 
-    /** Ending position */
-    to: TokenPosition;
+    /** Ending position (0-51, 100-105, or constant) */
+    toPosition: TokenPosition;
 
-    /** Whether move captures opponent */
-    captures: boolean;
+    /** List of captures made by this move */
+    captures: Capture[];
+
+    /** Whether move captures opponent (legacy flag) */
+    isCapture?: boolean;
+
+    /** Whether move is a spawn from yard */
+    isSpawn?: boolean;
+
+    /** Whether move reaches home goal */
+    isHome?: boolean;
+
+    /** Full path of steps for animation */
+    traversePath?: TokenPosition[];
 
     /** Whether move grants bonus turn */
-    grantsBonus: boolean;
+    grantsBonus?: boolean;
 }
 
 /* ============================================
@@ -407,6 +429,9 @@ export interface GameStoreState {
     /** Screen shake state */
     isShaking: boolean;
 
+    /** Sound mute state */
+    isMuted: boolean;
+
     /** Countdown states */
     showCountdown: boolean;
     gameCountdown: number;
@@ -414,7 +439,7 @@ export interface GameStoreState {
     /** Actions */
     setAppState: (appState: 'lobby' | 'game') => void;
     setConfig: (config: GameConfig | null) => void;
-    setState: (stateOrFn: GameState | null | ((prev: GameState | null) => GameState | null)) => void;
+    setGameState: (stateOrFn: GameState | null | ((prev: GameState | null) => GameState | null)) => void;
     updateState: (partial: Partial<GameState>) => void;
     setIsRolling: (isRolling: boolean) => void;
     setIsMoving: (isMoving: boolean) => void;
@@ -427,6 +452,7 @@ export interface GameStoreState {
     setPayoutProof: (proof: PayoutProof | null) => void;
     setMySelectedColor: (color: PlayerColor | null) => void;
     setIsShaking: (isShaking: boolean) => void;
+    setIsMuted: (isMuted: boolean) => void;
     setShowCountdown: (show: boolean) => void;
     setGameCountdown: (countdown: number) => void;
     reset: () => void;
