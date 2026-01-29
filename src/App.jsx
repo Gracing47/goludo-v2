@@ -191,11 +191,12 @@ function App() {
             const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
             const firstGroup = playersInCell.get(playerIndices[0]);
 
-            // 🛡️ Rule: Only stack side-by-side on Safe Zones (Stars), Yard, or Goal
+            // 🛡️ Rule: Always visually stack if multiple players are in the same cell
+            // This ensures tokens are never hidden, even if safe zone logic fails or during transit
             const isSafePos = SAFE_POSITIONS.includes(firstGroup.position);
             const isYard = firstGroup.inYard;
             const isGoal = firstGroup.position === POSITION.FINISHED;
-            const allowStacking = isSafePos || isYard || isGoal;
+            const allowStacking = playerIndices.length > 1 || isSafePos || isYard || isGoal;
 
             const stackSize = allowStacking ? playerIndices.length : 1;
 
