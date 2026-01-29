@@ -151,7 +151,7 @@ export const useGameActions = () => useGameStore(
     useShallow((s) => ({
         setAppState: s.setAppState,
         setConfig: s.setConfig,
-        setState: s.setState,
+        setGameState: s.setGameState,
         updateState: s.updateState,
         setIsRolling: s.setIsRolling,
         setIsMoving: s.setIsMoving,

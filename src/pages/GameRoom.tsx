@@ -22,13 +22,13 @@ const GameRoom: React.FC = () => {
     const navigate = useNavigate();
     const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
 
-    const { appState, config, state, setAppState, setConfig, setState } = useGameStore(useShallow((s) => ({
+    const { appState, config, state, setAppState, setConfig, setGameState } = useGameStore(useShallow((s) => ({
         appState: s.appState,
         config: s.config,
         state: s.state,
         setAppState: s.setAppState,
         setConfig: s.setConfig,
-        setState: s.setState,
+        setGameState: s.setGameState,
     })));
 
     /**
@@ -54,7 +54,7 @@ const GameRoom: React.FC = () => {
             try {
                 const { config: savedConfig, state: savedState } = JSON.parse(savedData);
                 setConfig(savedConfig);
-                setState(savedState);
+                setGameState(savedState);
                 setAppState('game');
                 setIsValidRoom(true);
                 return;
@@ -74,7 +74,7 @@ const GameRoom: React.FC = () => {
         // Unknown/invalid room - redirect to lobby
         console.warn(`Room ${roomId} not found, redirecting to lobby`);
         navigate(ROUTES.LUDO_LOBBY, { replace: true });
-    }, [roomId, state, config, navigate, setAppState, setConfig, setState]);
+    }, [roomId, state, config, navigate, setAppState, setConfig, setGameState]);
 
     // Show nothing while validating (will redirect if invalid)
     if (isValidRoom === null) {

@@ -16,10 +16,10 @@ import { createInitialState } from '../engine/gameLogic';
 const LudoLobby: React.FC = () => {
     const navigate = useNavigate();
 
-    const { setConfig, setAppState, setState } = useGameStore(useShallow((s) => ({
+    const { setConfig, setAppState, setGameState } = useGameStore(useShallow((s) => ({
         setConfig: s.setConfig,
         setAppState: s.setAppState,
-        setState: s.setState,
+        setGameState: s.setGameState,
     })));
 
     /**
@@ -37,7 +37,7 @@ const LudoLobby: React.FC = () => {
         // Create initial game state for ALL game modes
         // For Web3: This provides initial state; server updates will override via socket
         const initialState = createInitialState(config.playerCount, activeColors);
-        setState(initialState);
+        setGameState(initialState as any);
 
         // Set app to game mode
         setAppState('game');
@@ -51,7 +51,7 @@ const LudoLobby: React.FC = () => {
             const newGameId = Math.random().toString(36).substring(2, 11);
             navigate(gameRoute(newGameId));
         }
-    }, [navigate, setConfig, setAppState, setState]);
+    }, [navigate, setConfig, setAppState, setGameState]);
 
     const handleBack = useCallback(() => {
         navigate(ROUTES.LANDING);
