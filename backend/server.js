@@ -234,6 +234,11 @@ function declareWinner(io, room, winnerIdx) {
 
     console.log(`🏆 Winner Declared: ${winnerName} in room ${room.id}`);
 
+    // 📊 LEADERBOARD: Track game duration
+    const gameDurationMs = room._gameStartedAt ? Date.now() - room._gameStartedAt : 0;
+    const gameDurationSec = Math.floor(gameDurationMs / 1000);
+    console.log(`📝 Blockchain Event: GAME_DURATION | Room: ${room.id} | Duration: ${gameDurationSec}s | Winner: ${winner?.address}`);
+
     room.gameState.gamePhase = 'WIN';
     room.gameState.winner = winnerIdx;
     broadcastState(room, `🎉 ${winnerName} Wins!`);
@@ -292,6 +297,7 @@ function startGameCountdown(io, room, roomId) {
 
             // STEP 3: Start the game
             room.status = "ACTIVE";
+            room._gameStartedAt = Date.now(); // For duration tracking
             console.log(`🎮 Game Starting: Room ${roomId}`);
             console.log(`📋 Socket states:`, room.players.filter(p => p).map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
             console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter(p => p).map(p => p.address).join(', ')}`);
@@ -451,6 +457,22 @@ io.on('connection', (socket) => {
 
             let newState = moveToken(room.gameState, validMove);
             newState = completeMoveAnimation(newState);
+
+            // 📊 LEADERBOARD: Track captures
+            if (validMove.captures && validMove.captures.length > 0) {
+                const attacker = room.players[activePlayerIdx];
+                validMove.captures.forEach(capture => {
+                    const victim = room.players[capture.player];
+                    console.log(`📝 Blockchain Event: TOKEN_CAPTURED | Room: ${room.id} | Attacker: ${attacker?.address} | Victim: ${victim?.address}`);
+                });
+
+                // Track first blood (first capture in the game)
+                if (!room._firstBloodLogged) {
+                    room._firstBloodLogged = true;
+                    console.log(`📝 Blockchain Event: FIRST_BLOOD | Room: ${room.id} | Player: ${attacker?.address}`);
+                }
+            }
+
             room.gameState = newState;
 
             let msg = null;
@@ -500,6 +522,11 @@ io.on('connection', (socket) => {
                         if (playerRef && !playerRef.socketId && !playerRef.forfeited) {
                             console.log(`💀 Player ${playerRef.name} forfeited due to 15s total disconnection!`);
                             playerRef.forfeited = true;
+
+                            // 📊 LEADERBOARD: Track forfeit
+                            const winnerIdx = room.gameState.activeColors.find(idx => idx !== pIdx);
+                            const winner = room.players[winnerIdx];
+                            console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${playerRef.address} | Winner: ${winner?.address}`);
 
                             // Remove from active colors
                             room.gameState.activeColors = room.gameState.activeColors.filter(idx => idx !== pIdx);
