@@ -27,28 +27,50 @@ const FLARE_RPC_URL = process.env.FLARE_RPC_URL;
 const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS;
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
 
+// ============================================
+// GRACEFUL DEGRADATION
+// ============================================
+// If RPC URL or Vault address is missing, verification is DISABLED but server still runs
+// This allows deployment without full blockchain verification configured
+
+let VERIFICATION_ENABLED = true;
+let provider = null;
+let ludoVaultContract = null;
+let ludoVaultABI = null;
+
 if (!FLARE_RPC_URL) {
-    console.error("❌ FLARE_RPC_URL missing in .env");
-    process.exit(1);
+    console.warn("⚠️ FLARE_RPC_URL missing - On-chain verification DISABLED");
+    console.warn("   Add FLARE_RPC_URL to Railway environment variables for production security");
+    VERIFICATION_ENABLED = false;
 }
 
 if (!VAULT_ADDRESS) {
-    console.error("❌ VITE_LUDOVAULT_ADDRESS missing in .env");
-    process.exit(1);
+    console.warn("⚠️ VITE_LUDOVAULT_ADDRESS missing - On-chain verification DISABLED");
+    VERIFICATION_ENABLED = false;
 }
 
-// Initialize provider
-const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, CHAIN_ID);
+if (VERIFICATION_ENABLED) {
+    try {
+        // Initialize provider
+        provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, CHAIN_ID);
 
-// Load LudoVault ABI
-const abiPath = path.join(__dirname, "../smart-contracts/artifacts/contracts/LudoVault.sol/LudoVault.json");
-const ludoVaultArtifact = JSON.parse(fs.readFileSync(abiPath, "utf-8"));
-const ludoVaultABI = ludoVaultArtifact.abi;
+        // Load LudoVault ABI
+        const abiPath = path.join(__dirname, "../smart-contracts/artifacts/contracts/LudoVault.sol/LudoVault.json");
+        const ludoVaultArtifact = JSON.parse(fs.readFileSync(abiPath, "utf-8"));
+        ludoVaultABI = ludoVaultArtifact.abi;
 
-// Create contract instance
-const ludoVaultContract = new ethers.Contract(VAULT_ADDRESS, ludoVaultABI, provider);
+        // Create contract instance
+        ludoVaultContract = new ethers.Contract(VAULT_ADDRESS, ludoVaultABI, provider);
 
-console.log(`🔗 Contract Verifier initialized: ${VAULT_ADDRESS} on Chain ${CHAIN_ID}`);
+        console.log(`🔗 Contract Verifier initialized: ${VAULT_ADDRESS} on Chain ${CHAIN_ID}`);
+    } catch (error) {
+        console.error(`❌ Failed to initialize Contract Verifier: ${error.message}`);
+        console.warn("   On-chain verification DISABLED");
+        VERIFICATION_ENABLED = false;
+    }
+} else {
+    console.log("📋 Server running in LEGACY MODE (no blockchain verification)");
+}
 
 // ============================================
 // VERIFICATION FUNCTIONS
@@ -65,6 +87,12 @@ console.log(`🔗 Contract Verifier initialized: ${VAULT_ADDRESS} on Chain ${CHA
  * @throws {Error} - If verification fails
  */
 export async function verifyRoomCreation(roomId, txHash, expectedCreator, expectedStake) {
+    // Skip verification if not configured
+    if (!VERIFICATION_ENABLED) {
+        console.log(`⏭️ Skipping room creation verification (LEGACY MODE)`);
+        return true;
+    }
+
     try {
         // Normalize inputs
         const normalizedRoomId = roomId.toLowerCase();
@@ -139,6 +167,12 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
  * @throws {Error} - If verification fails
  */
 export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedStake) {
+    // Skip verification if not configured
+    if (!VERIFICATION_ENABLED) {
+        console.log(`⏭️ Skipping room join verification (LEGACY MODE)`);
+        return true;
+    }
+
     try {
         // Normalize inputs
         const normalizedRoomId = roomId.toLowerCase();
@@ -211,6 +245,10 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
  * @returns {Promise<Object>} - Room state object
  */
 export async function getRoomStateFromContract(roomId) {
+    if (!VERIFICATION_ENABLED) {
+        throw new Error("Contract verification not configured");
+    }
+
     try {
         const room = await ludoVaultContract.getRoom(roomId);
 
@@ -234,6 +272,11 @@ export async function getRoomStateFromContract(roomId) {
  * @returns {Promise<Array>} - Array of room objects
  */
 export async function recoverActiveRoomsFromBlockchain() {
+    if (!VERIFICATION_ENABLED) {
+        console.log(`⏭️ Session recovery skipped (verification not configured)`);
+        return [];
+    }
+
     try {
         console.log(`♻️ Recovering active rooms from blockchain...`);
 
@@ -307,5 +350,6 @@ export {
     provider,
     ludoVaultContract,
     VAULT_ADDRESS,
-    CHAIN_ID
+    CHAIN_ID,
+    VERIFICATION_ENABLED
 };
