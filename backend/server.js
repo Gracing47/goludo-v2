@@ -75,11 +75,68 @@ const broadcastState = (room, message = null) => {
 // AAA-LEVEL TURN TIMER SYSTEM
 // ============================================
 const TURN_TIMEOUT_MS = 10000; // 10 seconds
-const FORFEIT_TIMEOUT_MS = 15000; // 15 seconds for recovery before forfeit
+const FORFEIT_TIMEOUT_MS = 15000; // 15 seconds for recovery before skip counts
 const COUNTDOWN_INTERVAL_MS = 1000; // Update every second
+const MAX_SKIPS_BEFORE_FORFEIT = 3; // Player forfeits after 3 skips (AFK or disconnect)
 
 // Store both timeout and interval for each room
 const activeTurnTimers = new Map(); // roomId -> { timeoutId, intervalId, startTime, phase }
+
+/**
+ * Handles a player skip (from AFK timeout or disconnect timeout)
+ * After 3 skips, player forfeits
+ * @returns {boolean} true if player forfeited, false if still in game
+ */
+function handlePlayerSkip(io, room, playerIndex, reason = 'timeout') {
+    const player = room.players[playerIndex];
+    if (!player || player.forfeited) return true;
+
+    // Initialize skip counter if not exists
+    if (typeof player.skipCount !== 'number') {
+        player.skipCount = 0;
+    }
+
+    player.skipCount++;
+    console.log(`⏭️ Player ${player.name} skipped (${reason}). Skip count: ${player.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}`);
+    console.log(`📝 Blockchain Event: PLAYER_SKIPPED | Room: ${room.id} | Player: ${player.address} | SkipCount: ${player.skipCount} | Reason: ${reason}`);
+
+    // Check if player should forfeit
+    if (player.skipCount >= MAX_SKIPS_BEFORE_FORFEIT) {
+        console.log(`💀 Player ${player.name} forfeited after ${MAX_SKIPS_BEFORE_FORFEIT} skips!`);
+        player.forfeited = true;
+
+        // Track forfeit event
+        const winnerIdx = room.gameState.activeColors.find(idx => idx !== playerIndex);
+        const winner = room.players[winnerIdx];
+        console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
+
+        // Remove from active colors
+        room.gameState.activeColors = room.gameState.activeColors.filter(idx => idx !== playerIndex);
+        broadcastState(room, `💀 ${player.name} forfeited (${MAX_SKIPS_BEFORE_FORFEIT} skips).`);
+
+        // Check win condition
+        if (room.gameState.activeColors.length === 1) {
+            declareWinner(io, room, room.gameState.activeColors[0]);
+            return true;
+        } else if (room.gameState.activeColors.length === 0) {
+            cleanupRoom(room.id, activeRooms);
+            return true;
+        }
+
+        return true; // Player forfeited
+    }
+
+    // Broadcast skip to all players
+    io.to(room.id).emit('player_skipped', {
+        playerIndex,
+        playerName: player.name,
+        skipCount: player.skipCount,
+        maxSkips: MAX_SKIPS_BEFORE_FORFEIT,
+        reason
+    });
+
+    return false; // Player still in game
+}
 
 /**
  * Clears all timers for a room (timeout + countdown interval)
@@ -168,21 +225,28 @@ function startTurnTimer(io, room, playerIndex, phase) {
 }
 
 /**
- * Handles what happens when a turn times out
+ * Handles what happens when a turn times out (AFK - still connected but not acting)
  */
 function handleTurnTimeout(io, room, playerIndex, phase) {
     const currentPlayer = room.players[playerIndex];
 
+    // Use unified skip system - counts towards 3-skip forfeit
+    const playerForfeited = handlePlayerSkip(io, room, playerIndex, 'afk_timeout');
+
+    if (playerForfeited) {
+        // Player was removed from game, handlePlayerSkip already handled everything
+        return;
+    }
+
+    // Player still in game, proceed to next turn
     if (phase === GAME_PHASE.ROLL_DICE) {
-        // They didn't roll - skip to next player
         const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
         room.gameState.activePlayer = nextPlayerIdx;
         room.gameState.consecutiveSixes = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer?.name || 'Player'} timed out. Turn skipped.`);
+        broadcastState(room, `⏰ ${currentPlayer?.name || 'Player'} timed out. Turn skipped (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     } else if (phase === GAME_PHASE.SELECT_TOKEN || phase === GAME_PHASE.BONUS_MOVE) {
-        // They didn't select a token - forfeit move and pass turn
         const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
         room.gameState.activePlayer = nextPlayerIdx;
         room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
@@ -191,7 +255,7 @@ function handleTurnTimeout(io, room, playerIndex, phase) {
         room.gameState.consecutiveSixes = 0;
         room.gameState.bonusMoves = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited.`);
+        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     }
 }
@@ -511,48 +575,37 @@ io.on('connection', (socket) => {
                 player.socketId = null;
                 console.log(`⚠️ Player ${player.name} (${player.color}) disconnected from room ${room.id}`);
 
-                // If game is active, start a 15s forfeit watchdog for THIS specific player
+                // If game is active, start a 15s reconnect window - after which it counts as 1 skip
                 if (room.status === 'ACTIVE' && room.gameState && !player.forfeited) {
-                    console.log(`🛡️ Starting 15s forfeit watchdog for ${player.name}`);
+                    console.log(`🛡️ Starting ${FORFEIT_TIMEOUT_MS / 1000}s reconnect window for ${player.name}`);
 
-                    const forfeitTimer = setTimeout(() => {
+                    const skipTimer = setTimeout(() => {
                         const roomRef = activeRooms.find(r => r.id === room.id);
                         const playerRef = roomRef?.players[pIdx];
 
+                        // Only count skip if player is still disconnected
                         if (playerRef && !playerRef.socketId && !playerRef.forfeited) {
-                            console.log(`💀 Player ${playerRef.name} forfeited due to 15s total disconnection!`);
-                            playerRef.forfeited = true;
+                            console.log(`⏱️ Player ${playerRef.name} didn't reconnect in ${FORFEIT_TIMEOUT_MS / 1000}s - counting as skip`);
 
-                            // 📊 LEADERBOARD: Track forfeit
-                            const winnerIdx = room.gameState.activeColors.find(idx => idx !== pIdx);
-                            const winner = room.players[winnerIdx];
-                            console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${playerRef.address} | Winner: ${winner?.address}`);
+                            // Use unified skip system
+                            const playerForfeited = handlePlayerSkip(io, roomRef, pIdx, 'disconnect');
 
-                            // Remove from active colors
-                            room.gameState.activeColors = room.gameState.activeColors.filter(idx => idx !== pIdx);
-                            broadcastState(room, `💀 ${playerRef.name} forfeited (Disconnected).`);
+                            if (!playerForfeited && roomRef.gameState.activePlayer === pIdx) {
+                                // Player still in game but it was their turn - skip to next
+                                console.log(`⏭️ Disconnected player's turn - skipping to next`);
+                                const nextIdx = getNextPlayer(pIdx, roomRef.gameState.activeColors);
+                                roomRef.gameState.activePlayer = nextIdx;
+                                roomRef.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
+                                roomRef.gameState.diceValue = null;
+                                roomRef.gameState.validMoves = [];
 
-                            // Check win condition
-                            if (room.gameState.activeColors.length === 1) {
-                                declareWinner(io, room, room.gameState.activeColors[0]);
-                            } else if (room.gameState.activeColors.length === 0) {
-                                cleanupRoom(room.id, activeRooms);
-                            } else if (room.gameState.activePlayer === pIdx) {
-                                // If it was their turn, skip to next player
-                                console.log(`⏭️ Active player forfeited - skipping to next`);
-                                const nextIdx = getNextPlayer(pIdx, room.gameState.activeColors);
-                                room.gameState.activePlayer = nextIdx;
-                                room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
-                                room.gameState.diceValue = null;
-                                room.gameState.validMoves = [];
-
-                                broadcastState(room);
-                                handleNextTurn(io, room);
+                                broadcastState(roomRef);
+                                handleNextTurn(io, roomRef);
                             }
                         }
                     }, FORFEIT_TIMEOUT_MS);
 
-                    registerRoomTimer(room.id, `forfeit_${pIdx}`, forfeitTimer);
+                    registerRoomTimer(room.id, `skip_${pIdx}`, skipTimer);
                 }
             }
         });
