@@ -52,6 +52,40 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
+// ============================================
+// RATE LIMITING (Phase 6: Audit Readiness)
+// ============================================
+import rateLimit from 'express-rate-limit';
+
+// Rate limiters for different endpoint types
+const payoutLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // 10 requests per minute per IP
+    message: { error: 'Too many payout requests. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res, _next, options) => {
+        console.log(`🚫 Rate limit exceeded: ${req.ip} on ${req.path}`);
+        res.status(429).json(options.message);
+    }
+});
+
+const createRoomLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5, // 5 room creations per minute per IP
+    message: { error: 'Too many room creation requests. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+const joinRoomLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10, // 10 join attempts per minute per IP
+    message: { error: 'Too many join requests. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 // Basic request logger for production monitoring
 app.use((req, res, next) => {
     if (req.url === '/health' || req.url === '/metrics') return next();
@@ -673,7 +707,7 @@ app.get('/metrics', (req, res) => {
     });
 });
 
-app.post('/api/payout/sign', async (req, res) => {
+app.post('/api/payout/sign', payoutLimiter, async (req, res) => {
     const { roomId, winner } = req.body;
     const normalizedId = roomId?.toLowerCase();
 
@@ -713,7 +747,7 @@ app.post('/api/payout/sign', async (req, res) => {
 
 app.get('/api/rooms', (req, res) => res.json(activeRooms));
 
-app.post('/api/rooms/create', async (req, res) => {
+app.post('/api/rooms/create', createRoomLimiter, async (req, res) => {
     let { roomId, txHash, stake, maxPlayers, creatorName, creatorAddress } = req.body;
     roomId = roomId?.toLowerCase();
 
@@ -762,7 +796,7 @@ app.post('/api/rooms/create', async (req, res) => {
     res.json({ success: true, room: newRoom });
 });
 
-app.post('/api/rooms/join', async (req, res) => {
+app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     let { roomId, txHash, playerName, playerAddress, color } = req.body;
     roomId = roomId?.toLowerCase();
     const room = activeRooms.find(r => r.id?.toLowerCase() === roomId);
