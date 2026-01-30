@@ -48,6 +48,22 @@ export function clearAllRoomTimers(roomId) {
 }
 
 /**
+ * Clear a specific timer for a room
+ */
+export function clearSpecificTimer(roomId, timerType) {
+    const timers = roomTimers.get(roomId);
+    if (timers && timers[timerType]) {
+        if (timerType.includes('Interval')) {
+            clearInterval(timers[timerType]);
+        } else {
+            clearTimeout(timers[timerType]);
+        }
+        delete timers[timerType];
+        console.log(`⏹️ Cleared ${timerType} for room ${roomId}`);
+    }
+}
+
+/**
  * Check if a room should be cleaned up
  * Returns true if room is inactive and should be removed
  */

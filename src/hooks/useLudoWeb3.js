@@ -68,12 +68,14 @@ export const useLudoWeb3 = () => {
             console.log("Prepared TX:", createTx);
             console.log("Sending transaction to wallet...");
             const txResult = await sendTx(createTx);
-            console.log("Transaction confirmed:", txResult);
+            const txHash = txResult.transactionHash;
+            console.log("Transaction confirmed:", txHash);
 
             // Step C: Register Room in Backend Lobby
             console.log("Registering room in backend...");
             await syncWithBackend('rooms/create', {
                 roomId,
+                txHash,  // ✅ PHASE 5: Send transaction hash for verification
                 stake: stakeAmount,
                 maxPlayers,
                 creatorName,
@@ -109,12 +111,15 @@ export const useLudoWeb3 = () => {
                 params: [roomId],
                 value: amountInWei, // Send native C2FLR
             });
-            await sendTx(joinTx);
+            const txResult = await sendTx(joinTx);
+            const txHash = txResult.transactionHash;
+            console.log("Join transaction confirmed:", txHash);
 
             // Step C: Update Backend
             console.log("Updating backend lobby...");
             const result = await syncWithBackend('rooms/join', {
                 roomId,
+                txHash,  // ✅ PHASE 5: Send transaction hash for verification
                 playerName,
                 playerAddress: account.address,
                 color

@@ -1,0 +1,311 @@
+import { ethers } from "ethers";
+import path from "path";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
+/**
+ * CONTRACT VERIFIER MODULE
+ * 
+ * Server-side blockchain verification to prevent fake room creation/joining.
+ * Verifies that transactions actually occurred on Flare/Coston2 before
+ * accepting room operations.
+ * 
+ * @module contractVerifier
+ */
+
+// ============================================
+// CONFIGURATION
+// ============================================
+
+const FLARE_RPC_URL = process.env.FLARE_RPC_URL;
+const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS;
+const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
+
+if (!FLARE_RPC_URL) {
+    console.error("❌ FLARE_RPC_URL missing in .env");
+    process.exit(1);
+}
+
+if (!VAULT_ADDRESS) {
+    console.error("❌ VITE_LUDOVAULT_ADDRESS missing in .env");
+    process.exit(1);
+}
+
+// Initialize provider
+const provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, CHAIN_ID);
+
+// Load LudoVault ABI
+const abiPath = path.join(__dirname, "../smart-contracts/artifacts/contracts/LudoVault.sol/LudoVault.json");
+const ludoVaultArtifact = JSON.parse(fs.readFileSync(abiPath, "utf-8"));
+const ludoVaultABI = ludoVaultArtifact.abi;
+
+// Create contract instance
+const ludoVaultContract = new ethers.Contract(VAULT_ADDRESS, ludoVaultABI, provider);
+
+console.log(`🔗 Contract Verifier initialized: ${VAULT_ADDRESS} on Chain ${CHAIN_ID}`);
+
+// ============================================
+// VERIFICATION FUNCTIONS
+// ============================================
+
+/**
+ * Verifies that a room creation transaction actually occurred on-chain
+ * 
+ * @param {string} roomId - bytes32 room ID
+ * @param {string} txHash - Transaction hash to verify
+ * @param {string} expectedCreator - Expected creator address
+ * @param {number} expectedStake - Expected stake amount (in token units, not Wei)
+ * @returns {Promise<boolean>} - True if verified
+ * @throws {Error} - If verification fails
+ */
+export async function verifyRoomCreation(roomId, txHash, expectedCreator, expectedStake) {
+    try {
+        // Normalize inputs
+        const normalizedRoomId = roomId.toLowerCase();
+        const normalizedCreator = expectedCreator.toLowerCase();
+        const expectedStakeWei = ethers.parseEther(expectedStake.toString());
+
+        console.log(`🔍 Verifying room creation: ${normalizedRoomId}`);
+        console.log(`   TX Hash: ${txHash}`);
+        console.log(`   Expected Creator: ${normalizedCreator}`);
+        console.log(`   Expected Stake: ${expectedStake} (${expectedStakeWei} Wei)`);
+
+        // Fetch transaction receipt
+        const receipt = await provider.getTransactionReceipt(txHash);
+
+        if (!receipt) {
+            throw new Error("Transaction not found on blockchain");
+        }
+
+        if (receipt.status !== 1) {
+            throw new Error("Transaction failed on blockchain");
+        }
+
+        // Parse logs for RoomCreated event
+        const roomCreatedEvent = receipt.logs
+            .map(log => {
+                try {
+                    return ludoVaultContract.interface.parseLog(log);
+                } catch {
+                    return null;
+                }
+            })
+            .find(event => event && event.name === "RoomCreated");
+
+        if (!roomCreatedEvent) {
+            throw new Error("RoomCreated event not found in transaction logs");
+        }
+
+        // Verify event parameters
+        const eventRoomId = roomCreatedEvent.args.roomId.toLowerCase();
+        const eventCreator = roomCreatedEvent.args.creator.toLowerCase();
+        const eventAmount = roomCreatedEvent.args.entryAmount;
+
+        if (eventRoomId !== normalizedRoomId) {
+            throw new Error(`Room ID mismatch: expected ${normalizedRoomId}, got ${eventRoomId}`);
+        }
+
+        if (eventCreator !== normalizedCreator) {
+            throw new Error(`Creator mismatch: expected ${normalizedCreator}, got ${eventCreator}`);
+        }
+
+        if (eventAmount !== expectedStakeWei) {
+            throw new Error(`Stake amount mismatch: expected ${expectedStakeWei}, got ${eventAmount}`);
+        }
+
+        console.log(`✅ Room creation verified successfully`);
+        return true;
+
+    } catch (error) {
+        console.error(`❌ Room creation verification failed: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * Verifies that a room join transaction actually occurred on-chain
+ * 
+ * @param {string} roomId - bytes32 room ID
+ * @param {string} txHash - Transaction hash to verify
+ * @param {string} expectedJoiner - Expected joiner address
+ * @param {number} expectedStake - Expected stake amount (in token units, not Wei)
+ * @returns {Promise<boolean>} - True if verified
+ * @throws {Error} - If verification fails
+ */
+export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedStake) {
+    try {
+        // Normalize inputs
+        const normalizedRoomId = roomId.toLowerCase();
+        const normalizedJoiner = expectedJoiner.toLowerCase();
+        const expectedStakeWei = ethers.parseEther(expectedStake.toString());
+
+        console.log(`🔍 Verifying room join: ${normalizedRoomId}`);
+        console.log(`   TX Hash: ${txHash}`);
+        console.log(`   Expected Joiner: ${normalizedJoiner}`);
+        console.log(`   Expected Stake: ${expectedStake} (${expectedStakeWei} Wei)`);
+
+        // Fetch transaction receipt
+        const receipt = await provider.getTransactionReceipt(txHash);
+
+        if (!receipt) {
+            throw new Error("Transaction not found on blockchain");
+        }
+
+        if (receipt.status !== 1) {
+            throw new Error("Transaction failed on blockchain");
+        }
+
+        // Parse logs for RoomJoined event
+        const roomJoinedEvent = receipt.logs
+            .map(log => {
+                try {
+                    return ludoVaultContract.interface.parseLog(log);
+                } catch {
+                    return null;
+                }
+            })
+            .find(event => event && event.name === "RoomJoined");
+
+        if (!roomJoinedEvent) {
+            throw new Error("RoomJoined event not found in transaction logs");
+        }
+
+        // Verify event parameters
+        const eventRoomId = roomJoinedEvent.args.roomId.toLowerCase();
+        const eventOpponent = roomJoinedEvent.args.opponent.toLowerCase();
+        const eventTotalPot = roomJoinedEvent.args.totalPot;
+
+        if (eventRoomId !== normalizedRoomId) {
+            throw new Error(`Room ID mismatch: expected ${normalizedRoomId}, got ${eventRoomId}`);
+        }
+
+        if (eventOpponent !== normalizedJoiner) {
+            throw new Error(`Joiner mismatch: expected ${normalizedJoiner}, got ${eventOpponent}`);
+        }
+
+        // Total pot should be 2x stake (creator + joiner)
+        const expectedTotalPot = expectedStakeWei * 2n;
+        if (eventTotalPot !== expectedTotalPot) {
+            throw new Error(`Total pot mismatch: expected ${expectedTotalPot}, got ${eventTotalPot}`);
+        }
+
+        console.log(`✅ Room join verified successfully`);
+        return true;
+
+    } catch (error) {
+        console.error(`❌ Room join verification failed: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * Fetches the current state of a room from the smart contract
+ * 
+ * @param {string} roomId - bytes32 room ID
+ * @returns {Promise<Object>} - Room state object
+ */
+export async function getRoomStateFromContract(roomId) {
+    try {
+        const room = await ludoVaultContract.getRoom(roomId);
+
+        return {
+            creator: room.creator,
+            opponent: room.opponent,
+            entryAmount: room.entryAmount.toString(),
+            pot: room.pot.toString(),
+            createdAt: Number(room.createdAt),
+            status: room.status // 0=EMPTY, 1=WAITING, 2=ACTIVE, 3=FINISHED, 4=CANCELLED
+        };
+    } catch (error) {
+        console.error(`❌ Failed to fetch room state: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * Recovers active rooms from blockchain events (for server restart)
+ * 
+ * @returns {Promise<Array>} - Array of room objects
+ */
+export async function recoverActiveRoomsFromBlockchain() {
+    try {
+        console.log(`♻️ Recovering active rooms from blockchain...`);
+
+        // Query RoomCreated events from last 24 hours
+        const currentBlock = await provider.getBlockNumber();
+        const blocksPerDay = Math.floor((24 * 60 * 60) / 2); // ~2s block time on Flare
+        const fromBlock = Math.max(0, currentBlock - blocksPerDay);
+
+        console.log(`   Scanning blocks ${fromBlock} to ${currentBlock}`);
+
+        const roomCreatedFilter = ludoVaultContract.filters.RoomCreated();
+        const createdEvents = await ludoVaultContract.queryFilter(roomCreatedFilter, fromBlock, currentBlock);
+
+        console.log(`   Found ${createdEvents.length} RoomCreated events`);
+
+        const recoveredRooms = [];
+
+        for (const event of createdEvents) {
+            const roomId = event.args.roomId;
+
+            // Fetch current room state from contract
+            const roomState = await getRoomStateFromContract(roomId);
+
+            // Only recover ACTIVE rooms (status = 2)
+            if (roomState.status === 2) {
+                console.log(`   ✅ Recovering ACTIVE room: ${roomId}`);
+
+                // Reconstruct room object matching server format
+                const room = {
+                    id: roomId.toLowerCase(),
+                    stake: parseFloat(ethers.formatEther(roomState.entryAmount)),
+                    maxPlayers: 2, // Web3 matches are always 2-player
+                    players: [null, null, null, null],
+                    gameState: null, // Will be reconstructed by game engine if needed
+                    status: "ACTIVE",
+                    createdAt: roomState.createdAt * 1000 // Convert to milliseconds
+                };
+
+                // Note: We don't have player names/colors from blockchain
+                // These will be re-established when players reconnect via WebSocket
+                room.players[0] = {
+                    address: roomState.creator,
+                    name: "Player 1", // Placeholder
+                    color: "red"
+                };
+
+                room.players[1] = {
+                    address: roomState.opponent,
+                    name: "Player 2", // Placeholder
+                    color: "blue"
+                };
+
+                recoveredRooms.push(room);
+            }
+        }
+
+        console.log(`♻️ Recovered ${recoveredRooms.length} active rooms`);
+        return recoveredRooms;
+
+    } catch (error) {
+        console.error(`❌ Session recovery failed: ${error.message}`);
+        throw error;
+    }
+}
+
+// ============================================
+// EXPORTS
+// ============================================
+
+export {
+    provider,
+    ludoVaultContract,
+    VAULT_ADDRESS,
+    CHAIN_ID
+};
