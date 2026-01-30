@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
-import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +27,25 @@ const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS;
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
 
 // ============================================
+// EMBEDDED MINIMAL ABI (Eliminates filesystem dependency for Railway)
+// Only includes events and functions needed for verification
+// ============================================
+
+const LUDOVAULT_MINIMAL_ABI = [
+    // Events for transaction verification
+    "event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount)",
+    "event RoomJoined(bytes32 indexed roomId, address indexed opponent, uint256 totalPot)",
+    "event RoomCancelled(bytes32 indexed roomId, address indexed creator, uint256 refundAmount)",
+    "event GameFinished(bytes32 indexed roomId, address indexed winner, uint256 payout, uint256 fee)",
+
+    // Room status enum: EMPTY=0, WAITING=1, ACTIVE=2, FINISHED=3, CANCELLED=4
+
+    // View functions for state queries
+    "function rooms(bytes32 roomId) view returns (address creator, address opponent, uint256 entryAmount, uint256 pot, uint256 createdAt, uint8 status)",
+    "function getRoom(bytes32 roomId) view returns (tuple(address creator, address opponent, uint256 entryAmount, uint256 pot, uint256 createdAt, uint8 status))"
+];
+
+// ============================================
 // GRACEFUL DEGRADATION
 // ============================================
 // If RPC URL or Vault address is missing, verification is DISABLED but server still runs
@@ -36,7 +54,6 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
 let VERIFICATION_ENABLED = true;
 let provider = null;
 let ludoVaultContract = null;
-let ludoVaultABI = null;
 
 if (!FLARE_RPC_URL) {
     console.warn("⚠️ FLARE_RPC_URL missing - On-chain verification DISABLED");
@@ -54,13 +71,8 @@ if (VERIFICATION_ENABLED) {
         // Initialize provider
         provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, CHAIN_ID);
 
-        // Load LudoVault ABI
-        const abiPath = path.join(__dirname, "../smart-contracts/artifacts/contracts/LudoVault.sol/LudoVault.json");
-        const ludoVaultArtifact = JSON.parse(fs.readFileSync(abiPath, "utf-8"));
-        ludoVaultABI = ludoVaultArtifact.abi;
-
-        // Create contract instance
-        ludoVaultContract = new ethers.Contract(VAULT_ADDRESS, ludoVaultABI, provider);
+        // Create contract instance with embedded ABI (no filesystem dependency!)
+        ludoVaultContract = new ethers.Contract(VAULT_ADDRESS, LUDOVAULT_MINIMAL_ABI, provider);
 
         console.log(`🔗 Contract Verifier initialized: ${VAULT_ADDRESS} on Chain ${CHAIN_ID}`);
     } catch (error) {
@@ -71,6 +83,7 @@ if (VERIFICATION_ENABLED) {
 } else {
     console.log("📋 Server running in LEGACY MODE (no blockchain verification)");
 }
+
 
 // ============================================
 // VERIFICATION FUNCTIONS
