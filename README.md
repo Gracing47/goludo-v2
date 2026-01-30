@@ -96,6 +96,45 @@ goludo/
 
 ---
 
+## 🛠️ Setup & Deployment (Audit Readiness)
+
+### Prerequisites
+- Node.js >= 20.0.0
+- npm or yarn
+- A Flare/Coston2 RPC URL
+
+### Backend Setup
+1. Navigate to the `backend` directory:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Configure environment:
+   - Copy `.env.example` to `.env`
+   - Fill in `FLARE_RPC_URL`, `LUDOVAULT_ADDRESS`, and `SERVER_SIGNER_PRIVATE_KEY`
+4. Run in development:
+   ```bash
+   npm start
+   ```
+5. Run tests:
+   ```bash
+   npm test
+   ```
+
+### Security Considerations
+- **Signer Key**: The `SERVER_SIGNER_PRIVATE_KEY` must be handled as a high-security secret. On Railway or other PaaS, use environment variables directly; never hardcode them.
+- **On-Chain Verification**: The backend verifies every room creation and join transaction against the Flare blockchain to prevent spoofing.
+- **Input Integrity**: All REST endpoints are protected by Zod schemas to prevent injection and malformed data.
+- **Rate Limiting**: Critical endpoints (payouts, room creation) are rate-limited to prevent brute-force attacks.
+
+### Recovery
+In case of server restart, the backend automatically scans the Flare blockchain for active rooms using the `recoverActiveRoomsFromBlockchain` utility in `contractVerifier.js`.
+
+---
+
 ## 🎯 Tech Stack
 
 ### Frontend

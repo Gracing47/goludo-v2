@@ -12,6 +12,7 @@
 
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
+import type { Socket } from 'socket.io-client';
 import type { GameStoreState, GameConfig, GameState, PayoutProof } from '../types';
 
 /**
@@ -64,7 +65,7 @@ export const useGameStore = create<GameStoreState>()(
             isMuted: false,
 
             /** Socket.io instance for multiplayer */
-            socket: null,
+            socket: null as Socket | null,
 
             /** Screen shake effect */
             isShaking: false,

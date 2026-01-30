@@ -36,7 +36,7 @@ export function calculateAIMove(gameState: GameState): Move | null {
     // Score each move
     const scoredMoves = validMoves.map(move => ({
         move,
-        score: evaluateMove(move, tokens, activePlayer)
+        score: evaluateMove(move, tokens, activePlayer, gameState.activeColors)
     }));
 
     // Sort by score (highest first)
@@ -56,7 +56,7 @@ export function calculateAIMove(gameState: GameState): Move | null {
 /**
  * Evaluate a move and return a score
  */
-function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: number): number {
+function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: number, activeColors: number[]): number {
     let score = 0;
 
     // Priority 1: Capture enemy
@@ -84,7 +84,7 @@ function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: numbe
     if (typeof move.toPosition === 'number' && SAFE_POSITIONS.includes(move.toPosition)) {
         score += SCORES.SAFE_ZONE;
 
-        if (isInDanger(move.fromPosition, tokens, activePlayer)) {
+        if (isInDanger(move.fromPosition, tokens, activePlayer, activeColors)) {
             score += SCORES.DANGER_ESCAPE;
         }
     }
@@ -113,8 +113,8 @@ function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: numbe
     }
 
     // Priority 6: Escape danger
-    if (isInDanger(move.fromPosition, tokens, activePlayer) &&
-        !isInDanger(move.toPosition, tokens, activePlayer)) {
+    if (isInDanger(move.fromPosition, tokens, activePlayer, activeColors) &&
+        !isInDanger(move.toPosition, tokens, activePlayer, activeColors)) {
         score += SCORES.DANGER_ESCAPE;
     }
 
@@ -126,7 +126,7 @@ function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: numbe
 
     // Penalty: Moving to danger
     if (typeof move.toPosition === 'number' &&
-        isInDanger(move.toPosition, tokens, activePlayer)) {
+        isInDanger(move.toPosition, tokens, activePlayer, activeColors)) {
         score += SCORES.DANGER_PENALTY;
     }
 
@@ -136,7 +136,7 @@ function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: numbe
 /**
  * Check if a position is in danger
  */
-function isInDanger(position: TokenPosition, tokens: TokenPosition[][], currentPlayer: number): boolean {
+function isInDanger(position: TokenPosition, tokens: TokenPosition[][], currentPlayer: number, activeColors: number[]): boolean {
     if (position === POSITION.IN_YARD || position === POSITION.FINISHED) {
         return false;
     }
@@ -150,7 +150,8 @@ function isInDanger(position: TokenPosition, tokens: TokenPosition[][], currentP
             return false;
         }
 
-        for (let player = 0; player < 4; player++) {
+        const colors = activeColors || [0, 1, 2, 3];
+        for (const player of colors) {
             if (player === currentPlayer) continue;
 
             for (const tokenPos of tokens[player]) {
@@ -183,7 +184,8 @@ function getRelativeProgress(position: TokenPosition, player: number): number {
     if (position === POSITION.FINISHED) return 57;
 
     const path = PLAYER_PATHS[player];
-    return path ? path.indexOf(position as number) : 0;
+    const pos = position as number;
+    return path ? path.indexOf(pos) : 0;
 }
 
 /**

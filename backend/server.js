@@ -18,6 +18,9 @@ import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob, cl
 // Blockchain Verification (Phase 5: On-Chain Security)
 import { verifyRoomCreation, verifyRoomJoin, recoverActiveRoomsFromBlockchain, getRoomStateFromContract } from './contractVerifier.js';
 
+// Input Validation (Phase 6: Audit Readiness)
+import { validateRequest, createRoomSchema, payoutSignSchema } from './validation.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -96,12 +99,19 @@ app.use((req, res, next) => {
 const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
 
 const broadcastState = (room, message = null) => {
+    // Extract player skip metadata for the frontend
+    const playersMetadata = room.players.map(p => p ? {
+        skipCount: p.skipCount || 0,
+        forfeited: p.forfeited || false
+    } : null);
+
     io.to(room.id).emit('state_update', {
         ...room.gameState,
         currentTurn: room.gameState.activePlayer,
         turnState: room.gameState.gamePhase === GAME_PHASE.ROLL_DICE ? "WAITING_FOR_ROLL" : "WAITING_FOR_MOVE",
         lastDice: room.gameState.diceValue,
-        msg: message || room.gameState.message
+        msg: message || room.gameState.message,
+        playersMetadata // Added to sync skips and forfeit status
     });
 };
 
@@ -707,7 +717,7 @@ app.get('/metrics', (req, res) => {
     });
 });
 
-app.post('/api/payout/sign', payoutLimiter, async (req, res) => {
+app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), async (req, res) => {
     const { roomId, winner } = req.body;
     const normalizedId = roomId?.toLowerCase();
 
@@ -747,7 +757,7 @@ app.post('/api/payout/sign', payoutLimiter, async (req, res) => {
 
 app.get('/api/rooms', (req, res) => res.json(activeRooms));
 
-app.post('/api/rooms/create', createRoomLimiter, async (req, res) => {
+app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchema), async (req, res) => {
     let { roomId, txHash, stake, maxPlayers, creatorName, creatorAddress } = req.body;
     roomId = roomId?.toLowerCase();
 
@@ -914,20 +924,25 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     res.json({ success: true, room });
 });
 
-server.listen(PORT, async () => {
-    console.log(`🚀 GoLudo Backend running on http://localhost:${PORT}`);
+// Only listen if this file is run directly (not imported for tests)
+if (process.env.NODE_ENV !== 'test') {
+    server.listen(PORT, async () => {
+        console.log(`🚀 GoLudo Backend running on http://localhost:${PORT}`);
 
-    // ✅ PHASE 5: Recover active rooms from blockchain on startup
-    try {
-        const recoveredRooms = await recoverActiveRoomsFromBlockchain();
-        activeRooms.push(...recoveredRooms);
-        console.log(`♻️ Recovered ${recoveredRooms.length} active Web3 rooms from blockchain`);
-    } catch (error) {
-        console.error(`⚠️ Session recovery failed: ${error.message}`);
-        console.error(`   Server will start with empty room list`);
-    }
+        // ✅ PHASE 5: Recover active rooms from blockchain on startup
+        try {
+            const recoveredRooms = await recoverActiveRoomsFromBlockchain();
+            activeRooms.push(...recoveredRooms);
+            console.log(`♻️ Recovered ${recoveredRooms.length} active Web3 rooms from blockchain`);
+        } catch (error) {
+            console.error(`⚠️ Session recovery failed: ${error.message}`);
+            console.error(`   Server will start with empty room list`);
+        }
 
-    // Start periodic cleanup job (runs every 60s)
-    startCleanupJob(activeRooms);
-    console.log(`🧹 Room cleanup job started (runs every 60s)`);
-});
+        // Start periodic cleanup job (runs every 60s)
+        startCleanupJob(activeRooms);
+        console.log(`🧹 Room cleanup job started (runs every 60s)`);
+    });
+}
+
+export { app, server, io, activeRooms };

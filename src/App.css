@@ -224,6 +224,14 @@ body {
     box-shadow: 0 2px 12px var(--pod-glow-color, rgba(255, 255, 255, 0.2));
 }
 
+.player-pod.forfeited {
+    opacity: 0.3;
+    filter: grayscale(1);
+    background: rgba(40, 0, 0, 0.6);
+    border-color: rgba(255, 0, 0, 0.3);
+    pointer-events: none;
+}
+
 .player-pod.red {
     --pod-glow-color: var(--color-red);
 }
@@ -317,6 +325,27 @@ body {
     white-space: nowrap;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Skip Dots Overlay */
+.pod-skips {
+    display: flex;
+    gap: 3px;
+    margin-left: 2px;
+}
+
+.skip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.skip-dot.active {
+    background: #ff4757;
+    box-shadow: 0 0 6px #ff4757;
+    border: none;
 }
 
 /* ============================================

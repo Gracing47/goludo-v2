@@ -4,6 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
 import { SOCKET_URL } from '../config/api';
 import { createInitialState } from '../engine/gameLogic';
+import { Web3Account } from '../types';
 
 /**
  * useGameSocket Hook
@@ -11,7 +12,7 @@ import { createInitialState } from '../engine/gameLogic';
  * Manages the WebSocket connection for multiplayer matches.
  * Handles event listeners and maps server updates to the Zustand store.
  */
-export const useGameSocket = (roomId: string | undefined, account: any) => {
+export const useGameSocket = (roomId: string | undefined, account: Web3Account | null) => {
     const setSocket = useGameStore((s) => s.setSocket);
     const updateState = useGameStore((s) => s.updateState);
     const setGameState = useGameStore((s) => s.setGameState);
@@ -33,7 +34,8 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
 
         // Prevent double connection if already active for this room
         if (socketRef.current && socketRef.current.connected) {
-            if ((socketRef.current as any)._targetRoom === roomId && (socketRef.current as any)._targetAddr === targetAddr) {
+            const currentSocket = socketRef.current as any;
+            if (currentSocket._targetRoom === roomId && currentSocket._targetAddr === targetAddr) {
                 return;
             }
             socketRef.current.disconnect();
@@ -51,8 +53,9 @@ export const useGameSocket = (roomId: string | undefined, account: any) => {
         });
 
         // Tag socket for room persistence
-        (socket as any)._targetRoom = roomId;
-        (socket as any)._targetAddr = targetAddr;
+        const taggedSocket = socket as any;
+        taggedSocket._targetRoom = roomId;
+        taggedSocket._targetAddr = targetAddr;
 
         socket.on('connect', () => {
             console.log('✅ Socket connected! ID:', socket.id, 'Transport:', socket.io.engine.transport.name);

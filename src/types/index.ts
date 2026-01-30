@@ -9,6 +9,7 @@
    PLAYER TYPES
    ============================================ */
 
+import type { Socket } from 'socket.io-client';
 export type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
 export type PlayerType = 'human' | 'ai';
@@ -416,7 +417,7 @@ export interface GameStoreState {
     serverMsg: string | null;
 
     /** Socket.io instance */
-    socket: any | null;
+    socket: Socket | null;
 
     /** Local player index in multiplayer */
     myPlayerIndex: number | null;
@@ -447,7 +448,7 @@ export interface GameStoreState {
     setTurnTimer: (seconds: number | null) => void;
     setServerMsg: (msg: string | null) => void;
     initGame: (config: GameConfig) => void;
-    setSocket: (socket: any) => void;
+    setSocket: (socket: Socket | null) => void;
     setMyPlayerIndex: (index: number | null) => void;
     setPayoutProof: (proof: PayoutProof | null) => void;
     setMySelectedColor: (color: PlayerColor | null) => void;

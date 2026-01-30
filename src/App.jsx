@@ -872,14 +872,26 @@ function App() {
                                     ? p.address?.toLowerCase() === account?.address?.toLowerCase()
                                     : !p.isAI && idx === 0;
 
+                                // NEW: Get skip/forfeit data from state
+                                const metadata = gameState.playersMetadata?.[idx];
+                                const skipCount = metadata?.skipCount || 0;
+                                const isForfeited = metadata?.forfeited || false;
+
                                 return (
                                     <div key={idx} className={`pod-anchor pos-${visualPos}`}>
-                                        <div className={`player-pod ${color} ${isActive ? 'active' : ''}`}>
+                                        <div className={`player-pod ${color} ${isActive ? 'active' : ''} ${isForfeited ? 'forfeited' : ''}`}>
                                             <div className={`pod-avatar ${color}`}>
-                                                {p.isAI ? '🤖' : '👤'}
-                                                {isActive && <div className="pod-turn-indicator" />}
+                                                {isForfeited ? '💀' : (p.isAI ? '🤖' : '👤')}
+                                                {isActive && !isForfeited && <div className="pod-turn-indicator" />}
                                             </div>
-                                            <span className="pod-name">{p.name}{isMe && ' •'}</span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                <span className="pod-name">{p.name}{isMe && ' •'}</span>
+                                                <div className="pod-skips">
+                                                    <div className={`skip-dot ${skipCount >= 1 ? 'active' : ''}`} title="1 Skip" />
+                                                    <div className={`skip-dot ${skipCount >= 2 ? 'active' : ''}`} title="2 Skips" />
+                                                    <div className={`skip-dot ${skipCount >= 3 ? 'active' : ''}`} title="FORFEIT" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
