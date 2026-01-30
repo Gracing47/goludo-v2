@@ -117,11 +117,17 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
         console.log(`   Expected Creator: ${normalizedCreator}`);
         console.log(`   Expected Stake: ${expectedStake} (${expectedStakeWei} Wei)`);
 
-        // Fetch transaction receipt
-        const receipt = await provider.getTransactionReceipt(txHash);
+        // Fetch transaction receipt with retries (RPC lag)
+        let receipt = null;
+        for (let i = 0; i < 5; i++) {
+            receipt = await provider.getTransactionReceipt(txHash);
+            if (receipt) break;
+            console.log(`   ⏳ Transaction not found yet, retrying in 2s... (${i + 1}/5)`);
+            await new Promise(r => setTimeout(r, 2000));
+        }
 
         if (!receipt) {
-            throw new Error("Transaction not found on blockchain");
+            throw new Error("Transaction not found on blockchain after 10s");
         }
 
         if (receipt.status !== 1) {
@@ -197,11 +203,17 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
         console.log(`   Expected Joiner: ${normalizedJoiner}`);
         console.log(`   Expected Stake: ${expectedStake} (${expectedStakeWei} Wei)`);
 
-        // Fetch transaction receipt
-        const receipt = await provider.getTransactionReceipt(txHash);
+        // Fetch transaction receipt with retries (RPC lag)
+        let receipt = null;
+        for (let i = 0; i < 5; i++) {
+            receipt = await provider.getTransactionReceipt(txHash);
+            if (receipt) break;
+            console.log(`   ⏳ Transaction not found yet, retrying in 2s... (${i + 1}/5)`);
+            await new Promise(r => setTimeout(r, 2000));
+        }
 
         if (!receipt) {
-            throw new Error("Transaction not found on blockchain");
+            throw new Error("Transaction not found on blockchain after 10s");
         }
 
         if (receipt.status !== 1) {
@@ -291,19 +303,37 @@ export async function recoverActiveRoomsFromBlockchain() {
     }
 
     try {
-        console.log(`♻️ Recovering active rooms from blockchain...`);
-
         // Query RoomCreated events from last 24 hours
         const currentBlock = await provider.getBlockNumber();
         const blocksPerDay = Math.floor((24 * 60 * 60) / 2); // ~2s block time on Flare
-        const fromBlock = Math.max(0, currentBlock - blocksPerDay);
+        let fromBlock = Math.max(0, currentBlock - blocksPerDay);
 
-        console.log(`   Scanning blocks ${fromBlock} to ${currentBlock}`);
+        // RPC might have tight block range limits (e.g., 30 blocks)
+        const CHUNK_SIZE = 30;
+        const MAX_TOTAL_SCANNED = 3000; // Limit total scan to avoid too many RPC calls (covers ~2 hours)
 
-        const roomCreatedFilter = ludoVaultContract.filters.RoomCreated();
-        const createdEvents = await ludoVaultContract.queryFilter(roomCreatedFilter, fromBlock, currentBlock);
+        // Adjust fromBlock to stay within a reasonable limit if needed
+        fromBlock = Math.max(fromBlock, currentBlock - MAX_TOTAL_SCANNED);
 
-        console.log(`   Found ${createdEvents.length} RoomCreated events`);
+        console.log(`   Scanning blocks ${fromBlock} to ${currentBlock} in chunks of ${CHUNK_SIZE}`);
+
+        const createdEvents = [];
+        for (let start = fromBlock; start < currentBlock; start += CHUNK_SIZE) {
+            const end = Math.min(start + CHUNK_SIZE - 1, currentBlock);
+            try {
+                const chunk = await ludoVaultContract.queryFilter(
+                    ludoVaultContract.filters.RoomCreated(),
+                    start,
+                    end
+                );
+                createdEvents.push(...chunk);
+            } catch (err) {
+                console.warn(`   ⚠️ Failed to scan chunk ${start}-${end}: ${err.message}`);
+                // Continue to next chunk instead of failing entirely
+            }
+        }
+
+        console.log(`   Found ${createdEvents.length} RoomCreated events in scan window`);
 
         const recoveredRooms = [];
 
