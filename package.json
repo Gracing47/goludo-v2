@@ -27,6 +27,7 @@
     "dotenv": "^17.2.3",
     "ethers": "^6.16.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "framer-motion": "^12.26.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -35,6 +36,7 @@
     "socket.io-client": "^4.8.3",
     "thirdweb": "^5.116.1",
     "vite": "^5.0.11",
+    "zod": "^4.3.6",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
