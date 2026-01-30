@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import rateLimit from 'express-rate-limit';
 import { signPayout, walletAddress } from './signer.js';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -58,7 +59,6 @@ app.use(bodyParser.json());
 // ============================================
 // RATE LIMITING (Phase 6: Audit Readiness)
 // ============================================
-import rateLimit from 'express-rate-limit';
 
 // Rate limiters for different endpoint types
 const payoutLimiter = rateLimit({
