@@ -16,7 +16,7 @@ import { GAME_PHASE } from '../src/engine/constants.js';
 import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob, clearSpecificTimer } from './roomManager.js';
 
 // Blockchain Verification (Phase 5: On-Chain Security)
-import { verifyRoomCreation, verifyRoomJoin, recoverActiveRoomsFromBlockchain } from './contractVerifier.js';
+import { verifyRoomCreation, verifyRoomJoin, recoverActiveRoomsFromBlockchain, getRoomStateFromContract } from './contractVerifier.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -294,6 +294,7 @@ function startGameCountdown(io, room, roomId) {
             room.status = "ACTIVE";
             console.log(`🎮 Game Starting: Room ${roomId}`);
             console.log(`📋 Socket states:`, room.players.filter(p => p).map(p => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
+            console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter(p => p).map(p => p.address).join(', ')}`);
 
             io.to(roomId).emit('game_started', room);
             broadcastState(room, "Game Started!");
@@ -593,7 +594,7 @@ app.get('/metrics', (req, res) => {
 });
 
 app.post('/api/payout/sign', async (req, res) => {
-    const { roomId, winner, amount } = req.body;
+    const { roomId, winner } = req.body;
     const normalizedId = roomId?.toLowerCase();
 
     // CRITICAL SECURITY CHECK
@@ -616,9 +617,11 @@ app.post('/api/payout/sign', async (req, res) => {
     }
 
     try {
-        // Calculate amount on server to prevent client manipulation
-        // Format: stake * playerCount (in Wei)
-        const potAmount = (BigInt(ethers.parseEther(room.stake.toString())) * BigInt(room.maxPlayers)).toString();
+        // 🔗 PHASE 5: Fetch pot amount directly from blockchain (trustless)
+        const contractRoom = await getRoomStateFromContract(roomId);
+        const potAmount = contractRoom.pot;
+
+        console.log(`📋 Blockchain Event: GAME_FINISHED | Room: ${roomId} | Winner: ${winner} | Pot: ${potAmount}`);
 
         const payoutProof = await signPayout(roomId, winner, potAmount);
         res.json(payoutProof);
@@ -675,6 +678,7 @@ app.post('/api/rooms/create', async (req, res) => {
 
     activeRooms.push(newRoom);
     console.log(`🏠 Room Created: ${roomId} (Total active: ${activeRooms.length})`);
+    console.log(`📝 Blockchain Event: ROOM_CREATED | Room: ${roomId} | Creator: ${creatorAddress} | Stake: ${stake}`);
     res.json({ success: true, room: newRoom });
 });
 

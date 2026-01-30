@@ -18,7 +18,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 // 🌍 Configuration from .env
 const SIGNER_PRIVATE_KEY = process.env.SERVER_SIGNER_PRIVATE_KEY;
 const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS || process.env.LUDOVAULT_ADDRESS;
-const CHAIN_ID = 114; // Coston2 Testnet (Use 14 for Flare Mainnet)
+const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114"); // Default to Coston2, override for Mainnet
 
 if (!SIGNER_PRIVATE_KEY || !VAULT_ADDRESS) {
     console.error("❌ SIGNER_PRIVATE_KEY or LUDOVAULT_ADDRESS missing in .env");
@@ -41,9 +41,9 @@ if (SIGNER_PRIVATE_KEY) {
 export async function signPayout(roomId, winnerAddress, amountInWei) {
     if (!wallet) throw new Error("Signer wallet not initialized");
 
-    // 1. Prepare unique nonce and deadline (1 hour from now)
+    // 1. Prepare unique nonce and deadline (24 hours from now)
     const nonce = ethers.hexlify(ethers.randomBytes(32));
-    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
 
     // 2. Define EIP-712 Domain
     const domain = {
