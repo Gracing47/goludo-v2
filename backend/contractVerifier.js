@@ -68,8 +68,16 @@ if (!VAULT_ADDRESS) {
 
 if (VERIFICATION_ENABLED) {
     try {
-        // Initialize provider
-        provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, CHAIN_ID);
+        // Create a custom Network for Coston2/Flare that explicitly disables ENS
+        // This prevents ethers from trying to resolve ENS names on networks that don't support it
+        const flareNetwork = new ethers.Network("coston2", CHAIN_ID);
+        // Explicitly set no ENS address to prevent ENS resolution attempts
+        flareNetwork.attachPlugin(new ethers.EnsPlugin(null));
+
+        // Initialize provider with custom network
+        provider = new ethers.JsonRpcProvider(FLARE_RPC_URL, flareNetwork, {
+            staticNetwork: flareNetwork // Prevents network auto-detection which can trigger ENS
+        });
 
         // Create contract instance with embedded ABI (no filesystem dependency!)
         ludoVaultContract = new ethers.Contract(VAULT_ADDRESS, LUDOVAULT_MINIMAL_ABI, provider);
