@@ -15,8 +15,8 @@ export const client = createThirdwebClient({
 export const coston2 = defineChain(114);
 
 // Contract Addresses
-export const GO_TOKEN_ADDRESS = import.meta.env.VITE_GOTOKEN_ADDRESS || "0x937667232207904006E88888EB33aCA8E1700688";
-export const LUDO_VAULT_ADDRESS = import.meta.env.VITE_LUDOVAULT_ADDRESS || "0xd3EB7151534BBDFcb70352DA8E727B6000966E14";
+export const GO_TOKEN_ADDRESS = import.meta.env.VITE_GOTOKEN_ADDRESS || "0x50787A6A4cEA4f3eFeA653D82eA8629DBF634C13";
+export const LUDO_VAULT_ADDRESS = import.meta.env.VITE_LUDOVAULT_ADDRESS || "0x50787A6A4cEA4f3eFeA653D82eA8629DBF634C13";
 
 // Contract Instances (v5 style)
 export const goTokenContract = getContract({
