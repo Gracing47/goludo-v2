@@ -30,7 +30,7 @@ export function calculateAIMove(gameState: GameState): Move | null {
     }
 
     if (validMoves.length === 1) {
-        return validMoves[0];
+        return validMoves[0]!;
     }
 
     // Score each move
@@ -44,13 +44,13 @@ export function calculateAIMove(gameState: GameState): Move | null {
 
     // Add slight randomness for variety (pick from top 2 if scores are close)
     if (scoredMoves.length >= 2) {
-        const scoreDiff = scoredMoves[0].score - scoredMoves[1].score;
+        const scoreDiff = scoredMoves[0]!.score - scoredMoves[1]!.score;
         if (scoreDiff < 5 && Math.random() < 0.3) {
-            return scoredMoves[1].move;
+            return scoredMoves[1]!.move;
         }
     }
 
-    return scoredMoves[0].move;
+    return scoredMoves[0]!.move;
 }
 
 /**
@@ -64,7 +64,7 @@ function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: numbe
         score += SCORES.CAPTURE * move.captures.length;
 
         move.captures.forEach(capture => {
-            const capturedPos = tokens[capture.player][capture.tokenIndex];
+            const capturedPos = tokens[capture.player]?.[capture.tokenIndex];
             if (typeof capturedPos === 'number') {
                 if (capturedPos >= HOME_STRETCH_START) {
                     score += 50;
@@ -99,9 +99,10 @@ function evaluateMove(move: Move, tokens: TokenPosition[][], activePlayer: numbe
 
     // Priority 5: Spawn new token
     if (move.isSpawn) {
-        const tokensOnBoard = tokens[activePlayer].filter(
+        const playerTokens = tokens[activePlayer];
+        const tokensOnBoard = playerTokens ? playerTokens.filter(
             p => p !== POSITION.IN_YARD && p !== POSITION.FINISHED
-        ).length;
+        ).length : 0;
 
         if (tokensOnBoard === 0) {
             score += SCORES.SPAWN_EMPTY;
@@ -154,7 +155,9 @@ function isInDanger(position: TokenPosition, tokens: TokenPosition[][], currentP
         for (const player of colors) {
             if (player === currentPlayer) continue;
 
-            for (const tokenPos of tokens[player]) {
+            const playerTokens = tokens[player];
+            if (!playerTokens) continue;
+            for (const tokenPos of playerTokens) {
                 if (tokenPos === POSITION.IN_YARD || tokenPos === POSITION.FINISHED || typeof tokenPos !== 'number') {
                     continue;
                 }
@@ -194,5 +197,5 @@ function getRelativeProgress(position: TokenPosition, player: number): number {
 export function selectRandomMove(validMoves: Move[]): Move | null {
     if (!validMoves || validMoves.length === 0) return null;
     const index = Math.floor(Math.random() * validMoves.length);
-    return validMoves[index];
+    return validMoves[index] ?? null;
 }

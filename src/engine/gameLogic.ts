@@ -20,8 +20,7 @@ import { GameState, Move, TokenPosition } from '../types';
 // STATE INITIALIZATION
 // ============================================
 
-export function createInitialState(playerCount: number = 4, activeColors: number[] = [0, 1, 2, 3]): GameState {
-    const count = Math.max(2, Math.min(4, playerCount));
+export function createInitialState(_playerCount: number = 4, activeColors: number[] = [0, 1, 2, 3]): GameState {
     const sortedColors = [...activeColors].sort((a, b) => a - b);
 
     return {
