@@ -74,25 +74,30 @@ const Token = ({
         if (hasPositionChanged && !inYard) {
             setIsAnimating(true);
 
-            // Weighted "Heavy" Hop Animation
+            // Snappy Hop Animation - faster for path traversal
+            const hopDuration = isBonusMove ? 0.08 : 0.15; // Very quick hops
+
             controls.start({
-                y: [0, -25, 0], // Higher jump
-                scale: [1, 1.15, 0.95, 1], // Compression on landing
-                rotate: [0, 5, -5, 0], // Subtle mid-air wobble
+                y: [0, -18, 0], // Quick, punchy hop
+                scale: [1, 1.08, 0.96, 1], // Subtle compression
+                rotate: [0, 3, -2, 0], // Minimal wobble
                 transition: {
-                    duration: isBonusMove ? 0.15 : 0.35,
-                    times: [0, 0.4, 0.8, 1],
+                    duration: hopDuration,
+                    times: [0, 0.35, 0.75, 1],
                     ease: "easeOut"
                 }
             }).then(() => {
                 setIsAnimating(false);
-                setShowImpact(true);
-                setTimeout(() => setShowImpact(false), 300);
+                // Only show impact on final landing (determined by caller)
+                if (!isBonusMove) {
+                    setShowImpact(true);
+                    setTimeout(() => setShowImpact(false), 200);
+                }
             });
         }
 
         prevPos.current = { row, col };
-    }, [row, col, inYard, controls]);
+    }, [row, col, inYard, controls, isBonusMove]);
 
     const classes = [
         'token',

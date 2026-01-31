@@ -83,7 +83,7 @@ export const RULES = {
     HOME_BONUS: 10,
     EXACT_HOME_ENTRY: true,
     BLOCKADE_SIZE: 2,
-    BLOCKADE_STRICT: true  // Blockades act as walls (cannot pass)
+    BLOCKADE_STRICT: false  // Disabled: tokens can pass each other freely
 };
 
 // ============================================
