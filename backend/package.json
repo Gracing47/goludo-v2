@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "npx tsx server.ts",
+    "dev": "npx tsx --watch server.ts",
     "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
     "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
@@ -19,6 +21,8 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "socket.io": "^4.8.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
