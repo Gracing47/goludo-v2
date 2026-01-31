@@ -16,10 +16,11 @@ console.log('🔄 Compatibility Mode: Redirecting server.js -> server.ts');
 // We presume running from root, so we check if we can resolve ts-node
 const cmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-// Spawn node with the loader
-const child = spawn('node', ['--loader', 'ts-node/esm', serverTs], {
+// Spawn tsx to run the server
+const child = spawn('npx', ['tsx', serverTs], {
     stdio: 'inherit',
-    env: { ...process.env, NODE_OPTIONS: process.env.NODE_OPTIONS || '' }
+    env: { ...process.env, NODE_OPTIONS: process.env.NODE_OPTIONS || '' },
+    shell: true
 });
 
 child.on('error', (err) => {
