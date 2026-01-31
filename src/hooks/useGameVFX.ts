@@ -4,6 +4,20 @@ import { useShallow } from 'zustand/shallow';
 import soundManager from '../services/SoundManager';
 import { PLAYER_COLORS } from '../engine/constants';
 
+interface CaptureEffect {
+    id: number;
+    color: string;
+    row: number;
+    col: number;
+}
+
+interface SpawnEffect {
+    id: number;
+    color: string;
+    row: number;
+    col: number;
+}
+
 /**
  * useGameVFX Hook
  * 
@@ -15,13 +29,13 @@ export const useGameVFX = () => {
         setIsShaking: s.setIsShaking,
     })));
 
-    const [captureEffects, setCaptureEffects] = useState([]);
-    const [spawnEffects, setSpawnEffects] = useState([]);
+    const [captureEffects, setCaptureEffects] = useState<CaptureEffect[]>([]);
+    const [spawnEffects, setSpawnEffects] = useState<SpawnEffect[]>([]);
 
     /**
      * Trigger a capture explosion effect
      */
-    const triggerCapture = useCallback((victimColorIdx, row, col) => {
+    const triggerCapture = useCallback((victimColorIdx: number, row: number, col: number) => {
         const id = Date.now();
         const victimColor = PLAYER_COLORS[victimColorIdx];
 
@@ -46,7 +60,7 @@ export const useGameVFX = () => {
     /**
      * Trigger a spawn sparkle effect
      */
-    const triggerSpawn = useCallback((playerIdx, row, col) => {
+    const triggerSpawn = useCallback((playerIdx: number, row: number, col: number) => {
         const id = Date.now();
         const color = PLAYER_COLORS[playerIdx];
 
@@ -67,7 +81,7 @@ export const useGameVFX = () => {
     /**
      * Sound wrapper for common actions
      */
-    const playSound = useCallback((type) => {
+    const playSound = useCallback((type: string) => {
         try {
             soundManager.play(type);
         } catch (error) {

@@ -4,8 +4,9 @@ import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
 import { SOCKET_URL } from '../config/api';
 import { createInitialState } from '../engine/gameLogic';
-import { PLAYER_PATHS, POSITION, MASTER_LOOP } from '../engine/constants';
-import { Web3Account } from '../types';
+import { PLAYER_PATHS } from '../engine/constants';
+import { Web3Account, TokenPosition } from '../types';
+import soundManager from '../services/SoundManager';
 
 /**
  * useGameSocket Hook
@@ -14,16 +15,25 @@ import { Web3Account } from '../types';
  * Handles event listeners and maps server updates to the Zustand store.
  */
 export const useGameSocket = (roomId: string | undefined, account: Web3Account | null) => {
-    const setSocket = useGameStore((s) => s.setSocket);
-    const updateState = useGameStore((s) => s.updateState);
-    const setGameState = useGameStore((s) => s.setGameState);
-    const setConfig = useGameStore((s) => s.setConfig);
-    const setAppState = useGameStore((s) => s.setAppState);
-    const setBoardRotation = useGameStore((s) => s.setBoardRotation);
-    const setServerMsg = useGameStore((s) => s.setServerMsg);
-    const setTurnTimer = useGameStore((s) => s.setTurnTimer);
-    const setIsRolling = useGameStore((s) => s.setIsRolling);
-    const setIsMoving = useGameStore((s) => s.setIsMoving);
+    const {
+        setSocket, updateState, setGameState, setConfig,
+        setAppState, setBoardRotation, setServerMsg,
+        setTurnTimer, setIsRolling, setIsMoving,
+        setGameCountdown, setShowCountdown
+    } = useGameStore(useShallow((s) => ({
+        setSocket: s.setSocket,
+        updateState: s.updateState,
+        setGameState: s.setGameState,
+        setConfig: s.setConfig,
+        setAppState: s.setAppState,
+        setBoardRotation: s.setBoardRotation,
+        setServerMsg: s.setServerMsg,
+        setTurnTimer: s.setTurnTimer,
+        setIsRolling: s.setIsRolling,
+        setIsMoving: s.setIsMoving,
+        setGameCountdown: s.setGameCountdown,
+        setShowCountdown: s.setShowCountdown,
+    })));
 
     const socketRef = useRef<Socket | null>(null);
 
@@ -108,7 +118,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
             // 🤖 SMART ANIMATION: Detect if an opponent moved a token
             if (update.tokens && currentState?.tokens) {
-                let movedToken: { p: number, t: number, from: any, to: any } | null = null;
+                let movedToken: { p: number, t: number, from: TokenPosition, to: TokenPosition } | null = null;
 
                 for (let p = 0; p < 4; p++) {
                     for (let t = 0; t < 4; t++) {
@@ -150,16 +160,15 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                                     if (!prev) return prev;
                                     const newTokens = prev.tokens.map((arr: any) => [...arr]);
                                     newTokens[p][t] = pos;
-                                    // Trigger move sound (SoundManager is a singleton, App uses it via useGameVFX)
-                                    // Here we can just dispatch a custom event or let the Token component handle its own sound?
-                                    // Actually, we'll just emit a move sound from the soundManager directly
-                                    import('../services/SoundManager').then(m => m.default.play('move'));
+
+                                    // Trigger move sound
+                                    soundManager.play('move');
                                     return { ...prev, tokens: newTokens };
                                 });
 
                                 if (index === traversePath.length - 1) {
                                     setIsMoving(false);
-                                    import('../services/SoundManager').then(m => m.default.play('land'));
+                                    soundManager.play('land');
                                     // Final sync to ensure everything is perfect
                                     updateState(update);
                                 }
