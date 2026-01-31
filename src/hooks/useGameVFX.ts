@@ -37,7 +37,7 @@ export const useGameVFX = () => {
      */
     const triggerCapture = useCallback((victimColorIdx: number, row: number, col: number) => {
         const id = Date.now();
-        const victimColor = PLAYER_COLORS[victimColorIdx];
+        const victimColor = PLAYER_COLORS[victimColorIdx] ?? 'red'; // Fallback to red
 
         setCaptureEffects(prev => [...prev, {
             id,
@@ -62,7 +62,7 @@ export const useGameVFX = () => {
      */
     const triggerSpawn = useCallback((playerIdx: number, row: number, col: number) => {
         const id = Date.now();
-        const color = PLAYER_COLORS[playerIdx];
+        const color = PLAYER_COLORS[playerIdx] ?? 'red'; // Fallback to red
 
         setSpawnEffects(prev => [...prev, {
             id,

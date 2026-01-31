@@ -264,7 +264,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             setGameState(createInitialState(4, activeColors) as any);
             setAppState('game');
 
-            const myIdx = room.players.findIndex(p =>
+            const myIdx = room.players.findIndex((p: any) =>
                 p?.address?.toLowerCase() === account.address?.toLowerCase()
             );
             if (myIdx !== -1) {
