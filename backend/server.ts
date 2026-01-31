@@ -477,11 +477,12 @@ io.on('connection', (socket) => {
                         handleNextTurn(io, room);
                     }
                 } else if (room.status === "STARTING") {
-                    // During countdown, just confirm connection but don't enable rolling
-                    console.log(`⏳ Player ${player.name} connected during countdown - waiting for game start`);
-                    socket.emit('state_update', {
-                        gamePhase: 'COUNTDOWN',
-                        msg: 'Waiting for countdown...'
+                    // During countdown, send the full initialization event so the client sets up the board
+                    console.log(`⏳ Player ${player.name} connected during countdown - syncing state`);
+                    socket.emit('pre_game_countdown', {
+                        room: room,
+                        countdownSeconds: 5, // Will be corrected by next tick
+                        message: "Syncing..."
                     });
                 }
             }

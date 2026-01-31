@@ -73,6 +73,7 @@ export interface GameMode {
    ============================================ */
 
 export type GamePhase =
+    | 'COUNTDOWN'
     | 'ROLL_DICE'
     | 'SELECT_TOKEN'
     | 'BONUS_MOVE'
