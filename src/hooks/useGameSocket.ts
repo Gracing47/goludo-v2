@@ -123,14 +123,17 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             if (useGameStore.getState().state) return;
 
             setServerMsg(message);
+            setGameCountdown(countdownSeconds);
+            setShowCountdown(true);
+            setAppState('game'); // Force transition to game view
 
             setConfig({
                 mode: 'web3',
                 gameMode: 'classic',
                 roomId: room.id,
                 stake: room.stake,
-                playerCount: room.players.filter(p => p).length,
-                players: room.players.map((p, idx) => p ? ({
+                playerCount: room.players.filter((p: any) => p).length,
+                players: room.players.map((p: any, idx: number) => p ? ({
                     id: idx,
                     name: p.name,
                     color: p.color,
@@ -141,7 +144,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             });
 
             // Perspective rotation
-            const myIdx = room.players.findIndex(p =>
+            const myIdx = room.players.findIndex((p: any) =>
                 p?.address?.toLowerCase() === account.address?.toLowerCase()
             );
             if (myIdx !== -1) {
@@ -152,8 +155,8 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         socket.on('countdown_tick', ({ remaining }) => {
             if (useGameStore.getState().state) return;
             console.log(`⏳ Countdown: ${remaining}s`);
-            // We could add a local countdown state if needed, but currently App manages it.
-            // For now, let's just use server messages or add a store field later.
+            setGameCountdown(remaining);
+            if (remaining > 0) setShowCountdown(true);
         });
 
         socket.on('game_started', (room) => {

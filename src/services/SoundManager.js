@@ -80,25 +80,32 @@ class SoundManager {
                 break;
 
             case 'move':
-                // Soft hop sound
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(500, now);
-                osc.frequency.exponentialRampToValueAtTime(350, now + 0.06);
-                gainNode.gain.setValueAtTime(0.15, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+                // Snappy "Klack" sound (Percussive AAA Quality)
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.04);
+
+                gainNode.gain.setValueAtTime(0.12, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+
                 osc.start(now);
-                osc.stop(now + 0.06);
+                osc.stop(now + 0.04);
+
+                // Add a tiny bit of noise for the "click" texture
+                this.playNoise(0.05, now, 0.02);
                 break;
 
             case 'land':
-                // Token landing - satisfying thud
+                // Final landing - satisfying woody thud
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+
+                gainNode.gain.setValueAtTime(0.25, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
                 osc.start(now);
-                osc.stop(now + 0.15);
+                osc.stop(now + 0.12);
                 break;
 
             case 'roll':

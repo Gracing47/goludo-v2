@@ -335,9 +335,11 @@ function App() {
             setBoardRotation((3 - humanColorIndex) * 90);
         }
 
-        // Trigger Countdown for all modes
-        setGameCountdown(5);
-        setShowCountdown(true);
+        // Trigger Countdown for all modes (Web3 is now handled by socket hook)
+        if (config.mode !== 'web3') {
+            setGameCountdown(5);
+            setShowCountdown(true);
+        }
 
         if (config.mode === 'web3') {
             socketConnect();
@@ -422,21 +424,24 @@ function App() {
         }
     }, [gameId, gameState, gameConfig, appState]);
 
-    // 3. Countdown Ticker Hook (Universal)
+    // 3. Countdown Ticker Hook (Local & AI ONLY)
     useEffect(() => {
+        // Web3 mode countdown is handled by the server (countdown_tick)
+        if (gameConfig?.mode === 'web3') return;
+
         if (showCountdown && gameCountdown > 0) {
             const timer = setTimeout(() => {
                 setGameCountdown(gameCountdown - 1);
             }, 1000);
             return () => clearTimeout(timer);
         } else if (showCountdown && gameCountdown === 0) {
-            // Countdown finished - reveal game or trigger socket start
+            // Countdown finished - reveal game
             setShowCountdown(false);
             if (appState !== 'game') {
                 setAppState('game');
             }
         }
-    }, [showCountdown, gameCountdown, appState, setGameCountdown, setShowCountdown, setAppState]);
+    }, [showCountdown, gameCountdown, appState, setGameCountdown, setShowCountdown, setAppState, gameConfig?.mode]);
 
     // Return to lobby
     const handleBackToLobby = useCallback(() => {
@@ -560,10 +565,8 @@ function App() {
                     const newTokens = prev.tokens.map(arr => [...arr]);
                     newTokens[playerIdx][tokenIdx] = pos;
 
-                    // Audio tick for each step (except last)
-                    if (index < path.length - 1) {
-                        playSound('move');
-                    }
+                    // Audio tick for each step
+                    playSound('move');
 
                     return { ...prev, tokens: newTokens };
                 });
@@ -579,7 +582,7 @@ function App() {
                     const newState = completeMoveAnimation(stateAfterMove);
 
                     // FINAL LANDING EFFECTS
-                    playSound('move');
+                    playSound('land');
 
                     const toPos = move.toPosition;
 
