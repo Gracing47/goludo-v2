@@ -4,6 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
 import { SOCKET_URL } from '../config/api';
 import { createInitialState } from '../engine/gameLogic';
+import { PLAYER_PATHS, POSITION, MASTER_LOOP } from '../engine/constants';
 import { Web3Account } from '../types';
 
 /**
@@ -101,6 +102,76 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
         socket.on('state_update', (update) => {
             if (update.msg) setServerMsg(update.msg);
+
+            const currentState = useGameStore.getState().state;
+            const activeAnim = useGameStore.getState().activeMovingToken;
+
+            // 🤖 SMART ANIMATION: Detect if an opponent moved a token
+            if (update.tokens && currentState?.tokens) {
+                let movedToken: { p: number, t: number, from: any, to: any } | null = null;
+
+                for (let p = 0; p < 4; p++) {
+                    for (let t = 0; t < 4; t++) {
+                        const oldPos = currentState.tokens[p]?.[t];
+                        const newPos = update.tokens[p]?.[t];
+
+                        if (oldPos !== undefined && newPos !== undefined && oldPos !== newPos) {
+                            // Skip if we are already animating this token locally
+                            if (activeAnim && activeAnim.playerIdx === p && activeAnim.tokenIdx === t) {
+                                continue;
+                            }
+                            movedToken = { p, t, from: oldPos, to: newPos };
+                            break;
+                        }
+                    }
+                    if (movedToken) break;
+                }
+
+                if (movedToken) {
+                    const { p, t, from, to } = movedToken;
+                    const path = PLAYER_PATHS[p];
+                    const fromIdx = path.indexOf(from);
+                    const toIdx = path.indexOf(to);
+
+                    if (fromIdx !== -1 && toIdx !== -1 && toIdx > fromIdx) {
+                        const traversePath = path.slice(fromIdx + 1, toIdx + 1);
+                        const hopDuration = 150; // Standard sync speed
+
+                        setIsMoving(true);
+
+                        // 1. Update everything EXCEPT the tokens first (or use prev tokens)
+                        const partialUpdate = { ...update, tokens: currentState.tokens };
+                        updateState(partialUpdate);
+
+                        // 2. Animate the steps
+                        traversePath.forEach((pos, index) => {
+                            setTimeout(() => {
+                                setGameState((prev: any) => {
+                                    if (!prev) return prev;
+                                    const newTokens = prev.tokens.map((arr: any) => [...arr]);
+                                    newTokens[p][t] = pos;
+                                    // Trigger move sound (SoundManager is a singleton, App uses it via useGameVFX)
+                                    // Here we can just dispatch a custom event or let the Token component handle its own sound?
+                                    // Actually, we'll just emit a move sound from the soundManager directly
+                                    import('../services/SoundManager').then(m => m.default.play('move'));
+                                    return { ...prev, tokens: newTokens };
+                                });
+
+                                if (index === traversePath.length - 1) {
+                                    setIsMoving(false);
+                                    import('../services/SoundManager').then(m => m.default.play('land'));
+                                    // Final sync to ensure everything is perfect
+                                    updateState(update);
+                                }
+                            }, (index + 1) * hopDuration);
+                        });
+
+                        return; // Handled via animation
+                    }
+                }
+            }
+
+            // Default: Instant update if no movement or invalid path
             updateState(update);
             if (update.gamePhase !== 'ROLL_DICE') {
                 setIsRolling(false);

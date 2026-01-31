@@ -407,6 +407,9 @@ export interface GameStoreState {
     /** Moving animation state */
     isMoving: boolean;
 
+    /** Currently animating token (to prevent teleportation from server updates) */
+    activeMovingToken: { playerIdx: number; tokenIdx: number; isBonus: boolean } | null;
+
     /** Board rotation (for web3 local player) */
     boardRotation: number;
 
@@ -444,6 +447,7 @@ export interface GameStoreState {
     updateState: (partial: Partial<GameState>) => void;
     setIsRolling: (isRolling: boolean) => void;
     setIsMoving: (isMoving: boolean) => void;
+    setActiveMovingToken: (activeMovingToken: { playerIdx: number; tokenIdx: number; isBonus: boolean } | null) => void;
     setBoardRotation: (rotation: number) => void;
     setTurnTimer: (seconds: number | null) => void;
     setServerMsg: (msg: string | null) => void;

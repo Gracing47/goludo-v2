@@ -62,6 +62,7 @@ function App() {
         updateState, // Import updateState action
         isRolling, setIsRolling,
         isMoving, setIsMoving,
+        activeMovingToken, setActiveMovingToken,
         boardRotation, setBoardRotation,
         serverMsg, setServerMsg,
         turnTimer, setTurnTimer,
@@ -79,11 +80,13 @@ function App() {
         setConfig: s.setConfig,
         state: s.state,
         setGameState: s.setGameState,
-        updateState: s.updateState, // Map updateState
+        updateState: s.updateState,
         isRolling: s.isRolling,
         setIsRolling: s.setIsRolling,
         isMoving: s.isMoving,
         setIsMoving: s.setIsMoving,
+        activeMovingToken: s.activeMovingToken,
+        setActiveMovingToken: s.setActiveMovingToken,
         boardRotation: s.boardRotation,
         setBoardRotation: s.setBoardRotation,
         serverMsg: s.serverMsg,
@@ -98,6 +101,8 @@ function App() {
         setShowCountdown: s.setShowCountdown,
         gameCountdown: s.gameCountdown,
         setGameCountdown: s.setGameCountdown,
+        isMuted: s.isMuted,
+        setIsMuted: s.setIsMuted,
         reset: s.reset,
     })));
 
@@ -263,8 +268,7 @@ function App() {
         return canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
     }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
 
-    // Moving token path state: { playerIdx, tokenIdx, path: [] } | null
-    const [activeMovingToken, setActiveMovingToken] = useState(null);
+    // Moving token path state is now in useGameStore: activeMovingToken, setActiveMovingToken
 
     // Effect: Haptic feedback on rolling a 6
     useEffect(() => {
@@ -489,74 +493,25 @@ function App() {
     const executeMove = useCallback((move) => {
         if (!gameState || (gameState.gamePhase !== 'SELECT_TOKEN' && gameState.gamePhase !== 'BONUS_MOVE')) return;
 
-        // ============================================
-        // WEB3 MODE: Server is authoritative - only emit and wait
-        // ============================================
-        if (gameConfig?.mode === 'web3') {
-            emitMove(move.tokenIndex);
-
-            // Immediate visual/audio feedback
-            if (move.isSpawn) playSound('spawn');
-            else if (move.captures && move.captures.length > 0) {
-                playSound('capture');
-                if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-            } else if (move.isHome) playSound('home');
-            else playSound('move');
-
-            setIsMoving(true);
-            setTimeout(() => setIsMoving(false), 500);
-            return;
-        }
-
-        // ============================================
-        // LOCAL/AI MODE: Full local state management
-        // ============================================
-
-        // 🌟 Spawn Sparkle
-        if (move.isSpawn) {
-            const startPos = PLAYER_START_POSITIONS[gameState.activePlayer];
-            const startCoords = MASTER_LOOP[startPos];
-            if (startCoords) {
-                triggerSpawn(gameState.activePlayer, startCoords.r, startCoords.c);
-            }
-        }
-
-        // 💥 Capture Explosion
-        if (move.captures && move.captures.length > 0) {
-            let coords = null;
-            const toPos = move.toPosition;
-            if (toPos >= 0 && toPos < MASTER_LOOP.length) {
-                coords = MASTER_LOOP[toPos];
-            } else if (toPos >= 100 && toPos < 106) {
-                coords = HOME_STRETCH_COORDS[gameState.activePlayer]?.[toPos - 100];
-            }
-
-            if (coords) {
-                triggerCapture(move.captures[0].player, coords.r, coords.c);
-            }
-        } else if (move.isHome) {
-            playSound('home');
-        } else {
-            playSound('move');
-        }
-
-        setIsMoving(true);
-
-        const path = move.traversePath || [move.toPosition];
+        const isWeb3 = gameConfig?.mode === 'web3';
         const playerIdx = gameState.activePlayer;
         const tokenIdx = move.tokenIndex;
-
-        // Dynamic speed: Bonus/Capture moves are 2.5x faster (AAA Speed Upgrade)
         const isBonus = gameState.gamePhase === 'BONUS_MOVE';
         const hasCapture = move.captures && move.captures.length > 0;
-        const hopDuration = (isBonus || hasCapture) ? 60 : 150; // Snappy hops
+        const path = move.traversePath || [move.toPosition];
+        const hopDuration = (isBonus || hasCapture) ? 60 : 150;
 
-        // 🎬 START ANIMATION TRACKING (For UI flags like isBonusMove)
-        setActiveMovingToken({
-            playerIdx: gameState.activePlayer,
-            tokenIdx: move.tokenIndex,
-            isBonus: isBonus
-        });
+        // 🌟 Spawn Effect
+        if (move.isSpawn) {
+            playSound('spawn');
+            const startPos = PLAYER_START_POSITIONS[playerIdx];
+            const startCoords = MASTER_LOOP[startPos];
+            if (startCoords) triggerSpawn(playerIdx, startCoords.r, startCoords.c);
+        }
+
+        // 🎬 START ANIMATION TRACKING
+        setIsMoving(true);
+        setActiveMovingToken({ playerIdx, tokenIdx, isBonus });
 
         // 🎬 STEP-BY-STEP ANIMATION LOOP
         path.forEach((pos, index) => {
@@ -564,45 +519,55 @@ function App() {
                 setGameState(prev => {
                     const newTokens = prev.tokens.map(arr => [...arr]);
                     newTokens[playerIdx][tokenIdx] = pos;
-
-                    // Audio tick for each step
                     playSound('move');
-
                     return { ...prev, tokens: newTokens };
                 });
             }, index * hopDuration);
         });
 
-        // 🏁 FINAL COMPLETION (Capture, Bonus, Finish)
+        // 🏁 FINAL COMPLETION
         setTimeout(() => {
-            try {
-                setGameState(prev => {
-                    // moveToken handles actual captures and toPosition state
-                    const stateAfterMove = moveToken(prev, move);
-                    const newState = completeMoveAnimation(stateAfterMove);
+            if (isWeb3) {
+                // Emit to server and let state_update handle the logic
+                emitMove(tokenIdx);
 
-                    // FINAL LANDING EFFECTS
-                    playSound('land');
+                // Audio/Feedback
+                if (hasCapture) {
+                    playSound('capture');
+                    if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+                } else if (move.isHome) playSound('home');
+                else playSound('land');
 
-                    const toPos = move.toPosition;
-
-                    if (newState.bonusMoves > 0) {
-                        playSound('bonus');
-                    }
-
-                    return newState;
-                });
-            } catch (error) {
-                console.error("Move execution error:", error);
-                // Force reset if something blows up
-                setServerMsg("⚠️ Move error recovering...");
-                setTimeout(() => setServerMsg(null), 3000);
-            } finally {
                 setIsMoving(false);
-                aiActionInProgress.current = false;
+                setActiveMovingToken(null);
+            } else {
+                // Local/AI Mode Logic
+                try {
+                    setGameState(prev => {
+                        const stateAfterMove = moveToken(prev, move);
+                        const newState = completeMoveAnimation(stateAfterMove);
+
+                        // Impact/Capture
+                        if (hasCapture) {
+                            playSound('capture');
+                            const coords = MASTER_LOOP[move.toPosition] || (move.toPosition >= 100 ? HOME_STRETCH_COORDS[playerIdx][move.toPosition - 100] : null);
+                            if (coords) triggerCapture(move.captures[0].player, coords.r, coords.c);
+                        } else if (move.isHome) playSound('home');
+                        else playSound('land');
+
+                        if (newState.bonusMoves > 0) playSound('bonus');
+                        return newState;
+                    });
+                } catch (e) {
+                    console.error("Local move error:", e);
+                } finally {
+                    setIsMoving(false);
+                    setActiveMovingToken(null);
+                    aiActionInProgress.current = false;
+                }
             }
         }, path.length * hopDuration + 100);
-    }, [gameState, gameConfig, account, playSound, triggerCapture, triggerSpawn]);
+    }, [gameState, gameConfig, emitMove, playSound, triggerSpawn, triggerCapture]);
 
     // Human token click
     const handleTokenClick = useCallback((playerIndex, tokenIndex) => {

@@ -52,6 +52,9 @@ export const useGameStore = create<GameStoreState>()(
             /** Token moving animation */
             isMoving: false,
 
+            /** Currently animating token (to prevent teleportation from server updates) */
+            activeMovingToken: null as { playerIdx: number; tokenIdx: number; isBonus: boolean } | null,
+
             /** Board rotation for local player perspective */
             boardRotation: 0,
 
@@ -114,6 +117,9 @@ export const useGameStore = create<GameStoreState>()(
             /** Set moving animation state (transient for performance) */
             setIsMoving: (isMoving) => set({ isMoving }, false, 'setIsMoving'),
 
+            /** Set currently animating token */
+            setActiveMovingToken: (activeMovingToken) => set({ activeMovingToken }, false, 'setActiveMovingToken'),
+
             /** Set board rotation angle */
             setBoardRotation: (rotation) => set({ boardRotation: rotation }, false, 'setBoardRotation'),
 
@@ -158,6 +164,7 @@ export const useGameStore = create<GameStoreState>()(
                 state: null,
                 isRolling: false,
                 isMoving: false,
+                activeMovingToken: null,
                 boardRotation: 0,
                 turnTimer: null,
                 serverMsg: null,
