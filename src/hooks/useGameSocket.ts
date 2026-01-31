@@ -200,9 +200,8 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
         socket.on('pre_game_countdown', ({ room, countdownSeconds, message }) => {
             console.log('🎬 Pre-game countdown received:', countdownSeconds, 's');
-            // If game already exists (reconnect), skip countdown
-            if (useGameStore.getState().state) return;
 
+            // Always show countdown - even if state exists (Lobby may have set it early)
             setServerMsg(message);
             setGameCountdown(countdownSeconds);
             setShowCountdown(true);

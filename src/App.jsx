@@ -693,8 +693,6 @@ function App() {
     return (
         <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
             {/* 0. PREMIUM COUNTDOWN LAYER */}
-            {/* DEBUG: Check if countdown should show */}
-            {console.log('🎯 Countdown Debug:', { showCountdown, gameCountdown, hasConfig: !!gameConfig, appState })}
             <AnimatePresence>
                 {showCountdown && gameConfig && (
                     <AAACountdown
