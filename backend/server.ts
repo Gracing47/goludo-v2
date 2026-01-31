@@ -409,10 +409,17 @@ function startGameCountdown(io: Server, room: any, roomId: string) {
         if (countdown <= 0) {
             clearInterval(countdownInterval);
 
-            // STEP 3: Start the game
+            // STEP 3: Initialize game state
+            const activeColors = room.players
+                .map((p: any, idx: number) => p ? idx : null)
+                .filter((idx: any) => idx !== null) as number[];
+
+            room.gameState = createInitialState(4, activeColors);
             room.status = "ACTIVE";
             room._gameStartedAt = Date.now(); // For duration tracking
+
             console.log(`🎮 Game Starting: Room ${roomId}`);
+            console.log(`📋 Active colors: [${activeColors.join(', ')}]`);
             console.log(`📋 Socket states:`, room.players.filter((p: any) => p).map((p: any) => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
             console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter((p: any) => p).map((p: any) => p.address).join(', ')}`);
 
