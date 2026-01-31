@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
 import { signPayout, walletAddress } from './signer.js';
@@ -34,15 +35,23 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 app.set('trust proxy', 1); // Phase 6: Required for express-rate-limit behind Railway/Netlify proxy
+
+// ============================================
+// SECURITY HEADERS (Phase 7: Final Hardening)
+// ============================================
+app.use(helmet({
+    contentSecurityPolicy: false, // Disabled for WebSocket/API compatibility
+    crossOriginEmbedderPolicy: false
+}));
 const server = http.createServer(app);
+// Production-aware CORS origins
+const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
+    ? ["https://goludo.netlify.app", "https://goludo-production.up.railway.app"]
+    : ["http://localhost:3000", "http://localhost:5173", "https://goludo.netlify.app", "https://goludo-production.up.railway.app"];
+
 const io = new Server(server, {
     cors: {
-        origin: [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "https://goludo.netlify.app",
-            "https://goludo-production.up.railway.app"
-        ],
+        origin: ALLOWED_ORIGINS,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -52,15 +61,10 @@ const PORT = process.env.PORT || 3333;
 let activeRooms: any[] = [];
 
 app.use(cors({
-    origin: [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://goludo.netlify.app",
-        "https://goludo-production.up.railway.app"
-    ],
+    origin: ALLOWED_ORIGINS,
     credentials: true
 }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10kb' })); // Phase 7: Prevent DoS via large payloads
 
 // ============================================
 // RATE LIMITING (Phase 6: Audit Readiness)
