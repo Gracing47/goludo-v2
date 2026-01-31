@@ -233,12 +233,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         });
 
         socket.on('countdown_tick', ({ remaining }) => {
-            // Fix: Allow countdown updates even if partial state exists (e.g. { gamePhase: 'COUNTDOWN' })
-            const currentState = useGameStore.getState().state;
-            if (currentState && currentState.gamePhase !== 'COUNTDOWN' && currentState.gamePhase !== undefined) return;
-
-            console.log(`⏳ Countdown: ${remaining}s`);
+            console.log(`⏳ Countdown tick: ${remaining}s`);
             setGameCountdown(remaining);
+
             if (remaining > 0) {
                 setShowCountdown(true);
                 // Ensure we are in the game view if we see a countdown
