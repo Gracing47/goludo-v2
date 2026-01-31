@@ -66,7 +66,7 @@ export const useLudoWeb3 = () => {
             const createTx = prepareContractCall({
                 contract: ludoVaultContract,
                 method: "function createRoom(bytes32,uint256)",
-                params: [roomId, amountInWei],
+                params: [roomId as `0x${string}`, amountInWei],
                 value: amountInWei, // Send native C2FLR
             });
 
@@ -109,7 +109,7 @@ export const useLudoWeb3 = () => {
             const joinTx = prepareContractCall({
                 contract: ludoVaultContract,
                 method: "function joinRoom(bytes32)",
-                params: [roomId],
+                params: [roomId as `0x${string}`],
                 value: amountInWei, // Send native C2FLR
             });
             const txResult = await sendTx(joinTx);
@@ -149,8 +149,8 @@ export const useLudoWeb3 = () => {
                 contract: ludoVaultContract,
                 method: "function claimPayout(bytes32,address,uint256,uint256,uint256,bytes)",
                 params: [
-                    payoutProof.roomId,
-                    payoutProof.winner,
+                    payoutProof.roomId as `0x${string}`,
+                    payoutProof.winner as `0x${string}`,
                     BigInt(payoutProof.amount),
                     BigInt(payoutProof.nonce),
                     BigInt(payoutProof.deadline),
