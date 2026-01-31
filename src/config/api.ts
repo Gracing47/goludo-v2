@@ -5,8 +5,8 @@
  */
 
 // Get API URL from environment variable or fallback to Railway production
-const RAILWAY_URL = 'https://goludo-production.up.railway.app';
-export const API_URL = import.meta.env.VITE_API_URL || RAILWAY_URL;
+const RAILWAY_URL: string = 'https://goludo-production.up.railway.app';
+export const API_URL: string = (import.meta as any).env.VITE_API_URL || RAILWAY_URL;
 
 // Socket.IO server URL (same as API)
-export const SOCKET_URL = API_URL;
+export const SOCKET_URL: string = API_URL;

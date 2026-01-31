@@ -6,10 +6,14 @@
  */
 
 class SoundManager {
+    private muted: boolean;
+    private bgm: HTMLAudioElement | null;
+    private audioCtx: AudioContext;
+    private soundMap: Record<string, string>;
+
     constructor() {
         this.muted = localStorage.getItem('goludo_muted') === 'true';
         this.bgm = null;
-        this.sounds = {};
 
         // Define sound mappings
         this.soundMap = {
@@ -22,14 +26,15 @@ class SoundManager {
         };
 
         // Web Audio Context for Synths (Fallback)
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+        this.audioCtx = new AudioContextClass();
     }
 
     /**
      * Play a one-shot sound effect
-     * @param {string} key - The key of the sound to play (roll, click, etc.)
+     * @param key - The key of the sound to play (roll, click, etc.)
      */
-    play(key) {
+    public play(key: string): void {
         if (this.muted) return;
 
         // Resume context if suspended (browser policy)
@@ -37,29 +42,15 @@ class SoundManager {
             this.audioCtx.resume();
         }
 
-        const src = this.soundMap[key];
-
         // Use Synth for immediate feedback (until assets are provided)
         this.playSynth(key);
-
-        /* 
-        // Real implementation with Asset Priority:
-        if (src) {
-             const audio = new Audio(src);
-             audio.volume = 0.6;
-             if (key === 'move') audio.playbackRate = 0.9 + Math.random() * 0.2;
-             audio.play().catch(e => {
-                 this.playSynth(key); // Fallback to synth if file missing/error
-             });
-        }
-        */
     }
 
     /**
      * Play a synthesized sound (Premium AAA Quality)
-     * @param {string} key 
+     * @param key 
      */
-    playSynth(key) {
+    public playSynth(key: string): void {
         const osc = this.audioCtx.createOscillator();
         const gainNode = this.audioCtx.createGain();
 
@@ -189,7 +180,7 @@ class SoundManager {
     /**
      * Play noise burst (for impact/rattle effects)
      */
-    playNoise(volume, startTime, duration) {
+    public playNoise(volume: number, startTime: number, duration: number): void {
         const bufferSize = this.audioCtx.sampleRate * duration;
         const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -212,7 +203,7 @@ class SoundManager {
         noise.stop(startTime + duration);
     }
 
-    playNote(freq, startTime, duration) {
+    public playNote(freq: number, startTime: number, duration: number): void {
         const osc = this.audioCtx.createOscillator();
         const gain = this.audioCtx.createGain();
         osc.connect(gain);
@@ -229,7 +220,7 @@ class SoundManager {
     /**
      * Start Background Music
      */
-    playBGM() {
+    public playBGM(): void {
         if (this.bgm) return; // Already playing
 
         try {
@@ -240,7 +231,7 @@ class SoundManager {
             if (!this.muted) {
                 this.bgm.play().catch(e => {
                     // Autoplay policy might block this until interaction
-                    console.log('BGM Autoplay blocked, waiting for interaction');
+                    console.log('BGM Autoplay blocked, waiting for interaction', e);
                 });
             }
         } catch (err) {
@@ -251,7 +242,7 @@ class SoundManager {
     /**
      * Stop Background Music
      */
-    stopBGM() {
+    public stopBGM(): void {
         if (this.bgm) {
             this.bgm.pause();
             this.bgm = null;
@@ -260,11 +251,11 @@ class SoundManager {
 
     /**
      * Toggle Mute State
-     * @returns {boolean} new mute state
+     * @returns new mute state
      */
-    toggleMute() {
+    public toggleMute(): boolean {
         this.muted = !this.muted;
-        localStorage.setItem('goludo_muted', this.muted);
+        localStorage.setItem('goludo_muted', String(this.muted));
 
         if (this.muted) {
             if (this.bgm) this.bgm.pause();
@@ -286,19 +277,19 @@ class SoundManager {
         return this.muted;
     }
 
-    isMuted() {
+    public isMuted(): boolean {
         return this.muted;
     }
 
     /**
      * Explicitly set mute state (for syncing with global store)
-     * @param {boolean} isMuted 
+     * @param isMuted 
      */
-    setMuted(isMuted) {
+    public setMuted(isMuted: boolean): void {
         if (this.muted === isMuted) return; // No change
 
         this.muted = isMuted;
-        localStorage.setItem('goludo_muted', this.muted);
+        localStorage.setItem('goludo_muted', String(this.muted));
 
         if (this.muted) {
             if (this.bgm) this.bgm.pause();

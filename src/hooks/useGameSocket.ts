@@ -140,6 +140,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                 if (movedToken) {
                     const { p, t, from, to } = movedToken;
                     const path = PLAYER_PATHS[p];
+                    if (!path) return; // Safety check
                     const fromIdx = path.indexOf(from);
                     const toIdx = path.indexOf(to);
 
@@ -154,7 +155,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                         updateState(partialUpdate);
 
                         // 2. Animate the steps
-                        traversePath.forEach((pos, index) => {
+                        traversePath.forEach((pos: TokenPosition, index: number) => {
                             setTimeout(() => {
                                 setGameState((prev: any) => {
                                     if (!prev) return prev;
@@ -240,18 +241,17 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         });
 
         socket.on('game_started', (room) => {
-            const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
             const activeColors = room.players
-                .map((p, idx) => p ? idx : null)
-                .filter(idx => idx !== null) as number[];
+                .map((p: any, idx: number) => p ? idx : null)
+                .filter((idx: any) => idx !== null) as number[];
 
             setConfig({
                 mode: 'web3',
                 gameMode: 'classic',
                 roomId: room.id,
                 stake: room.stake,
-                playerCount: room.players.filter(p => p).length,
-                players: room.players.map((p, idx) => p ? ({
+                playerCount: room.players.filter((p: any) => p).length,
+                players: room.players.map((p: any, idx: number) => p ? ({
                     id: idx,
                     name: p.name,
                     color: p.color,

@@ -389,6 +389,10 @@ export interface PayoutProof {
     amount: string;
     /** Server signature */
     signature: string;
+    /** Nonce for replay protection */
+    nonce: string;
+    /** Deadline for claim expiration */
+    deadline: string;
 }
 
 export interface GameStoreState {

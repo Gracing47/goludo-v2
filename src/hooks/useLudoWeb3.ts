@@ -1,10 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb/react";
-import { prepareContractCall, toWei, readContract, sendAndConfirmTransaction } from "thirdweb";
+import { prepareContractCall, toWei } from "thirdweb";
 import { ethers } from "ethers";
-import { goTokenContract, ludoVaultContract, LUDO_VAULT_ADDRESS, coston2, client } from "../config/web3";
+import { ludoVaultContract, coston2, client } from "../config/web3";
 import { API_URL } from "../config/api";
+import { PayoutProof } from "../types";
 
+/**
+ * useLudoWeb3 Hook
+ * 
+ * Manages Web3 interactions including room creation, joining, and payout claims.
+ * Handles transaction state and backend synchronization.
+ */
 export const useLudoWeb3 = () => {
     const account = useActiveAccount();
     const { mutateAsync: sendTx } = useSendTransaction();
@@ -20,13 +27,12 @@ export const useLudoWeb3 = () => {
     const balance = walletBalance?.displayValue || "0";
     const balanceSymbol = walletBalance?.symbol || "C2FLR";
 
-    const refetchBalance = () => {
-        // Handled by hook polling
-    };
-
+    const refetchBalance = useCallback(() => {
+        // Handled by hook polling automatically if data is accessed
+    }, []);
 
     // 3. Sync with Backend
-    const syncWithBackend = async (endpoint, body) => {
+    const syncWithBackend = async (endpoint: string, body: any) => {
         try {
             const res = await fetch(`${API_URL}/api/${endpoint}`, {
                 method: 'POST',
@@ -42,12 +48,12 @@ export const useLudoWeb3 = () => {
             return await res.json();
         } catch (error) {
             console.error("Backend Sync Error:", error);
-            throw error; // Rethrow so caller knows it failed
+            throw error;
         }
     };
 
     // 4. Create Room Flow
-    const handleCreateRoom = async (stakeAmount, maxPlayers, creatorName, color) => {
+    const handleCreateRoom = async (stakeAmount: string | number, maxPlayers: number, creatorName: string, color: string) => {
         if (!account) return alert("Please connect wallet first");
 
         setIsProcessing(true);
@@ -57,25 +63,21 @@ export const useLudoWeb3 = () => {
 
             // Step B: Create Room on Blockchain (PAYABLE)
             console.log("Creating room on blockchain with native currency...");
-            console.log("Room ID:", roomId);
-            console.log("Amount in Wei:", amountInWei.toString());
             const createTx = prepareContractCall({
                 contract: ludoVaultContract,
                 method: "function createRoom(bytes32,uint256)",
                 params: [roomId, amountInWei],
                 value: amountInWei, // Send native C2FLR
             });
-            console.log("Prepared TX:", createTx);
-            console.log("Sending transaction to wallet...");
+
             const txResult = await sendTx(createTx);
             const txHash = txResult.transactionHash;
             console.log("Transaction confirmed:", txHash);
 
             // Step C: Register Room in Backend Lobby
-            console.log("Registering room in backend...");
             await syncWithBackend('rooms/create', {
                 roomId,
-                txHash,  // ✅ PHASE 5: Send transaction hash for verification
+                txHash,
                 stake: stakeAmount,
                 maxPlayers,
                 creatorName,
@@ -84,7 +86,6 @@ export const useLudoWeb3 = () => {
             });
 
             console.log("✅ Room created successfully!", roomId);
-            refetchBalance();
             return roomId;
         } catch (error) {
             console.error("Create Room Failed:", error);
@@ -96,7 +97,7 @@ export const useLudoWeb3 = () => {
     };
 
     // 5. Join Room Flow
-    const handleJoinGame = async (roomId, stakeAmount, playerName, color) => {
+    const handleJoinGame = async (roomId: string, stakeAmount: string | number, playerName: string, color: string) => {
         if (!account) return alert("Please connect wallet first");
 
         setIsProcessing(true);
@@ -116,17 +117,15 @@ export const useLudoWeb3 = () => {
             console.log("Join transaction confirmed:", txHash);
 
             // Step C: Update Backend
-            console.log("Updating backend lobby...");
             const result = await syncWithBackend('rooms/join', {
                 roomId,
-                txHash,  // ✅ PHASE 5: Send transaction hash for verification
+                txHash,
                 playerName,
                 playerAddress: account.address,
                 color
             });
 
             console.log("✅ Successfully joined room:", result);
-            refetchBalance();
             return result;
 
         } catch (error) {
@@ -139,7 +138,7 @@ export const useLudoWeb3 = () => {
     };
 
     // 6. Claim Winnings Flow
-    const handleClaimPayout = async (payoutProof) => {
+    const handleClaimPayout = async (payoutProof: PayoutProof) => {
         if (!account) return alert("Please connect wallet first");
 
         setIsProcessing(true);
@@ -155,14 +154,13 @@ export const useLudoWeb3 = () => {
                     BigInt(payoutProof.amount),
                     BigInt(payoutProof.nonce),
                     BigInt(payoutProof.deadline),
-                    payoutProof.signature
+                    payoutProof.signature as `0x${string}`
                 ],
             });
 
             const result = await sendTx(claimTx);
             console.log("Payout claimed successfully!", result);
             alert("Congratulations! Your winnings have been transferred to your wallet.");
-            refetchBalance();
             return result;
         } catch (error) {
             console.error("Payout Claim Error:", error);

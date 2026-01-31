@@ -1,5 +1,4 @@
 import {
-    PLAYERS,
     PLAYER_PATHS,
     POSITION,
     RULES,
@@ -7,7 +6,8 @@ import {
     HOME_STRETCH_START,
     PLAYER_START_POSITIONS,
     SAFE_POSITIONS
-} from './constants.js';
+} from './constants';
+import { GameState, TokenPosition, Move, Capture } from '../types';
 
 /**
  * MOVEMENT ENGINE
@@ -16,17 +16,17 @@ import {
  */
 
 // Logging helper to track logic in console
-const logMove = (msg, ...args) => {
+const logMove = (msg: string, ...args: any[]) => {
     // console.log(`[MoveEngine] ${msg}`, ...args);
 };
 
-export function calculateMove(state, playerIndex, tokenIndex, steps) {
-    const position = state.tokens[playerIndex][tokenIndex];
+export function calculateMove(state: GameState, playerIndex: number, tokenIndex: number, steps: number): Move | null {
+    const position = state.tokens[playerIndex]![tokenIndex]!;
 
     // 1. Handle Yard Exit (Spawn)
     if (position === POSITION.IN_YARD) {
         if (steps === RULES.ENTRY_ROLL) {
-            const startPos = PLAYER_START_POSITIONS[playerIndex];
+            const startPos = PLAYER_START_POSITIONS[playerIndex]!;
 
             // Blockade Check on Spawn Point
             if (isBlockedByBlockade(state, playerIndex, startPos)) {
@@ -65,13 +65,18 @@ export function calculateMove(state, playerIndex, tokenIndex, steps) {
         traversePath: result.path,
         isSpawn: false,
         isHome: result.destination === POSITION.FINISHED,
-        captures: (result.destination >= 0 && result.destination < MAIN_PATH_LENGTH)
+        captures: (typeof result.destination === 'number' && result.destination >= 0 && result.destination < MAIN_PATH_LENGTH)
             ? getCapturesAt(state, playerIndex, result.destination)
             : []
     };
 }
 
-export function calculateDestinationWithPath(state, playerIndex, currentPos, steps) {
+export function calculateDestinationWithPath(
+    state: GameState,
+    playerIndex: number,
+    currentPos: TokenPosition,
+    steps: number
+): { destination: TokenPosition, path: TokenPosition[] } | null {
     const path = PLAYER_PATHS[playerIndex];
     if (!path) return null;
 
@@ -79,7 +84,7 @@ export function calculateDestinationWithPath(state, playerIndex, currentPos, ste
     if (currentIndex === -1) return null;
 
     const targetIndex = currentIndex + steps;
-    const traversePath = [];
+    const traversePath: TokenPosition[] = [];
 
     // CHECK: Overshot Goal
     if (targetIndex >= path.length) {
@@ -87,7 +92,7 @@ export function calculateDestinationWithPath(state, playerIndex, currentPos, ste
         else {
             // Fill path up to goal
             for (let i = currentIndex + 1; i < path.length; i++) {
-                traversePath.push(path[i]);
+                traversePath.push(path[i]!);
             }
             return { destination: POSITION.FINISHED, path: traversePath };
         }
@@ -95,41 +100,30 @@ export function calculateDestinationWithPath(state, playerIndex, currentPos, ste
 
     // CHECK: Path Blockades & Fill Traverse Path
     for (let i = currentIndex + 1; i <= targetIndex; i++) {
-        const stepPos = path[i];
+        const stepPos = path[i]!;
         if (isBlockedByBlockade(state, playerIndex, stepPos)) return null;
         traversePath.push(stepPos);
     }
 
     // CHECK: Reached Goal (Exact Match)
     if (targetIndex === path.length - 1) {
-        // Fill path up to goal
-        for (let i = currentIndex + 1; i <= targetIndex; i++) {
-            traversePath.push(path[i]);
-        }
         return { destination: POSITION.FINISHED, path: traversePath };
     }
 
-    return { destination: path[targetIndex], path: traversePath };
+    return { destination: path[targetIndex]!, path: traversePath };
 }
 
-
-
-export function isBlockedByBlockade(state, movingPlayer, position) {
+export function isBlockedByBlockade(state: GameState, movingPlayer: number, position: TokenPosition): boolean {
     if (!RULES.BLOCKADE_STRICT) return false;
-    // Safe zones usually don't support blockades or don't block? 
-    // Actually safe zones allow stacking, but do they block?
-    // Constants said: Blockade size 2.
 
     // Cannot blockade inside home stretch or yard
-    if (position >= HOME_STRETCH_START) return false;
+    if (typeof position === 'number' && position >= HOME_STRETCH_START) return false;
     if (position === POSITION.IN_YARD) return false;
 
     const playersToCheck = state.activeColors || [0, 1, 2, 3];
     for (const player of playersToCheck) {
-        // Blockades are formed by ANY player (opponents usually, sometimes own)
-        // Let's assume ANY blockade stops movement.
         let tokensAtPos = 0;
-        state.tokens[player].forEach(pos => {
+        state.tokens[player]?.forEach(pos => {
             if (pos === position) tokensAtPos++;
         });
 
@@ -141,29 +135,23 @@ export function isBlockedByBlockade(state, movingPlayer, position) {
     return false;
 }
 
-export function getCapturesAt(state, movingPlayer, position) {
-    const captures = [];
+export function getCapturesAt(state: GameState, movingPlayer: number, position: TokenPosition): Capture[] {
+    const captures: Capture[] = [];
 
     // Safety checks
-    if (SAFE_POSITIONS.includes(position)) return captures;
-    if (position >= HOME_STRETCH_START) return captures;
+    if (typeof position === 'number' && SAFE_POSITIONS.includes(position)) return captures;
+    if (typeof position === 'number' && position >= HOME_STRETCH_START) return captures;
 
     const playersToCheck = state.activeColors || [0, 1, 2, 3];
     for (const player of playersToCheck) {
         if (player === movingPlayer) continue;
 
-        state.tokens[player].forEach((pos, tokenIndex) => {
+        state.tokens[player]?.forEach((pos, tokenIndex) => {
             if (pos === position) {
                 captures.push({ player, tokenIndex });
             }
         });
     }
-
-    // Standard Ludo: Capture happens if landing on opponent's single token.
-    // If opponent has 2 tokens (Blockade), we already returned NULL in validation, so we never reach here?
-    // Correct. But if BLOCKADE_STRICT is false, we might land here.
-    // If landing on a blockade captures it? Usually no, blockades are safe.
-    // But let's assume validMoves filter protected us.
 
     return captures;
 }

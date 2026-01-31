@@ -2,28 +2,9 @@
  * GAME CONSTANTS - GOLUDO ENGINE (USA STANDARD RULES)
  * 
  * Standard 15x15 Ludo Board - CORRECT PATH MAPPING
- * 
- * Visual representation (P = path, bases in corners):
- * 
- *     Col:  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14
- *         ┌───────────────────────┬───────────┬───────────────────────┐
- *   Row 0 │ BR  BR  BR  BR  BR  BR│ P   P   P │ BG  BG  BG  BG  BG  BG│
- *   Row 1 │ BR  BR  BR  BR  BR  BR│ P   HG  SG│ BG  BG  BG  BG  BG  BG│
- *   Row 2 │ BR  BR  BR  BR  BR  BR│ S   HG  P │ BG  BG  BG  BG  BG  BG│
- *   Row 3 │ BR  BR  BR  BR  BR  BR│ P   HG  P │ BG  BG  BG  BG  BG  BG│
- *   Row 4 │ BR  BR  BR  BR  BR  BR│ P   HG  P │ BG  BG  BG  BG  BG  BG│
- *   Row 5 │ BR  BR  BR  BR  BR  BR│ P   HG  P │ BG  BG  BG  BG  BG  BG│
- *   Row 6 │ P   SR  P   P   P   P │ C   C   C │ P   P   P   P   S   P │
- *   Row 7 │ P   HR  HR  HR  HR  HR│ C   C   C │ HY  HY  HY  HY  HY  P │
- *   Row 8 │ P   S   P   P   P   P │ C   C   C │ P   P   P   P   SY  P │
- *   Row 9 │ BB  BB  BB  BB  BB  BB│ P   HB  P │ BY  BY  BY  BY  BY  BY│
- *   Row10 │ BB  BB  BB  BB  BB  BB│ P   HB  P │ BY  BY  BY  BY  BY  BY│
- *   Row11 │ BB  BB  BB  BB  BB  BB│ P   HB  P │ BY  BY  BY  BY  BY  BY│
- *   Row12 │ BB  BB  BB  BB  BB  BB│ P   HB  S │ BY  BY  BY  BY  BY  BY│
- *   Row13 │ BB  BB  BB  BB  BB  BB│ SB  HB  P │ BY  BY  BY  BY  BY  BY│
- *   Row14 │ BB  BB  BB  BB  BB  BB│ P   P   P │ BY  BY  BY  BY  BY  BY│
- *         └───────────────────────┴───────────┴───────────────────────┘
  */
+
+import { Coordinates, TokenPosition } from '../types';
 
 // ============================================
 // GRID CONFIGURATION
@@ -40,10 +21,10 @@ export const PLAYERS = {
     GREEN: 1,
     YELLOW: 2,
     BLUE: 3
-};
+} as const;
 
-export const PLAYER_COLORS = ['red', 'green', 'yellow', 'blue'];
-export const PLAYER_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
+export const PLAYER_COLORS = ['red', 'green', 'yellow', 'blue'] as const;
+export const PLAYER_NAMES = ['Red', 'Green', 'Yellow', 'Blue'] as const;
 export const TOKENS_PER_PLAYER = 4;
 
 // ============================================
@@ -56,16 +37,16 @@ export const GAME_PHASE = {
     BONUS_MOVE: 'BONUS_MOVE',
     MOVING: 'MOVING',
     WIN: 'WIN'
-};
+} as const;
 
 // ============================================
 // SPECIAL POSITIONS
 // ============================================
 
 export const POSITION = {
-    IN_YARD: -1,
-    FINISHED: 999
-};
+    IN_YARD: -1 as TokenPosition,
+    FINISHED: 999 as TokenPosition
+} as const;
 
 export const MAIN_PATH_LENGTH = 52;
 export const HOME_STRETCH_START = 100;
@@ -107,7 +88,7 @@ export const CELL_TYPE = {
     START_YELLOW: 'start-yellow',
     START_BLUE: 'start-blue',
     CENTER: 'center'
-};
+} as const;
 
 // ============================================
 // BOARD MATRIX (15x15)
@@ -154,7 +135,7 @@ export const BOARD_LAYOUT = [
 // Clockwise path starting at Red's entry point
 // ============================================
 
-export const MASTER_LOOP = [
+export const MASTER_LOOP: Coordinates[] = [
     // --- RED SECTION (Positions 0-12) ---
     { r: 6, c: 1 },   // 0  - RED START ★
     { r: 6, c: 2 },   // 1
@@ -239,26 +220,26 @@ export const HOME_ENTRY_POSITIONS = [
 // HARDCODED PLAYER PATHS
 // ============================================
 
-const generatePath = (startIdx, endIdxBeforeHome) => {
-    let path = [];
+const generatePath = (startIdx: number, endIdxBeforeHome: number): TokenPosition[] => {
+    let path: TokenPosition[] = [];
     let current = startIdx;
 
     // Main path loop
     while (current !== (endIdxBeforeHome + 1) % 52) {
-        path.push(current);
+        path.push(current as TokenPosition);
         current = (current + 1) % 52;
     }
 
     // Add Home Stretch (100-105)
     // Note: 105 is the goal
     for (let i = 0; i < 6; i++) {
-        path.push(100 + i);
+        path.push((100 + i) as TokenPosition);
     }
 
     return path;
 };
 
-export const PLAYER_PATHS = {
+export const PLAYER_PATHS: Record<number, TokenPosition[]> = {
     [PLAYERS.RED]: generatePath(0, 50),
     [PLAYERS.GREEN]: generatePath(13, 11),
     [PLAYERS.YELLOW]: generatePath(26, 24),
@@ -280,7 +261,7 @@ export const SAFE_POSITIONS = [
 // HOME STRETCH COORDINATES (6 cells each)
 // ============================================
 
-export const HOME_STRETCH_COORDS = {
+export const HOME_STRETCH_COORDS: Record<number, Coordinates[]> = {
     [PLAYERS.RED]: [
         { r: 7, c: 1 },   // 100
         { r: 7, c: 2 },   // 101
@@ -319,7 +300,7 @@ export const HOME_STRETCH_COORDS = {
 // YARD SPAWN POSITIONS
 // ============================================
 
-export const YARD_COORDS = {
+export const YARD_COORDS: Record<number, Coordinates[]> = {
     [PLAYERS.RED]: [
         { r: 1, c: 1 }, { r: 1, c: 4 }, { r: 4, c: 1 }, { r: 4, c: 4 }
     ],
@@ -342,4 +323,4 @@ export const DICE = {
     MIN: 1,
     MAX: 6,
     SPECIAL_ROLL: 6
-};
+} as const;
