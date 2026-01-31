@@ -3,10 +3,8 @@
  */
 
 import {
-    TOKENS_PER_PLAYER,
     GAME_PHASE,
     POSITION,
-    PLAYER_START_POSITIONS,
     RULES,
     SAFE_POSITIONS
 } from './constants';
@@ -16,7 +14,7 @@ import {
     isBlockedByBlockade
 } from './movementEngine';
 
-import { GameState, Move, TokenPosition, Capture } from '../types';
+import { GameState, Move, TokenPosition } from '../types';
 
 // ============================================
 // STATE INITIALIZATION
@@ -52,7 +50,6 @@ export function createInitialState(playerCount: number = 4, activeColors: number
 
 export function rollDice(state: GameState, forcedValue: number | null = null): GameState {
     let diceValue: number;
-    const currentPlayer = state.activePlayer;
 
     if (forcedValue !== null) {
         diceValue = forcedValue;
