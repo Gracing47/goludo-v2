@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "dev:backend": "node backend/server.js",
+    "dev:backend": "node --loader ts-node/esm backend/server.ts",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:backend\"",
     "build": "npx vite build",
     "preview": "vite preview",
