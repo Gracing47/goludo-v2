@@ -246,6 +246,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                 if (useGameStore.getState().appState !== 'game') {
                     setAppState('game');
                 }
+            } else {
+                // Countdown finished - hide overlay (game_started will handle game init)
+                setShowCountdown(false);
             }
         });
 
@@ -271,6 +274,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             });
 
             setGameState(createInitialState(4, activeColors) as any);
+            setShowCountdown(false); // Hide countdown overlay
             setAppState('game');
 
             const myIdx = room.players.findIndex((p: any) =>
