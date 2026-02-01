@@ -383,8 +383,12 @@ function startGameCountdown(io: Server, room: any, roomId: string) {
         message: "Get Ready!"
     });
 
+    // Store current countdown value on room object for late joiners
+    room._currentCountdown = countdown;
+
     const countdownInterval = setInterval(() => {
         countdown--;
+        room._currentCountdown = countdown;
 
         const connectedNow = room.players.filter((p: any) => p && p.socketId).length;
         const totalPlayersNeeded = room.players.filter((p: any) => p).length;
@@ -399,17 +403,19 @@ function startGameCountdown(io: Server, room: any, roomId: string) {
         if (countdown <= 0) {
             clearInterval(countdownInterval);
 
-            // STEP 3: Initialize game state
-            const activeColors = room.players
-                .map((p: any, idx: number) => p ? idx : null)
-                .filter((idx: any) => idx !== null) as number[];
+            // STEP 3: Ensure game state is initialized (should be done already when status became STARTING)
+            if (!room.gameState) {
+                const activeColors = room.players
+                    .map((p: any, idx: number) => p ? idx : null)
+                    .filter((idx: any) => idx !== null) as number[];
+                room.gameState = createInitialState(4, activeColors);
+            }
 
-            room.gameState = createInitialState(4, activeColors);
             room.status = "ACTIVE";
             room._gameStartedAt = Date.now(); // For duration tracking
 
             console.log(`🎮 Game Starting: Room ${roomId}`);
-            console.log(`📋 Active colors: [${activeColors.join(', ')}]`);
+            console.log(`📋 Active colors: [${room.gameState.activeColors.join(', ')}]`);
             console.log(`📋 Socket states:`, room.players.filter((p: any) => p).map((p: any) => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
             console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter((p: any) => p).map((p: any) => p.address).join(', ')}`);
 
@@ -474,13 +480,24 @@ io.on('connection', (socket) => {
                         handleNextTurn(io, room);
                     }
                 } else if (room.status === "STARTING") {
-                    // During countdown, send the full initialization event so the client sets up the board
-                    console.log(`⏳ Player ${player.name} connected during countdown - syncing state`);
+                    // During countdown, send the current countdown value and initialization event
+                    console.log(`⏳ Player ${player.name} connected during countdown (${room._currentCountdown || 5}s) - syncing state`);
+
                     socket.emit('pre_game_countdown', {
                         room: room,
-                        countdownSeconds: 5, // Will be corrected by next tick
-                        message: "Syncing..."
+                        countdownSeconds: room._currentCountdown || 5,
+                        message: "Synchronizing..."
                     });
+
+                    // Also send gameState if it exists (highly likely since we init it on STARTING now)
+                    if (room.gameState) {
+                        socket.emit('state_update', {
+                            ...room.gameState,
+                            currentTurn: room.gameState.activePlayer,
+                            turnState: "WAITING_FOR_GAME_START",
+                            msg: "Game starting soon..."
+                        });
+                    }
                 }
             }
         }
@@ -894,7 +911,13 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     const totalPlayers = room.players.filter((p: any) => p).length;
     if (totalPlayers >= room.maxPlayers) {
         room.status = "STARTING";
-        console.log(`🚦 Room ${roomId} is full! Status -> STARTING`);
+        console.log(`🚦 Room ${roomId} is full (${totalPlayers}/${room.maxPlayers})! Status -> STARTING`);
+
+        // Initialize Game State immediately so joiners see the board under the countdown
+        const activeColors = room.players
+            .map((p: any, idx: number) => p ? idx : null)
+            .filter((idx: any) => idx !== null) as number[];
+        room.gameState = createInitialState(4, activeColors);
 
         // Notify all clients to start countdown
         io.to(roomId).emit('room_full', room);

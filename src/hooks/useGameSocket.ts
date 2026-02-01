@@ -113,6 +113,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         socket.on('state_update', (update) => {
             if (update.msg) setServerMsg(update.msg);
 
+            // Safety: If we get a state update, the game is definitely not in initial countdown anymore
+            setShowCountdown(false);
+
             const currentState = useGameStore.getState().state;
             const activeAnim = useGameStore.getState().activeMovingToken;
 
@@ -262,6 +265,8 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         });
 
         socket.on('game_started', (room) => {
+            console.log('🎮 Game started event received! Room ID:', room.id, 'Players:', room.players.filter((p: any) => p).length);
+
             const activeColors = room.players
                 .map((p: any, idx: number) => p ? idx : null)
                 .filter((idx: any) => idx !== null) as number[];
@@ -285,6 +290,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             setGameState(createInitialState(4, activeColors) as any);
             setShowCountdown(false); // Hide countdown overlay
             setAppState('game');
+            setServerMsg("Game Started!");
 
             const myIdx = room.players.findIndex((p: any) =>
                 p?.address?.toLowerCase() === account.address?.toLowerCase()
