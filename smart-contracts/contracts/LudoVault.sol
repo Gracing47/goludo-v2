@@ -25,9 +25,10 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     uint256 public constant EMERGENCY_DELAY = 24 hours;
     uint256 public constant ROOM_TIMEOUT = 3 minutes;
 
-    bytes32 public constant PAYOUT_TYPEHASH = keccak256(
-        "Payout(bytes32 roomId,address winner,uint256 amount,uint256 nonce,uint256 deadline)"
-    );
+    bytes32 public constant PAYOUT_TYPEHASH =
+        keccak256(
+            "Payout(bytes32 roomId,address winner,uint256 amount,uint256 nonce,uint256 deadline)"
+        );
 
     // ============================================
     // STATE VARIABLES
@@ -42,7 +43,13 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     // ROOM STRUCTURE
     // ============================================
 
-    enum RoomStatus { EMPTY, WAITING, ACTIVE, FINISHED, CANCELLED }
+    enum RoomStatus {
+        EMPTY,
+        WAITING,
+        ACTIVE,
+        FINISHED,
+        CANCELLED
+    }
 
     struct Room {
         address creator;
@@ -60,11 +67,43 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     // EVENTS
     // ============================================
 
-    event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount, uint256 maxPlayers);
-    event RoomJoined(bytes32 indexed roomId, address indexed opponent, uint256 currentPot, uint256 playersJoined);
-    event RoomCancelled(bytes32 indexed roomId, address indexed creator, uint256 refundAmount);
-    event GameFinished(bytes32 indexed roomId, address indexed winner, uint256 payout, uint256 fee);
-    event EmergencyWithdraw(bytes32 indexed roomId, address indexed player, uint256 amount);
+    // Room lifecycle events
+    event RoomCreated(
+        bytes32 indexed roomId,
+        address indexed creator,
+        uint256 entryAmount,
+        uint256 maxPlayers
+    );
+    event RoomJoined(
+        bytes32 indexed roomId,
+        address indexed player,
+        uint256 currentPot,
+        uint256 playersJoined
+    );
+    event RoomCancelled(
+        bytes32 indexed roomId,
+        address indexed creator,
+        uint256 refundAmount
+    );
+    event GameFinished(
+        bytes32 indexed roomId,
+        address indexed winner,
+        uint256 payout,
+        uint256 fee
+    );
+    event EmergencyWithdraw(
+        bytes32 indexed roomId,
+        address indexed player,
+        uint256 amount
+    );
+
+    // Admin events for monitoring
+    event SignerUpdated(address indexed oldSigner, address indexed newSigner);
+    event FeeUpdated(uint256 oldFee, uint256 newFee);
+    event TreasuryUpdated(
+        address indexed oldTreasury,
+        address indexed newTreasury
+    );
 
     // ============================================
     // ERRORS
@@ -88,10 +127,13 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     // CONSTRUCTOR
     // ============================================
 
-    constructor(address _signer, address _treasury, uint256 _feeBps) 
-        Ownable(msg.sender) EIP712("LudoVault", "1") 
-    {
-        if (_signer == address(0) || _treasury == address(0)) revert InvalidAddress();
+    constructor(
+        address _signer,
+        address _treasury,
+        uint256 _feeBps
+    ) Ownable(msg.sender) EIP712("LudoVault", "1") {
+        if (_signer == address(0) || _treasury == address(0))
+            revert InvalidAddress();
         if (_feeBps > MAX_FEE_BPS) revert InvalidFee();
         signer = _signer;
         treasury = _treasury;
@@ -102,10 +144,15 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     // ROOM MANAGEMENT
     // ============================================
 
-    function createRoom(bytes32 roomId, uint256 entryAmount, uint256 maxPlayers) external payable nonReentrant {
+    function createRoom(
+        bytes32 roomId,
+        uint256 entryAmount,
+        uint256 maxPlayers
+    ) external payable nonReentrant {
         if (msg.value == 0 || msg.value != entryAmount) revert InvalidAmount();
         if (maxPlayers < 2 || maxPlayers > 4) revert InvalidAmount();
-        if (rooms[roomId].status != RoomStatus.EMPTY) revert InvalidRoomStatus();
+        if (rooms[roomId].status != RoomStatus.EMPTY)
+            revert InvalidRoomStatus();
 
         Room storage room = rooms[roomId];
         room.creator = msg.sender;
@@ -121,7 +168,7 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
 
     function joinRoom(bytes32 roomId) external payable nonReentrant {
         Room storage room = rooms[roomId];
-        
+
         if (room.status != RoomStatus.WAITING) revert InvalidRoomStatus();
         if (msg.value != room.entryAmount) revert InvalidAmount();
         if (room.participants.length >= room.maxPlayers) revert RoomFull();
@@ -133,7 +180,7 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
 
         room.participants.push(msg.sender);
         room.pot += msg.value;
-        
+
         if (room.participants.length == room.maxPlayers) {
             room.status = RoomStatus.ACTIVE;
         }
@@ -154,7 +201,9 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
 
         uint256 refundPerPlayer = room.entryAmount;
         for (uint256 i = 0; i < toRefund.length; i++) {
-            (bool success, ) = payable(toRefund[i]).call{value: refundPerPlayer}("");
+            (bool success, ) = payable(toRefund[i]).call{
+                value: refundPerPlayer
+            }("");
             if (!success) revert TransferFailed();
         }
 
@@ -190,8 +239,12 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
         }
         if (!isParticipant) revert NotRoomParticipant();
 
-        bytes32 structHash = keccak256(abi.encode(PAYOUT_TYPEHASH, roomId, winner, amount, nonce, deadline));
-        address recoveredSigner = _hashTypedDataV4(structHash).recover(signature);
+        bytes32 structHash = keccak256(
+            abi.encode(PAYOUT_TYPEHASH, roomId, winner, amount, nonce, deadline)
+        );
+        address recoveredSigner = _hashTypedDataV4(structHash).recover(
+            signature
+        );
         if (recoveredSigner != signer) revert InvalidSignature();
 
         usedNonces[nonceKey] = true;
@@ -214,7 +267,8 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     function emergencyWithdraw(bytes32 roomId) external nonReentrant {
         Room storage room = rooms[roomId];
         if (room.status != RoomStatus.ACTIVE) revert InvalidRoomStatus();
-        if (block.timestamp < room.createdAt + EMERGENCY_DELAY) revert EmergencyDelayNotPassed();
+        if (block.timestamp < room.createdAt + EMERGENCY_DELAY)
+            revert EmergencyDelayNotPassed();
 
         address[] memory participants = room.participants;
         uint256 refundPerPlayer = room.entryAmount;
@@ -223,7 +277,9 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
         room.pot = 0;
 
         for (uint256 i = 0; i < participants.length; i++) {
-            (bool success, ) = payable(participants[i]).call{value: refundPerPlayer}("");
+            (bool success, ) = payable(participants[i]).call{
+                value: refundPerPlayer
+            }("");
             if (!success) revert TransferFailed();
             emit EmergencyWithdraw(roomId, participants[i], refundPerPlayer);
         }
@@ -233,10 +289,35 @@ contract LudoVault is ReentrancyGuard, Ownable2Step, EIP712 {
     // ADMIN & VIEW FUNCTIONS
     // ============================================
 
-    function setSigner(address newSigner) external onlyOwner { signer = newSigner; }
-    function setFee(uint256 newFeeBps) external onlyOwner { feeBps = newFeeBps; }
-    function setTreasury(address newTreasury) external onlyOwner { treasury = newTreasury; }
-    function getRoom(bytes32 roomId) external view returns (Room memory) { return rooms[roomId]; }
-    function getParticipants(bytes32 roomId) external view returns (address[] memory) { return rooms[roomId].participants; }
-    function domainSeparator() external view returns (bytes32) { return _domainSeparatorV4(); }
+    function setSigner(address newSigner) external onlyOwner {
+        if (newSigner == address(0)) revert InvalidAddress();
+        address oldSigner = signer;
+        signer = newSigner;
+        emit SignerUpdated(oldSigner, newSigner);
+    }
+
+    function setFee(uint256 newFeeBps) external onlyOwner {
+        if (newFeeBps > MAX_FEE_BPS) revert InvalidFee();
+        uint256 oldFee = feeBps;
+        feeBps = newFeeBps;
+        emit FeeUpdated(oldFee, newFeeBps);
+    }
+
+    function setTreasury(address newTreasury) external onlyOwner {
+        if (newTreasury == address(0)) revert InvalidAddress();
+        address oldTreasury = treasury;
+        treasury = newTreasury;
+        emit TreasuryUpdated(oldTreasury, newTreasury);
+    }
+    function getRoom(bytes32 roomId) external view returns (Room memory) {
+        return rooms[roomId];
+    }
+    function getParticipants(
+        bytes32 roomId
+    ) external view returns (address[] memory) {
+        return rooms[roomId].participants;
+    }
+    function domainSeparator() external view returns (bytes32) {
+        return _domainSeparatorV4();
+    }
 }

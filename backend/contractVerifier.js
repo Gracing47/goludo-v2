@@ -281,15 +281,18 @@ export async function getRoomStateFromContract(roomId) {
     }
 
     try {
-        const room = await ludoVaultContract.getRoom(roomId);
+        // New struct: (creator, maxPlayers, entryAmount, pot, createdAt, status)
+        const room = await ludoVaultContract.rooms(roomId);
+        const participants = await ludoVaultContract.getParticipants(roomId);
 
         return {
-            creator: room.creator,
-            opponent: room.opponent,
-            entryAmount: room.entryAmount.toString(),
-            pot: room.pot.toString(),
-            createdAt: Number(room.createdAt),
-            status: room.status // 0=EMPTY, 1=WAITING, 2=ACTIVE, 3=FINISHED, 4=CANCELLED
+            creator: room[0],
+            maxPlayers: Number(room[1]),
+            entryAmount: room[2].toString(),
+            pot: room[3].toString(),
+            createdAt: Number(room[4]),
+            status: Number(room[5]), // 0=EMPTY, 1=WAITING, 2=ACTIVE, 3=FINISHED, 4=CANCELLED
+            participants: participants
         };
     } catch (error) {
         console.error(`❌ Failed to fetch room state: ${error.message}`);

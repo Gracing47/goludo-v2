@@ -18,7 +18,7 @@ export const coston2 = defineChain(114);
 
 // Contract Addresses
 export const GO_TOKEN_ADDRESS: `0x${string}` = ((import.meta as any).env.VITE_GOTOKEN_ADDRESS || "0x50787A6A4cEA4f3eFeA653D82eA8629DBF634C13") as `0x${string}`;
-export const LUDO_VAULT_ADDRESS: `0x${string}` = ((import.meta as any).env.VITE_LUDOVAULT_ADDRESS || "0x50787A6A4cEA4f3eFeA653D82eA8629DBF634C13") as `0x${string}`;
+export const LUDO_VAULT_ADDRESS: `0x${string}` = ((import.meta as any).env.VITE_LUDOVAULT_ADDRESS || "0xa8d47bE166B677125BD28a1d94FF087d4B45923a") as `0x${string}`;
 
 // Contract Instances (v5 style with ABIs for proper error decoding)
 export const goTokenContract = getContract({
