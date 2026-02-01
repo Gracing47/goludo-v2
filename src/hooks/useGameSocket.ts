@@ -146,8 +146,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
                     if (fromIdx !== -1 && toIdx !== -1 && toIdx > fromIdx) {
                         const traversePath = path.slice(fromIdx + 1, toIdx + 1);
-                        const hopDuration = 150; // Standard sync speed
-
+                        const hopDuration = 120; // Snappier sync speed (120ms instead of 150ms)
                         setIsMoving(true);
 
                         // 1. Update everything EXCEPT the tokens first (or use prev tokens)
@@ -189,14 +188,28 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             setIsMoving(false);
         });
 
-        socket.on('turn_timer_start', ({ timeoutMs }) => {
-            setTurnTimer(Math.floor(timeoutMs / 1000));
+        // Create a local interval for the timer to avoid socket spam
+        let localTimerId: ReturnType<typeof setInterval> | null = null;
+
+        socket.on('turn_timer_start', ({ expiresAt }: { expiresAt: number }) => {
+            if (localTimerId) clearInterval(localTimerId);
+
+            const updateTimer = () => {
+                const now = Date.now();
+                const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000));
+                setTurnTimer(remaining);
+                if (remaining <= 0 && localTimerId) {
+                    clearInterval(localTimerId);
+                    localTimerId = null;
+                }
+            };
+
+            updateTimer();
+            localTimerId = setInterval(updateTimer, 1000);
         });
 
-        socket.on('turn_timer_update', ({ remainingMs, remainingSeconds }) => {
-            const seconds = remainingSeconds || Math.floor(remainingMs / 1000);
-            setTurnTimer(seconds);
-        });
+        // Remove old turn_timer_update handler
+        // socket.on('turn_timer_update', ...);
 
         socket.on('pre_game_countdown', ({ room, countdownSeconds, message }) => {
             console.log('🎬 Pre-game countdown received:', countdownSeconds, 's');

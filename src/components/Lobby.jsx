@@ -491,7 +491,7 @@ const Lobby = ({ onStartGame }) => {
                         <div className="setup-section">
                             <label className="setup-label">Number of Players</label>
                             <div className={`player-count-buttons ${selectedRoom ? 'disabled' : ''}`}>
-                                {(gameMode === 'web3' ? [2] : [2, 3, 4]).map(count => (
+                                {[2, 3, 4].map(count => (
                                     <button
                                         key={count}
                                         className={`count-btn ${playerCount === count ? 'active' : ''}`}

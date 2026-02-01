@@ -74,8 +74,8 @@ const Token = ({
         if (hasPositionChanged && !inYard) {
             setIsAnimating(true);
 
-            // Snappy Hop Animation - faster for path traversal
-            const hopDuration = isBonusMove ? 0.08 : 0.15; // Very quick hops
+            // Snappy Hop Animation - faster for path traversal (120ms)
+            const hopDuration = isBonusMove ? 0.08 : 0.12;
 
             controls.start({
                 y: [0, -18, 0], // Quick, punchy hop

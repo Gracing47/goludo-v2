@@ -102,7 +102,7 @@ const joinRoomLimiter = rateLimit({
 // ============================================
 // HEALTH CHECK (Phase 8: Monitoring)
 // ============================================
-app.get('/health', (req, res) => {
+app.get('/health', (_req: express.Request, res: express.Response) => {
     res.json({
         status: 'UP',
         timestamp: new Date().toISOString(),
@@ -112,7 +112,7 @@ app.get('/health', (req, res) => {
 });
 
 // Basic request logger for production monitoring
-app.use((req, res, next) => {
+app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
     if (req.url === '/health' || req.url === '/metrics') return next();
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
@@ -228,46 +228,22 @@ function startTurnTimer(io: Server, room: any, playerIndex: number, phase: any) 
     // Clear any existing timers first
     clearRoomTimers(roomId);
 
-    const startTime = Date.now();
-    let remainingSeconds = Math.floor(TURN_TIMEOUT_MS / 1000);
+    console.log(`⏰ Starting ${TURN_TIMEOUT_MS / 1000}s timer for ${currentPlayer?.name || 'Unknown'} (Phase: ${phase})`);
 
-    console.log(`⏰ Starting ${remainingSeconds}s timer for ${currentPlayer?.name || 'Unknown'} (Phase: ${phase})`);
-
-    // Broadcast initial timer start
+    // Broadcast initial timer start with expiration timestamp
     io.to(room.id).emit('turn_timer_start', {
         playerIndex,
-        timeoutMs: TURN_TIMEOUT_MS,
+        expiresAt: Date.now() + TURN_TIMEOUT_MS,
         phase
     });
 
-    // Countdown interval - updates every second
-    const intervalId = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        remainingSeconds = Math.max(0, Math.floor((TURN_TIMEOUT_MS - elapsed) / 1000));
-
-        // Broadcast countdown update
-        io.to(room.id).emit('turn_timer_update', {
-            playerIndex,
-            remainingSeconds,
-            phase
-        });
-
-        // Stop interval when time runs out
-        if (remainingSeconds <= 0) {
-            const timerData = activeTurnTimers.get(room.id);
-            if (timerData?.intervalId) {
-                clearInterval(timerData.intervalId);
-            }
-        }
-    }, COUNTDOWN_INTERVAL_MS);
-
-    // Timeout handler - executes when time runs out
+    // We still keep the timeout for server-side enforcement,
+    // but we can remove the 1s interval emit to save bandwidth
     const timeoutId = setTimeout(() => {
         console.log(`⏰ TIMEOUT! Player ${currentPlayer.name} didn't act in ${TURN_TIMEOUT_MS / 1000}s. Skipping turn...`);
-
-        // Clear interval
-        clearInterval(intervalId);
-        activeTurnTimers.delete(room.id);
+        // The timer is cleared by clearRoomTimers when the next turn starts or game ends.
+        // For this specific timeout, we just need to handle the game logic.
+        // activeTurnTimers.delete(room.id) is handled by clearRoomTimers or when a new timer is set.
 
         // Broadcast timeout event
         io.to(room.id).emit('turn_timeout', {
@@ -280,11 +256,9 @@ function startTurnTimer(io: Server, room: any, playerIndex: number, phase: any) 
         handleTurnTimeout(io, room, playerIndex, phase);
     }, TURN_TIMEOUT_MS);
 
-    // Store both IDs
-    activeTurnTimers.set(room.id, {
+    // Store timeout ID for cleanup
+    activeTurnTimers.set(roomId, {
         timeoutId,
-        intervalId,
-        startTime,
         phase,
         playerIndex
     });
@@ -690,7 +664,7 @@ io.on('connection', (socket) => {
 // PRODUCTION MONITORING ENDPOINTS
 // ============================================
 
-app.get('/', (req, res) => res.json({
+app.get('/', (_req: express.Request, res: express.Response) => res.json({
     message: "GoLudo Backend v4 (Production Ready)",
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV || 'development'
@@ -700,7 +674,7 @@ app.get('/', (req, res) => res.json({
  * Health Check Endpoint
  * Used by Railway/Docker for container health monitoring
  */
-app.get('/health', (req, res) => {
+app.get('/health', (_req: express.Request, res: express.Response) => {
     res.json({
         status: 'ok',
         uptime: process.uptime(),
@@ -718,7 +692,7 @@ app.get('/health', (req, res) => {
  * Metrics Endpoint
  * Detailed stats for monitoring dashboards (Grafana, DataDog, etc.)
  */
-app.get('/metrics', (req, res) => {
+app.get('/metrics', (_req: express.Request, res: express.Response) => {
     // Import roomTimers dynamically to avoid circular deps
     const { roomTimers } = require('./roomManager.js');
 

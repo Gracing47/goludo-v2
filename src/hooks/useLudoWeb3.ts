@@ -65,8 +65,8 @@ export const useLudoWeb3 = () => {
             console.log("Creating room on blockchain with native currency...");
             const createTx = prepareContractCall({
                 contract: ludoVaultContract,
-                method: "function createRoom(bytes32,uint256)",
-                params: [roomId as `0x${string}`, amountInWei],
+                method: "function createRoom(bytes32,uint256,uint256)",
+                params: [roomId as `0x${string}`, amountInWei, BigInt(maxPlayers)],
                 value: amountInWei, // Send native C2FLR
             });
 
@@ -107,13 +107,19 @@ export const useLudoWeb3 = () => {
             // Step B1: Verify Room Status on Blockchain (Prevent InvalidRoomStatus revert)
             console.log("Checking room status on-chain...");
             try {
-                // @ts-ignore - Thirdweb's type inference can be tricky with read calls
+                // @ts-ignore
                 const roomInfo = await ludoVaultContract.read.rooms([roomId as `0x${string}`]);
-                // roomInfo is [creator, opponent, entryAmount, pot, createdAt, status]
-                const status = roomInfo[5]; // status is the 6th element (index 5)
+                // roomInfo is [creator, maxPlayers, entryAmount, pot, createdAt, status]
+                const maxPlayers = Number(roomInfo[1]);
+                const status = Number(roomInfo[5]);
+
+                // Fetch current participants count
+                // @ts-ignore
+                const participants = await ludoVaultContract.read.getParticipants([roomId as `0x${string}`]);
 
                 if (status === 0) throw new Error("Room does not exist on the smart contract.");
-                if (status !== 1) throw new Error(`Cannot join: Room status is ${status === 2 ? 'ACTIVE' : status === 3 ? 'FINISHED' : 'CANCELLED'}.`);
+                if (status !== 1) throw new Error(`Cannot join: Room status is ${status === 2 ? 'ACTIVE' : 'INACTIVE'}.`);
+                if (participants.length >= maxPlayers) throw new Error("Room is already full.");
             } catch (err: any) {
                 console.warn("Pre-join status check failed:", err.message);
                 if (err.message.includes("Room does not exist") || err.message.includes("Cannot join")) {

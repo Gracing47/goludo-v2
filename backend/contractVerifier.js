@@ -33,16 +33,14 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
 
 const LUDOVAULT_MINIMAL_ABI = [
     // Events for transaction verification
-    "event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount)",
-    "event RoomJoined(bytes32 indexed roomId, address indexed opponent, uint256 totalPot)",
+    "event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount, uint256 maxPlayers)",
+    "event RoomJoined(bytes32 indexed roomId, address indexed opponent, uint256 currentPot, uint256 playersJoined)",
     "event RoomCancelled(bytes32 indexed roomId, address indexed creator, uint256 refundAmount)",
     "event GameFinished(bytes32 indexed roomId, address indexed winner, uint256 payout, uint256 fee)",
 
-    // Room status enum: EMPTY=0, WAITING=1, ACTIVE=2, FINISHED=3, CANCELLED=4
-
-    // View functions for state queries
-    "function rooms(bytes32 roomId) view returns (address creator, address opponent, uint256 entryAmount, uint256 pot, uint256 createdAt, uint8 status)",
-    "function getRoom(bytes32 roomId) view returns (tuple(address creator, address opponent, uint256 entryAmount, uint256 pot, uint256 createdAt, uint8 status))"
+    // View functions
+    "function rooms(bytes32 roomId) view returns (address creator, uint256 maxPlayers, uint256 entryAmount, uint256 pot, uint256 createdAt, uint8 status)",
+    "function getParticipants(bytes32 roomId) view returns (address[])"
 ];
 
 // ============================================
