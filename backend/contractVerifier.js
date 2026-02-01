@@ -34,7 +34,7 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
 const LUDOVAULT_MINIMAL_ABI = [
     // Events for transaction verification
     "event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount, uint256 maxPlayers)",
-    "event RoomJoined(bytes32 indexed roomId, address indexed opponent, uint256 currentPot, uint256 playersJoined)",
+    "event RoomJoined(bytes32 indexed roomId, address indexed player, uint256 currentPot, uint256 playersJoined)",
     "event RoomCancelled(bytes32 indexed roomId, address indexed creator, uint256 refundAmount)",
     "event GameFinished(bytes32 indexed roomId, address indexed winner, uint256 payout, uint256 fee)",
 
