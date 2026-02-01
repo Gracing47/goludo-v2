@@ -104,7 +104,25 @@ export const useLudoWeb3 = () => {
         try {
             const amountInWei = toWei(stakeAmount.toString());
 
-            // Step B: Join Room on Blockchain (PAYABLE)
+            // Step B1: Verify Room Status on Blockchain (Prevent InvalidRoomStatus revert)
+            console.log("Checking room status on-chain...");
+            try {
+                // @ts-ignore - Thirdweb's type inference can be tricky with read calls
+                const roomInfo = await ludoVaultContract.read.rooms([roomId as `0x${string}`]);
+                // roomInfo is [creator, opponent, entryAmount, pot, createdAt, status]
+                const status = roomInfo[5]; // status is the 6th element (index 5)
+
+                if (status === 0) throw new Error("Room does not exist on the smart contract.");
+                if (status !== 1) throw new Error(`Cannot join: Room status is ${status === 2 ? 'ACTIVE' : status === 3 ? 'FINISHED' : 'CANCELLED'}.`);
+            } catch (err: any) {
+                console.warn("Pre-join status check failed:", err.message);
+                if (err.message.includes("Room does not exist") || err.message.includes("Cannot join")) {
+                    throw err;
+                }
+                // Continue if it's just a RPC error, let the transaction try
+            }
+
+            // Step B2: Join Room on Blockchain (PAYABLE)
             console.log("Joining room on blockchain with native currency...");
             const joinTx = prepareContractCall({
                 contract: ludoVaultContract,
