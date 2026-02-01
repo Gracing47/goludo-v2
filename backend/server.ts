@@ -869,12 +869,19 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     }
 
     const colorMap: any = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-    const requestedColorIndex = colorMap[color?.toLowerCase()];
+    const Colors = ['red', 'green', 'yellow', 'blue'];
+    let requestedColorIndex = colorMap[color?.toLowerCase()];
 
-    // Validate color slot
-    if (room.players[requestedColorIndex] !== null) {
-        // @ts-ignore
-        return res.status(400).json({ error: "Color already taken" });
+    // AAA Robustness: If color is taken or invalid, auto-assign next available slot
+    if (requestedColorIndex === undefined || room.players[requestedColorIndex] !== null) {
+        const fallbackIndex = room.players.findIndex((p: any) => p === null);
+        if (fallbackIndex === -1) {
+            // @ts-ignore
+            return res.status(400).json({ error: "Room full" });
+        }
+        console.log(`🎨 Color conflict for ${playerAddress}: ${color} taken/invalid, auto-assigning slot ${fallbackIndex}`);
+        requestedColorIndex = fallbackIndex;
+        color = Colors[requestedColorIndex];
     }
 
     // ✅ PHASE 5: Verify join transaction on blockchain
@@ -906,6 +913,9 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     };
 
     console.log(`👋 ${playerName} joined Room ${roomId} as ${color}`);
+
+    // Broadcast room update to anyone already connected (for real-time lobby sync)
+    io.to(roomId).emit('room_update', room);
 
     // Check if room needs to start
     const totalPlayers = room.players.filter((p: any) => p).length;

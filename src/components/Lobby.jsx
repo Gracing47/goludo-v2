@@ -77,9 +77,9 @@ const Lobby = ({ onStartGame }) => {
         { name: 'Player 4', color: 'blue', isAI: true },
     ]);
 
-    // Poll for rooms if in lobby
+    // Poll for rooms if in lobby or setup
     useEffect(() => {
-        if (step !== 'web3-lobby' && step !== 'waiting') return;
+        if (step !== 'web3-lobby' && step !== 'waiting' && step !== 'setup') return;
 
         const fetchRooms = async () => {
             try {
@@ -90,11 +90,17 @@ const Lobby = ({ onStartGame }) => {
 
                 if (step === 'waiting' && waitingRoomId) {
                     const room = data.find(r => r.id === waitingRoomId);
-                    // CRITICAL FIX: Connect socket as soon as room status is STARTING or ACTIVE
-                    // This ensures we connect DURING the countdown, not after
                     if (room && (room.status === "STARTING" || room.status === "ACTIVE")) {
                         console.log(`🚀 Room status is ${room.status} - Connecting immediately!`);
                         handleStart(room);
+                    }
+                }
+
+                // AAA: Sync selectedRoom data in setup phase for real-time color picking
+                if (step === 'setup' && selectedRoom) {
+                    const freshRoom = data.find(r => r.id === selectedRoom.id);
+                    if (freshRoom) {
+                        setSelectedRoom(freshRoom);
                     }
                 }
             } catch (err) {
@@ -106,7 +112,7 @@ const Lobby = ({ onStartGame }) => {
         // Poll faster during waiting (1.5s instead of 3s)
         const interval = setInterval(fetchRooms, step === 'waiting' ? 1500 : 3000);
         return () => clearInterval(interval);
-    }, [step, waitingRoomId]);
+    }, [step, waitingRoomId, selectedRoom?.id]);
 
     const handleModeSelect = (mode) => {
         if (mode === 'web3' && !account) {
@@ -202,16 +208,19 @@ const Lobby = ({ onStartGame }) => {
             let finalColor = player.color;
 
             if (takenColors.includes(player.color)) {
-                // Our color was taken! Auto-switch to first available
-                const availableColor = COLORS.find(c => !takenColors.includes(c));
-                if (!availableColor) {
-                    alert("This room is full. Please select another.");
+                // AAA: Color was JUST taken! Find available alternatives
+                const availableColors = COLORS.filter(c => !takenColors.includes(c));
+                if (availableColors.length === 0) {
+                    alert("This room just became full. Please select another.");
                     setSelectedRoom(null);
+                    setStep('web3-lobby');
                     return;
                 }
-                finalColor = availableColor;
+
+                // Auto-switch to first available and notify user
+                finalColor = availableColors[0];
                 setPlayers(prev => prev.map((p, i) => i === 0 ? { ...p, color: finalColor } : p));
-                // Don't alert, just use the new color silently
+                console.log(`🎨 Auto-switching color to ${finalColor} due to conflict.`);
             }
 
             const result = await handleJoinGame(selectedRoom.id, selectedRoom.stake, player.name, finalColor);
@@ -550,8 +559,9 @@ const Lobby = ({ onStartGame }) => {
                                                         <button
                                                             key={c}
                                                             className={`color-swatch ${c} ${isSelected ? 'selected' : ''} ${isTaken ? 'taken' : ''}`}
-                                                            onClick={() => handlePlayerChange(index, 'color', c)}
-                                                            title={COLOR_NAMES[cIdx]}
+                                                            onClick={() => !isTaken && handlePlayerChange(index, 'color', c)}
+                                                            disabled={isTaken}
+                                                            title={isTaken ? `${COLOR_NAMES[cIdx]} is taken` : COLOR_NAMES[cIdx]}
                                                         >
                                                             {isSelected && <span className="checkmark">✓</span>}
                                                         </button>
