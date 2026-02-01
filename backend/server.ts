@@ -749,10 +749,8 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
 
     try {
         // 🔗 PHASE 5: Fetch pot amount directly from blockchain (trustless)
-        const contractRoom = await getRoomStateFromContract(roomId);
+        const contractRoom = await getRoomStateFromContract(roomId) as { pot: string; status: number };
         const potAmount = contractRoom.pot;
-
-        console.log(`📋 Blockchain Event: GAME_FINISHED | Room: ${roomId} | Winner: ${winner} | Pot: ${potAmount}`);
 
         const payoutProof = await signPayout(roomId, winner, potAmount);
         res.json(payoutProof);
