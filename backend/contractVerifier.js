@@ -241,26 +241,28 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
             throw new Error("RoomJoined event not found in transaction logs");
         }
 
-        // Verify event parameters
+        // Verify event parameters (Updated for multiplayer contract)
+        // New event: RoomJoined(bytes32 indexed roomId, address indexed player, uint256 currentPot, uint256 playersJoined)
         const eventRoomId = roomJoinedEvent.args.roomId.toLowerCase();
-        const eventOpponent = roomJoinedEvent.args.opponent.toLowerCase();
-        const eventTotalPot = roomJoinedEvent.args.totalPot;
+        const eventPlayer = roomJoinedEvent.args.player.toLowerCase();
+        const eventCurrentPot = roomJoinedEvent.args.currentPot;
+        const eventPlayersJoined = Number(roomJoinedEvent.args.playersJoined);
 
         if (eventRoomId !== normalizedRoomId) {
             throw new Error(`Room ID mismatch: expected ${normalizedRoomId}, got ${eventRoomId}`);
         }
 
-        if (eventOpponent !== normalizedJoiner) {
-            throw new Error(`Joiner mismatch: expected ${normalizedJoiner}, got ${eventOpponent}`);
+        if (eventPlayer !== normalizedJoiner) {
+            throw new Error(`Joiner mismatch: expected ${normalizedJoiner}, got ${eventPlayer}`);
         }
 
-        // Total pot should be 2x stake (creator + joiner)
-        const expectedTotalPot = expectedStakeWei * 2n;
-        if (eventTotalPot !== expectedTotalPot) {
-            throw new Error(`Total pot mismatch: expected ${expectedTotalPot}, got ${eventTotalPot}`);
+        // Pot should be stake * playersJoined (flexible for 2-4 players)
+        const expectedMinPot = expectedStakeWei * BigInt(eventPlayersJoined);
+        if (eventCurrentPot < expectedMinPot) {
+            throw new Error(`Pot too low: expected at least ${expectedMinPot}, got ${eventCurrentPot}`);
         }
 
-        console.log(`✅ Room join verified successfully`);
+        console.log(`✅ Room join verified successfully (${eventPlayersJoined} players, pot: ${eventCurrentPot})`);
         return true;
 
     } catch (error) {
