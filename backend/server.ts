@@ -99,6 +99,18 @@ const joinRoomLimiter = rateLimit({
     legacyHeaders: false
 });
 
+// ============================================
+// HEALTH CHECK (Phase 8: Monitoring)
+// ============================================
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'UP',
+        timestamp: new Date().toISOString(),
+        rooms: activeRooms.length,
+        version: '1.0.0'
+    });
+});
+
 // Basic request logger for production monitoring
 app.use((req, res, next) => {
     if (req.url === '/health' || req.url === '/metrics') return next();
