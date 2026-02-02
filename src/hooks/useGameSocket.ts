@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/shallow';
 import { SOCKET_URL } from '../config/api';
 import { createInitialState } from '../engine/gameLogic';
 import { PLAYER_PATHS } from '../engine/constants';
-import { Web3Account, TokenPosition } from '../types';
+import { Web3Account, TokenPosition, Player } from '../types';
 import soundManager from '../services/SoundManager';
 
 /**
@@ -159,9 +159,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                         // 2. Animate the steps
                         traversePath.forEach((pos: TokenPosition, index: number) => {
                             setTimeout(() => {
-                                setGameState((prev: any) => {
+                                setGameState((prev) => {
                                     if (!prev) return prev;
-                                    const newTokens = prev.tokens.map((arr: any) => [...arr]);
+                                    const newTokens = prev.tokens.map((arr) => [...arr]);
                                     newTokens[p][t] = pos;
 
                                     // Trigger move sound
@@ -228,19 +228,19 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                 gameMode: 'classic',
                 roomId: room.id,
                 stake: room.stake,
-                playerCount: room.players.filter((p: any) => p).length,
-                players: room.players.map((p: any, idx: number) => p ? ({
+                playerCount: room.players.filter((p: Player) => p).length,
+                players: room.players.map((p: Player, idx: number) => p ? ({
                     id: idx,
                     name: p.name,
                     color: p.color,
                     address: p.address,
                     type: 'human',
                     isAI: false
-                }) : null) as any
+                }) : null) as Player[]
             });
 
             // Perspective rotation
-            const myIdx = room.players.findIndex((p: any) =>
+            const myIdx = room.players.findIndex((p: Player) =>
                 p?.address?.toLowerCase() === account.address?.toLowerCase()
             );
             if (myIdx !== -1) {
@@ -265,26 +265,26 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         });
 
         socket.on('game_started', (room) => {
-            console.log('🎮 Game started event received! Room ID:', room.id, 'Players:', room.players.filter((p: any) => p).length);
+            console.log('🎮 Game started event received! Room ID:', room.id, 'Players:', room.players.filter((p: Player) => p).length);
 
             const activeColors = room.players
-                .map((p: any, idx: number) => p ? idx : null)
-                .filter((idx: any) => idx !== null) as number[];
+                .map((p: Player, idx: number) => p ? idx : null)
+                .filter((idx) => idx !== null) as number[];
 
             setConfig({
                 mode: 'web3',
                 gameMode: 'classic',
                 roomId: room.id,
                 stake: room.stake,
-                playerCount: room.players.filter((p: any) => p).length,
-                players: room.players.map((p: any, idx: number) => p ? ({
+                playerCount: room.players.filter((p: Player) => p).length,
+                players: room.players.map((p: Player, idx: number) => p ? ({
                     id: idx,
                     name: p.name,
                     color: p.color,
                     address: p.address,
                     type: 'human',
                     isAI: false
-                }) : null) as any
+                }) : null) as Player[]
             });
 
             setGameState(createInitialState(4, activeColors) as any);
@@ -292,7 +292,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             setAppState('game');
             setServerMsg("Game Started!");
 
-            const myIdx = room.players.findIndex((p: any) =>
+            const myIdx = room.players.findIndex((p: Player) =>
                 p?.address?.toLowerCase() === account.address?.toLowerCase()
             );
             if (myIdx !== -1) {

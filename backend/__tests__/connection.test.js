@@ -1,26 +1,24 @@
 import { io as ioc } from 'socket.io-client';
-import { server, io } from '../server.js';
+import { server, io } from '../server.ts';
 
 describe('Socket Connection & Match Flow', () => {
     let clientSocket;
     const port = 3300 + Math.floor(Math.random() * 100);
 
-    beforeAll((done) => {
-        server.listen(port, () => {
-            done();
-        });
+    beforeAll(async () => {
+        await new Promise(resolve => server.listen(port, resolve));
     });
 
-    afterAll((done) => {
-        io.close();
-        server.close(() => {
-            done();
-        });
+    afterAll(async () => {
+        await new Promise(resolve => io.close(() => resolve()));
+        await new Promise(resolve => server.close(resolve));
     });
 
-    beforeEach((done) => {
+    beforeEach(async () => {
         clientSocket = ioc(`http://localhost:${port}`);
-        clientSocket.on('connect', done);
+        await new Promise((resolve) => {
+            clientSocket.on('connect', resolve);
+        });
     });
 
     afterEach(() => {
@@ -29,7 +27,7 @@ describe('Socket Connection & Match Flow', () => {
         }
     });
 
-    test('should connect and join a match', (done) => {
+    test('should connect and join a match', async () => {
         const testData = {
             roomId: 'test_room_' + Date.now(),
             playerAddress: '0x1234567890123456789012345678901234567890'
@@ -38,11 +36,8 @@ describe('Socket Connection & Match Flow', () => {
         clientSocket.emit('join_match', testData);
 
         // Give it a moment to process and check state
-        setTimeout(() => {
-            // In a real test, we would expect a response or check server state
-            // For now, just verifying the emit doesn't crash the server
-            expect(clientSocket.connected).toBe(true);
-            done();
-        }, 500);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        expect(clientSocket.connected).toBe(true);
     });
 });

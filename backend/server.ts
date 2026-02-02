@@ -11,13 +11,32 @@ import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 
 // Engine Imports
-// Fix: Import from .ts source files directly (ts-node will handle this) or compiled .js if building
-// Since we are likely running via ts-node or similar in dev, we should point to the .ts files or their transpiled outputs.
-// However, standard ESM in Node requires extensions.
-// If using ts-node/tsx, we can import from .ts
-// Let's assume the environment supports TS or standard JS resolution.
-import { createInitialState, rollDice, moveToken, completeMoveAnimation } from '../src/engine/gameLogic';
-import { GAME_PHASE } from '../src/engine/constants';
+// Using .js extensions for ESM compatibility even when source is .ts
+import { createInitialState, rollDice, moveToken, completeMoveAnimation } from '../src/engine/gameLogic.js';
+import { GAME_PHASE } from '../src/engine/constants.js';
+import { GameState, Move } from '../src/types/index.js';
+
+interface BackendPlayer {
+    name: string;
+    address: string;
+    color: string;
+    socketId: string | null;
+    joinedAt: number;
+    forfeited: boolean;
+    skipCount: number;
+}
+
+interface BackendRoom {
+    id: string;
+    stake: string;
+    maxPlayers: number;
+    players: (BackendPlayer | null)[];
+    gameState: GameState | null;
+    status: string;
+    createdAt: number;
+    turnTimeout?: number;
+    timeoutMs?: number;
+}
 
 // Room Lifecycle Manager (prevents memory leaks at scale)
 import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob, clearSpecificTimer } from './roomManager.js';
@@ -43,13 +62,13 @@ app.use(helmet({
     contentSecurityPolicy: false, // Disabled for WebSocket/API compatibility
     crossOriginEmbedderPolicy: false
 }));
-const server = http.createServer(app);
+export const server = http.createServer(app);
 // Production-aware CORS origins
 const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
     ? ["https://goludo.netlify.app", "https://goludo-production.up.railway.app"]
     : ["http://localhost:3000", "http://localhost:5173", "https://goludo.netlify.app", "https://goludo-production.up.railway.app"];
 
-const io = new Server(server, {
+export const io = new Server(server, {
     cors: {
         origin: ALLOWED_ORIGINS,
         methods: ["GET", "POST"],
@@ -153,7 +172,7 @@ const activeTurnTimers = new Map<string, any>(); // roomId -> { timeoutId, inter
  * After 3 skips, player forfeits
  * @returns {boolean} true if player forfeited, false if still in game
  */
-function handlePlayerSkip(io: Server, room: any, playerIndex: number, reason = 'timeout') {
+function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, reason = 'timeout') {
     const player = room.players[playerIndex];
     if (!player || player.forfeited) return true;
 
@@ -221,7 +240,7 @@ function clearRoomTimers(roomId: string) {
 /**
  * Starts a countdown timer with live updates
  */
-function startTurnTimer(io: Server, room: any, playerIndex: number, phase: any) {
+function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phase: any) {
     const roomId = room.id.toLowerCase();
     const currentPlayer = room.players[playerIndex];
 
@@ -267,7 +286,7 @@ function startTurnTimer(io: Server, room: any, playerIndex: number, phase: any) 
 /**
  * Handles what happens when a turn times out (AFK - still connected but not acting)
  */
-function handleTurnTimeout(io: Server, room: any, playerIndex: number, phase: any) {
+function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, phase: any) {
     const currentPlayer = room.players[playerIndex];
 
     // Use unified skip system - counts towards 3-skip forfeit
@@ -303,7 +322,7 @@ function handleTurnTimeout(io: Server, room: any, playerIndex: number, phase: an
 /**
  * Main turn handler - manages turn flow and timer initialization
  */
-function handleNextTurn(io: Server, room: any) {
+function handleNextTurn(io: Server, room: BackendRoom) {
     if (room.gameState?.gamePhase === 'WIN') return;
 
     const currentPlayerIndex = room.gameState.activePlayer;
@@ -332,7 +351,7 @@ function handleNextTurn(io: Server, room: any) {
 /**
  * Global Win Handler - Centralized logic for ending a game
  */
-function declareWinner(io: Server, room: any, winnerIdx: number) {
+function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
     const winner = room.players[winnerIdx];
     const winnerName = winner?.name || `Player ${winnerIdx + 1}`;
 
@@ -369,7 +388,7 @@ function getNextPlayer(current: number, activeColors: number[]) {
 /**
  * Handles the pre-game countdown and transitions the room to ACTIVE
  */
-function startGameCountdown(io: Server, room: any, roomId: string) {
+function startGameCountdown(io: Server, room: BackendRoom, roomId: string) {
     // Prevent double starts
     if (room._countdownStarted) return;
     room._countdownStarted = true;
@@ -943,21 +962,23 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
 startCleanupJob(activeRooms);
 
 // Start server
-server.listen(PORT, async () => {
-    console.log(`🚀 Game Server running on port ${PORT}`);
+if (process.env.NODE_ENV !== 'test') {
+    server.listen(PORT, async () => {
+        console.log(`🚀 Game Server running on port ${PORT}`);
 
-    // Try to recover state on startup (Crash recovery)
-    try {
-        const recovered = await recoverActiveRoomsFromBlockchain();
-        if (recovered && recovered.length > 0) {
-            console.log(`♻️ Recovered ${recovered.length} active rooms from blockchain state`);
-            recovered.forEach((r: any) => {
-                if (!activeRooms.find(ar => ar.id === r.id)) {
-                    activeRooms.push(r);
-                }
-            });
+        // Try to recover state on startup (Crash recovery)
+        try {
+            const recovered = await recoverActiveRoomsFromBlockchain();
+            if (recovered && recovered.length > 0) {
+                console.log(`♻️ Recovered ${recovered.length} active rooms from blockchain state`);
+                recovered.forEach((r: any) => {
+                    if (!activeRooms.find(ar => ar.id === r.id)) {
+                        activeRooms.push(r);
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn(`⚠️ State recovery skipped:`, e);
         }
-    } catch (e) {
-        console.warn(`⚠️ State recovery skipped:`, e);
-    }
-});
+    });
+}

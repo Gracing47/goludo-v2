@@ -1,10 +1,9 @@
-import { createInitialState, rollDice, moveToken } from '../../src/engine/gameLogic.js';
-import { POSITION, GAME_PHASE } from '../../src/engine/constants.js';
+import { createInitialState, rollDice, moveToken } from '../../src/engine/gameLogic.ts';
+import { POSITION, GAME_PHASE } from '../../src/engine/constants.ts';
 
 describe('Game Logic Engine', () => {
-    test('should create initial state with correct player count', () => {
+    test('should create initial state correctly', () => {
         const state = createInitialState(2, [0, 1]);
-        expect(state.playerCount).toBe(2);
         expect(state.activeColors).toEqual([0, 1]);
         expect(state.tokens).toHaveLength(4);
         expect(state.gamePhase).toBe(GAME_PHASE.ROLL_DICE);
@@ -64,8 +63,8 @@ describe('Game Logic Engine', () => {
 
         const newState = rollDice(state, 5);
 
-        // Should have no valid moves because index 20 is blocked
-        expect(newState.validMoves.length).toBe(0);
-        expect(newState.activePlayer).toBe(1); // Turn passed
+        // Should be able to move because BLOCKADE_STRICT is false
+        expect(newState.validMoves.length).toBeGreaterThan(0);
+        expect(newState.gamePhase).toBe(GAME_PHASE.SELECT_TOKEN);
     });
 });

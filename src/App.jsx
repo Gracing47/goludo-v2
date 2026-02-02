@@ -24,6 +24,7 @@ import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
 import AAACountdown from './components/AAACountdown';
+import soundManager from './services/SoundManager';
 
 
 import './App.css';
@@ -286,17 +287,7 @@ function App() {
 
     // Sync Mute State with SoundManager
     useEffect(() => {
-        // We import soundManager dynamically or just use the hook context if we refactored fully
-        // But since SoundManager is a singleton, we can just access the global instance
-        // via the useGameVFX hook or import it inside the effect if strictly needed.
-        // Or better: Let's trust useGameVFX to handle this, OR refactor SoundManager to be a true singleton accessible locally without crash.
-        // Actually, preventing the import at top level avoids the ReferenceError if the file execution order is wrong.
-        // BUT, the ReferenceError was "ReferenceError: soundManager is not defined", which suggests it wasn't initialized.
-
-        import('./services/SoundManager').then(module => {
-            module.default.setMuted(isMuted);
-        }).catch(err => console.warn("SoundManager sync failed", err));
-
+        soundManager.setMuted(isMuted);
     }, [isMuted]);
 
     const handleToggleMute = useCallback(() => {

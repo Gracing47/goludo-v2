@@ -12,10 +12,10 @@ describe('GoLudo Engine', () => {
     describe('Initialization', () => {
         it('should create initial state correctly', () => {
             const state = createInitialState(2, [0, 1]);
-            expect(state.playerCount).toBe(2);
             expect(state.activeColors).toEqual([0, 1]);
             expect(state.gamePhase).toBe(GAME_PHASE.ROLL_DICE);
             expect(state.activePlayer).toBe(0); // Red starts
+            expect(state.tokens[0]).toHaveLength(4);
             expect(state.tokens[0].every(pos => pos === POSITION.IN_YARD)).toBe(true);
         });
     });

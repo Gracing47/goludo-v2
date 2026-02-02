@@ -49,7 +49,6 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 243, 255, 0.2);
     }
 }
-}
 
 .ludo-board::before {
     content: '';

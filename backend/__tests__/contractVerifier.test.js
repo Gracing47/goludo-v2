@@ -1,8 +1,8 @@
-import { jest } from '@jest/globals';
-
-// Mock the module before importing it (or mock its dependencies)
-// In ESM with Jest, mocking can be tricky. Let's use a simpler approach by mocking the functions themselves if they fail.
 import * as contractVerifier from '../contractVerifier.js';
+import { vi } from 'vitest';
+
+// Mock the potentially slow blockchain call to avoid timeouts during audit
+vi.spyOn(contractVerifier, 'recoverActiveRoomsFromBlockchain').mockResolvedValue([]);
 
 describe('Contract Verifier Module', () => {
     test('should verify room creation (Legacy Mode / Disabled)', async () => {

@@ -19,35 +19,29 @@ describe("LudoVault", function () {
     beforeEach(async function () {
         [owner, player1, player2, serverSigner, treasury] = await ethers.getSigners();
 
-        // Deploy GoToken
+        // Deploy GoToken (LudoVault now Uses Native FLR, but we might need GoToken for other tests or future migration)
         const GoTokenFactory = await ethers.getContractFactory("GoToken");
         goToken = await GoTokenFactory.deploy(ethers.parseEther("1000000"));
-        // await goToken.waitForDeployment(); // In ethers v6 this is waitForDeployment, sometimes deployed() in older
+        await goToken.waitForDeployment();
 
-        // Deploy LudoVault
+        // Deploy LudoVault (Uses Native Currency)
         const LudoVaultFactory = await ethers.getContractFactory("LudoVault");
         ludoVault = await LudoVaultFactory.deploy(
-            await goToken.getAddress(),
             serverSigner.address,
             treasury.address,
             FEE_BPS
         );
-        // await ludoVault.waitForDeployment();
+        await ludoVault.waitForDeployment();
 
-        // Give players some tokens
-        await goToken.transfer(player1.address, ethers.parseEther("10000"));
-        await goToken.transfer(player2.address, ethers.parseEther("10000"));
-
-        // Players approve vault
-        await goToken.connect(player1).approve(await ludoVault.getAddress(), ethers.MaxUint256);
-        await goToken.connect(player2).approve(await ludoVault.getAddress(), ethers.MaxUint256);
+        // No need for GoToken transfers/approvals if using Native FLR
     });
 
     describe("Room Management", function () {
         it("should create a room with deposit", async function () {
             const roomId = ethers.id("room_001");
+            const maxPlayers = 2;
 
-            await ludoVault.connect(player1).createRoom(roomId, ENTRY_AMOUNT);
+            await ludoVault.connect(player1).createRoom(roomId, ENTRY_AMOUNT, maxPlayers, { value: ENTRY_AMOUNT });
 
             const room = await ludoVault.getRoom(roomId);
             expect(room.creator).to.equal(player1.address);
@@ -58,12 +52,13 @@ describe("LudoVault", function () {
 
         it("should allow opponent to join room", async function () {
             const roomId = ethers.id("room_002");
+            const maxPlayers = 2;
 
-            await ludoVault.connect(player1).createRoom(roomId, ENTRY_AMOUNT);
-            await ludoVault.connect(player2).joinRoom(roomId);
+            await ludoVault.connect(player1).createRoom(roomId, ENTRY_AMOUNT, maxPlayers, { value: ENTRY_AMOUNT });
+            await ludoVault.connect(player2).joinRoom(roomId, { value: ENTRY_AMOUNT });
 
             const room = await ludoVault.getRoom(roomId);
-            expect(room.opponent).to.equal(player2.address);
+            expect(room.participants[1]).to.equal(player2.address);
             expect(room.pot).to.equal(ENTRY_AMOUNT * 2n);
             expect(room.status).to.equal(2); // ACTIVE
         });
@@ -72,10 +67,11 @@ describe("LudoVault", function () {
     describe("EIP-712 Signature Payout", function () {
         it("should accept valid server signature for payout", async function () {
             const roomId = ethers.id("room_payout_test");
+            const maxPlayers = 2;
 
             // Setup: Create and join room
-            await ludoVault.connect(player1).createRoom(roomId, ENTRY_AMOUNT);
-            await ludoVault.connect(player2).joinRoom(roomId);
+            await ludoVault.connect(player1).createRoom(roomId, ENTRY_AMOUNT, maxPlayers, { value: ENTRY_AMOUNT });
+            await ludoVault.connect(player2).joinRoom(roomId, { value: ENTRY_AMOUNT });
 
             const room = await ludoVault.getRoom(roomId);
             const totalPot = room.pot;
