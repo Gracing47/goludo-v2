@@ -871,30 +871,28 @@ function App() {
                         {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
 
                         {/* C. WIN SCREEN */}
-                        {gameState.gamePhase === 'WIN' && (
-                            <VictoryCelebration
-                                winner={gameState.winner}
-                                playerName={gameConfig.players[gameState.winner]?.name || `Player ${gameState.winner + 1}`}
-                                isWeb3Match={gameConfig.mode === 'web3'}
-                                onClose={handleBackToLobby}
-                            />
-                        )}
+                        {gameState.gamePhase === 'WIN' && (() => {
+                            // Determine if current player is the winner
+                            const winnerPlayer = gameConfig.players[gameState.winner];
+                            const amIWinner = gameConfig.mode === 'web3'
+                                ? winnerPlayer?.address?.toLowerCase() === account?.address?.toLowerCase()
+                                : !winnerPlayer?.isAI; // In local, human player is always "you"
 
-                        {/* Web3 Claim Button */}
-                        {gameState.gamePhase === 'WIN' && gameConfig.mode === 'web3' && (
-                            <div className="web3-claim-overlay">
-                                {payoutProof ? (
-                                    <button className="btn-claim-payout" onClick={onClaimClick} disabled={isClaiming}>
-                                        {isClaiming ? 'Claiming...' : '💰 Claim Payout'}
-                                    </button>
-                                ) : (
-                                    <div className="payout-verifying">
-                                        <span className="spinner">⏳</span>
-                                        Verifying on Blockchain...
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                            return (
+                                <VictoryCelebration
+                                    winner={gameState.winner}
+                                    playerName={winnerPlayer?.name || `Player ${gameState.winner + 1}`}
+                                    isWeb3Match={gameConfig.mode === 'web3'}
+                                    isWinner={amIWinner}
+                                    payoutProof={payoutProof}
+                                    isClaiming={isClaiming}
+                                    onClaim={onClaimClick}
+                                    onClose={handleBackToLobby}
+                                />
+                            );
+                        })()}
+
+                        {/* Web3 Claim Button removed - now integrated into VictoryCelebration */}
 
                         {/* D. CENTRAL DICE */}
                         {gameState.gamePhase !== 'WIN' && (

@@ -21,7 +21,11 @@ export default function VictoryCelebration({
     winner,
     playerName,
     onClose,
-    isWeb3Match = false
+    isWeb3Match = false,
+    isWinner = false,       // Am I the winner?
+    payoutProof = null,     // Payout proof for claim
+    isClaiming = false,     // Is claim in progress?
+    onClaim = () => { }      // Claim callback
 }) {
     const [showContent, setShowContent] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
@@ -97,9 +101,9 @@ export default function VictoryCelebration({
                                 initial={{ y: 30, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.5 }}
-                                style={{ color: winnerData.color }}
+                                style={{ color: isWinner ? winnerData.color : '#ff4757' }}
                             >
-                                VICTORY!
+                                {isWinner ? 'VICTORY!' : 'GAME OVER'}
                             </motion.h1>
 
                             {/* Winner Name */}
@@ -109,7 +113,9 @@ export default function VictoryCelebration({
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.7 }}
                             >
-                                {playerName || `${winnerData.name} Player`} Wins!
+                                {isWinner
+                                    ? 'Congratulations!'
+                                    : <><span style={{ color: winnerData.color, fontWeight: 'bold' }}>{playerName || `${winnerData.name} Player`}</span> Wins!</>}
                             </motion.p>
 
                             {/* Glowing ring effect */}
@@ -128,8 +134,8 @@ export default function VictoryCelebration({
                                 }}
                             />
 
-                            {/* Web3 Prize Info */}
-                            {isWeb3Match && (
+                            {/* Web3 Prize Info - Only for Winner */}
+                            {isWeb3Match && isWinner && (
                                 <motion.div
                                     className="victory-prize"
                                     initial={{ y: 20, opacity: 0 }}
@@ -141,23 +147,73 @@ export default function VictoryCelebration({
                                 </motion.div>
                             )}
 
-                            {/* Action Buttons */}
+                            {/* Loser Message */}
+                            {!isWinner && (
+                                <motion.div
+                                    className="loser-message"
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.9 }}
+                                >
+                                    <span>Better luck next time! 🎲</span>
+                                </motion.div>
+                            )}
+
+                            {/* Action Buttons - Context-Aware */}
                             <motion.div
                                 className="victory-actions"
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 1.1 }}
                             >
-                                <button
-                                    className="victory-btn primary"
-                                    onClick={onClose}
-                                    style={{
-                                        backgroundColor: winnerData.color,
-                                        boxShadow: `0 0 20px ${winnerData.color}40`
-                                    }}
-                                >
-                                    Continue
-                                </button>
+                                {/* Winner View: Claim button (if Web3) */}
+                                {isWinner && isWeb3Match && (
+                                    <>
+                                        {payoutProof ? (
+                                            <button
+                                                className="victory-btn primary claim-btn"
+                                                onClick={onClaim}
+                                                disabled={isClaiming}
+                                                style={{
+                                                    backgroundColor: '#ffd700',
+                                                    boxShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+                                                    color: '#000'
+                                                }}
+                                            >
+                                                {isClaiming ? '⏳ Claiming...' : '💰 Claim Payout'}
+                                            </button>
+                                        ) : (
+                                            <div className="verifying-payout">
+                                                <span className="spinner">⏳</span>
+                                                Verifying on Blockchain...
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Winner View: Continue button (local games) */}
+                                {isWinner && !isWeb3Match && (
+                                    <button
+                                        className="victory-btn primary"
+                                        onClick={onClose}
+                                        style={{
+                                            backgroundColor: winnerData.color,
+                                            boxShadow: `0 0 20px ${winnerData.color}40`
+                                        }}
+                                    >
+                                        Continue
+                                    </button>
+                                )}
+
+                                {/* Loser View: Back to Lobby */}
+                                {!isWinner && (
+                                    <button
+                                        className="victory-btn secondary"
+                                        onClick={onClose}
+                                    >
+                                        🏠 Back to Lobby
+                                    </button>
+                                )}
                             </motion.div>
                         </motion.div>
                     )}
