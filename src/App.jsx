@@ -653,8 +653,8 @@ function App() {
                 </WarpTransition>
             )}
 
-            {/* 2. LOADING VIEW */}
-            {appState === 'game' && (!gameState || !gameConfig) && (
+            {/* 2. LOADING VIEW (Connection / Sync) */}
+            {appState === 'game' && (!gameState || !gameConfig || !gameConfig.players) && (
                 <WarpTransition mode={gameConfig?.mode === 'web3' ? 'literal' : 'subtle'}>
                     <div className="app-loading" style={{ background: 'transparent' }}>
                         <div className="loading-content">
@@ -691,8 +691,8 @@ function App() {
                 </WarpTransition>
             )}
 
-            {/* 3. GAME VIEW */}
-            {appState === 'game' && gameState && gameConfig && (
+            {/* 3. GAME VIEW (Render board once data is ready) */}
+            {appState === 'game' && gameState && gameConfig?.players && (
                 <div className={`app aaa-layout ${isShaking ? 'shake-active' : ''}`}>
 
                     {/* 1. BOARD LAYER (Centered) */}

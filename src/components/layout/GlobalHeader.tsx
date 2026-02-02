@@ -9,6 +9,7 @@ import { inAppWallet, createWallet } from 'thirdweb/wallets';
 import { coston2 } from '../../config/web3';
 
 const wallets = [
+    createWallet("io.metamask"),
     inAppWallet({
         auth: {
             options: [
@@ -19,8 +20,9 @@ const wallets = [
             ],
         },
     }),
-    createWallet("io.metamask"),
+    createWallet("com.coinbase.wallet"),
     createWallet("me.rainbow"),
+    createWallet("com.trustwallet.app"),
 ];
 
 const GlobalHeader: React.FC = () => {
