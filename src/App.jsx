@@ -338,6 +338,7 @@ function App() {
         }
 
         if (config.mode === 'web3') {
+            setAppState('game');
             socketConnect();
         } else {
             console.log('🎮 Local mode: Initializing game transition...');
@@ -734,7 +735,7 @@ function App() {
                         </p>
                         <div className="loading-debug-info">
                             <p>Room: {gameId?.substring(0, 10)}...</p>
-                            <p>Socket: {socketRef?.current?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
+                            <p>Socket: {socket?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
                             <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
                         </div>
                         <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>

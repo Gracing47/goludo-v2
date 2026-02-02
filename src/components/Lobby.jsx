@@ -225,6 +225,9 @@ const Lobby = ({ onStartGame }) => {
 
             const result = await handleJoinGame(selectedRoom.id, selectedRoom.stake, player.name, finalColor);
 
+            // Clear modal immediately after successful transaction/sync
+            setSelectedRoom(null);
+
             // Result.room contains full player list
             if (result && result.room) {
                 // CRITICAL FIX: Connect socket immediately for STARTING or ACTIVE
