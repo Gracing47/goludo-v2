@@ -1,4 +1,4 @@
-# 🏁 GoLudo Final Polish & Handover (v4.4.0)
+# 🏁 GoLudo Final Polish & Handover (v4.4.5)
 
 This document summarizes the final polish phase, focusing on **AAA Victory Experience**, **Real-time Color Sync**, and **Multiplayer Robustness**.
 
@@ -8,10 +8,11 @@ This document summarizes the final polish phase, focusing on **AAA Victory Exper
 
 ### 1. 🏆 AAA Victory & Payout Experience
 - **Context-Aware Screens:** Winners and Losers see different versions of the victory screen.
-  - **Winners:** Get confetti, a trophy, a "Congratulations!" message, and an integrated **Claim Payout** button.
+  - **Winners:** Get confetti, a trophy, and a claim flow. After a successful claim, the title changes to "PAYOUT SENT!" and shows a **"Back to Lobby"** button.
   - **Losers:** Get a sad "Game Over" sound, no confetti, and a clear "Back to Lobby" flow.
-- **Integrated Claims:** The Web3 payout claim button is now part of the `VictoryCelebration` component, preventing UI overlaps and ensuring a smooth transition from win to claim.
-- **Dynamic Pot Display:** A pulsing gold box in the center of the board shows the total pot size in real-time during Web3 matches.
+- **Integrated Claims:** The Web3 payout claim button is now part of the `VictoryCelebration` component, preventing UI overlaps and ensuring a smooth transition.
+- **Improved HUD (Pot Display):** The pot amount is now displayed in the **bottom-left** area (no background, smaller, Orbitron font) to prevent covering the center tiles.
+
 
 ### 2. 🎨 Real-time Color Sync & Lobby Stability
 - **Active Polling:** The lobby now polls for room state updates also during the "Setup" phase, ensuring the color picker is always synced with what others have selected.

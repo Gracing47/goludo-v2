@@ -12,7 +12,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 
-const BUILD_VERSION = "v4.4.0 - AAA Victory & Color Sync";
+const BUILD_VERSION = "v4.4.5 - AAA Victory & Pot HUD";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
@@ -122,6 +122,7 @@ function App() {
 
     // Local state for claiming (not needed in global store)
     const [isClaiming, setIsClaiming] = useState(false);
+    const [isClaimed, setIsClaimed] = useState(false);
 
     // VFX Hook
     const {
@@ -594,6 +595,7 @@ function App() {
         setGameState(createInitialState(gameConfig?.playerCount || 4));
         setIsRolling(false);
         setIsMoving(false);
+        setIsClaimed(false); // Reset claim status
         if (aiActionInProgress) aiActionInProgress.current = false;
     }, [gameConfig, setGameState, setIsRolling, setIsMoving, aiActionInProgress]);
 
@@ -661,7 +663,8 @@ function App() {
         try {
             await handleClaimPayout(payoutProof);
             setPayoutProof(null);
-            alert("Victory! Payout claimed. 💰");
+            setIsClaimed(true); // Mark as claimed!
+            playSound('success');
         } catch (err) {
             console.error(err);
             alert("Claim failed: " + (err.message || "Unknown error"));
@@ -901,6 +904,7 @@ function App() {
                                     isWinner={amIWinner}
                                     payoutProof={payoutProof}
                                     isClaiming={isClaiming}
+                                    isClaimed={isClaimed}
                                     onClaim={onClaimClick}
                                     onClose={handleBackToLobby}
                                     potAmount={potDisplay}

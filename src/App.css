@@ -114,57 +114,56 @@ body {
 
 .pot-display {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    bottom: 115px;
+    /* Positioned above the bottom-left player pod area */
+    left: 20px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 2px;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 2px solid rgba(255, 215, 0, 0.4);
-    border-radius: 12px;
-    padding: 8px 14px;
+    gap: 8px;
+    background: transparent !important;
+    border: none !important;
+    padding: 0;
     z-index: 20;
-    animation: pot-pulse 2s ease-in-out infinite;
+    animation: pot-float 3s ease-in-out infinite;
     pointer-events: none;
 }
 
 .pot-icon {
     font-size: 1.2rem;
-    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
 }
 
 .pot-amount {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 800;
     color: #ffd700;
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .pot-currency {
     font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 215, 0, 0.6);
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-weight: 700;
 }
 
-@keyframes pot-pulse {
+@keyframes pot-float {
 
     0%,
     100% {
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-        border-color: rgba(255, 215, 0, 0.4);
+        transform: translateY(0);
+        opacity: 0.8;
     }
 
     50% {
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-        border-color: rgba(255, 215, 0, 0.6);
+        transform: translateY(-6px);
+        opacity: 1;
     }
 }
+
 
 @media (max-width: 480px) {
     .pot-display {

@@ -25,6 +25,7 @@ export default function VictoryCelebration({
     isWinner = false,       // Am I the winner?
     payoutProof = null,     // Payout proof for claim
     isClaiming = false,     // Is claim in progress?
+    isClaimed = false,      // HAS it been claimed?
     onClaim = () => { },    // Claim callback
     potAmount = null        // Pot amount (string, e.g. "0.2")
 }) {
@@ -107,7 +108,7 @@ export default function VictoryCelebration({
                                 transition={{ delay: 0.5 }}
                                 style={{ color: isWinner ? winnerData.color : '#ff4757' }}
                             >
-                                {isWinner ? 'VICTORY!' : 'GAME OVER'}
+                                {isWinner ? (isClaimed ? 'PAYOUT SENT!' : 'VICTORY!') : 'GAME OVER'}
                             </motion.h1>
 
                             {/* Winner Name */}
@@ -118,14 +119,14 @@ export default function VictoryCelebration({
                                 transition={{ delay: 0.7 }}
                             >
                                 {isWinner
-                                    ? 'Congratulations!'
+                                    ? (isClaimed ? 'Funds transferred to your wallet.' : 'Congratulations!')
                                     : <><span style={{ color: winnerData.color, fontWeight: 'bold' }}>{playerName || `${winnerData.name} Player`}</span> Wins!</>}
                             </motion.p>
 
                             {/* Glowing ring effect */}
                             <motion.div
                                 className="victory-ring"
-                                style={{ borderColor: winnerData.color }}
+                                style={{ borderColor: isClaimed ? '#ffd700' : winnerData.color }}
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{
                                     scale: [0.8, 1.2, 1],
@@ -138,8 +139,8 @@ export default function VictoryCelebration({
                                 }}
                             />
 
-                            {/* Web3 Prize Info - Only for Winner */}
-                            {isWeb3Match && isWinner && (
+                            {/* Web3 Prize Info - Only for Winner (Before Claim) */}
+                            {isWeb3Match && isWinner && !isClaimed && (
                                 <motion.div
                                     className="victory-prize"
                                     initial={{ y: 20, opacity: 0 }}
@@ -174,10 +175,21 @@ export default function VictoryCelebration({
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 1.1 }}
                             >
-                                {/* Winner View: Claim button (if Web3) */}
+                                {/* Winner View: Claim button or Back to Lobby after claim */}
                                 {isWinner && isWeb3Match && (
                                     <>
-                                        {payoutProof ? (
+                                        {isClaimed ? (
+                                            <button
+                                                className="victory-btn primary"
+                                                onClick={onClose}
+                                                style={{
+                                                    backgroundColor: '#00d26a',
+                                                    boxShadow: '0 0 20px rgba(0, 210, 106, 0.4)'
+                                                }}
+                                            >
+                                                🏠 Back to Lobby
+                                            </button>
+                                        ) : payoutProof ? (
                                             <button
                                                 className="victory-btn primary claim-btn"
                                                 onClick={onClaim}

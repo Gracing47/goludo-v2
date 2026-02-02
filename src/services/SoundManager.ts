@@ -174,6 +174,14 @@ class SoundManager {
                 this.playNote(196.00, now + 0.5, 0.5);  // G3 (low, sustained)
                 return;
 
+            case 'success':
+                // Triumphant rising chord for successful claim
+                this.playNote(523.25, now, 0.1);    // C5
+                this.playNote(659.25, now + 0.1, 0.1); // E5
+                this.playNote(783.99, now + 0.2, 0.1); // G5
+                this.playNote(1046.50, now + 0.3, 0.4); // C6
+                return;
+
             default:
                 // Fallback generic beep
                 osc.type = 'sine';
