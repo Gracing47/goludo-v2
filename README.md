@@ -188,11 +188,13 @@ In case of server restart, the backend automatically scans the Flare blockchain 
 Comprehensive documentation is available in the [`docs/`](./docs) folder:
 
 - **[Refactoring Plan](./docs/REFACTORING_PLAN.md)** - Architecture overview
+- **[Socket Events](./docs/SOCKET_EVENTS.md)** - Complete socket API reference for UI
 - **[Phase 1 Complete](./docs/PHASE_1_COMPLETE.md)** - Current implementation status
 - **[Mobile-First UI](./docs/MOBILE_FIRST_UI_IMPROVEMENTS.md)** - UI/UX improvements
 - **[Turn Timer System](./docs/TURN_TIMER_IMPROVEMENTS.md)** - Timer implementation
 - **[State Management](./docs/MULTIPLAYER_STATE_MANAGEMENT.md)** - Multiplayer patterns
 - **[Testing Guide](./docs/TESTING_CHECKLIST.md)** - QA procedures
+
 
 ---
 

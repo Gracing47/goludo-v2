@@ -12,7 +12,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 
-const BUILD_VERSION = "v4.3.4 - Web3 Socket Fix";
+const BUILD_VERSION = "v4.4.0 - AAA Victory & Color Sync";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';

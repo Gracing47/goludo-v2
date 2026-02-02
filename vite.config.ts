@@ -1,7 +1,9 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -52,8 +54,16 @@ export default defineConfig({
                     'web3-vendor': ['ethers', 'socket.io-client']
                 }
             }
-        }
+        },
+        // Remove console.log/warn in production for performance & security
+        minify: 'esbuild',
     },
+
+    /* Production Console Removal */
+    esbuild: {
+        drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    },
+
 
     /* Vitest Configuration */
     test: {
@@ -74,4 +84,4 @@ export default defineConfig({
             ]
         }
     }
-});
+} as any);
