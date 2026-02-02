@@ -107,9 +107,10 @@ export const useGameStore = create<GameStoreState>()(
              * Update game state partially (merges with existing)
              * Useful for socket updates that only contain changed fields
              */
-            updateState: (partial) => set((prev) => ({
-                state: prev.state ? { ...prev.state, ...partial } : null
-            }), false, 'updateState'),
+            updateState: (partial) => set((prev) => {
+                if (!prev.state) return {};
+                return { state: { ...prev.state, ...partial } };
+            }, false, 'updateState'),
 
             /** Set rolling animation state (transient for performance) */
             setIsRolling: (isRolling) => set({ isRolling }, false, 'setIsRolling'),
