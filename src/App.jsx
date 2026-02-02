@@ -331,13 +331,13 @@ function App() {
 
                 // Initialize config if missing (e.g. on direct reload)
                 if (!gameConfig) {
-                    setConfig({ mode: 'web3', roomId: roomId });
+                    setGameConfig({ mode: 'web3', roomId: roomId });
                 }
 
                 socketConnect();
             }
         }
-    }, [gameId, appState, gameConfig, socketConnect, account?.address, setConfig]);
+    }, [gameId, appState, gameConfig, socketConnect, account?.address, setGameConfig]);
 
     // Note: Connection watchdog removed. Socket.IO built-in reconnection is sufficient.
 
