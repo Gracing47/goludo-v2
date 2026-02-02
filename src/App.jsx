@@ -7,7 +7,6 @@ import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { AnimatePresence } from 'framer-motion';
 import { useGameSocket } from './hooks/useGameSocket';
 import { ethers } from 'ethers';
-import Lobby from './components/Lobby';
 import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
@@ -312,82 +311,14 @@ function App() {
         };
     }, [handleInteraction]);
 
-    // ============================================
-    // GAME START LOGIC (Refactored from handleStartGame)
-    // ============================================
-    const onGameStart = useCallback((config) => {
-        aiActionInProgress.current = false;
 
-        // Initialize state regardless of mode
-        const colorMap = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
-        const activeColors = config.players?.map(p => p ? colorMap[p.color] : null).filter(c => c !== null) || [0, 1, 2, 3];
-
-        setGameConfig(config);
-        setGameState(createInitialState(4, activeColors));
-
-        // Perspective rotation
-        if (config.players?.[0]) {
-            const humanColorIndex = colorMap[config.players[0].color];
-            setBoardRotation((3 - humanColorIndex) * 90);
-        }
-
-        // Trigger Countdown for all modes (Web3 is now handled by socket hook)
-        if (config.mode !== 'web3') {
-            setGameCountdown(5);
-            setShowCountdown(true);
-        }
-
-        if (config.mode === 'web3') {
-            setAppState('game');
-            socketConnect();
-        } else {
-            console.log('🎮 Local mode: Initializing game transition...');
-            // App state will switch to 'game' after countdown in the effect
-        }
-    }, [socketConnect, setGameConfig, setGameState, setShowCountdown, setGameCountdown, setBoardRotation]);
-
-    // Handle Start from Lobby
-    const handleStartGame = useCallback((config) => {
-        if (config.mode === 'web3') {
-            // Update URL for Web3 re-entry
-            if (config.roomId) {
-                navigate(`/game/${config.roomId}`);
-            }
-            onGameStart(config);
-        } else {
-            // Local/AI Mode: Generate unique ID and navigate
-            const newGameId = Math.random().toString(36).substring(2, 11);
-            navigate(`/game/${newGameId}`);
-            onGameStart(config);
-        }
-    }, [onGameStart, navigate]);
-
-    // ============================================
-    // STATE PERSISTENCE (Local & AI)
-    // ============================================
-    // 1. Persistence Hook: Re-entry (Lobby -> Game) OR Web3 Connection
+    // 1. Web3 Connection Hook
     useEffect(() => {
-        const roomId = gameId; // Use the room ID from URL params
-        if (!roomId) return;
+        const roomId = gameId;
+        if (!roomId || appState !== 'game') return;
 
-        // Case 1: Resume from localStorage (local/AI games)
-        if (appState === 'lobby') {
-            const savedData = localStorage.getItem(`ludo_game_${roomId}`);
-            if (savedData) {
-                try {
-                    const { config, state } = JSON.parse(savedData);
-                    setGameConfig(config);
-                    setGameState(state);
-                    setAppState('game');
-                    return;
-                } catch (e) {
-                    console.warn("Failed to resume game", e);
-                }
-            }
-        }
-
-        // Case 2: Web3 room needs socket connection
-        if (roomId?.length > 20 || gameConfig?.mode === 'web3') {
+        // If it's a Web3 room, ensure we have a socket connection
+        if (roomId.length > 20 || gameConfig?.mode === 'web3') {
             const targetAddr = account?.address || 'anonymous';
             const currentSocket = matchSocket;
 
@@ -395,18 +326,18 @@ function App() {
                 currentSocket._targetRoom === roomId &&
                 currentSocket._targetAddr === targetAddr;
 
-            // Sync check: only init if we don't have a socket object for this room at all
-            if (!isMatchingSocket) {
+            if (!isMatchingSocket && account?.address) {
                 console.log('🌐 Web3 Session: Initializing connection...', { roomId, account: targetAddr });
 
-                const config = (gameConfig?.mode === 'web3' && gameConfig.roomId === roomId)
-                    ? gameConfig
-                    : { mode: 'web3', roomId: roomId };
+                // Initialize config if missing (e.g. on direct reload)
+                if (!gameConfig) {
+                    setConfig({ mode: 'web3', roomId: roomId });
+                }
 
-                onGameStart(config);
+                socketConnect();
             }
         }
-    }, [gameId, appState, gameConfig, onGameStart, account?.address]);
+    }, [gameId, appState, gameConfig, socketConnect, account?.address, setConfig]);
 
     // Note: Connection watchdog removed. Socket.IO built-in reconnection is sufficient.
 
@@ -708,19 +639,16 @@ function App() {
                 )}
             </AnimatePresence>
 
-            {/* 1. LOBBY VIEW */}
+            {/* 1. LOBBY VIEW - Handled by LudoLobby.tsx in the new routing system */}
             {appState === 'lobby' && (
                 <WarpTransition>
                     <div className="lobby-background">
-                        <Lobby onStartGame={handleStartGame} />
-
-                        {/* Audio Toggle (Lobby Overlay) */}
-                        <div className="audio-control-lobby" onClick={handleToggleMute} style={{ position: 'fixed', top: 20, right: 20, cursor: 'pointer', zIndex: 100 }}>
-                            {isMuted ? '🔇' : '🔊'}
+                        <div className="app-loading">
+                            <p>Redirecting to Lobby...</p>
+                            <button className="btn-secondary" onClick={() => navigate('/lobby')}>
+                                Go to Lobby
+                            </button>
                         </div>
-
-                        {/* Version Overlay */}
-                        <div className="version-tag" style={{ position: 'fixed', bottom: 5, right: 5, opacity: 0.3, fontSize: 10 }}>{BUILD_VERSION}</div>
                     </div>
                 </WarpTransition>
             )}
@@ -729,17 +657,35 @@ function App() {
             {appState === 'game' && (!gameState || !gameConfig) && (
                 <WarpTransition mode={gameConfig?.mode === 'web3' ? 'literal' : 'subtle'}>
                     <div className="app-loading" style={{ background: 'transparent' }}>
-                        <div className="loading-spinner">↻</div>
-                        <p style={{ fontFamily: 'var(--font-display)', letterSpacing: '2px' }}>
-                            Establishing Connection...
-                        </p>
-                        <div className="loading-debug-info">
-                            <p>Room: {gameId?.substring(0, 10)}...</p>
-                            <p>Socket: {socket?.connected ? '✅ Connected' : '⏳ Connecting...'}</p>
-                            <p>State: {gameState ? '✅' : '❌'} | Config: {gameConfig ? '✅' : '❌'}</p>
+                        <div className="loading-content">
+                            <div className="loading-spinner">↻</div>
+                            <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: '4px', textTransform: 'uppercase' }}>
+                                Establishing Connection
+                            </h2>
+                            <p className="loading-subtitle">Synchronizing with the Flare Network...</p>
                         </div>
-                        <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 20 }}>
-                            Return to Lobby
+
+                        <div className="loading-debug-info">
+                            <div className="debug-item">
+                                <span className="debug-label">Room ID</span>
+                                <span className="debug-value">{gameId?.substring(0, 10)}...</span>
+                            </div>
+                            <div className="debug-item">
+                                <span className="debug-label">Socket</span>
+                                <span className={`debug-status ${socket?.connected ? 'active' : 'waiting'}`}>
+                                    {socket?.connected ? 'CONNECTED' : 'CONNECTING...'}
+                                </span>
+                            </div>
+                            <div className="debug-item">
+                                <span className="debug-label">Game Engine</span>
+                                <span className={`debug-status ${gameState ? 'active' : 'waiting'}`}>
+                                    {gameState ? 'INITIALIZED' : 'WAITING FOR DATA...'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <button className="btn-secondary" onClick={handleBackToLobby} style={{ marginTop: 40, padding: '12px 24px', borderRadius: '30px' }}>
+                            Leave & Return to Lobby
                         </button>
                     </div>
                 </WarpTransition>

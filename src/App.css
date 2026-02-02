@@ -743,7 +743,7 @@ body {
 }
 
 /* ============================================
-   LOADING STATE
+   LOADING STATE (AAA Premium)
    ============================================ */
 
 .app-loading {
@@ -751,34 +751,113 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    height: 100vh;
+    width: 100vw;
+    background: radial-gradient(circle at center, #1a1a35 0%, #0a0a1a 100%);
     color: white;
+    z-index: 9999;
+}
+
+.loading-content {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fade-in-up 0.8s ease-out;
 }
 
 .loading-spinner {
-    font-size: 2rem;
-    animation: spin 1s linear infinite;
+    font-size: 3rem;
+    color: var(--neon-blue);
+    margin-bottom: 20px;
+    animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    text-shadow: 0 0 15px var(--neon-blue);
 }
 
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
+.loading-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.6;
+    letter-spacing: 1px;
+    margin-top: 8px;
 }
 
 .loading-debug-info {
-    margin-top: 10px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    font-family: monospace;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.5);
-    text-align: left;
+    width: 300px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: fade-in 1.2s ease-out;
+}
+
+.debug-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+}
+
+.debug-label {
+    opacity: 0.5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.debug-value {
+    font-weight: 600;
+    font-family: 'Orbitron', monospace;
+}
+
+.debug-status {
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+}
+
+.debug-status.active {
+    color: var(--color-green);
+    background: rgba(46, 213, 115, 0.1);
+}
+
+.debug-status.waiting {
+    color: var(--color-yellow);
+    background: rgba(255, 165, 2, 0.1);
+    animation: pulse-opacity 1s infinite alternate;
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse-opacity {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.4;
+    }
 }
 
 /* ============================================

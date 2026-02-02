@@ -21,9 +21,30 @@ const GameRoom = lazy(() => import('./pages/GameRoom'));
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
-    <div className="page-loader">
-        <div className="loader-spinner">↻</div>
-        <p>Loading...</p>
+    <div className="page-loader" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: 'radial-gradient(circle at center, #1a1a2e 0%, #0d0d1a 100%)',
+        color: 'white',
+        fontFamily: 'Exo 2, sans-serif'
+    }}>
+        <div className="loader-spinner" style={{
+            fontSize: '48px',
+            marginBottom: '20px',
+            animation: 'spin 2s linear infinite'
+        }}>↻</div>
+        <p style={{
+            fontSize: '18px',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            opacity: 0.8
+        }}>Loading Assets...</p>
+        <style>{`
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        `}</style>
     </div>
 );
 
