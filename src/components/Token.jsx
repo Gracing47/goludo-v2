@@ -202,4 +202,4 @@ const Token = ({
     );
 };
 
-export default Token;
+export default React.memo(Token);

@@ -210,6 +210,16 @@ body {
   --duration-fast: 200ms;
   --duration-normal: 400ms;
   --duration-slow: 800ms;
+
+  /* Global Radii */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-full: 9999px;
+
+  /* Global Borders */
+  --border-thin: 1px;
 }
 
 /* Tablet and larger screens */

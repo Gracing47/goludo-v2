@@ -159,8 +159,8 @@ const broadcastState = (room: any, message: string | null = null) => {
 // ============================================
 // AAA-LEVEL TURN TIMER SYSTEM
 // ============================================
-const TURN_TIMEOUT_MS = 10000; // 10 seconds
-const FORFEIT_TIMEOUT_MS = 15000; // 15 seconds for recovery before skip counts
+const TURN_TIMEOUT_MS = 30000; // 30 seconds (More forgiving for Web3)
+const FORFEIT_TIMEOUT_MS = 60000; // 60 seconds (Wait 1 minute for reconnect)
 const COUNTDOWN_INTERVAL_MS = 1000; // Update every second
 const MAX_SKIPS_BEFORE_FORFEIT = 3; // Player forfeits after 3 skips (AFK or disconnect)
 
@@ -484,7 +484,6 @@ io.on('connection', (socket) => {
                     // Re-emit game_started so the client enters the 'game' AppState if they were in lobby
                     socket.emit('game_started', room);
 
-                    // Send current board state
                     socket.emit('state_update', {
                         ...room.gameState,
                         currentTurn: room.gameState.activePlayer,
@@ -540,6 +539,8 @@ io.on('connection', (socket) => {
 
             if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
                 console.log(`❌ Out-of-turn roll attempt by ${playerAddress} (Expected: Player ${activePlayerIdx} - ${activePlayerObj?.address})`);
+                // AAA: Force sync for the laggy client
+                broadcastState(room);
                 return;
             }
 
@@ -589,6 +590,8 @@ io.on('connection', (socket) => {
 
             if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
                 console.log(`❌ Out-of-turn move by ${playerAddress}`);
+                // AAA: Force sync for the laggy client
+                broadcastState(room);
                 return;
             }
 

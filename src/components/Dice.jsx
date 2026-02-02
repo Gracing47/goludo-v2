@@ -35,4 +35,4 @@ const Dice = ({ value, onRoll, disabled, isRolling }) => {
     );
 };
 
-export default Dice;
+export default React.memo(Dice);

@@ -269,7 +269,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
             const activeColors = room.players
                 .map((p: Player, idx: number) => p ? idx : null)
-                .filter((idx) => idx !== null) as number[];
+                .filter((idx: any) => idx !== null) as number[];
 
             setConfig({
                 mode: 'web3',
@@ -287,20 +287,27 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                 }) : null) as Player[]
             });
 
-            setGameState(createInitialState(4, activeColors) as any);
+            // AAA FIX: Use server-side gameState if it exists (reconnect scenario)
+            // This prevents the board from resetting to 0 tokens for a split second
+            if (room.gameState) {
+                console.log("📥 Resuming game with server-provided state");
+                setGameState(room.gameState);
+            } else {
+                console.log("🆕 Starting fresh game state");
+                setGameState(createInitialState(4, activeColors) as any);
+            }
+
             setShowCountdown(false); // Hide countdown overlay
             setAppState('game');
             setServerMsg("Game Started!");
 
             const myIdx = room.players.findIndex((p: Player) =>
-                p?.address?.toLowerCase() === account.address?.toLowerCase()
+                p?.address?.toLowerCase() === account?.address?.toLowerCase()
             );
             if (myIdx !== -1) {
                 setBoardRotation((3 - myIdx) * 90);
+                setTurnTimer(Math.floor((room.timeoutMs || 30000) / 1000));
             }
-
-            const timeout = room.timeoutMs || room.turnTimeout || 30000;
-            setTurnTimer(Math.floor(timeout / 1000));
         });
 
         socket.on('turn_timeout', ({ playerName }) => {

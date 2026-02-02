@@ -124,4 +124,4 @@ function getCellClasses(cellType, row, col, activePlayer) {
     return classes.join(' ');
 }
 
-export default Board;
+export default React.memo(Board);
