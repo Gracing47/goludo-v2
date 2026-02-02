@@ -25,7 +25,8 @@ export default function VictoryCelebration({
     isWinner = false,       // Am I the winner?
     payoutProof = null,     // Payout proof for claim
     isClaiming = false,     // Is claim in progress?
-    onClaim = () => { }      // Claim callback
+    onClaim = () => { },    // Claim callback
+    potAmount = null        // Pot amount (string, e.g. "0.2")
 }) {
     const [showContent, setShowContent] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
@@ -35,14 +36,17 @@ export default function VictoryCelebration({
 
     useEffect(() => {
         if (winner !== null && winner !== undefined) {
-            // Play victory sound
-            playSound('win');
+            // Play appropriate sound based on outcome
+            playSound(isWinner ? 'win' : 'lose');
 
             // Staggered reveal
             setTimeout(() => setShowContent(true), 200);
-            setTimeout(() => setShowConfetti(true), 400);
+            // Confetti only for winner
+            if (isWinner) {
+                setTimeout(() => setShowConfetti(true), 400);
+            }
         }
-    }, [winner]);
+    }, [winner, isWinner]);
 
     if (winner === null || winner === undefined) return null;
 
@@ -63,8 +67,8 @@ export default function VictoryCelebration({
                     transition={{ duration: 0.8 }}
                 />
 
-                {/* Confetti */}
-                <VictoryConfetti active={showConfetti} winnerColor={winnerData.class} />
+                {/* Confetti - Only for Winner */}
+                {isWinner && <VictoryConfetti active={showConfetti} winnerColor={winnerData.class} />}
 
                 {/* Main Content */}
                 <AnimatePresence>
@@ -143,7 +147,11 @@ export default function VictoryCelebration({
                                     transition={{ delay: 0.9 }}
                                 >
                                     <span className="prize-icon">💰</span>
-                                    <span className="prize-text">Claim your prize from the vault!</span>
+                                    <span className="prize-text">
+                                        {potAmount
+                                            ? `You won ${potAmount} C2FLR!`
+                                            : 'Claim your prize from the vault!'}
+                                    </span>
                                 </motion.div>
                             )}
 

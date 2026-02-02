@@ -108,6 +108,79 @@ body {
     overflow: visible;
 }
 
+/* ============================================
+   POT DISPLAY - Center of Board
+   ============================================ */
+
+.pot-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    border-radius: 12px;
+    padding: 8px 14px;
+    z-index: 20;
+    animation: pot-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.pot-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+}
+
+.pot-amount {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.pot-currency {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@keyframes pot-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        border-color: rgba(255, 215, 0, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        border-color: rgba(255, 215, 0, 0.6);
+    }
+}
+
+@media (max-width: 480px) {
+    .pot-display {
+        padding: 6px 10px;
+    }
+
+    .pot-amount {
+        font-size: 0.9rem;
+    }
+
+    .pot-icon {
+        font-size: 1rem;
+    }
+}
+
+
 /* Container for pods that anchors them to board corners */
 .player-pods-container {
     position: absolute;

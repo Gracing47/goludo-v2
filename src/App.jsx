@@ -620,11 +620,9 @@ function App() {
         }
     }, [gameState?.validMoves, gameState?.gamePhase, isLocalPlayerTurn, isRolling, isMoving, executeMove]);
 
-    // Web3 Payout Proof Handler & Win Sound
+    // Web3 Payout Proof Handler (Sound now handled by VictoryCelebration)
     useEffect(() => {
         if (appState === 'game' && gameState?.gamePhase === 'WIN') {
-            // Play success sound
-            playSound('win');
 
             if (gameConfig?.mode === 'web3' && !payoutProof) {
                 const winner = gameConfig.players[gameState.winner];
@@ -816,7 +814,19 @@ function App() {
                                 />
                             ))}
                         </Board>
+
+                        {/* Pot Display - Center of Board (Web3 only) */}
+                        {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && (
+                            <div className="pot-display">
+                                <span className="pot-icon">💰</span>
+                                <span className="pot-amount">
+                                    {(parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(2)}
+                                </span>
+                                <span className="pot-currency">C2FLR</span>
+                            </div>
+                        )}
                     </div>
+
 
                     {/* 2. HUD LAYER (Overlay) */}
                     <div className="game-hud">
@@ -878,6 +888,11 @@ function App() {
                                 ? winnerPlayer?.address?.toLowerCase() === account?.address?.toLowerCase()
                                 : !winnerPlayer?.isAI; // In local, human player is always "you"
 
+                            // Calculate pot amount for display
+                            const potDisplay = gameConfig.mode === 'web3' && gameConfig.stake
+                                ? (parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(2)
+                                : null;
+
                             return (
                                 <VictoryCelebration
                                     winner={gameState.winner}
@@ -888,6 +903,7 @@ function App() {
                                     isClaiming={isClaiming}
                                     onClaim={onClaimClick}
                                     onClose={handleBackToLobby}
+                                    potAmount={potDisplay}
                                 />
                             );
                         })()}

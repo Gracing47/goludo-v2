@@ -166,6 +166,14 @@ class SoundManager {
                 this.playNote(200, now + 0.3, 0.3);
                 return;
 
+            case 'lose':
+                // Game over for loser - sad descending minor chord
+                this.playNote(329.63, now, 0.2);        // E4
+                this.playNote(293.66, now + 0.15, 0.2); // D4
+                this.playNote(261.63, now + 0.3, 0.3);  // C4
+                this.playNote(196.00, now + 0.5, 0.5);  // G3 (low, sustained)
+                return;
+
             default:
                 // Fallback generic beep
                 osc.type = 'sine';
