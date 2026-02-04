@@ -11,7 +11,7 @@ import Board from './components/Board';
 import Token from './components/Token';
 import Dice from './components/Dice';
 
-const BUILD_VERSION = "v4.4.5 - AAA Victory & Pot HUD";
+const BUILD_VERSION = "v4.4.6 - Socket Stability Fixes";
 import CaptureExplosion from './components/CaptureExplosion';
 import VictoryCelebration from './components/VictoryCelebration';
 import { SpawnSparkle } from './components/ParticleEffects';
@@ -114,7 +114,7 @@ function App() {
     const { account, handleClaimPayout } = useLudoWeb3();
 
     // Socket Hook
-    const { socket: matchSocket, connect: socketConnect, emitRoll, emitMove } = useGameSocket(gameId, account);
+    const { socket: matchSocket, isConnected, connect: socketConnect, emitRoll, emitMove } = useGameSocket(gameId, account);
 
     // Sync isRolling to ref for safety timeouts
     const isRollingRef = useRef(isRolling);
@@ -817,6 +817,14 @@ function App() {
                                 );
                             })}
                         </div>
+
+                        {/* SPECIAL: DISCONNECT OVERLAY */}
+                        {!isConnected && appState === 'game' && gameState && (
+                            <div className="disconnect-overlay">
+                                <div className="spinner"></div>
+                                <div>Connection Lost. Reconnecting...</div>
+                            </div>
+                        )}
 
                         {/* B. SERVER MESSAGE TOAST */}
                         {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}

@@ -60,7 +60,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             reconnectionAttempts: Infinity,
             reconnectionDelay: 1000,
             transports: ['websocket', 'polling'], // Force websocket first for better reliability
-            timeout: 20000,
+            timeout: 10000, // Reduced connection timeout
         });
 
         // Tag socket for room persistence
@@ -82,6 +82,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         socket.on('game_error', (error) => {
             console.error('❌ Game error:', error.message);
             setServerMsg(`❌ ${error.message}`);
+            // Reset flags to allow retry
+            setIsRolling(false);
+            setIsMoving(false);
             setTimeout(() => setServerMsg(null), 5000);
         });
 
@@ -98,7 +101,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
         socket.io.on("reconnect", (attempt) => {
             console.log(`✅ Reconnected on attempt #${attempt}`);
-            setServerMsg("✅ Back online!");
+            setServerMsg("✅ Back online! Resyncing...");
+            // Force re-join to ensure server knows we are back on this socket ID
+            socket.emit('join_match', { roomId, playerAddress: targetAddr });
             setTimeout(() => setServerMsg(null), 2000);
         });
 
@@ -177,6 +182,17 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                                 }
                             }, (index + 1) * hopDuration);
                         });
+
+                        // 3. SAFETY FALLBACK: Force consistency after animation ends (plus buffer)
+                        // This prevents "stuck" states if the browser throttles timers or something crashes
+                        setTimeout(() => {
+                            if (useGameStore.getState().isMoving) {
+                                console.warn("⚠️ Animation watchdog triggered - forcing state sync");
+                                setIsMoving(false);
+                                setIsRolling(false);
+                                updateState(update);
+                            }
+                        }, (traversePath.length + 2) * hopDuration);
 
                         return; // Handled via animation
                     }

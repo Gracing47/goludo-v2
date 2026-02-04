@@ -73,7 +73,9 @@ export const io = new Server(server, {
         origin: ALLOWED_ORIGINS,
         methods: ["GET", "POST"],
         credentials: true
-    }
+    },
+    pingInterval: 2000, // Send heartbeat every 2s
+    pingTimeout: 5000   // Consider connection dead if no pong after 5s (Total detection ~7s)
 });
 const PORT = process.env.PORT || 3333;
 
@@ -475,8 +477,9 @@ io.on('connection', (socket) => {
                 player.socketId = socket.id;
                 console.log(`🔗 Linked Socket ${socket.id} to Player ${player.name} (${player.color})`);
 
-                // ✅ Clear individual forfeit watchdog
+                // ✅ Clear individual forfeit/skip watchdogs
                 clearSpecificTimer(roomId, `forfeit_${playerIndex}`);
+                clearSpecificTimer(roomId, `skip_${playerIndex}`);
 
                 // CRITICAL FIX: Only send full state sync if game is ACTIVE (not during countdown)
                 if (room.gameState && room.status === "ACTIVE") {
