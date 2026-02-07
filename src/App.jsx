@@ -315,9 +315,9 @@ function App() {
     // 1. Web3 Connection Hook
     useEffect(() => {
         const roomId = gameId;
-        if (!roomId || appState !== 'game') return;
+        if (!roomId || appState !== 'game' || gameConfig?.mode !== 'web3') return;
 
-        // If it's a Web3 room, ensure we have a socket connection
+        // Ensure we have a socket connection
         if (roomId.length > 20 || gameConfig?.mode === 'web3') {
             const targetAddr = account?.address || 'anonymous';
             const currentSocket = matchSocket;
@@ -660,9 +660,11 @@ function App() {
                         <div className="loading-content">
                             <div className="loading-spinner">↻</div>
                             <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: '4px', textTransform: 'uppercase' }}>
-                                Establishing Connection
+                                {gameConfig?.mode === 'web3' ? 'Establishing Connection' : 'Preparing Match'}
                             </h2>
-                            <p className="loading-subtitle">Synchronizing with the Flare Network...</p>
+                            <p className="loading-subtitle">
+                                {gameConfig?.mode === 'web3' ? 'Synchronizing with the Flare Network...' : 'Loading game assets...'}
+                            </p>
                         </div>
 
                         <div className="loading-debug-info">
@@ -818,8 +820,8 @@ function App() {
                             })}
                         </div>
 
-                        {/* SPECIAL: DISCONNECT OVERLAY */}
-                        {!isConnected && appState === 'game' && gameState && (
+                        {/* SPECIAL: DISCONNECT OVERLAY (Web3 Only) */}
+                        {!isConnected && appState === 'game' && gameState && gameConfig?.mode === 'web3' && (
                             <div className="disconnect-overlay">
                                 <div className="spinner"></div>
                                 <div>Connection Lost. Reconnecting...</div>
