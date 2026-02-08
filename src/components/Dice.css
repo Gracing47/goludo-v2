@@ -58,8 +58,24 @@
 }
 
 .dice-button:focus-visible {
-    outline: 2px solid rgba(0, 243, 255, 0.8);
-    outline-offset: 3px;
+    outline: 3px solid var(--color-tertiary);
+    outline-offset: 4px;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 20px rgba(34, 211, 238, 0.4);
+}
+
+/* Screen Reader Only - Hide visually but keep for screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }
 
 /* Rolling state - intense shake */

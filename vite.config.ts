@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -15,9 +16,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * - Vitest for unit testing
  * - Optimized build settings
  * - Development server configuration
+ * - Bundle analysis with visualizer
  */
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+
+        // Bundle Visualizer - generates stats.html
+        visualizer({
+            filename: './dist/stats.html',
+            open: false,
+            gzipSize: true,
+            brotliSize: true,
+            template: 'treemap' // or 'sunburst', 'network'
+        })
+    ],
 
     /* Path Aliases - Clean Imports */
     resolve: {
@@ -32,6 +45,7 @@ export default defineConfig({
             '@utils': path.resolve(__dirname, './src/utils'),
             '@types': path.resolve(__dirname, './src/types'),
             '@config': path.resolve(__dirname, './src/config'),
+            '@design-system': path.resolve(__dirname, './src/design-system'),
         }
     },
 
@@ -46,17 +60,43 @@ export default defineConfig({
     build: {
         target: 'es2020',
         sourcemap: true,
+        chunkSizeWarningLimit: 1000, // Warn if chunk > 1MB
         rollupOptions: {
             output: {
                 manualChunks: {
-                    'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-                    'game-engine': ['./src/engine/gameLogic', './src/engine/aiEngine'],
-                    'web3-vendor': ['ethers', 'socket.io-client']
-                }
+                    // React core - ~130KB
+                    'react-vendor': ['react', 'react-dom'],
+
+                    // React Router - ~20KB
+                    'router': ['react-router-dom'],
+
+                    // Game Engine - ~50KB
+                    'game-engine': [
+                        './src/engine/gameLogic',
+                        './src/engine/aiEngine',
+                        './src/engine/movementEngine',
+                        './src/engine/constants'
+                    ],
+
+                    // Web3 & Socket - ~200KB
+                    'web3-vendor': ['ethers', 'thirdweb'],
+                    'socket-vendor': ['socket.io-client'],
+
+                    // Animations - ~80KB
+                    'animation-vendor': ['framer-motion'],
+
+                    // State Management - ~5KB
+                    'state-vendor': ['zustand']
+                },
+                // Better filenames for cache busting
+                entryFileNames: 'assets/[name]-[hash].js',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash].[ext]'
             }
         },
-        // Remove console.log/warn in production for performance & security
+        // Minification settings
         minify: 'esbuild',
+        cssMinify: true,
     },
 
     /* Production Console Removal */

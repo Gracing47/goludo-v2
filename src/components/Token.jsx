@@ -99,6 +99,27 @@ const Token = ({
         prevPos.current = { row, col };
     }, [row, col, inYard, controls, isBonusMove]);
 
+    // Accessibility: Describe token state for screen readers
+    const getAriaLabel = () => {
+        const colorName = ['Red', 'Green', 'Yellow', 'Blue'][playerIndex] || color;
+        const position = inYard ? 'in starting yard' : `at row ${row + 1}, column ${col + 1}`;
+        const status = isHighlighted ? 'selectable' : '';
+        const stackInfo = tokenCount > 1 ? `, stacked with ${tokenCount} tokens` : '';
+
+        return `${colorName} token ${tokenIndex + 1} ${position}${stackInfo}${status ? `. ${status}` : ''}`;
+    };
+
+    // Handle keyboard navigation
+    const handleKeyDown = (e) => {
+        if (!onClick) return;
+
+        // Enter or Space to select token
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick?.();
+        }
+    };
+
     const classes = [
         'token',
         `token-${color}`,
@@ -142,14 +163,21 @@ const Token = ({
                 transition: { type: "spring", stiffness: 300 }
             } : {}}
             onClick={onClick}
+            onKeyDown={handleKeyDown}
+            // Accessibility attributes
+            role={onClick ? "button" : undefined}
+            tabIndex={onClick ? 0 : -1}
+            aria-label={getAriaLabel()}
+            aria-pressed={isHighlighted}
+            aria-disabled={!onClick}
         >
             <div className={`token-inner liquid-glass ${color}`}>
-                <div className="token-shine" />
-                <div className="token-center-dot" />
+                <div className="token-shine" aria-hidden="true" />
+                <div className="token-center-dot" aria-hidden="true" />
 
                 {/* 🔢 Stack Count Badge (moved to corner for visibility) */}
                 {tokenCount > 1 && (
-                    <div className="token-stack-badge">
+                    <div className="token-stack-badge" aria-label={`${tokenCount} tokens stacked`}>
                         {tokenCount}
                     </div>
                 )}
@@ -163,6 +191,7 @@ const Token = ({
                             animate={{ scale: 2.5, opacity: 0 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
+                            aria-hidden="true"
                         />
                     )}
                 </AnimatePresence>
@@ -181,12 +210,13 @@ const Token = ({
                         duration: 2,
                         ease: "linear"
                     }}
+                    aria-hidden="true"
                 />
             )}
 
             {/* Movement Particles (Simplified) */}
             {isAnimating && (
-                <div className="token-trail-particles">
+                <div className="token-trail-particles" aria-hidden="true">
                     {[1, 2, 3].map(i => (
                         <motion.div
                             key={i}
@@ -197,6 +227,13 @@ const Token = ({
                         />
                     ))}
                 </div>
+            )}
+
+            {/* Screen reader announcement for movement */}
+            {isAnimating && !isBonusMove && (
+                <span className="sr-only" aria-live="polite">
+                    Token moving
+                </span>
             )}
         </motion.div>
     );

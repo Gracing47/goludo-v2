@@ -1,4 +1,9 @@
 /* ============================================
+   DESIGN SYSTEM - Import Centralized Tokens
+   ============================================ */
+@import './design-system/tokens.css';
+
+/* ============================================
    GLOBAL STYLES - UNISWAP/PANCAKESWAP INSPIRED
    Dark Theme with Glassmorphism & Gradients
    ============================================ */

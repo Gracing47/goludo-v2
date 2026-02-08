@@ -22,7 +22,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
-import AAACountdown from './components/AAACountdown';
+import DiceArea from './components/DiceArea';
 import soundManager from './services/SoundManager';
 
 
@@ -616,28 +616,6 @@ function App() {
 
     return (
         <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
-            {/* 0. PREMIUM COUNTDOWN LAYER */}
-            <AnimatePresence>
-                {showCountdown && gameConfig && (
-                    <AAACountdown
-                        countdown={gameCountdown}
-                        playerName={
-                            gameConfig.mode === 'web3' && account
-                                ? gameConfig.players?.find(p =>
-                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                )?.name
-                                : gameConfig.players?.[0]?.name
-                        }
-                        playerColor={
-                            gameConfig.mode === 'web3' && account
-                                ? gameConfig.players?.find(p =>
-                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                )?.color
-                                : gameConfig.players?.[0]?.color || 'cyan'
-                        }
-                    />
-                )}
-            </AnimatePresence>
 
             {/* 1. LOBBY VIEW - Handled by LudoLobby.tsx in the new routing system */}
             {appState === 'lobby' && (
@@ -862,14 +840,30 @@ function App() {
 
                         {/* Web3 Claim Button removed - now integrated into VictoryCelebration */}
 
-                        {/* D. CENTRAL DICE */}
+                        {/* D. CENTRAL DICE with Integrated Countdown */}
                         {gameState.gamePhase !== 'WIN' && (
                             <div className="central-dice-area">
                                 <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
-                                    <Dice
-                                        value={gameState.diceValue}
-                                        onRoll={canRoll ? handleRoll : null}
-                                        disabled={!canRoll}
+                                    <DiceArea
+                                        showCountdown={showCountdown}
+                                        countdown={gameCountdown}
+                                        playerName={
+                                            gameConfig.mode === 'web3' && account
+                                                ? gameConfig.players?.find(p =>
+                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                                )?.name
+                                                : gameConfig.players?.[0]?.name
+                                        }
+                                        playerColor={
+                                            gameConfig.mode === 'web3' && account
+                                                ? gameConfig.players?.find(p =>
+                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                                )?.color
+                                                : gameConfig.players?.[0]?.color || 'cyan'
+                                        }
+                                        diceValue={gameState.diceValue}
+                                        onRoll={handleRoll}
+                                        canRoll={canRoll}
                                         isRolling={isRolling}
                                     />
                                 </div>
