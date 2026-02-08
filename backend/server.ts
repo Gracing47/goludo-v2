@@ -37,6 +37,7 @@ interface BackendRoom {
     turnTimeout?: number;
     timeoutMs?: number;
     turnExpiresAt?: number;
+    // AAA: Internal states for game lifecycle
     _countdownStarted?: boolean;
     _currentCountdown?: number;
     _gameStartedAt?: number;
@@ -84,7 +85,7 @@ export const io = new Server(server, {
 });
 const PORT = process.env.PORT || 3333;
 
-let activeRooms: any[] = [];
+let activeRooms: BackendRoom[] = [];
 
 app.use(cors({
     origin: ALLOWED_ORIGINS,
@@ -146,13 +147,18 @@ app.use((req: express.Request, _res: express.Response, next: express.NextFunctio
 
 const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
 
-const broadcastState = (room: any, message: string | null = null) => {
-    if (!room.gameState) return;
+const broadcastState = (room: BackendRoom, message: string | null = null) => {
     // Extract player skip metadata for the frontend
-    const playersMetadata = room.players.map((p: any) => p ? {
+    const playersMetadata = room.players.map((p) => p ? {
         skipCount: p.skipCount || 0,
         forfeited: p.forfeited || false
     } : null);
+
+    // AAA Robustness: Prevent broadcasting null state
+    if (!room.gameState) {
+        console.warn(`⚠️ Attempted broadcast to room ${room.id} without gameState. Initializing...`);
+        return;
+    }
 
     io.to(room.id).emit('state_update', {
         ...room.gameState,
@@ -198,28 +204,20 @@ function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, re
         console.log(`💀 Player ${player.name} forfeited after ${MAX_SKIPS_BEFORE_FORFEIT} skips!`);
         player.forfeited = true;
 
-        const state = room.gameState;
-        if (!state) {
-            console.error("🚨 Fatal: gameState missing during forfeit");
-            return true;
-        }
-
         // Track forfeit event
-        const winnerIdx = state.activeColors.find((idx: number) => idx !== playerIndex);
-        if (winnerIdx !== undefined) {
-            const winner = room.players[winnerIdx];
-            console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
-        }
+        const winnerIdx = room.gameState.activeColors.find((idx: number) => idx !== playerIndex);
+        const winner = room.players[winnerIdx];
+        console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
 
         // Remove from active colors
-        state.activeColors = state.activeColors.filter((idx: number) => idx !== playerIndex);
+        room.gameState.activeColors = room.gameState.activeColors.filter((idx: number) => idx !== playerIndex);
         broadcastState(room, `💀 ${player.name} forfeited (${MAX_SKIPS_BEFORE_FORFEIT} skips).`);
 
         // Check win condition
-        if (state.activeColors.length === 1) {
-            declareWinner(io, room, state.activeColors[0]);
+        if (room.gameState.activeColors.length === 1) {
+            declareWinner(io, room, room.gameState.activeColors[0]);
             return true;
-        } else if (state.activeColors.length === 0) {
+        } else if (room.gameState.activeColors.length === 0) {
             cleanupRoom(room.id, activeRooms);
             return true;
         }
@@ -258,7 +256,7 @@ function clearRoomTimers(roomId: string) {
 /**
  * Starts a countdown timer with live updates
  */
-function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phase: any) {
+function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phase: GamePhase) {
     const roomId = room.id.toLowerCase();
     const currentPlayer = room.players[playerIndex];
 
@@ -307,38 +305,35 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
 /**
  * Handles what happens when a turn times out (AFK - still connected but not acting)
  */
-function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, phase: any) {
+function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, phase: GamePhase) {
     const currentPlayer = room.players[playerIndex];
-    if (!currentPlayer || !room.gameState) return;
 
     // Use unified skip system - counts towards 3-skip forfeit
     const playerForfeited = handlePlayerSkip(io, room, playerIndex, 'afk_timeout');
 
-    // Re-verify after potentially async-safe call (though not async, TS is cautious)
-    if (playerForfeited || !room.gameState) {
+    if (playerForfeited) {
+        // Player was removed from game, handlePlayerSkip already handled everything
         return;
     }
 
-    const state = room.gameState;
-
     // Player still in game, proceed to next turn
     if (phase === GAME_PHASE.ROLL_DICE) {
-        const nextPlayerIdx = getNextPlayer(playerIndex, state.activeColors);
-        state.activePlayer = nextPlayerIdx;
-        state.consecutiveSixes = 0;
+        const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
+        room.gameState.activePlayer = nextPlayerIdx;
+        room.gameState.consecutiveSixes = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Turn skipped (${currentPlayer.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
+        broadcastState(room, `⏰ ${currentPlayer?.name || 'Player'} timed out. Turn skipped (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     } else if (phase === GAME_PHASE.SELECT_TOKEN || phase === GAME_PHASE.BONUS_MOVE) {
-        const nextPlayerIdx = getNextPlayer(playerIndex, state.activeColors);
-        state.activePlayer = nextPlayerIdx;
-        state.gamePhase = GAME_PHASE.ROLL_DICE;
-        state.validMoves = [];
-        state.diceValue = null;
-        state.consecutiveSixes = 0;
-        state.bonusMoves = 0;
+        const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
+        room.gameState.activePlayer = nextPlayerIdx;
+        room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
+        room.gameState.validMoves = [];
+        room.gameState.diceValue = null;
+        room.gameState.consecutiveSixes = 0;
+        room.gameState.bonusMoves = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited (${currentPlayer.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
+        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     }
 }
@@ -347,14 +342,13 @@ function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, p
  * Main turn handler - manages turn flow and timer initialization
  */
 function handleNextTurn(io: Server, room: BackendRoom) {
-    if (!room.gameState || room.gameState.gamePhase === 'WIN') return;
-    const state = room.gameState;
+    if (room.gameState?.gamePhase === 'WIN') return;
 
-    const currentPlayerIndex = state.activePlayer;
+    const currentPlayerIndex = room.gameState.activePlayer;
     const currentPlayer = room.players[currentPlayerIndex];
 
     if (!currentPlayer) {
-        console.error(`🚨 Fatal: State or Player missing at index ${currentPlayerIndex}`);
+        console.error(`🚨 Fatal: currentPlayer is null at index ${currentPlayerIndex}`);
         return;
     }
 
@@ -434,8 +428,8 @@ function startGameCountdown(io: Server, room: BackendRoom, roomId: string) {
         countdown--;
         room._currentCountdown = countdown;
 
-        const connectedNow = room.players.filter((p: any) => p && p.socketId).length;
-        const totalPlayersNeeded = room.players.filter((p: any) => p).length;
+        const connectedNow = room.players.filter((p) => p && p.socketId).length;
+        const totalPlayersNeeded = room.players.filter((p) => p).length;
         console.log(`⏳ Countdown: ${countdown}s | Sockets: ${connectedNow}/${totalPlayersNeeded}`);
 
         io.to(room.id).emit('countdown_tick', {
@@ -450,8 +444,8 @@ function startGameCountdown(io: Server, room: BackendRoom, roomId: string) {
             // STEP 3: Ensure game state is initialized (should be done already when status became STARTING)
             if (!room.gameState) {
                 const activeColors = room.players
-                    .map((p: any, idx: number) => p ? idx : null)
-                    .filter((idx: any) => idx !== null) as number[];
+                    .map((p, idx: number) => p ? idx : null)
+                    .filter((idx) => idx !== null) as number[];
                 room.gameState = createInitialState(4, activeColors);
             }
 
@@ -459,14 +453,12 @@ function startGameCountdown(io: Server, room: BackendRoom, roomId: string) {
             room._gameStartedAt = Date.now(); // For duration tracking
 
             console.log(`🎮 Game Starting: Room ${roomId}`);
-            console.log(`📋 Active colors: [${room.gameState.activeColors.join(', ')}]`);
-            console.log(`📋 Socket states:`, room.players.filter((p: any) => p).map((p: any) => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
-            console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter((p: any) => p).map((p: any) => p.address).join(', ')}`);
+            console.log(`📋 Active colors: [${room.gameState?.activeColors.join(', ')}]`);
+            console.log(`📋 Socket states:`, room.players.filter((p) => p).map((p) => `${p?.name}: ${p?.socketId ? '✅' : '❌'}`));
+            console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter((p) => p).map((p) => p?.address).join(', ')}`);
 
-            if (room.gameState) {
-                io.to(roomId).emit('game_started', room);
-                broadcastState(room, "Game Started!");
-            }
+            io.to(roomId).emit('game_started', room);
+            broadcastState(room, "Game Started!");
 
             // STEP 4: Begin turn logic
             setTimeout(() => {
@@ -506,22 +498,22 @@ io.on('connection', (socket) => {
                 clearSpecificTimer(roomId, `forfeit_${playerIndex}`);
                 clearSpecificTimer(roomId, `skip_${playerIndex}`);
 
+                // CRITICAL FIX: Only send full state sync if game is ACTIVE (not during countdown)
                 if (room.gameState && room.status === "ACTIVE") {
-                    const state = room.gameState;
                     console.log(`🔄 Sending immediate state sync to ${player.name}`);
                     // Re-emit game_started so the client enters the 'game' AppState if they were in lobby
                     socket.emit('game_started', room);
 
                     socket.emit('state_update', {
-                        ...state,
-                        currentTurn: state.activePlayer,
-                        turnState: state.gamePhase === GAME_PHASE.ROLL_DICE ? "WAITING_FOR_ROLL" : "WAITING_FOR_MOVE",
-                        lastDice: state.diceValue,
-                        msg: state.message || "Reconnected"
+                        ...room.gameState,
+                        currentTurn: room.gameState.activePlayer,
+                        turnState: room.gameState.gamePhase === GAME_PHASE.ROLL_DICE ? "WAITING_FOR_ROLL" : "WAITING_FOR_MOVE",
+                        lastDice: room.gameState.diceValue,
+                        msg: room.gameState.message || "Reconnected"
                     });
 
                     // ⚡ If it's their turn and they were disconnected, RESUME it
-                    if (state.activePlayer === playerIndex) {
+                    if (room.gameState.activePlayer === playerIndex) {
                         const existingTimer = activeTurnTimers.get(roomId);
                         if (existingTimer && room.turnExpiresAt) {
                             console.log(`🏃 Resuming existing turn timer for reconnected player ${player.name} (Expires in: ${Math.floor((room.turnExpiresAt - Date.now()) / 1000)}s)`);
@@ -547,10 +539,9 @@ io.on('connection', (socket) => {
 
                     // Also send gameState if it exists (highly likely since we init it on STARTING now)
                     if (room.gameState) {
-                        const state = room.gameState;
                         socket.emit('state_update', {
-                            ...state,
-                            currentTurn: state.activePlayer,
+                            ...room.gameState,
+                            currentTurn: room.gameState.activePlayer,
                             turnState: "WAITING_FOR_GAME_START",
                             msg: "Game starting soon..."
                         });
@@ -573,8 +564,7 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            const state = room.gameState;
-            const activePlayerIdx = state.activePlayer;
+            const activePlayerIdx = room.gameState.activePlayer;
             const activePlayerObj = room.players[activePlayerIdx];
 
             if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
@@ -584,16 +574,16 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            if (state.gamePhase !== GAME_PHASE.ROLL_DICE) return;
+            if (room.gameState.gamePhase !== GAME_PHASE.ROLL_DICE) return;
 
             // Clear turn timer - player acted in time
             clearRoomTimers(room.id);
 
-            const newState = rollDice(state);
-            const rolledValue = newState.diceValue;
-            const isPenalty = newState.message && newState.message.includes('Triple 6');
+            const nextGameState = rollDice(room.gameState);
+            const rolledValue = nextGameState.diceValue;
+            const isPenalty = nextGameState.message && nextGameState.message.includes('Triple 6');
 
-            room.gameState = newState;
+            room.gameState = nextGameState;
 
             console.log(`🎲 Player ${activePlayerIdx} rolled ${rolledValue || 'Penalty'}`);
 
@@ -606,12 +596,12 @@ io.on('connection', (socket) => {
             broadcastState(room);
 
             // If penalty or no valid moves, auto-skip after brief delay
-            if (isPenalty || state.validMoves.length === 0) {
+            if (isPenalty || room.gameState.validMoves.length === 0) {
                 const delay = isPenalty ? 2500 : 1500;
                 setTimeout(() => handleNextTurn(io, room), delay);
             } else {
                 // Player has valid moves - start timer for token selection
-                startTurnTimer(io, room, activePlayerIdx, state.gamePhase);
+                startTurnTimer(io, room, activePlayerIdx, room.gameState.gamePhase);
             }
         } catch (error) {
             console.error('🚨 Error in roll_dice handler:', error);
@@ -625,8 +615,7 @@ io.on('connection', (socket) => {
             const room = activeRooms.find(r => r.id?.toLowerCase() === normalizedId);
             if (!room || !room.gameState) return;
 
-            const state = room.gameState;
-            const activePlayerIdx = state.activePlayer;
+            const activePlayerIdx = room.gameState.activePlayer;
             const activePlayerObj = room.players[activePlayerIdx];
 
             if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
@@ -636,8 +625,7 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            const state = room.gameState;
-            const validMove = state.validMoves.find((m: any) => m.tokenIndex === tokenIndex);
+            const validMove = room.gameState.validMoves.find((m: any) => m.tokenIndex === tokenIndex);
             if (!validMove) {
                 console.log(`❌ Invalid move attempt for token ${tokenIndex}`);
                 return;
@@ -648,8 +636,8 @@ io.on('connection', (socket) => {
 
             console.log(`➡️ Player ${activePlayerIdx} moved token ${tokenIndex}`);
 
-            let newState = moveToken(state, validMove);
-            newState = completeMoveAnimation(newState);
+            let nextGameState = moveToken(room.gameState, validMove);
+            nextGameState = completeMoveAnimation(nextGameState);
 
             // 📊 LEADERBOARD: Track captures
             if (validMove.captures && validMove.captures.length > 0) {
@@ -666,26 +654,26 @@ io.on('connection', (socket) => {
                 }
             }
 
-            room.gameState = newState;
+            room.gameState = nextGameState;
 
             let msg = null;
-            if (newState.gamePhase === 'WIN') {
-                declareWinner(io, room, newState.winner!);
+            if (nextGameState.gamePhase === 'WIN') {
+                declareWinner(io, room, nextGameState.winner!);
                 return;
-            } else if (newState.gamePhase === GAME_PHASE.BONUS_MOVE) {
+            } else if (nextGameState.gamePhase === GAME_PHASE.BONUS_MOVE) {
                 msg = "Bonus Turn! Move again.";
-            } else if (newState.diceValue === 6 && newState.gamePhase === GAME_PHASE.ROLL_DICE) {
+            } else if (nextGameState.diceValue === 6 && nextGameState.gamePhase === GAME_PHASE.ROLL_DICE) {
                 msg = "Six! Roll again.";
             }
 
             broadcastState(room, msg);
 
             // TRIGGER NEXT TURN OR BONUS MOVE
-            if (newState.gamePhase === GAME_PHASE.BONUS_MOVE) {
+            if (nextGameState.gamePhase === GAME_PHASE.BONUS_MOVE) {
                 // Bonus move - same player, start timer for token selection
                 console.log(`🎁 Bonus move activated for Player ${activePlayerIdx}`);
                 startTurnTimer(io, room, activePlayerIdx, GAME_PHASE.BONUS_MOVE);
-            } else if (newState.gamePhase === GAME_PHASE.ROLL_DICE) {
+            } else if (nextGameState.gamePhase === GAME_PHASE.ROLL_DICE) {
                 // Normal turn end or roll-again after 6
                 handleNextTurn(io, room);
             }
@@ -705,30 +693,28 @@ io.on('connection', (socket) => {
                 console.log(`⚠️ Player ${player.name} (${player.color}) disconnected from room ${room.id}`);
 
                 // If game is active, start a 15s reconnect window - after which it counts as 1 skip
-                const state = room.gameState;
-                if (room.status === 'ACTIVE' && state && !player.forfeited) {
+                if (room.status === 'ACTIVE' && room.gameState && !player.forfeited) {
                     console.log(`🛡️ Starting ${FORFEIT_TIMEOUT_MS / 1000}s reconnect window for ${player.name}`);
 
                     const skipTimer = setTimeout(() => {
                         const roomRef = activeRooms.find(r => r.id === room.id);
                         const playerRef = roomRef?.players[pIdx];
-                        const stateRef = roomRef?.gameState;
 
                         // Only count skip if player is still disconnected
-                        if (playerRef && !playerRef.socketId && !playerRef.forfeited && stateRef) {
+                        if (playerRef && !playerRef.socketId && !playerRef.forfeited) {
                             console.log(`⏱️ Player ${playerRef.name} didn't reconnect in ${FORFEIT_TIMEOUT_MS / 1000}s - counting as skip`);
 
                             // Use unified skip system
                             const playerForfeited = handlePlayerSkip(io, roomRef, pIdx, 'disconnect');
 
-                            if (!playerForfeited && stateRef.activePlayer === pIdx) {
+                            if (!playerForfeited && roomRef.gameState.activePlayer === pIdx) {
                                 // Player still in game but it was their turn - skip to next
                                 console.log(`⏭️ Disconnected player's turn - skipping to next`);
-                                const nextIdx = getNextPlayer(pIdx, stateRef.activeColors);
-                                stateRef.activePlayer = nextIdx;
-                                stateRef.gamePhase = GAME_PHASE.ROLL_DICE;
-                                stateRef.diceValue = null;
-                                stateRef.validMoves = [];
+                                const nextIdx = getNextPlayer(pIdx, roomRef.gameState.activeColors);
+                                roomRef.gameState.activePlayer = nextIdx;
+                                roomRef.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
+                                roomRef.gameState.diceValue = null;
+                                roomRef.gameState.validMoves = [];
 
                                 broadcastState(roomRef);
                                 handleNextTurn(io, roomRef);
@@ -812,13 +798,13 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
     const room = activeRooms.find(r => r.id?.toLowerCase() === normalizedId);
 
     if (!room) {
-        // @ts-ignore
-        return res.status(404).json({ error: "Room not found on server" });
+        res.status(404).json({ error: "Room not found on server" });
+        return;
     }
 
     if (!room.gameState || room.gameState.gamePhase !== 'WIN') {
-        // @ts-ignore
-        return res.status(400).json({ error: "Game is not finished yet" });
+        res.status(400).json({ error: "Game is not finished yet" });
+        return;
     }
 
     const winnerIdx = room.gameState.winner;
@@ -826,8 +812,8 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
 
     if (!actualWinner || actualWinner.address?.toLowerCase() !== winner?.toLowerCase()) {
         console.warn(`🚨 Unauthorized payout signature attempt for room ${roomId}. Requested: ${winner}, Actual: ${actualWinner?.address}`);
-        // @ts-ignore
-        return res.status(403).json({ error: "Unauthorized winner" });
+        res.status(403).json({ error: "Unauthorized winner" });
+        return;
     }
 
     try {
@@ -839,7 +825,6 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
         res.json(payoutProof);
     } catch (e: any) {
         console.error("❌ Sign Payout Error:", e);
-        // @ts-ignore
         res.status(500).json({ error: e.message });
     }
 });
@@ -857,18 +842,20 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
             console.log(`✅ Room creation verified on-chain: ${roomId}`);
         } catch (error: any) {
             console.warn(`🚨 Room creation verification failed: ${error.message}`);
-            // @ts-ignore
-            return res.status(403).json({
+            res.status(403).json({
                 error: "Transaction verification failed",
                 details: error.message
             });
+            return;
         }
     } else {
         console.warn(`⚠️ Room creation without txHash (legacy mode): ${roomId}`);
     }
 
-    // @ts-ignore
-    if (activeRooms.find(r => r.id?.toLowerCase() === roomId)) return res.status(400).json({ error: "Room exists" });
+    if (activeRooms.find(r => r.id?.toLowerCase() === roomId)) {
+        res.status(400).json({ error: "Room exists" });
+        return;
+    }
 
     const colorMap: any = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
     const creatorColorIndex = colorMap[req.body.color?.toLowerCase() || 'red'];
@@ -878,7 +865,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
         stake,
         maxPlayers: parseInt(maxPlayers),
         // Initialize with 4 empty slots to match board colors (0-Red, 1-Green, 2-Yellow, 3-Blue)
-        players: [null, null, null, null] as any[],
+        players: [null, null, null, null] as (BackendPlayer | null)[],
         gameState: null,
         status: "WAITING",
         createdAt: Date.now() // Track creation time for cleanup
@@ -912,26 +899,26 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
 
     const room = activeRooms.find(r => r.id === roomId);
     if (!room) {
-        // @ts-ignore
-        return res.status(404).json({ error: "Room not found" });
+        res.status(404).json({ error: "Room not found" });
+        return;
     }
 
     if (room.status !== "WAITING") {
-        // @ts-ignore
-        return res.status(400).json({ error: "Game already started" });
+        res.status(400).json({ error: "Game already started" });
+        return;
     }
 
     // Check if player is already in room (idempotency)
     const existingPlayer = room.players.find((p: any) => p && p.address.toLowerCase() === playerAddress.toLowerCase());
     if (existingPlayer) {
-        // @ts-ignore
-        return res.json({ success: true, message: "Already joined" });
+        res.json({ success: true, message: "Already joined" });
+        return;
     }
 
-    const currentPlayers = room.players.filter((p: any) => p).length;
+    const currentPlayers = room.players.filter((p) => p).length;
     if (currentPlayers >= room.maxPlayers) {
-        // @ts-ignore
-        return res.status(400).json({ error: "Room full" });
+        res.status(400).json({ error: "Room full" });
+        return;
     }
 
     const colorMap: any = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
@@ -942,8 +929,8 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     if (requestedColorIndex === undefined || room.players[requestedColorIndex] !== null) {
         const fallbackIndex = room.players.findIndex((p: any) => p === null);
         if (fallbackIndex === -1) {
-            // @ts-ignore
-            return res.status(400).json({ error: "Room full" });
+            res.status(400).json({ error: "Room full" });
+            return;
         }
         console.log(`🎨 Color conflict for ${playerAddress}: ${color} taken/invalid, auto-assigning slot ${fallbackIndex}`);
         requestedColorIndex = fallbackIndex;
@@ -957,11 +944,11 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
             console.log(`✅ Room join verified on-chain: ${playerAddress} -> ${roomId}`);
         } catch (error: any) {
             console.warn(`🚨 Room join verification failed: ${error.message}`);
-            // @ts-ignore
-            return res.status(403).json({
+            res.status(403).json({
                 error: "Transaction verification failed",
                 details: error.message
             });
+            return;
         }
     } else {
         console.warn(`⚠️ Room join without txHash (legacy mode): ${playerAddress}`);

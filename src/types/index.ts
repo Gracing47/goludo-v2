@@ -281,7 +281,7 @@ export interface Room {
     players: Player[];
 
     /** Room status */
-    status: 'WAITING' | 'ACTIVE' | 'FINISHED';
+    status: 'WAITING' | 'STARTING' | 'ACTIVE' | 'FINISHED' | 'CANCELLED';
 
     /** Game state (if active) */
     gameState?: GameState;
