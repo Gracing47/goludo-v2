@@ -198,20 +198,28 @@ function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, re
         console.log(`💀 Player ${player.name} forfeited after ${MAX_SKIPS_BEFORE_FORFEIT} skips!`);
         player.forfeited = true;
 
+        const state = room.gameState;
+        if (!state) {
+            console.error("🚨 Fatal: gameState missing during forfeit");
+            return true;
+        }
+
         // Track forfeit event
-        const winnerIdx = room.gameState?.activeColors.find((idx: number) => idx !== playerIndex);
-        const winner = room.players[winnerIdx];
-        console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
+        const winnerIdx = state.activeColors.find((idx: number) => idx !== playerIndex);
+        if (winnerIdx !== undefined) {
+            const winner = room.players[winnerIdx];
+            console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
+        }
 
         // Remove from active colors
-        room.gameState.activeColors = room.gameState.activeColors.filter((idx: number) => idx !== playerIndex);
+        state.activeColors = state.activeColors.filter((idx: number) => idx !== playerIndex);
         broadcastState(room, `💀 ${player.name} forfeited (${MAX_SKIPS_BEFORE_FORFEIT} skips).`);
 
         // Check win condition
-        if (room.gameState.activeColors.length === 1) {
-            declareWinner(io, room, room.gameState.activeColors[0]);
+        if (state.activeColors.length === 1) {
+            declareWinner(io, room, state.activeColors[0]);
             return true;
-        } else if (room.gameState.activeColors.length === 0) {
+        } else if (state.activeColors.length === 0) {
             cleanupRoom(room.id, activeRooms);
             return true;
         }
@@ -498,22 +506,22 @@ io.on('connection', (socket) => {
                 clearSpecificTimer(roomId, `forfeit_${playerIndex}`);
                 clearSpecificTimer(roomId, `skip_${playerIndex}`);
 
-                // CRITICAL FIX: Only send full state sync if game is ACTIVE (not during countdown)
                 if (room.gameState && room.status === "ACTIVE") {
+                    const state = room.gameState;
                     console.log(`🔄 Sending immediate state sync to ${player.name}`);
                     // Re-emit game_started so the client enters the 'game' AppState if they were in lobby
                     socket.emit('game_started', room);
 
                     socket.emit('state_update', {
-                        ...room.gameState,
-                        currentTurn: room.gameState.activePlayer,
-                        turnState: room.gameState.gamePhase === GAME_PHASE.ROLL_DICE ? "WAITING_FOR_ROLL" : "WAITING_FOR_MOVE",
-                        lastDice: room.gameState.diceValue,
-                        msg: room.gameState.message || "Reconnected"
+                        ...state,
+                        currentTurn: state.activePlayer,
+                        turnState: state.gamePhase === GAME_PHASE.ROLL_DICE ? "WAITING_FOR_ROLL" : "WAITING_FOR_MOVE",
+                        lastDice: state.diceValue,
+                        msg: state.message || "Reconnected"
                     });
 
                     // ⚡ If it's their turn and they were disconnected, RESUME it
-                    if (room.gameState.activePlayer === playerIndex) {
+                    if (state.activePlayer === playerIndex) {
                         const existingTimer = activeTurnTimers.get(roomId);
                         if (existingTimer && room.turnExpiresAt) {
                             console.log(`🏃 Resuming existing turn timer for reconnected player ${player.name} (Expires in: ${Math.floor((room.turnExpiresAt - Date.now()) / 1000)}s)`);
@@ -539,9 +547,10 @@ io.on('connection', (socket) => {
 
                     // Also send gameState if it exists (highly likely since we init it on STARTING now)
                     if (room.gameState) {
+                        const state = room.gameState;
                         socket.emit('state_update', {
-                            ...room.gameState,
-                            currentTurn: room.gameState.activePlayer,
+                            ...state,
+                            currentTurn: state.activePlayer,
                             turnState: "WAITING_FOR_GAME_START",
                             msg: "Game starting soon..."
                         });
@@ -564,7 +573,8 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            const activePlayerIdx = room.gameState.activePlayer;
+            const state = room.gameState;
+            const activePlayerIdx = state.activePlayer;
             const activePlayerObj = room.players[activePlayerIdx];
 
             if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
@@ -574,9 +584,7 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            if (room.gameState.gamePhase !== GAME_PHASE.ROLL_DICE) return;
-
-            const state = room.gameState;
+            if (state.gamePhase !== GAME_PHASE.ROLL_DICE) return;
 
             // Clear turn timer - player acted in time
             clearRoomTimers(room.id);
@@ -598,12 +606,12 @@ io.on('connection', (socket) => {
             broadcastState(room);
 
             // If penalty or no valid moves, auto-skip after brief delay
-            if (isPenalty || room.gameState.validMoves.length === 0) {
+            if (isPenalty || state.validMoves.length === 0) {
                 const delay = isPenalty ? 2500 : 1500;
                 setTimeout(() => handleNextTurn(io, room), delay);
             } else {
                 // Player has valid moves - start timer for token selection
-                startTurnTimer(io, room, activePlayerIdx, room.gameState.gamePhase);
+                startTurnTimer(io, room, activePlayerIdx, state.gamePhase);
             }
         } catch (error) {
             console.error('🚨 Error in roll_dice handler:', error);
@@ -617,7 +625,8 @@ io.on('connection', (socket) => {
             const room = activeRooms.find(r => r.id?.toLowerCase() === normalizedId);
             if (!room || !room.gameState) return;
 
-            const activePlayerIdx = room.gameState.activePlayer;
+            const state = room.gameState;
+            const activePlayerIdx = state.activePlayer;
             const activePlayerObj = room.players[activePlayerIdx];
 
             if (activePlayerObj?.address?.toLowerCase() !== playerAddress?.toLowerCase()) {
@@ -696,28 +705,30 @@ io.on('connection', (socket) => {
                 console.log(`⚠️ Player ${player.name} (${player.color}) disconnected from room ${room.id}`);
 
                 // If game is active, start a 15s reconnect window - after which it counts as 1 skip
-                if (room.status === 'ACTIVE' && room.gameState && !player.forfeited) {
+                const state = room.gameState;
+                if (room.status === 'ACTIVE' && state && !player.forfeited) {
                     console.log(`🛡️ Starting ${FORFEIT_TIMEOUT_MS / 1000}s reconnect window for ${player.name}`);
 
                     const skipTimer = setTimeout(() => {
                         const roomRef = activeRooms.find(r => r.id === room.id);
                         const playerRef = roomRef?.players[pIdx];
+                        const stateRef = roomRef?.gameState;
 
                         // Only count skip if player is still disconnected
-                        if (playerRef && !playerRef.socketId && !playerRef.forfeited) {
+                        if (playerRef && !playerRef.socketId && !playerRef.forfeited && stateRef) {
                             console.log(`⏱️ Player ${playerRef.name} didn't reconnect in ${FORFEIT_TIMEOUT_MS / 1000}s - counting as skip`);
 
                             // Use unified skip system
                             const playerForfeited = handlePlayerSkip(io, roomRef, pIdx, 'disconnect');
 
-                            if (!playerForfeited && roomRef.gameState.activePlayer === pIdx) {
+                            if (!playerForfeited && stateRef.activePlayer === pIdx) {
                                 // Player still in game but it was their turn - skip to next
                                 console.log(`⏭️ Disconnected player's turn - skipping to next`);
-                                const nextIdx = getNextPlayer(pIdx, roomRef.gameState.activeColors);
-                                roomRef.gameState.activePlayer = nextIdx;
-                                roomRef.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
-                                roomRef.gameState.diceValue = null;
-                                roomRef.gameState.validMoves = [];
+                                const nextIdx = getNextPlayer(pIdx, stateRef.activeColors);
+                                stateRef.activePlayer = nextIdx;
+                                stateRef.gamePhase = GAME_PHASE.ROLL_DICE;
+                                stateRef.diceValue = null;
+                                stateRef.validMoves = [];
 
                                 broadcastState(roomRef);
                                 handleNextTurn(io, roomRef);
