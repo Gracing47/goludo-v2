@@ -322,7 +322,14 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             );
             if (myIdx !== -1) {
                 setBoardRotation((3 - myIdx) * 90);
-                setTurnTimer(Math.floor((room.timeoutMs || 30000) / 1000));
+
+                // Sync turn timer from server if available (persistence)
+                if (room.turnExpiresAt) {
+                    const remaining = Math.max(0, Math.floor((room.turnExpiresAt - Date.now()) / 1000));
+                    setTurnTimer(remaining);
+                } else {
+                    setTurnTimer(Math.floor((room.timeoutMs || 30000) / 1000));
+                }
             }
         });
 

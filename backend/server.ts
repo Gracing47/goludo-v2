@@ -36,6 +36,11 @@ interface BackendRoom {
     createdAt: number;
     turnTimeout?: number;
     timeoutMs?: number;
+    turnExpiresAt?: number;
+    _countdownStarted?: boolean;
+    _currentCountdown?: number;
+    _gameStartedAt?: number;
+    _firstBloodLogged?: boolean;
 }
 
 // Room Lifecycle Manager (prevents memory leaks at scale)
@@ -142,6 +147,7 @@ app.use((req: express.Request, _res: express.Response, next: express.NextFunctio
 const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
 
 const broadcastState = (room: any, message: string | null = null) => {
+    if (!room.gameState) return;
     // Extract player skip metadata for the frontend
     const playersMetadata = room.players.map((p: any) => p ? {
         skipCount: p.skipCount || 0,
@@ -193,7 +199,7 @@ function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, re
         player.forfeited = true;
 
         // Track forfeit event
-        const winnerIdx = room.gameState.activeColors.find((idx: number) => idx !== playerIndex);
+        const winnerIdx = room.gameState?.activeColors.find((idx: number) => idx !== playerIndex);
         const winner = room.players[winnerIdx];
         console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
 
@@ -235,6 +241,8 @@ function clearRoomTimers(roomId: string) {
         if (timerData.timeoutId) clearTimeout(timerData.timeoutId);
         if (timerData.intervalId) clearInterval(timerData.intervalId);
         activeTurnTimers.delete(id);
+        const room = activeRooms.find(r => r.id?.toLowerCase() === id);
+        if (room) delete room.turnExpiresAt;
         console.log(`⏹️ Cleared timers for room ${id}`);
     }
 }
@@ -251,10 +259,13 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
 
     console.log(`⏰ Starting ${TURN_TIMEOUT_MS / 1000}s timer for ${currentPlayer?.name || 'Unknown'} (Phase: ${phase})`);
 
+    const expiresAt = Date.now() + TURN_TIMEOUT_MS;
+    room.turnExpiresAt = expiresAt;
+
     // Broadcast initial timer start with expiration timestamp
     io.to(room.id).emit('turn_timer_start', {
         playerIndex,
-        expiresAt: Date.now() + TURN_TIMEOUT_MS,
+        expiresAt,
         phase
     });
 
@@ -290,33 +301,36 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
  */
 function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, phase: any) {
     const currentPlayer = room.players[playerIndex];
+    if (!currentPlayer || !room.gameState) return;
 
     // Use unified skip system - counts towards 3-skip forfeit
     const playerForfeited = handlePlayerSkip(io, room, playerIndex, 'afk_timeout');
 
-    if (playerForfeited) {
-        // Player was removed from game, handlePlayerSkip already handled everything
+    // Re-verify after potentially async-safe call (though not async, TS is cautious)
+    if (playerForfeited || !room.gameState) {
         return;
     }
 
+    const state = room.gameState;
+
     // Player still in game, proceed to next turn
     if (phase === GAME_PHASE.ROLL_DICE) {
-        const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
-        room.gameState.activePlayer = nextPlayerIdx;
-        room.gameState.consecutiveSixes = 0;
+        const nextPlayerIdx = getNextPlayer(playerIndex, state.activeColors);
+        state.activePlayer = nextPlayerIdx;
+        state.consecutiveSixes = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer?.name || 'Player'} timed out. Turn skipped (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
+        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Turn skipped (${currentPlayer.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     } else if (phase === GAME_PHASE.SELECT_TOKEN || phase === GAME_PHASE.BONUS_MOVE) {
-        const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
-        room.gameState.activePlayer = nextPlayerIdx;
-        room.gameState.gamePhase = GAME_PHASE.ROLL_DICE;
-        room.gameState.validMoves = [];
-        room.gameState.diceValue = null;
-        room.gameState.consecutiveSixes = 0;
-        room.gameState.bonusMoves = 0;
+        const nextPlayerIdx = getNextPlayer(playerIndex, state.activeColors);
+        state.activePlayer = nextPlayerIdx;
+        state.gamePhase = GAME_PHASE.ROLL_DICE;
+        state.validMoves = [];
+        state.diceValue = null;
+        state.consecutiveSixes = 0;
+        state.bonusMoves = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
+        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited (${currentPlayer.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     }
 }
@@ -325,13 +339,14 @@ function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, p
  * Main turn handler - manages turn flow and timer initialization
  */
 function handleNextTurn(io: Server, room: BackendRoom) {
-    if (room.gameState?.gamePhase === 'WIN') return;
+    if (!room.gameState || room.gameState.gamePhase === 'WIN') return;
+    const state = room.gameState;
 
-    const currentPlayerIndex = room.gameState.activePlayer;
+    const currentPlayerIndex = state.activePlayer;
     const currentPlayer = room.players[currentPlayerIndex];
 
     if (!currentPlayer) {
-        console.error(`🚨 Fatal: currentPlayer is null at index ${currentPlayerIndex}`);
+        console.error(`🚨 Fatal: State or Player missing at index ${currentPlayerIndex}`);
         return;
     }
 
@@ -440,8 +455,10 @@ function startGameCountdown(io: Server, room: BackendRoom, roomId: string) {
             console.log(`📋 Socket states:`, room.players.filter((p: any) => p).map((p: any) => `${p.name}: ${p.socketId ? '✅' : '❌'}`));
             console.log(`📝 Blockchain Event: GAME_STARTED | Room: ${roomId} | Players: ${room.players.filter((p: any) => p).map((p: any) => p.address).join(', ')}`);
 
-            io.to(roomId).emit('game_started', room);
-            broadcastState(room, "Game Started!");
+            if (room.gameState) {
+                io.to(roomId).emit('game_started', room);
+                broadcastState(room, "Game Started!");
+            }
 
             // STEP 4: Begin turn logic
             setTimeout(() => {
@@ -497,8 +514,18 @@ io.on('connection', (socket) => {
 
                     // ⚡ If it's their turn and they were disconnected, RESUME it
                     if (room.gameState.activePlayer === playerIndex) {
-                        console.log(`🏃 Resuming turn for reconnected player ${player.name}`);
-                        handleNextTurn(io, room);
+                        const existingTimer = activeTurnTimers.get(roomId);
+                        if (existingTimer && room.turnExpiresAt) {
+                            console.log(`🏃 Resuming existing turn timer for reconnected player ${player.name} (Expires in: ${Math.floor((room.turnExpiresAt - Date.now()) / 1000)}s)`);
+                            socket.emit('turn_timer_start', {
+                                playerIndex,
+                                expiresAt: room.turnExpiresAt,
+                                phase: existingTimer.phase
+                            });
+                        } else {
+                            console.log(`🏃 Starting fresh turn for reconnected player ${player.name} (No existing timer found)`);
+                            handleNextTurn(io, room);
+                        }
                     }
                 } else if (room.status === "STARTING") {
                     // During countdown, send the current countdown value and initialization event
@@ -549,10 +576,12 @@ io.on('connection', (socket) => {
 
             if (room.gameState.gamePhase !== GAME_PHASE.ROLL_DICE) return;
 
+            const state = room.gameState;
+
             // Clear turn timer - player acted in time
             clearRoomTimers(room.id);
 
-            const newState = rollDice(room.gameState);
+            const newState = rollDice(state);
             const rolledValue = newState.diceValue;
             const isPenalty = newState.message && newState.message.includes('Triple 6');
 
@@ -598,7 +627,8 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            const validMove = room.gameState.validMoves.find((m: any) => m.tokenIndex === tokenIndex);
+            const state = room.gameState;
+            const validMove = state.validMoves.find((m: any) => m.tokenIndex === tokenIndex);
             if (!validMove) {
                 console.log(`❌ Invalid move attempt for token ${tokenIndex}`);
                 return;
@@ -609,7 +639,7 @@ io.on('connection', (socket) => {
 
             console.log(`➡️ Player ${activePlayerIdx} moved token ${tokenIndex}`);
 
-            let newState = moveToken(room.gameState, validMove);
+            let newState = moveToken(state, validMove);
             newState = completeMoveAnimation(newState);
 
             // 📊 LEADERBOARD: Track captures
