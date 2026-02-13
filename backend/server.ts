@@ -838,7 +838,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     // ✅ PHASE 5: Verify transaction on blockchain
     if (txHash) {
         try {
-            await verifyRoomCreation(roomId, txHash, creatorAddress, stake);
+            await verifyRoomCreation(roomId, txHash, creatorAddress, parseFloat(stake));
             console.log(`✅ Room creation verified on-chain: ${roomId}`);
         } catch (error: any) {
             console.warn(`🚨 Room creation verification failed: ${error.message}`);
@@ -940,7 +940,7 @@ app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
     // ✅ PHASE 5: Verify join transaction on blockchain
     if (txHash) {
         try {
-            await verifyRoomJoin(roomId, txHash, playerAddress, room.stake);
+            await verifyRoomJoin(roomId, txHash, playerAddress, parseFloat(room.stake));
             console.log(`✅ Room join verified on-chain: ${playerAddress} -> ${roomId}`);
         } catch (error: any) {
             console.warn(`🚨 Room join verification failed: ${error.message}`);
