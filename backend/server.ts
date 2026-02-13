@@ -14,7 +14,7 @@ import { fileURLToPath } from 'url';
 // Using .js extensions for ESM compatibility even when source is .ts
 import { createInitialState, rollDice, moveToken, completeMoveAnimation } from '../src/engine/gameLogic.js';
 import { GAME_PHASE } from '../src/engine/constants.js';
-import { GameState, Move } from '../src/types/index.js';
+import { GameState, GamePhase, Move } from '../src/types/index.js';
 
 interface BackendPlayer {
     name: string;
@@ -126,17 +126,7 @@ const joinRoomLimiter = rateLimit({
     legacyHeaders: false
 });
 
-// ============================================
-// HEALTH CHECK (Phase 8: Monitoring)
-// ============================================
-app.get('/health', (_req: express.Request, res: express.Response) => {
-    res.json({
-        status: 'UP',
-        timestamp: new Date().toISOString(),
-        rooms: activeRooms.length,
-        version: '1.0.0'
-    });
-});
+// NOTE: Primary /health endpoint is defined below with full monitoring data (uptime, memory, etc.)
 
 // Basic request logger for production monitoring
 app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
@@ -205,19 +195,20 @@ function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, re
         player.forfeited = true;
 
         // Track forfeit event
+        if (!room.gameState) return true;
         const winnerIdx = room.gameState.activeColors.find((idx: number) => idx !== playerIndex);
-        const winner = room.players[winnerIdx];
+        const winner = winnerIdx !== undefined ? room.players[winnerIdx] : null;
         console.log(`📝 Blockchain Event: PLAYER_FORFEIT | Room: ${room.id} | Forfeiter: ${player.address} | Winner: ${winner?.address} | Reason: ${MAX_SKIPS_BEFORE_FORFEIT}_skips`);
 
         // Remove from active colors
-        room.gameState.activeColors = room.gameState.activeColors.filter((idx: number) => idx !== playerIndex);
+        room.gameState!.activeColors = room.gameState!.activeColors.filter((idx: number) => idx !== playerIndex);
         broadcastState(room, `💀 ${player.name} forfeited (${MAX_SKIPS_BEFORE_FORFEIT} skips).`);
 
         // Check win condition
-        if (room.gameState.activeColors.length === 1) {
-            declareWinner(io, room, room.gameState.activeColors[0]);
+        if (room.gameState!.activeColors.length === 1) {
+            declareWinner(io, room, room.gameState!.activeColors[0]);
             return true;
-        } else if (room.gameState.activeColors.length === 0) {
+        } else if (room.gameState!.activeColors.length === 0) {
             cleanupRoom(room.id, activeRooms);
             return true;
         }
@@ -256,7 +247,7 @@ function clearRoomTimers(roomId: string) {
 /**
  * Starts a countdown timer with live updates
  */
-function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phase: GamePhase) {
+function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phase: string) {
     const roomId = room.id.toLowerCase();
     const currentPlayer = room.players[playerIndex];
 
@@ -278,7 +269,7 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
     // We still keep the timeout for server-side enforcement,
     // but we can remove the 1s interval emit to save bandwidth
     const timeoutId = setTimeout(() => {
-        console.log(`⏰ TIMEOUT! Player ${currentPlayer.name} didn't act in ${TURN_TIMEOUT_MS / 1000}s. Skipping turn...`);
+        console.log(`⏰ TIMEOUT! Player ${currentPlayer?.name || 'Unknown'} didn't act in ${TURN_TIMEOUT_MS / 1000}s. Skipping turn...`);
         // The timer is cleared by clearRoomTimers when the next turn starts or game ends.
         // For this specific timeout, we just need to handle the game logic.
         // activeTurnTimers.delete(room.id) is handled by clearRoomTimers or when a new timer is set.
@@ -286,7 +277,7 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
         // Broadcast timeout event
         io.to(room.id).emit('turn_timeout', {
             playerIndex,
-            playerName: currentPlayer.name,
+            playerName: currentPlayer?.name || 'Unknown',
             phase
         });
 
@@ -305,7 +296,7 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
 /**
  * Handles what happens when a turn times out (AFK - still connected but not acting)
  */
-function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, phase: GamePhase) {
+function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, phase: string) {
     const currentPlayer = room.players[playerIndex];
 
     // Use unified skip system - counts towards 3-skip forfeit
@@ -317,6 +308,8 @@ function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, p
     }
 
     // Player still in game, proceed to next turn
+    if (!room.gameState) return;
+
     if (phase === GAME_PHASE.ROLL_DICE) {
         const nextPlayerIdx = getNextPlayer(playerIndex, room.gameState.activeColors);
         room.gameState.activePlayer = nextPlayerIdx;
@@ -333,7 +326,7 @@ function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, p
         room.gameState.consecutiveSixes = 0;
         room.gameState.bonusMoves = 0;
 
-        broadcastState(room, `⏰ ${currentPlayer.name} timed out. Move forfeited (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
+        broadcastState(room, `⏰ ${currentPlayer?.name || 'Player'} timed out. Move forfeited (${currentPlayer?.skipCount}/${MAX_SKIPS_BEFORE_FORFEIT}).`);
         handleNextTurn(io, room);
     }
 }
@@ -344,6 +337,7 @@ function handleTurnTimeout(io: Server, room: BackendRoom, playerIndex: number, p
 function handleNextTurn(io: Server, room: BackendRoom) {
     if (room.gameState?.gamePhase === 'WIN') return;
 
+    if (!room.gameState) return;
     const currentPlayerIndex = room.gameState.activePlayer;
     const currentPlayer = room.players[currentPlayerIndex];
 
@@ -381,6 +375,7 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
     const gameDurationSec = Math.floor(gameDurationMs / 1000);
     console.log(`📝 Blockchain Event: GAME_DURATION | Room: ${room.id} | Duration: ${gameDurationSec}s | Winner: ${winner?.address}`);
 
+    if (!room.gameState) return;
     room.gameState.gamePhase = 'WIN';
     room.gameState.winner = winnerIdx;
     broadcastState(room, `🎉 ${winnerName} Wins!`);
@@ -396,12 +391,12 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
 }
 
 // Helper function to get next player
-function getNextPlayer(current: number, activeColors: number[]) {
+function getNextPlayer(current: number, activeColors: number[]): number {
     if (!activeColors || activeColors.length === 0) return 0;
     const currentIndex = activeColors.indexOf(current);
-    if (currentIndex === -1) return activeColors[0];
+    if (currentIndex === -1) return activeColors[0]!;
     const nextIndex = (currentIndex + 1) % activeColors.length;
-    return activeColors[nextIndex];
+    return activeColors[nextIndex]!;
 }
 
 /**
@@ -689,6 +684,7 @@ io.on('connection', (socket) => {
             const pIdx = room.players.findIndex((p: any) => p && p.socketId === socket.id);
             if (pIdx !== -1) {
                 const player = room.players[pIdx];
+                if (!player) return;
                 player.socketId = null;
                 console.log(`⚠️ Player ${player.name} (${player.color}) disconnected from room ${room.id}`);
 
@@ -707,7 +703,7 @@ io.on('connection', (socket) => {
                             // Use unified skip system
                             const playerForfeited = handlePlayerSkip(io, roomRef, pIdx, 'disconnect');
 
-                            if (!playerForfeited && roomRef.gameState.activePlayer === pIdx) {
+                            if (!playerForfeited && roomRef?.gameState && roomRef.gameState.activePlayer === pIdx) {
                                 // Player still in game but it was their turn - skip to next
                                 console.log(`⏭️ Disconnected player's turn - skipping to next`);
                                 const nextIdx = getNextPlayer(pIdx, roomRef.gameState.activeColors);
@@ -808,6 +804,10 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
     }
 
     const winnerIdx = room.gameState.winner;
+    if (winnerIdx === null || winnerIdx === undefined) {
+        res.status(400).json({ error: "Winner not determined" });
+        return;
+    }
     const actualWinner = room.players[winnerIdx];
 
     if (!actualWinner || actualWinner.address?.toLowerCase() !== winner?.toLowerCase()) {
