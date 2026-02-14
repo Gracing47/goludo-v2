@@ -17,13 +17,7 @@ try {
         console.log(`🔌 Initializing Prisma with URL: ${maskedUrl.split('@')[1]}`);
     }
 
-    prisma = new PrismaClient({
-        datasources: {
-            db: {
-                url: dbUrl
-            }
-        }
-    });
+    prisma = new PrismaClient();
 } catch (e: any) {
     console.warn('⚠️ Prisma init failed:', e.message);
     prisma = null as any;
