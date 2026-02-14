@@ -14,8 +14,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "postinstall": "npx prisma generate --schema=backend/prisma/schema.prisma || echo 'Prisma generate skipped'"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
