@@ -31,6 +31,7 @@ export const createRoomSchema = z.object({
     creatorName: z.string().min(1).max(32).trim(),
     creatorAddress: EthAddress,
     color: z.enum(['red', 'green', 'yellow', 'blue']).default('red'),
+    mode: z.enum(['classic', 'rapid']).default('classic'), // V2: Game mode
 });
 
 /**
@@ -39,6 +40,17 @@ export const createRoomSchema = z.object({
 export const payoutSignSchema = z.object({
     roomId: Bytes32,
     winner: EthAddress,
+});
+
+/**
+ * Room Join Schema
+ */
+export const joinRoomSchema = z.object({
+    roomId: Bytes32,
+    txHash: Bytes32.optional(),
+    playerName: z.string().min(1).max(32).trim(),
+    playerAddress: EthAddress,
+    color: z.enum(['red', 'green', 'yellow', 'blue']).default('blue'),
 });
 
 /**

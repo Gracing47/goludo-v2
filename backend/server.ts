@@ -9,12 +9,19 @@ import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
+import { randomInt } from 'crypto';
 
 // Engine Imports
 // Using .js extensions for ESM compatibility even when source is .ts
 import { createInitialState, rollDice, moveToken, completeMoveAnimation } from '../src/engine/gameLogic.js';
 import { GAME_PHASE } from '../src/engine/constants.js';
 import { GameState, GamePhase, Move } from '../src/types/index.js';
+
+// V2: Redis State + Profile System
+import { GameStateManager } from './services/stateManager.js';
+import { ProfileManager } from './services/profileManager.js';
+import profileRoutes from './routes/profile.js';
+import healthRoutes from './routes/health.js';
 
 interface BackendPlayer {
     name: string;
@@ -51,7 +58,7 @@ import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob, cl
 import { verifyRoomCreation, verifyRoomJoin, recoverActiveRoomsFromBlockchain, getRoomStateFromContract } from './contractVerifier.js';
 
 // Input Validation (Phase 6: Audit Readiness)
-import { validateRequest, createRoomSchema, payoutSignSchema } from './validation.js';
+import { validateRequest, createRoomSchema, payoutSignSchema, joinRoomSchema } from './validation.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -86,6 +93,10 @@ export const io = new Server(server, {
 const PORT = process.env.PORT || 3333;
 
 let activeRooms: BackendRoom[] = [];
+
+// V2: Service singletons
+const stateManager = GameStateManager.getInstance();
+const profileManager = ProfileManager.getInstance();
 
 app.use(cors({
     origin: ALLOWED_ORIGINS,
@@ -136,6 +147,10 @@ app.use((req: express.Request, _res: express.Response, next: express.NextFunctio
 });
 
 const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
+
+// V2: Register API routes
+app.use('/api', profileRoutes);
+app.use('/', healthRoutes);
 
 const broadcastState = (room: BackendRoom, message: string | null = null) => {
     // Extract player skip metadata for the frontend
@@ -380,6 +395,40 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
     room.gameState.winner = winnerIdx;
     broadcastState(room, `🎉 ${winnerName} Wins!`);
 
+    // V2: Profile updates (Observer pattern — async, non-blocking)
+    if (winner?.address && room.stake) {
+        const betAmount = BigInt(Math.floor(parseFloat(room.stake) * 1e18));
+        const feeAmount = (betAmount * 5n) / 100n;
+        const payoutAmount = betAmount * 2n - feeAmount;
+        const gameMode = (room.gameState.mode || 'classic') as 'classic' | 'rapid';
+        const playerAddresses = room.players.filter(Boolean).map((p: any) => p.address);
+        const loser = room.players.find((p, i) => p && i !== winnerIdx);
+
+        // Fire-and-forget: profile updates should never break the game
+        Promise.all([
+            profileManager.updateStats(winner.address, {
+                mode: gameMode, result: 'win',
+                wagered: betAmount, won: payoutAmount,
+                gameDuration: gameDurationSec,
+            }),
+            loser?.address ? profileManager.updateStats(loser.address, {
+                mode: gameMode, result: 'loss',
+                wagered: betAmount, won: 0n,
+                gameDuration: gameDurationSec,
+            }) : Promise.resolve(),
+            profileManager.saveGameHistory({
+                roomId: room.id, mode: gameMode,
+                players: playerAddresses,
+                winner: winner.address, loser: loser?.address,
+                betAmount, payoutAmount,
+                duration: gameDurationSec,
+                totalTurns: room.gameState?.activePlayer ?? 0,
+                startedAt: new Date(room._gameStartedAt ?? room.createdAt),
+                endedAt: new Date(),
+            }),
+        ]).catch(err => console.error('⚠️ Profile update failed (non-critical):', err.message));
+    }
+
     // Cleanup logic
     clearRoomTimers(room.id);
     clearAllRoomTimers(room.id);
@@ -574,7 +623,9 @@ io.on('connection', (socket) => {
             // Clear turn timer - player acted in time
             clearRoomTimers(room.id);
 
-            const nextGameState = rollDice(room.gameState);
+            // SECURITY: Use crypto.randomInt() for server-side dice (Web3 games with real stakes)
+            const secureDiceValue = randomInt(1, 7); // 1-6 inclusive, cryptographically secure
+            const nextGameState = rollDice(room.gameState, secureDiceValue);
             const rolledValue = nextGameState.diceValue;
             const isPenalty = nextGameState.message && nextGameState.message.includes('Triple 6');
 
@@ -884,6 +935,14 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
 
     activeRooms.push(newRoom);
 
+    // V2: Sync to Redis (write-through)
+    stateManager.saveRoom({
+        roomId, mode: 'classic',
+        status: 'waiting', creator: creatorAddress,
+        betAmount: stake, players: { [creatorColorIndex]: newRoom.players[creatorColorIndex]! },
+        gameState: null, createdAt: Date.now(),
+    }).catch(err => console.error('⚠️ Redis sync failed:', err.message));
+
     // Register 1-hour cleanup timer
     registerRoomTimer(roomId, 'cleanup', setTimeout(() => {
         cleanupRoom(roomId, activeRooms);
@@ -893,7 +952,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     res.json({ success: true, roomId });
 });
 
-app.post('/api/rooms/join', joinRoomLimiter, async (req, res) => {
+app.post('/api/rooms/join', joinRoomLimiter, validateRequest(joinRoomSchema), async (req, res) => {
     let { roomId, txHash, playerName, playerAddress, color } = req.body;
     roomId = roomId?.toLowerCase();
 
@@ -1000,7 +1059,17 @@ if (process.env.NODE_ENV !== 'test') {
     server.listen(PORT, async () => {
         console.log(`🚀 Game Server running on port ${PORT}`);
 
-        // Try to recover state on startup (Crash recovery)
+        // V2: Recover from Redis first (fast, local)
+        try {
+            const redisRooms = await stateManager.recoverState();
+            if (redisRooms.length > 0) {
+                console.log(`♻️ Recovered ${redisRooms.length} rooms from Redis`);
+            }
+        } catch (e: any) {
+            console.warn(`⚠️ Redis recovery skipped:`, e.message);
+        }
+
+        // Legacy: Blockchain recovery
         try {
             const recovered = await recoverActiveRoomsFromBlockchain();
             if (recovered && recovered.length > 0) {

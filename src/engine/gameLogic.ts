@@ -1,5 +1,6 @@
 /**
  * GAME LOGIC ENGINE - USA STANDARD LUDO RULES
+ * Supports multiple game modes via Strategy Pattern (see backend/engine/GameMode.ts)
  */
 
 import {
@@ -14,23 +15,42 @@ import {
     isBlockedByBlockade
 } from './movementEngine';
 
-import { GameState, Move, TokenPosition } from '../types';
+import { GameState, GameModeId, Move, TokenPosition } from '../types';
+
+// ============================================
+// MODE-SPECIFIC TOKEN INITIALIZATION
+// ============================================
+
+const PLAYER_START_POSITIONS = [0, 13, 26, 39];
+
+function getInitialTokensForMode(colorIndex: number, mode: GameModeId): TokenPosition[] {
+    if (mode === 'rapid') {
+        const startPos = PLAYER_START_POSITIONS[colorIndex] as TokenPosition;
+        return [startPos, startPos, POSITION.IN_YARD, POSITION.IN_YARD];
+    }
+    return [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD];
+}
 
 // ============================================
 // STATE INITIALIZATION
 // ============================================
 
-export function createInitialState(_playerCount: number = 4, activeColors: number[] = [0, 1, 2, 3]): GameState {
+export function createInitialState(
+    _playerCount: number = 4,
+    activeColors: number[] = [0, 1, 2, 3],
+    mode: GameModeId = 'classic'
+): GameState {
     const sortedColors = [...activeColors].sort((a, b) => a - b);
 
+    const tokens: TokenPosition[][] = [
+        getInitialTokensForMode(0, mode),
+        getInitialTokensForMode(1, mode),
+        getInitialTokensForMode(2, mode),
+        getInitialTokensForMode(3, mode),
+    ];
+
     return {
-        tokens: [
-            [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD],
-            [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD],
-            [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD],
-            [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD]
-        ],
-        // playerCount: count, // Removing this as it's not in the GameState interface but we could add it if needed
+        tokens,
         activeColors: sortedColors,
         activePlayer: sortedColors[0] ?? 0,
         gamePhase: GAME_PHASE.ROLL_DICE as any,
@@ -39,7 +59,8 @@ export function createInitialState(_playerCount: number = 4, activeColors: numbe
         consecutiveSixes: 0,
         bonusMoves: 0,
         winner: null,
-        message: ''
+        message: '',
+        mode,
     } as unknown as GameState;
 }
 
@@ -53,8 +74,9 @@ export function rollDice(state: GameState, forcedValue: number | null = null): G
     if (forcedValue !== null) {
         diceValue = forcedValue;
     } else {
-        // Simple random for now, or keep the bag system if needed
-        // Assuming bag logic was simplified for this TS conversion or we can re-add it
+        // LOCAL/AI GAMES ONLY: Math.random() is acceptable here — no real money at stake.
+        // For Web3 (real-money) games, the server uses crypto.randomInt(1, 7) and passes
+        // the result as `forcedValue` above. See: backend/server.ts roll_dice handler.
         diceValue = Math.floor(Math.random() * 6) + 1;
     }
 

@@ -44,23 +44,30 @@ const LUDOVAULT_MINIMAL_ABI = [
 ];
 
 // ============================================
-// GRACEFUL DEGRADATION
+// GRACEFUL DEGRADATION (dev) / STRICT ENFORCEMENT (production)
 // ============================================
-// If RPC URL or Vault address is missing, verification is DISABLED but server still runs
-// This allows deployment without full blockchain verification configured
+// Production: RPC + Vault MUST be configured — server will not start without them
+// Development: Graceful degradation — verification disabled with warnings
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 let VERIFICATION_ENABLED = true;
 let provider = null;
 let ludoVaultContract = null;
 
 if (!FLARE_RPC_URL) {
-    console.warn("⚠️ FLARE_RPC_URL missing - On-chain verification DISABLED");
+    if (IS_PRODUCTION) {
+        throw new Error('🚨 FATAL: FLARE_RPC_URL is required in production. On-chain verification cannot be disabled.');
+    }
+    console.warn("⚠️ FLARE_RPC_URL missing - On-chain verification DISABLED (dev only)");
     console.warn("   Add FLARE_RPC_URL to Railway environment variables for production security");
     VERIFICATION_ENABLED = false;
 }
 
 if (!VAULT_ADDRESS) {
-    console.warn("⚠️ VITE_LUDOVAULT_ADDRESS missing - On-chain verification DISABLED");
+    if (IS_PRODUCTION) {
+        throw new Error('🚨 FATAL: VITE_LUDOVAULT_ADDRESS is required in production. On-chain verification cannot be disabled.');
+    }
+    console.warn("⚠️ VITE_LUDOVAULT_ADDRESS missing - On-chain verification DISABLED (dev only)");
     VERIFICATION_ENABLED = false;
 }
 
@@ -83,11 +90,14 @@ if (VERIFICATION_ENABLED) {
         console.log(`🔗 Contract Verifier initialized: ${VAULT_ADDRESS} on Chain ${CHAIN_ID}`);
     } catch (error) {
         console.error(`❌ Failed to initialize Contract Verifier: ${error.message}`);
-        console.warn("   On-chain verification DISABLED");
+        if (IS_PRODUCTION) {
+            throw new Error(`🚨 FATAL: Contract Verifier initialization failed in production: ${error.message}`);
+        }
+        console.warn("   On-chain verification DISABLED (dev only)");
         VERIFICATION_ENABLED = false;
     }
 } else {
-    console.log("📋 Server running in LEGACY MODE (no blockchain verification)");
+    console.log("📋 Server running in LEGACY MODE (no blockchain verification) — dev only");
 }
 
 
@@ -108,7 +118,10 @@ if (VERIFICATION_ENABLED) {
 export async function verifyRoomCreation(roomId, txHash, expectedCreator, expectedStake) {
     // Skip verification if not configured
     if (!VERIFICATION_ENABLED) {
-        console.log(`⏭️ Skipping room creation verification (LEGACY MODE)`);
+        if (IS_PRODUCTION) {
+            throw new Error('🚨 Verification bypass not allowed in production');
+        }
+        console.log(`⏭️ Skipping room creation verification (LEGACY MODE — dev only)`);
         return true;
     }
 
@@ -194,7 +207,10 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
 export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedStake) {
     // Skip verification if not configured
     if (!VERIFICATION_ENABLED) {
-        console.log(`⏭️ Skipping room join verification (LEGACY MODE)`);
+        if (IS_PRODUCTION) {
+            throw new Error('🚨 Verification bypass not allowed in production');
+        }
+        console.log(`⏭️ Skipping room join verification (LEGACY MODE — dev only)`);
         return true;
     }
 
@@ -371,17 +387,16 @@ export async function recoverActiveRoomsFromBlockchain() {
 
                 // Note: We don't have player names/colors from blockchain
                 // These will be re-established when players reconnect via WebSocket
-                room.players[0] = {
-                    address: roomState.creator,
-                    name: "Player 1", // Placeholder
-                    color: "red"
-                };
-
-                room.players[1] = {
-                    address: roomState.opponent,
-                    name: "Player 2", // Placeholder
-                    color: "blue"
-                };
+                const PLACEHOLDER_COLORS = ['red', 'blue', 'green', 'yellow'];
+                roomState.participants.forEach((addr, idx) => {
+                    if (addr && addr !== ethers.ZeroAddress) {
+                        room.players[idx] = {
+                            address: addr,
+                            name: `Player ${idx + 1}`, // Placeholder
+                            color: PLACEHOLDER_COLORS[idx] || 'red'
+                        };
+                    }
+                });
 
                 recoveredRooms.push(room);
             }

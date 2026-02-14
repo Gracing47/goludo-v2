@@ -41,7 +41,7 @@ export interface Player {
    GAME MODE TYPES
    ============================================ */
 
-export type GameModeId = 'classic' | 'fast' | 'team' | 'blitz' | 'tournament';
+export type GameModeId = 'classic' | 'rapid' | 'fast' | 'team' | 'blitz' | 'tournament';
 
 export type GameType = 'local' | 'ai' | 'web3';
 
@@ -123,6 +123,9 @@ export interface GameState {
 
     /** Game message */
     message: string;
+
+    /** Game mode identifier (V2) */
+    mode?: GameModeId;
 }
 
 export interface Capture {
