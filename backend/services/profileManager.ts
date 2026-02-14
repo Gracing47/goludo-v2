@@ -7,19 +7,12 @@
 
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 
 let prisma: PrismaClient;
 let prismaInitPromise: Promise<void> | null = null;
 
 async function initPrisma() {
     const dbUrl = process.env.DATABASE_URL;
-
-    // Diagnostic logging
-    try {
-        const { Prisma } = await import('@prisma/client');
-        console.log(`💎 Prisma Client Version: ${Prisma?.prismaVersion?.client ?? '7.x'}`);
-    } catch (e) { }
 
     if (!dbUrl) {
         console.warn('⚠️ DATABASE_URL is missing in environment variables.');
@@ -31,9 +24,8 @@ async function initPrisma() {
         const maskedUrl = dbUrl.replace(/:[^@:]+@/, ':****@');
         console.log(`🔌 Initializing PrismaPg Adapter with URL: ${maskedUrl.split('@')[1]}`);
 
-        // Set up the pg adapter for Prisma v7
-        const pool = new pg.Pool({ connectionString: dbUrl });
-        const adapter = new PrismaPg(pool);
+        // Prisma v7: PrismaPg manages its own connection pool internally
+        const adapter = new PrismaPg({ connectionString: dbUrl });
         prisma = new PrismaClient({ adapter });
 
         console.log('✅ PrismaClient initialized with driver adapter');
