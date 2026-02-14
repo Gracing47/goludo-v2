@@ -10,6 +10,13 @@ import { PrismaClient } from '@prisma/client';
 let prisma: PrismaClient;
 try {
     const dbUrl = process.env.DATABASE_URL;
+
+    // Diagnostic logging for version
+    import('@prisma/client').then(({ Prisma }) => {
+        // @ts-ignore - access internal version
+        console.log(`💎 Prisma Client Version: ${Prisma?.prismaVersion?.client ?? '7.x'}`);
+    }).catch(() => { });
+
     if (!dbUrl) {
         console.warn('⚠️ DATABASE_URL is missing in environment variables.');
     } else {
@@ -17,7 +24,10 @@ try {
         console.log(`🔌 Initializing Prisma with URL: ${maskedUrl.split('@')[1]}`);
     }
 
-    prisma = new PrismaClient();
+    // @ts-ignore - datasourceUrl is the correct v7 way to pass URL
+    prisma = new PrismaClient({
+        datasourceUrl: dbUrl
+    });
 } catch (e: any) {
     console.warn('⚠️ Prisma init failed:', e.message);
     prisma = null as any;

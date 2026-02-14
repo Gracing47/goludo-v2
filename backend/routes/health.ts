@@ -28,7 +28,10 @@ router.get('/health', async (_req, res) => {
     // DB check (non-blocking) — lazy import to avoid crash if prisma not configured
     try {
         const { PrismaClient } = await import('@prisma/client');
-        const prisma = new PrismaClient();
+        const prisma = new PrismaClient({
+            // @ts-ignore
+            datasourceUrl: process.env.DATABASE_URL
+        });
         await prisma.$queryRaw`SELECT 1`;
         result.database.connected = true;
         await prisma.$disconnect();
