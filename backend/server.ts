@@ -76,10 +76,21 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 export const server = http.createServer(app);
-// Production-aware CORS origins
-const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
-    ? ["https://goludo.netlify.app", "https://goludo-v2.netlify.app", "https://goludo-production.up.railway.app", "https://goludo-v2-production.up.railway.app"]
-    : ["http://localhost:3000", "http://localhost:5173", "https://goludo.netlify.app", "https://goludo-v2.netlify.app", "https://goludo-production.up.railway.app", "https://goludo-v2-production.up.railway.app"];
+// Production-aware CORS origins (Dynamic regex for robustness)
+const ALLOWED_ORIGINS = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const validDomains = [
+        /https:\/\/goludo(-v2)?\.netlify\.app$/,
+        /https:\/\/goludo(-v2)?-production\.up\.railway\.app$/,
+        /http:\/\/localhost:(3000|5173)$/
+    ];
+
+    if (!origin || validDomains.some(re => re.test(origin))) {
+        callback(null, true);
+    } else {
+        console.warn(`🚫 CORS blocked for origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+    }
+};
 
 export const io = new Server(server, {
     cors: {
