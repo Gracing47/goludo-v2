@@ -6,8 +6,37 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient;
+let prismaInitPromise: Promise<void> | null = null;
+
+async function initPrisma() {
+    const dbUrl = process.env.DATABASE_URL;
+
+    if (!dbUrl) {
+        console.warn('⚠️ DATABASE_URL is missing in environment variables.');
+        prisma = null as any;
+        return;
+    }
+
+    try {
+        const maskedUrl = dbUrl.replace(/:[^@:]+@/, ':****@');
+        console.log(`🔌 Initializing PrismaPg Adapter with URL: ${maskedUrl.split('@')[1]}`);
+
+        // Prisma v7: PrismaPg manages its own connection pool internally
+        const adapter = new PrismaPg({ connectionString: dbUrl });
+        prisma = new PrismaClient({ adapter });
+
+        console.log('✅ PrismaClient initialized with driver adapter');
+    } catch (e: any) {
+        console.warn('❌ Prisma init failed:', e.message);
+        prisma = null as any;
+    }
+}
+
+// Start async init
+prismaInitPromise = initPrisma();
 
 // ============================================
 // TYPES
@@ -52,6 +81,9 @@ export class ProfileManager {
     }
 
     async getOrCreateProfile(walletAddress: string) {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) throw new Error('Prisma not initialized');
+
         const normalized = walletAddress.toLowerCase();
 
         let profile = await prisma.userProfile.findUnique({
@@ -68,6 +100,9 @@ export class ProfileManager {
     }
 
     async updateStats(walletAddress: string, gameResult: GameResult) {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) return;
+
         const normalized = walletAddress.toLowerCase();
         const profile = await this.getOrCreateProfile(normalized);
         const isWin = gameResult.result === 'win';
@@ -124,6 +159,9 @@ export class ProfileManager {
     }
 
     async saveGameHistory(data: GameHistoryData) {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) return;
+
         return prisma.gameHistory.create({
             data: {
                 roomId: data.roomId,
@@ -142,6 +180,9 @@ export class ProfileManager {
     }
 
     async getLeaderboard(metric: LeaderboardMetric, limit: number = 100) {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) return [];
+
         return prisma.userProfile.findMany({
             orderBy: { [metric]: 'desc' },
             take: Math.min(limit, 100),
@@ -160,12 +201,15 @@ export class ProfileManager {
     }
 
     async getPlayerStats(walletAddress: string) {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) throw new Error('Prisma not initialized');
+
         const normalized = walletAddress.toLowerCase();
         const profile = await this.getOrCreateProfile(normalized);
 
         const recentGames = await prisma.gameHistory.findMany({
             where: {
-                players: { array_contains: [normalized] },
+                players: { has: normalized },
             },
             orderBy: { createdAt: 'desc' },
             take: 10,
@@ -184,6 +228,8 @@ export class ProfileManager {
     }
 
     async disconnect() {
-        await prisma.$disconnect();
+        if (prisma) {
+            await prisma.$disconnect();
+        }
     }
 }
