@@ -194,6 +194,13 @@ const broadcastState = (room: BackendRoom, message: string | null = null) => {
         msg: message || room.gameState.message,
         playersMetadata // Added to sync skips and forfeit status
     });
+
+    // V2: Persist state to Redis after every broadcast
+    if (stateManager) {
+        stateManager.saveRoom(room).catch(e => {
+            console.error(`❌ Redis Save Error [Room: ${room.id}]:`, e.message);
+        });
+    }
 };
 
 // ============================================
@@ -247,6 +254,12 @@ function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, re
         } else if (room.gameState!.activeColors.length === 0) {
             cleanupRoom(room.id, activeRooms);
             return true;
+        }
+
+        // CRITICAL: If the active player forfeited, advance the turn immediately
+        if (room.gameState!.activePlayer === playerIndex) {
+            console.log(`⏩ Active player ${player.name} forfeited - advancing turn`);
+            handleNextTurn(io, room);
         }
 
         return true; // Player forfeited
@@ -1070,8 +1083,14 @@ if (process.env.NODE_ENV !== 'test') {
         if (stateManager) {
             try {
                 const redisRooms = await stateManager.recoverState();
-                if (redisRooms.length > 0) {
+                if (redisRooms && redisRooms.length > 0) {
                     console.log(`♻️ Recovered ${redisRooms.length} rooms from Redis`);
+                    // AAA Fix: Actually assign the recovered rooms to the active list
+                    redisRooms.forEach((r: any) => {
+                        if (!activeRooms.find(ar => ar.id === r.id)) {
+                            activeRooms.push(r);
+                        }
+                    });
                 }
             } catch (e: any) {
                 console.warn(`⚠️ Redis recovery skipped:`, e.message);
