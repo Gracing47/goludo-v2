@@ -3,8 +3,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { visualizer } from 'rollup-plugin-visualizer';
 
+// Optional: only available when devDependencies are installed
+let visualizer: any;
+try {
+    visualizer = (await import('rollup-plugin-visualizer')).visualizer;
+} catch {
+    // Not available in production builds (Netlify skips devDependencies)
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,15 +28,15 @@ export default defineConfig({
     plugins: [
         react(),
 
-        // Bundle Visualizer - generates stats.html
-        visualizer({
+        // Bundle Visualizer - generates stats.html (dev only)
+        visualizer?.({
             filename: './dist/stats.html',
             open: false,
             gzipSize: true,
             brotliSize: true,
-            template: 'treemap' // or 'sunburst', 'network'
+            template: 'treemap'
         })
-    ],
+    ].filter(Boolean),
 
     /* Path Aliases - Clean Imports */
     resolve: {
