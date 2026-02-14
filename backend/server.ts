@@ -78,8 +78,8 @@ app.use(helmet({
 export const server = http.createServer(app);
 // Production-aware CORS origins
 const ALLOWED_ORIGINS = process.env.NODE_ENV === 'production'
-    ? ["https://goludo.netlify.app", "https://goludo-production.up.railway.app"]
-    : ["http://localhost:3000", "http://localhost:5173", "https://goludo.netlify.app", "https://goludo-production.up.railway.app"];
+    ? ["https://goludo.netlify.app", "https://goludo-v2.netlify.app", "https://goludo-production.up.railway.app", "https://goludo-v2-production.up.railway.app"]
+    : ["http://localhost:3000", "http://localhost:5173", "https://goludo.netlify.app", "https://goludo-v2.netlify.app", "https://goludo-production.up.railway.app", "https://goludo-v2-production.up.railway.app"];
 
 export const io = new Server(server, {
     cors: {
