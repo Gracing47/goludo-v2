@@ -94,9 +94,19 @@ const PORT = process.env.PORT || 3333;
 
 let activeRooms: BackendRoom[] = [];
 
-// V2: Service singletons
-const stateManager = GameStateManager.getInstance();
-const profileManager = ProfileManager.getInstance();
+// V2: Service singletons (lazy, crash-safe)
+let stateManager: GameStateManager | null = null;
+let profileManager: ProfileManager | null = null;
+try {
+    stateManager = GameStateManager.getInstance();
+} catch (e: any) {
+    console.warn('⚠️ GameStateManager init failed (Redis not available?):', e.message);
+}
+try {
+    profileManager = ProfileManager.getInstance();
+} catch (e: any) {
+    console.warn('⚠️ ProfileManager init failed (DATABASE_URL missing?):', e.message);
+}
 
 app.use(cors({
     origin: ALLOWED_ORIGINS,
@@ -396,7 +406,7 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
     broadcastState(room, `🎉 ${winnerName} Wins!`);
 
     // V2: Profile updates (Observer pattern — async, non-blocking)
-    if (winner?.address && room.stake) {
+    if (winner?.address && room.stake && profileManager) {
         const betAmount = BigInt(Math.floor(parseFloat(room.stake) * 1e18));
         const feeAmount = (betAmount * 5n) / 100n;
         const payoutAmount = betAmount * 2n - feeAmount;
@@ -786,23 +796,7 @@ app.get('/', (_req: express.Request, res: express.Response) => res.json({
     env: process.env.NODE_ENV || 'development'
 }) as any);
 
-/**
- * Health Check Endpoint
- * Used by Railway/Docker for container health monitoring
- */
-app.get('/health', (_req: express.Request, res: express.Response) => {
-    res.json({
-        status: 'ok',
-        uptime: process.uptime(),
-        activeRooms: activeRooms.length,
-        memory: {
-            heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
-            heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB',
-            rss: Math.round(process.memoryUsage().rss / 1024 / 1024) + 'MB'
-        },
-        timestamp: new Date().toISOString()
-    });
-});
+// NOTE: /health endpoint is handled by healthRoutes registered above
 
 /**
  * Metrics Endpoint
@@ -936,12 +930,14 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     activeRooms.push(newRoom);
 
     // V2: Sync to Redis (write-through)
-    stateManager.saveRoom({
-        roomId, mode: 'classic',
-        status: 'waiting', creator: creatorAddress,
-        betAmount: stake, players: { [creatorColorIndex]: newRoom.players[creatorColorIndex]! },
-        gameState: null, createdAt: Date.now(),
-    }).catch(err => console.error('⚠️ Redis sync failed:', err.message));
+    if (stateManager) {
+        stateManager.saveRoom({
+            roomId, mode: 'classic',
+            status: 'waiting', creator: creatorAddress,
+            betAmount: stake, players: { [creatorColorIndex]: newRoom.players[creatorColorIndex]! },
+            gameState: null, createdAt: Date.now(),
+        }).catch(err => console.error('⚠️ Redis sync failed:', err.message));
+    }
 
     // Register 1-hour cleanup timer
     registerRoomTimer(roomId, 'cleanup', setTimeout(() => {
@@ -1060,13 +1056,15 @@ if (process.env.NODE_ENV !== 'test') {
         console.log(`🚀 Game Server running on port ${PORT}`);
 
         // V2: Recover from Redis first (fast, local)
-        try {
-            const redisRooms = await stateManager.recoverState();
-            if (redisRooms.length > 0) {
-                console.log(`♻️ Recovered ${redisRooms.length} rooms from Redis`);
+        if (stateManager) {
+            try {
+                const redisRooms = await stateManager.recoverState();
+                if (redisRooms.length > 0) {
+                    console.log(`♻️ Recovered ${redisRooms.length} rooms from Redis`);
+                }
+            } catch (e: any) {
+                console.warn(`⚠️ Redis recovery skipped:`, e.message);
             }
-        } catch (e: any) {
-            console.warn(`⚠️ Redis recovery skipped:`, e.message);
         }
 
         // Legacy: Blockchain recovery
