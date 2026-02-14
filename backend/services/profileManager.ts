@@ -9,9 +9,23 @@ import { PrismaClient } from '@prisma/client';
 
 let prisma: PrismaClient;
 try {
-    prisma = new PrismaClient();
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+        console.warn('⚠️ DATABASE_URL is missing in environment variables.');
+    } else {
+        const maskedUrl = dbUrl.replace(/:[^@:]+@/, ':****@');
+        console.log(`🔌 Initializing Prisma with URL: ${maskedUrl.split('@')[1]}`);
+    }
+
+    prisma = new PrismaClient({
+        datasources: {
+            db: {
+                url: dbUrl
+            }
+        }
+    });
 } catch (e: any) {
-    console.warn('⚠️ Prisma init failed (DATABASE_URL missing?):', e.message);
+    console.warn('⚠️ Prisma init failed:', e.message);
     prisma = null as any;
 }
 
