@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER PROFILE — Mode-specific stats
+// ============================================
+
+model UserProfile {
+  id            String   @id @default(uuid())
+  walletAddress String   @unique
+  username      String?
+  createdAt     DateTime @default(now())
+  lastSeen      DateTime @updatedAt
+  isVerified    Boolean  @default(false)
+  nonce         Int      @default(0)
+
+  // Overall Stats
+  totalGamesPlayed Int    @default(0)
+  totalWins        Int    @default(0)
+  totalLosses      Int    @default(0)
+  totalWagered     String @default("0") // BigInt as string
+  totalWon         String @default("0")
+  bestStreak       Int    @default(0)
+  currentStreak    Int    @default(0)
+
+  // Classic Mode Stats
+  classicGamesPlayed Int    @default(0)
+  classicWins        Int    @default(0)
+  classicLosses      Int    @default(0)
+  classicWagered     String @default("0")
+  classicWon         String @default("0")
+  classicBestTime    Int?   // Fastest win in seconds
+
+  // Rapid Mode Stats
+  rapidGamesPlayed Int    @default(0)
+  rapidWins        Int    @default(0)
+  rapidLosses      Int    @default(0)
+  rapidWagered     String @default("0")
+  rapidWon         String @default("0")
+  rapidBestTime    Int?
+
+  achievements String[]
+
+  @@index([totalWins])
+  @@index([classicWins])
+  @@index([rapidWins])
+}
+
+// ============================================
+// GAME HISTORY — Immutable record per match
+// ============================================
+
+model GameHistory {
+  id           String   @id @default(uuid())
+  roomId       String   @unique
+  mode         String   // 'classic' | 'rapid'
+
+  players      Json     // Array of player addresses
+  winner       String
+  loser        String?  // null if >2 players
+
+  betAmount    String   // BigInt as string
+  payoutAmount String
+
+  duration     Int      // Game duration in seconds
+  totalTurns   Int
+
+  startedAt    DateTime
+  endedAt      DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([mode])
+  @@index([winner])
+  @@index([createdAt])
+}

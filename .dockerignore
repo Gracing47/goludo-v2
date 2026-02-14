@@ -1,0 +1,51 @@
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build artifacts
+dist
+build
+.next
+.cache
+
+# Environment (don't copy to image, Railway injects at runtime)
+.env
+.env.local
+.env.*.local
+
+# Tests
+coverage
+__tests__
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Documentation
+*.md
+!README.md
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+*.log
+
+# Hardhat (smart contracts - not needed in backend)
+artifacts
+cache
+typechain-types
+
+# Agent configs (development only)
+.agent
+.gemini

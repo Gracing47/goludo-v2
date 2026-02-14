@@ -1,0 +1,374 @@
+/* ============================================
+   DESIGN SYSTEM - CONSOLIDATED TOKENS
+   GoLudo AAA Dark Theme
+   ============================================ */
+
+:root {
+    /* ============================================
+     COLOR PALETTE - Semantic Naming
+     ============================================ */
+
+    /* Primary Brand Colors */
+    --color-primary: #ff007a;
+    /* Pink accent */
+    --color-primary-hover: #ff3399;
+    --color-primary-active: #cc0062;
+
+    --color-secondary: #8b5cf6;
+    /* Purple accent */
+    --color-secondary-hover: #a78bfa;
+    --color-secondary-active: #7c3aed;
+
+    --color-tertiary: #22d3ee;
+    /* Cyan accent */
+    --color-tertiary-hover: #67e8f9;
+    --color-tertiary-active: #06b6d4;
+
+    /* Semantic Colors */
+    --color-success: #00ff88;
+    /* Green */
+    --color-warning: #ffd700;
+    /* Gold */
+    --color-error: #ff4757;
+    /* Red */
+    --color-info: #00a2ff;
+    /* Blue */
+
+    /* Player Colors (Vibrant Neon) */
+    --player-red: #ff3e3e;
+    --player-green: #00ff88;
+    --player-yellow: #ffcc00;
+    --player-blue: #00a2ff;
+
+    /* ============================================
+     BACKGROUND COLORS - Dark Theme
+     ============================================ */
+
+    /* Base Backgrounds */
+    --bg-primary: #0a0a1a;
+    /* Darkest - main background */
+    --bg-secondary: #0d0d21;
+    /* Dark - secondary surfaces */
+    --bg-surface: #101025;
+    /* Surface - cards, panels */
+
+    /* Interactive Backgrounds */
+    --bg-card: rgba(255, 255, 255, 0.04);
+    --bg-card-hover: rgba(255, 255, 255, 0.08);
+    --bg-card-active: rgba(255, 255, 255, 0.12);
+
+    /* Contrast Levels */
+    --bg-contrast-low: rgba(255, 255, 255, 0.02);
+    --bg-contrast-medium: rgba(255, 255, 255, 0.05);
+    --bg-contrast-high: rgba(255, 255, 255, 0.1);
+
+    /* ============================================
+     GLASSMORPHISM - Premium Effects
+     ============================================ */
+
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-bg-hover: rgba(255, 255, 255, 0.06);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-bright: rgba(255, 255, 255, 0.2);
+    --glass-blur: blur(20px);
+    --glass-reflection: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0) 50%,
+            rgba(255, 255, 255, 0.05) 100%);
+
+    /* ============================================
+     TEXT COLORS - Hierarchy
+     ============================================ */
+
+    --text-primary: rgba(255, 255, 255, 0.95);
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-tertiary: rgba(255, 255, 255, 0.5);
+    --text-disabled: rgba(255, 255, 255, 0.3);
+    --text-inverse: rgba(0, 0, 0, 0.9);
+
+    /* ============================================
+     GRADIENTS - Brand Gradients
+     ============================================ */
+
+    --gradient-primary: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
+    --gradient-warm: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
+    --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+    --gradient-background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #16213e 100%);
+
+    /* ============================================
+     TYPOGRAPHY - Font System
+     ============================================ */
+
+    /* Font Families */
+    --font-display: 'Orbitron', sans-serif;
+    --font-body: 'Exo 2', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Courier New', monospace;
+
+    /* Font Sizes - Type Scale (1.25 ratio) */
+    --text-xs: 0.75rem;
+    /* 12px */
+    --text-sm: 0.875rem;
+    /* 14px */
+    --text-base: 1rem;
+    /* 16px */
+    --text-lg: 1.125rem;
+    /* 18px */
+    --text-xl: 1.25rem;
+    /* 20px */
+    --text-2xl: 1.5rem;
+    /* 24px */
+    --text-3xl: 1.875rem;
+    /* 30px */
+    --text-4xl: 2.25rem;
+    /* 36px */
+    --text-5xl: 3rem;
+    /* 48px */
+
+    /* Font Weights */
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+    --font-extrabold: 800;
+
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.75;
+
+    /* Letter Spacing */
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+
+    /* ============================================
+     SPACING SCALE - 4px Base
+     ============================================ */
+
+    --space-0: 0;
+    --space-1: 0.25rem;
+    /* 4px */
+    --space-2: 0.5rem;
+    /* 8px */
+    --space-3: 0.75rem;
+    /* 12px */
+    --space-4: 1rem;
+    /* 16px */
+    --space-5: 1.25rem;
+    /* 20px */
+    --space-6: 1.5rem;
+    /* 24px */
+    --space-8: 2rem;
+    /* 32px */
+    --space-10: 2.5rem;
+    /* 40px */
+    --space-12: 3rem;
+    /* 48px */
+    --space-16: 4rem;
+    /* 64px */
+    --space-20: 5rem;
+    /* 80px */
+    --space-24: 6rem;
+    /* 96px */
+
+    /* ============================================
+     BORDER RADIUS - Rounded Corners
+     ============================================ */
+
+    --radius-none: 0;
+    --radius-sm: 0.5rem;
+    /* 8px */
+    --radius-md: 1rem;
+    /* 16px */
+    --radius-lg: 1.5rem;
+    /* 24px */
+    --radius-xl: 2rem;
+    /* 32px */
+    --radius-2xl: 2.5rem;
+    /* 40px */
+    --radius-full: 9999px;
+    /* Pill shape */
+
+    /* ============================================
+     SHADOWS - Layered Depth
+     ============================================ */
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.7);
+    --shadow-inner: inset 0 2px 4px rgba(255, 255, 255, 0.05);
+
+    /* Glow Effects */
+    --glow-pink: 0 0 20px rgba(255, 0, 122, 0.4);
+    --glow-purple: 0 0 20px rgba(139, 92, 246, 0.4);
+    --glow-cyan: 0 0 20px rgba(34, 211, 238, 0.4);
+    --glow-gold: 0 0 20px rgba(255, 215, 0, 0.4);
+
+    /* ============================================
+     BORDERS
+     ============================================ */
+
+    --border-thin: 1px;
+    --border-medium: 2px;
+    --border-thick: 4px;
+
+    /* ============================================
+     Z-INDEX SCALE
+     ============================================ */
+
+    --z-base: 0;
+    --z-board: 1;
+    --z-hud: 10;
+    --z-dropdown: 50;
+    --z-overlay: 100;
+    --z-modal: 200;
+    --z-toast: 300;
+    --z-tooltip: 400;
+
+    /* ============================================
+     ANIMATION - Timing & Easing
+     ============================================ */
+
+    /* Durations */
+    --duration-instant: 100ms;
+    --duration-fast: 200ms;
+    --duration-normal: 400ms;
+    --duration-slow: 800ms;
+    --duration-slower: 1200ms;
+
+    /* Easing Functions */
+    --ease-linear: linear;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-premium: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* ============================================
+     GAME-SPECIFIC TOKENS
+     ============================================ */
+
+    /* Board Sizing */
+    --board-size: min(90vh, 90vw, 550px);
+
+    /* Layout Heights */
+    --header-height: 50px;
+    --pod-height: 48px;
+    --bottom-bar-height: 60px;
+
+    /* Safe Areas (Mobile Notches) */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Tablet (768px+) */
+@media (min-width: 768px) {
+    :root {
+        --board-size: min(75vh, 70vw, 600px);
+    }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
+    :root {
+        --board-size: min(80vh, 60vw, 650px);
+    }
+}
+
+/* Large Desktop (1440px+) */
+@media (min-width: 1440px) {
+    :root {
+        --board-size: min(85vh, 55vw, 700px);
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES - Common Patterns
+   ============================================ */
+
+/* Text Utilities */
+.text-primary {
+    color: var(--text-primary);
+}
+
+.text-secondary {
+    color: var(--text-secondary);
+}
+
+.text-tertiary {
+    color: var(--text-tertiary);
+}
+
+.text-disabled {
+    color: var(--text-disabled);
+}
+
+/* Background Utilities */
+.bg-primary {
+    background: var(--bg-primary);
+}
+
+.bg-secondary {
+    background: var(--bg-secondary);
+}
+
+.bg-surface {
+    background: var(--bg-surface);
+}
+
+/* Gradient Text */
+.gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Glow Effects */
+.glow-pink {
+    box-shadow: var(--glow-pink);
+}
+
+.glow-purple {
+    box-shadow: var(--glow-purple);
+}
+
+.glow-cyan {
+    box-shadow: var(--glow-cyan);
+}
+
+.glow-gold {
+    box-shadow: var(--glow-gold);
+}
+
+/* Interactive States */
+.clickable {
+    cursor: pointer;
+    transition: transform var(--duration-fast) var(--ease-out),
+        box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.clickable:hover {
+    transform: translateY(-2px);
+}
+
+.clickable:active {
+    transform: translateY(0);
+}
+
+/* No Select */
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}

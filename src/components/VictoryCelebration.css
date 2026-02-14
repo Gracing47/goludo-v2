@@ -1,0 +1,270 @@
+/* ============================================
+   VICTORY CELEBRATION - Premium AAA Gaming
+   ============================================ */
+
+.victory-celebration {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+}
+
+.victory-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.95) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* ============================================
+   CONTENT CONTAINER
+   ============================================ */
+
+.victory-content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg), 0 0 50px rgba(0, 0, 0, 0.5);
+    max-width: 90vw;
+}
+
+/* ============================================
+   TROPHY
+   ============================================ */
+
+.victory-trophy {
+    font-size: clamp(4rem, 15vw, 8rem);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.6));
+    animation: trophy-bounce 2.5s ease-in-out infinite;
+}
+
+@keyframes trophy-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+    }
+
+    50% {
+        transform: translateY(-15px) rotate(0deg) scale(1.05);
+    }
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+.victory-title {
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: clamp(2rem, 8vw, 4rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0 0 0.5rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.4));
+}
+
+.victory-winner {
+    font-family: var(--font-body, 'Inter', sans-serif);
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 2rem;
+    letter-spacing: 1px;
+}
+
+/* ============================================
+   GLOWING RING
+   ============================================ */
+
+.victory-ring {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.1);
+    animation: ring-pulse 4s infinite linear;
+}
+
+@keyframes ring-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.1;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.5;
+    }
+}
+
+/* ============================================
+   PRIZE INFO
+   ============================================ */
+
+.victory-prize {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1rem 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+}
+
+.prize-icon {
+    font-size: 1.8rem;
+}
+
+.prize-text {
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* ============================================
+   ACTIONS
+   ============================================ */
+
+.victory-actions {
+    display: flex;
+    gap: 1.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.victory-btn {
+    padding: 14px 28px;
+    border-radius: var(--radius-full, 99px);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 140px;
+}
+
+.victory-btn.primary {
+    background: var(--accent-gradient, linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%));
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.victory-btn.primary:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+.victory-btn.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.victory-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ============================================
+   LOSER MESSAGE & PAYOUT VERIFYING
+   ============================================ */
+
+.loser-message {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(255, 71, 87, 0.15);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    border-radius: var(--radius-md);
+    padding: 0.8rem 1.5rem;
+    margin-bottom: 2rem;
+    color: #ff8fa3;
+    font-weight: 600;
+}
+
+.verifying-payout {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1rem 2rem;
+    color: #22d3ee;
+    font-family: var(--font-display);
+    letter-spacing: 1px;
+}
+
+.verifying-payout .spinner {
+    animation: spin 1s linear infinite;
+    font-size: 1.2rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 480px) {
+    .victory-content {
+        padding: 2rem 1.5rem;
+        width: 90%;
+    }
+
+    .victory-ring {
+        width: 200px;
+        height: 200px;
+    }
+
+    .victory-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 1rem;
+    }
+
+    .victory-btn {
+        width: 100%;
+        padding: 12px;
+    }
+}

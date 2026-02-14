@@ -1,0 +1,648 @@
+/* =========================================
+   AAA LUDO MASTER THEME - Mobile-First Layout
+   Berechnete Größen für alle Screen-Sizes
+   ========================================= */
+
+:root {
+    --bg-dark: #0a0a15;
+    --panel-glass: rgba(20, 20, 35, 0.85);
+    --neon-blue: #00f3ff;
+    --neon-gold: #ffd700;
+    --neon-pink: #ff007a;
+    --z-board: 1;
+    --z-hud: 10;
+    --z-modal: 100;
+
+    /* Player Colors - Vibrant */
+    --color-red: #ff4757;
+    --color-green: #2ed573;
+    --color-yellow: #ffa502;
+    --color-blue: #3498db;
+
+    /* Mobile Layout Spacing */
+    --header-height: 50px;
+    --pod-height: 48px;
+    --bottom-bar-height: 60px;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+body {
+    margin: 0;
+    background: var(--bg-dark);
+    font-family: 'Exo 2', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+}
+
+/* ============================================
+   MAIN CONTAINER - Fixed Viewport
+   ============================================ */
+
+.app.aaa-layout {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    grid-template-rows:
+        var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--bottom-bar-height);
+    grid-template-columns: 1fr;
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    background: linear-gradient(145deg, #050510 0%, #151025 50%, #0a0a15 100%);
+    overflow: hidden;
+}
+
+.shake-active .board-layer {
+    animation: screen-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes screen-shake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+/* ============================================
+   BOARD LAYER - Centered with Anchors
+   ============================================ */
+
+.board-layer {
+    grid-row: 2 / span 3;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-board);
+    padding: 8px;
+    padding-top: 45px;
+    padding-bottom: 8px;
+    overflow: visible;
+}
+
+/* ============================================
+   POT DISPLAY - Center of Board
+   ============================================ */
+
+.pot-display {
+    position: absolute;
+    bottom: 115px;
+    left: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    padding: 4px 12px;
+    z-index: 20;
+    animation: pot-float 3s ease-in-out infinite;
+    pointer-events: none;
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.pot-icon {
+    font-size: 1.2rem;
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
+}
+
+.pot-amount {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.pot-currency {
+    font-size: 0.65rem;
+    color: rgba(255, 215, 0, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+@keyframes pot-float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: translateY(-4px);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .pot-display {
+        padding: 4px 10px;
+        bottom: 80px;
+        left: 10px;
+    }
+
+    .pot-amount {
+        font-size: 0.9rem;
+    }
+
+    .pot-icon {
+        font-size: 1rem;
+    }
+}
+
+/* ============================================
+   PLAYER PODS CONTAINER
+   ============================================ */
+
+.player-pods-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Tighter constraint to keep pods near board */
+    width: calc(min(90vw, calc(100dvh - 200px), 500px) + 30px);
+    height: calc(min(90vw, calc(100dvh - 200px), 500px) + 60px);
+    pointer-events: none;
+    z-index: var(--z-hud);
+}
+
+.pod-anchor {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* Corner Positions - Adjusted for Mobile */
+.pos-0 {
+    top: -8px;
+    left: -8px;
+    justify-content: flex-start;
+}
+
+.pos-1 {
+    top: -8px;
+    right: -8px;
+    justify-content: flex-end;
+}
+
+.pos-2 {
+    bottom: -8px;
+    right: -8px;
+    justify-content: flex-end;
+}
+
+.pos-3 {
+    bottom: -8px;
+    left: -8px;
+    justify-content: flex-start;
+}
+
+/* Mobile: Extra spacing to prevent board overlap */
+@media (max-width: 480px) {
+    .player-pods-container {
+        width: calc(min(90vw, calc(100dvh - 200px), 500px) + 50px);
+        height: calc(min(90vw, calc(100dvh - 200px), 500px) + 80px);
+    }
+
+    .pos-0 {
+        top: -12px;
+        left: -12px;
+    }
+
+    .pos-1 {
+        top: -12px;
+        right: -12px;
+    }
+
+    .pos-2 {
+        bottom: -12px;
+        right: -12px;
+    }
+
+    .pos-3 {
+        bottom: -12px;
+        left: -12px;
+    }
+}
+
+/* Desktop: Push pods further out */
+@media (min-width: 768px) {
+    .player-pods-container {
+        width: calc(min(70vw, calc(100vh - 180px), 550px) + 60px);
+        height: calc(min(70vw, calc(100vh - 180px), 550px) + 120px);
+    }
+}
+
+/* ============================================
+   HUD LAYER (Overlay)
+   ============================================ */
+
+.game-hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: var(--z-hud);
+    display: grid;
+    grid-template-rows: var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--bottom-bar-height);
+}
+
+/* ============================================
+   DISCONNECT OVERLAY
+   ============================================ */
+.disconnect-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    color: white;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1.2rem;
+    pointer-events: all;
+    animation: fadeIn 0.3s ease;
+}
+
+.disconnect-overlay .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--neon-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   PLAYER PODS - UNISWAP POLISH
+   ============================================ */
+
+.player-pod {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px 6px 6px;
+    border-radius: 999px;
+    /* Pill Shape */
+    height: 48px;
+    min-width: 120px;
+    pointer-events: auto;
+
+    /* Glassmorphism */
+    background: rgba(20, 20, 35, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.02);
+
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.7;
+    filter: grayscale(0.1);
+}
+
+.player-pod.active {
+    opacity: 1;
+    filter: none;
+    background: rgba(30, 30, 50, 0.7);
+    border: 1px solid var(--pod-glow-color);
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        0 0 15px var(--pod-glow-color, rgba(255, 255, 255, 0.1)),
+        inset 0 0 10px rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px) scale(1.02);
+}
+
+.player-pod.forfeited {
+    opacity: 0.4;
+    filter: grayscale(1);
+    background: rgba(40, 0, 0, 0.4);
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+/* Dynamic Colors */
+.player-pod.red {
+    --pod-glow-color: rgba(255, 71, 87, 0.6);
+}
+
+.player-pod.green {
+    --pod-glow-color: rgba(46, 213, 115, 0.6);
+}
+
+.player-pod.yellow {
+    --pod-glow-color: rgba(255, 165, 2, 0.6);
+}
+
+.player-pod.blue {
+    --pod-glow-color: rgba(52, 152, 219, 0.6);
+}
+
+/* Avatar */
+.pod-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pod-avatar.red {
+    background: linear-gradient(135deg, #ff4757, #c0392b);
+}
+
+.pod-avatar.green {
+    background: linear-gradient(135deg, #2ed573, #218c74);
+}
+
+.pod-avatar.yellow {
+    background: linear-gradient(135deg, #ffa502, #e67e22);
+}
+
+.pod-avatar.blue {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.pod-turn-indicator {
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0.6;
+    animation: ripple-pulse 1.8s infinite;
+}
+
+@keyframes ripple-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+        stroke-width: 2px;
+    }
+
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+        stroke-width: 0px;
+    }
+}
+
+.pod-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.pod-skips {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.skip-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.skip-dot.active {
+    background: #ff4757;
+    box-shadow: 0 0 6px #ff4757;
+}
+
+/* ============================================
+   CENTRAL DICE - POLISHED
+   ============================================ */
+
+.central-dice-area {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
+}
+
+@media (min-width: 768px) {
+    .central-dice-area {
+        bottom: auto;
+        top: 50%;
+        left: calc(50% + min(35vw, 260px));
+        transform: translateY(-50%);
+    }
+}
+
+.dice-wrapper {
+    pointer-events: auto;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dice-wrapper.idle {
+    transform: scale(1);
+}
+
+.dice-wrapper.throwing {
+    transform: scale(1.25);
+    animation: dice-shake 0.5s ease-out;
+}
+
+.dice-wrapper.opponent-turn {
+    transform: scale(0.9);
+    opacity: 0.6;
+    filter: grayscale(0.5);
+}
+
+@keyframes dice-shake {
+
+    0%,
+    100% {
+        transform: scale(1.25) rotate(0deg);
+    }
+
+    25% {
+        transform: scale(1.3) rotate(-8deg);
+    }
+
+    75% {
+        transform: scale(1.3) rotate(8deg);
+    }
+}
+
+/* ============================================
+   TURN TIMER & OTHER HUD
+   ============================================ */
+
+.turn-timer-container {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.turn-timer {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--neon-blue);
+    background: rgba(10, 10, 20, 0.8);
+    backdrop-filter: blur(4px);
+    padding: 6px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.turn-timer.urgent {
+    color: #ff4757;
+    border-color: #ff4757;
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+    animation: urgent-pulse 0.5s infinite alternate;
+}
+
+@keyframes urgent-pulse {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0.8;
+        transform: scale(0.95);
+    }
+}
+
+/* ============================================
+   MENU & TOASTS
+   ============================================ */
+
+.menu-dropdown-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.menu-btn-floating {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu-btn-floating:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.server-toast {
+    position: absolute;
+    top: 110px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 12px;
+    z-index: 200;
+    animation: slide-down 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4);
+}
+
+@keyframes slide-down {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   MOBILE SPECIFIC ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 480px) {
+    .player-pods-container {
+        /* Slightly looser on mobile to use corner space */
+        width: calc(100vw - 16px);
+        height: calc(min(95vw, calc(100dvh - 200px), 500px) + 80px);
+    }
+
+    .player-pod {
+        min-width: auto;
+        padding: 4px 12px 4px 4px;
+        height: 40px;
+        background: rgba(10, 10, 20, 0.8);
+        /* Darker for contrast */
+    }
+
+    .pod-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .pod-name {
+        font-size: 10px;
+        max-width: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
