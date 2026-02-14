@@ -28,10 +28,24 @@ router.get('/health', async (_req, res) => {
     // DB check (non-blocking) — lazy import to avoid crash if prisma not configured
     try {
         const { PrismaClient } = await import('@prisma/client');
-        const prisma = new PrismaClient();
-        await prisma.$queryRaw`SELECT 1`;
-        result.database.connected = true;
-        await prisma.$disconnect();
+        const { PrismaPg } = await import('@prisma/adapter-pg');
+        const pg = await import('pg');
+
+        const dbUrl = process.env.DATABASE_URL;
+        if (dbUrl) {
+            const pool = new pg.default.Pool({
+                connectionString: dbUrl,
+                connectionTimeoutMillis: 2000
+            });
+            const adapter = new PrismaPg(pool);
+            const prisma = new PrismaClient({ adapter });
+
+            await prisma.$queryRaw`SELECT 1`;
+            result.database.connected = true;
+
+            await prisma.$disconnect();
+            await pool.end();
+        }
     } catch {
         // DB not available — that's fine
     }
