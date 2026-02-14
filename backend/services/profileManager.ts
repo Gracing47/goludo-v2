@@ -9,9 +9,7 @@ import { PrismaClient } from '@prisma/client';
 
 let prisma: PrismaClient;
 try {
-    prisma = new PrismaClient({
-        datasourceUrl: process.env.DATABASE_URL,
-    });
+    prisma = new PrismaClient();
 } catch (e: any) {
     console.warn('⚠️ Prisma init failed (DATABASE_URL missing?):', e.message);
     prisma = null as any;

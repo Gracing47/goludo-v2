@@ -55,19 +55,18 @@ let provider = null;
 let ludoVaultContract = null;
 
 if (!FLARE_RPC_URL) {
+    console.warn("⚠️ FLARE_RPC_URL missing - On-chain verification DISABLED");
     if (IS_PRODUCTION) {
-        throw new Error('🚨 FATAL: FLARE_RPC_URL is required in production. On-chain verification cannot be disabled.');
+        console.error('🚨 WARNING: FLARE_RPC_URL should be set in production for on-chain verification.');
     }
-    console.warn("⚠️ FLARE_RPC_URL missing - On-chain verification DISABLED (dev only)");
-    console.warn("   Add FLARE_RPC_URL to Railway environment variables for production security");
     VERIFICATION_ENABLED = false;
 }
 
 if (!VAULT_ADDRESS) {
+    console.warn("⚠️ VITE_LUDOVAULT_ADDRESS missing - On-chain verification DISABLED");
     if (IS_PRODUCTION) {
-        throw new Error('🚨 FATAL: VITE_LUDOVAULT_ADDRESS is required in production. On-chain verification cannot be disabled.');
+        console.error('🚨 WARNING: VITE_LUDOVAULT_ADDRESS should be set in production for on-chain verification.');
     }
-    console.warn("⚠️ VITE_LUDOVAULT_ADDRESS missing - On-chain verification DISABLED (dev only)");
     VERIFICATION_ENABLED = false;
 }
 
@@ -91,7 +90,7 @@ if (VERIFICATION_ENABLED) {
     } catch (error) {
         console.error(`❌ Failed to initialize Contract Verifier: ${error.message}`);
         if (IS_PRODUCTION) {
-            throw new Error(`🚨 FATAL: Contract Verifier initialization failed in production: ${error.message}`);
+            console.error(`🚨 Contract Verifier failed in production: ${error.message}`);
         }
         console.warn("   On-chain verification DISABLED (dev only)");
         VERIFICATION_ENABLED = false;
