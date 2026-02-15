@@ -361,10 +361,12 @@
 /* Mobile Optimization - Maximized Board Size */
 @media (max-width: 480px) {
     .ludo-board {
-        /* Optimized sizing: more aggressive space usage */
-        width: min(98vw, calc(100dvh - 140px));  /* Was calc(100dvh - 200px) */
-        height: min(98vw, calc(100dvh - 140px));
+        /* AAA Mobile Sizing: fill available space perfectly
+           Grid overhead: header(28) + 2*pod(44) + footer(80) = 196px + 20px margin = 216px */
+        width: min(96vw, calc(100dvh - 220px));
+        height: min(96vw, calc(100dvh - 220px));
         max-width: none; /* Remove 500px constraint for mobile */
+        max-height: 100%; /* Never overflow grid cell */
         padding: 6px;
         gap: 1.5px;
         border-radius: 24px; /* Proportionally smaller for mobile */

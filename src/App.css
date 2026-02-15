@@ -160,11 +160,10 @@ body {
 }
 
 @media (max-width: 480px) {
-    /* Board Layer - Reduced padding for more board space */
+    /* Board Layer - Grid handles centering, minimal padding */
     .board-layer {
-        padding: 4px;
-        padding-top: 32px;  /* Reduced from 45px */
-        padding-bottom: 4px;
+        padding: 2px;
+        overflow: hidden; /* Prevent any overflow */
     }
 
     .pot-display {
@@ -662,23 +661,12 @@ body {
    ============================================ */
 
 @media (max-width: 480px) {
-    .player-pods-container {
-        /* Adjusted for larger board - prevents overlap */
-        width: calc(min(98vw, calc(100dvh - 140px)) + 40px);
-        height: calc(min(98vw, calc(100dvh - 140px)) + 70px);
-    }
-
-    /* Corner positions - more offset for breathing room */
-    .pos-0 { top: -14px; left: -14px; }
-    .pos-1 { top: -14px; right: -14px; }
-    .pos-2 { bottom: -14px; right: -14px; }
-    .pos-3 { bottom: -14px; left: -14px; }
-
+    /* Keep grid-based pod positioning - don't override with absolute */
     .player-pod {
         min-width: 100px;
         padding: 6px 14px 6px 6px;
         height: 44px;  /* WCAG compliant touch target (was 40px) */
-        background: rgba(10, 10, 20, 0.8);
+        background: rgba(10, 10, 20, 0.85);
         gap: 6px;
     }
 
