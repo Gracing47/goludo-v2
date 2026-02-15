@@ -23,6 +23,12 @@ const GameHUD: React.FC<GameHUDProps> = ({
 }) => {
     return (
         <div className="game-hud">
+            {/* MODE BADGE - Top Right (below timer) */}
+            {gameState && (
+                <div className={`mode-badge ${gameState.mode === 'rapid' ? 'rapid-mode' : 'classic-mode'}`}>
+                    {gameState.mode === 'rapid' ? '⚡ RAPID' : '🎲 CLASSIC'}
+                </div>
+            )}
             {/* Turn Timer - Top Center */}
             {gameState.gamePhase !== 'WIN' && turnTimer !== null && turnTimer > 0 && (
                 <div className="turn-timer-container">

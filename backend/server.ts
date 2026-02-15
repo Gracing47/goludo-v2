@@ -1064,7 +1064,7 @@ app.post('/api/rooms/join', joinRoomLimiter, validateRequest(joinRoomSchema), as
         const activeColors = room.players
             .map((p: any, idx: number) => p ? idx : null)
             .filter((idx: any) => idx !== null) as number[];
-        room.gameState = createInitialState(4, activeColors);
+        room.gameState = createInitialState(4, activeColors, (room as any).mode || 'classic');
 
         // Notify all clients to start countdown
         io.to(roomId).emit('room_full', room);
