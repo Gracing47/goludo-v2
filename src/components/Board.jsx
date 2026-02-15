@@ -20,7 +20,7 @@ import {
     PLAYERS
 } from '../engine/constants';
 
-const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
+const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false }) => {
     // Calculate responsive board size - Full Size approach
     const getBoardSize = () => {
         const vw = window.innerWidth;
@@ -82,7 +82,7 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
     }, [activePlayer, rotation, boardSize]);
 
     return (
-        <div className="board-wrapper">
+        <div className={`board-wrapper ${isGameOver ? 'game-over-dim' : ''}`}>
             <div className={`board-focus-wrapper ${focusClass}`}>
                 <div className="ludo-board" style={{
                     transform: `rotate(${rotation}deg)`,

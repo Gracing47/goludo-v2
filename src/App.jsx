@@ -602,7 +602,7 @@ function App() {
                             ))}
 
                             {/* AAA: ON-FIELD UI - POT DISPLAY (Bottom Right corner area) */}
-                            {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && (
+                            {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
                                 <div className="on-field-pot">
                                     <div className="pot-glass-card">
                                         <span className="pot-icon">💰</span>
@@ -617,7 +617,7 @@ function App() {
                             )}
 
                             {/* AAA: ON-FIELD UI - DICE (Bottom Center) */}
-                            {gameState.gamePhase !== 'WIN' && (
+                            {gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
                                 <div className="on-field-dice-container">
                                     <DiceArea
                                         showCountdown={showCountdown}
@@ -665,7 +665,7 @@ function App() {
             {/* C. WIN SCREEN */}
             {gameState.gamePhase === 'WIN' && (() => {
                 // Determine if current player is the winner
-                const winnerPlayer = gameConfig.players[gameState.winner];
+                const winnerPlayer = gameConfig.players[gameState.winner] || { name: `Player ${gameState.winner + 1}`, isAI: false, address: '' };
                 const amIWinner = gameConfig.mode === 'web3'
                     ? winnerPlayer?.address?.toLowerCase() === account?.address?.toLowerCase()
                     : !winnerPlayer?.isAI; // In local, human player is always "you"

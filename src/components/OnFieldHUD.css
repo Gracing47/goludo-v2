@@ -78,3 +78,10 @@
     font-weight: 500;
     text-transform: uppercase;
 }
+
+/* Board Game Over State (Moved here for reliability) */
+.board-wrapper.game-over-dim {
+    filter: brightness(0.3) blur(2px) grayscale(0.5);
+    pointer-events: none;
+    transition: filter 1s ease 0.5s;
+}
