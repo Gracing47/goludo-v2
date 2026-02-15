@@ -8,7 +8,6 @@ import { AnimatePresence } from 'framer-motion';
 import { useGameSocket } from './hooks/useGameSocket';
 import { ethers } from 'ethers';
 import Board from './components/Board';
-import Board from './components/Board';
 
 const BUILD_VERSION = "v4.4.6 - Code Quality Cleanup";
 import { useGameVFX } from './hooks/useGameVFX';
