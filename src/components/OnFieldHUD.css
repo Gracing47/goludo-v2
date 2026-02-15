@@ -1,18 +1,24 @@
 /* OnFieldHUD.css - Grid-anchored Game UI */
 
-/* POT: Move to Top Center to avoid "free space" feeling on the left */
+/*
+   DEPRECATED:
+   Styles moved to App.css for better grid integration.
+   This file is kept temporarily to prevent import errors until fully removed.
+*/
+
+/*
 .on-field-pot {
     grid-row: 2 / 6;
     /* Top Area */
-    grid-column: 5 / 12;
-    /* Center-ish spanning columns 5-11 */
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
-    transition: transform 0.5s ease;
+grid-column: 5 / 12;
+/* Center-ish spanning columns 5-11 */
+z-index: 20;
+display: flex;
+align-items: center;
+justify-content: center;
+pointer-events: none;
+transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
+transition: transform 0.5s ease;
 }
 
 .pot-glass-card {

@@ -5,104 +5,103 @@
 
 :root {
     /* ============================================
-     COLOR PALETTE - Semantic Naming
+     COLOR PALETTE - Cyberpunk / Neo-Glass
      ============================================ */
 
     /* Primary Brand Colors */
     --color-primary: #ff007a;
-    /* Pink accent */
+    /* Neon Pink */
     --color-primary-hover: #ff3399;
-    --color-primary-active: #cc0062;
+    --color-primary-active: #d60065;
 
     --color-secondary: #8b5cf6;
-    /* Purple accent */
+    /* Electric Purple */
     --color-secondary-hover: #a78bfa;
     --color-secondary-active: #7c3aed;
 
     --color-tertiary: #22d3ee;
-    /* Cyan accent */
+    /* Cyber Cyan */
     --color-tertiary-hover: #67e8f9;
     --color-tertiary-active: #06b6d4;
 
     /* Semantic Colors */
-    --color-success: #00ff88;
-    /* Green */
-    --color-warning: #ffd700;
-    /* Gold */
-    --color-error: #ff4757;
-    /* Red */
-    --color-info: #00a2ff;
-    /* Blue */
+    --color-success: #00ff9d;
+    /* Matrix Green */
+    --color-warning: #ffcc00;
+    /* Cyber Gold */
+    --color-error: #ff2a6d;
+    /* Glitch Red */
+    --color-info: #05d9e8;
+    /* Holo Blue */
 
-    /* Player Colors (Vibrant Neon) */
-    --player-red: #ff3e3e;
-    --player-green: #00ff88;
+    /* Player Colors (High Vis Neon) */
+    --player-red: #ff2a6d;
+    --player-green: #00ff9d;
     --player-yellow: #ffcc00;
-    --player-blue: #00a2ff;
+    --player-blue: #05d9e8;
 
     /* ============================================
-     BACKGROUND COLORS - Dark Theme
+     BACKGROUND COLORS - OLED Deep Dark
      ============================================ */
 
     /* Base Backgrounds */
-    --bg-primary: #0a0a1a;
-    /* Darkest - main background */
-    --bg-secondary: #0d0d21;
-    /* Dark - secondary surfaces */
-    --bg-surface: #101025;
-    /* Surface - cards, panels */
+    --bg-primary: #050510;
+    /* Deepest Black-Blue */
+    --bg-secondary: #0a0a1f;
+    /* Deep Navy */
+    --bg-surface: #13132b;
+    /* Lighter Navy */
 
     /* Interactive Backgrounds */
-    --bg-card: rgba(255, 255, 255, 0.04);
-    --bg-card-hover: rgba(255, 255, 255, 0.08);
-    --bg-card-active: rgba(255, 255, 255, 0.12);
+    --bg-card: rgba(20, 20, 40, 0.6);
+    --bg-card-hover: rgba(40, 40, 80, 0.5);
+    --bg-card-active: rgba(60, 60, 100, 0.5);
 
     /* Contrast Levels */
-    --bg-contrast-low: rgba(255, 255, 255, 0.02);
-    --bg-contrast-medium: rgba(255, 255, 255, 0.05);
-    --bg-contrast-high: rgba(255, 255, 255, 0.1);
+    --bg-contrast-low: rgba(255, 255, 255, 0.03);
+    --bg-contrast-medium: rgba(255, 255, 255, 0.08);
+    --bg-contrast-high: rgba(255, 255, 255, 0.15);
 
     /* ============================================
-     GLASSMORPHISM - Premium Effects
+     GLASSMORPHISM - Heavy Blur
      ============================================ */
 
-    --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-bg-hover: rgba(255, 255, 255, 0.06);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-border-bright: rgba(255, 255, 255, 0.2);
-    --glass-blur: blur(20px);
+    --glass-bg: rgba(10, 10, 25, 0.7);
+    --glass-bg-hover: rgba(20, 20, 40, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-bright: rgba(34, 211, 238, 0.3);
+    --glass-blur: blur(24px);
     --glass-reflection: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.1) 0%,
-            rgba(255, 255, 255, 0) 50%,
+            rgba(255, 255, 255, 0.15) 0%,
+            rgba(255, 255, 255, 0.0) 40%,
             rgba(255, 255, 255, 0.05) 100%);
 
     /* ============================================
-     TEXT COLORS - Hierarchy
+     TEXT COLORS
      ============================================ */
 
-    --text-primary: rgba(255, 255, 255, 0.95);
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-tertiary: rgba(255, 255, 255, 0.5);
-    --text-disabled: rgba(255, 255, 255, 0.3);
-    --text-inverse: rgba(0, 0, 0, 0.9);
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+    --text-disabled: #334155;
+    --text-inverse: #000000;
+    --text-glow-base: 0 0 10px rgba(255, 255, 255, 0.5);
 
     /* ============================================
-     GRADIENTS - Brand Gradients
+     GRADIENTS
      ============================================ */
 
-    --gradient-primary: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
-    --gradient-warm: linear-gradient(135deg, #ff007a 0%, #8b5cf6 100%);
-    --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
-    --gradient-background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #16213e 100%);
+    --gradient-primary: linear-gradient(135deg, #05d9e8 0%, #7c3aed 100%);
+    --gradient-warm: linear-gradient(135deg, #ff2a6d 0%, #7c3aed 100%);
+    --gradient-gold: linear-gradient(135deg, #ffcc00 0%, #ff8c00 100%);
+    --gradient-background: radial-gradient(circle at center, #1a1a3a 0%, #050510 100%);
 
     /* ============================================
-     TYPOGRAPHY - Font System
+     TYPOGRAPHY & FONTS
      ============================================ */
-
-    /* Font Families */
-    --font-display: 'Orbitron', sans-serif;
-    --font-body: 'Exo 2', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'Courier New', monospace;
+    --font-display: 'Orbitron', 'Eurostile', sans-serif;
+    --font-body: 'Outfit', 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 
     /* Font Sizes - Type Scale (1.25 ratio) */
     --text-xs: 0.75rem;
@@ -249,22 +248,23 @@
     --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* ============================================
-     GAME-SPECIFIC TOKENS
+     GAME SPECIFIC
      ============================================ */
 
-    /* Board Sizing */
-    --board-size: min(90vh, 90vw, 550px);
+    /* Board Sizing - CSS Driven */
+    /* Mobile: Width is constraint. Desktop: Height is constraint. */
+    --board-max-size: 650px;
+    --board-mobile-width: 96vw;
+    --board-mobile-height: 60dvh;
 
     /* Layout Heights */
-    --header-height: 50px;
-    --pod-height: 48px;
-    --bottom-bar-height: 60px;
+    --header-height: 60px;
+    --footer-height: 80px;
+    --pod-height: 50px;
 
-    /* Safe Areas (Mobile Notches) */
-    --safe-area-top: env(safe-area-inset-top, 0px);
-    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-area-left: env(safe-area-inset-left, 0px);
-    --safe-area-right: env(safe-area-inset-right, 0px);
+    /* Safe Areas */
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 /* ============================================

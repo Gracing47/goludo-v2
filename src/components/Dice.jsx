@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import './Dice.css';
 
-const Dice = ({ value, onRoll, disabled, isRolling }) => {
+const Dice = ({ value, onRoll, disabled, isRolling, color = '#ff007a' }) => {
     // Determine current game state for screen readers
     const getAriaLabel = () => {
         if (disabled) {
@@ -46,6 +46,7 @@ const Dice = ({ value, onRoll, disabled, isRolling }) => {
             aria-live="polite"
             role="button"
             tabIndex={disabled ? -1 : 0}
+            style={{ '--dice-color': color }}
         >
             <div className={`dice ${isRolling ? 'rolling' : ''} show-${(value > 0 && value <= 6) ? value : 1}`}>
                 {/* Standard faces */}

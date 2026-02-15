@@ -118,11 +118,11 @@ const DiceArea: React.FC<DiceAreaProps> = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <Dice
-                            value={diceValue}
-                            onRoll={onRoll}
-                            disabled={!canRoll}
-                            isRolling={isRolling}
+                        value={diceValue}
+                        onRoll={onRoll}
+                        disabled={!canRoll}
+                        isRolling={isRolling}
+                        color={activeColor}
                         />
                     </motion.div>
                 )}

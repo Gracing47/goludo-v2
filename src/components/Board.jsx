@@ -22,25 +22,14 @@ import {
 
 const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false }) => {
     // Calculate responsive board size - Full Size approach
-    const getBoardSize = () => {
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        // Take maximum available space (minus header/controls padding)
-        const availableWidth = vw - 16; // 8px padding each side
-        const availableHeight = vh - 120; // 60px header + 50px controls
-        return Math.min(availableWidth, availableHeight, 600);
-    };
-
-    const [boardSize, setBoardSize] = useState(getBoardSize());
+    // CSS-driven sizing now handles this. We removed the JS logic to prevent
+    // layout thrashing on mobile address bar scrolls.
+    const boardSize = 600; // Legacy prop fallback if needed strings, but mostly unused now.
 
     // AAA: Dynamic Camera State
     const [focusClass, setFocusClass] = useState('');
 
-    useEffect(() => {
-        const handleResize = () => setBoardSize(getBoardSize());
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    /* Sizing logic moved to CSS [width: min(var(--board-mobile-width), ...)] */
 
     // AAA: Trigger Focus based on active player and phase
     // Zooms in during Roll/Select to create engagement

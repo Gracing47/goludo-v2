@@ -600,49 +600,6 @@ function App() {
                                     onComplete={() => { }}
                                 />
                             ))}
-
-                            {/* AAA: ON-FIELD UI - POT DISPLAY (Bottom Right corner area) */}
-                            {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
-                                <div className="on-field-pot">
-                                    <div className="pot-glass-card">
-                                        <span className="pot-icon">💰</span>
-                                        <div className="pot-info">
-                                            <span className="pot-amount-large">
-                                                {(parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(1)}
-                                            </span>
-                                            <span className="pot-currency-label">C2FLR</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* AAA: ON-FIELD UI - DICE (Bottom Center) */}
-                            {gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
-                                <div className="on-field-dice-container">
-                                    <DiceArea
-                                        showCountdown={showCountdown}
-                                        countdown={gameCountdown}
-                                        playerName={
-                                            gameConfig.mode === 'web3' && account
-                                                ? gameConfig.players?.find(p =>
-                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                                )?.name
-                                                : gameConfig.players?.[0]?.name
-                                        }
-                                        playerColor={
-                                            gameConfig.mode === 'web3' && account
-                                                ? gameConfig.players?.find(p =>
-                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                                )?.color
-                                                : gameConfig.players?.[0]?.color || 'cyan'
-                                        }
-                                        diceValue={gameState.diceValue}
-                                        onRoll={handleRoll}
-                                        canRoll={canRoll}
-                                        isRolling={isRolling}
-                                    />
-                                </div>
-                            )}
                         </Board>
                     </div>
 
@@ -656,6 +613,42 @@ function App() {
                         isConnected={isConnected}
                         appState={appState}
                     />
+
+                    {/* 3. GLOBAL UI (Pot & Dice - Moved out of Board for cleanup) */}
+                    {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
+                        <div className="pot-display">
+                            <span className="pot-icon">💰</span>
+                            <div className="pot-info" style={{ display: 'flex', alignItems: 'baseline' }}>
+                                <span className="pot-amount">
+                                    {(parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(1)}
+                                </span>
+                                <span className="pot-currency">C2FLR</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
+                        <div className="central-dice-area">
+                            <DiceArea
+                                showCountdown={showCountdown}
+                                countdown={gameCountdown}
+                                playerName={
+                                    gameConfig.mode === 'web3' && account
+                                        ? gameConfig.players?.find(p => p?.address?.toLowerCase() === account.address?.toLowerCase())?.name
+                                        : gameConfig.players?.[0]?.name
+                                }
+                                playerColor={
+                                    gameConfig.mode === 'web3' && account
+                                        ? gameConfig.players?.find(p => p?.address?.toLowerCase() === account.address?.toLowerCase())?.color
+                                        : gameConfig.players?.[0]?.color || 'cyan'
+                                }
+                                diceValue={gameState.diceValue}
+                                onRoll={handleRoll}
+                                canRoll={canRoll}
+                                isRolling={isRolling}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 
