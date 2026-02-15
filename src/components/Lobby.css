@@ -20,9 +20,11 @@
     justify-content: flex-start;
     align-items: center;
     /* Pushed down to clear global header and create centered space */
-    padding: 100px 16px 40px;
+    padding: 80px 16px 40px;
     box-sizing: border-box;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
     background: linear-gradient(135deg, #0a0a1a 0%, #1a1035 40%, #0d1b2a 100%);
     position: relative;
 }
@@ -271,9 +273,8 @@
 .lobby-setup {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    flex: 1;
-    min-height: 0;
+    gap: 16px;
+    width: 100%;
 }
 
 .setup-title {
@@ -353,9 +354,28 @@
    ============================================ */
 
 .variant-selector {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 12px;
     width: 100%;
+}
+
+@media (max-width: 480px) {
+    .variant-selector {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .variant-btn {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .variant-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
 }
 
 .variant-btn {
