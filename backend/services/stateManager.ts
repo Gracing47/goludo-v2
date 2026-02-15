@@ -21,9 +21,9 @@ export interface RoomPlayer {
 }
 
 export interface BackendRoom {
-    roomId: string;
+    id: string;
     mode: 'classic' | 'rapid';
-    status: 'waiting' | 'ready' | 'countdown' | 'in_progress' | 'finished' | 'cancelled';
+    status: 'WAITING' | 'READY' | 'COUNTDOWN' | 'ACTIVE' | 'FINISHED' | 'CANCELLED';
     creator: string;
     betAmount: string;
     players: Record<number, RoomPlayer>;
@@ -64,12 +64,12 @@ export class GameStateManager {
     }
 
     async saveRoom(room: BackendRoom): Promise<void> {
-        const key = `${ROOM_PREFIX}${room.roomId}`;
+        const key = `${ROOM_PREFIX}${room.id}`;
         const data = JSON.stringify({ ...room, lastUpdated: Date.now() });
 
         await Promise.all([
             redis.setex(key, ROOM_TTL, data),
-            redis.sadd(ACTIVE_ROOMS_SET, room.roomId),
+            redis.sadd(ACTIVE_ROOMS_SET, room.id),
         ]);
     }
 
@@ -142,13 +142,13 @@ export class GameStateManager {
             const hoursSinceUpdate = (Date.now() - (room.lastUpdated ?? 0)) / (1000 * 60 * 60);
 
             if (hoursSinceUpdate > 24) {
-                console.log(`🗑️ Removing stale room ${room.roomId}`);
-                await this.deleteRoom(room.roomId);
+                console.log(`🗑️ Removing stale room ${room.id}`);
+                await this.deleteRoom(room.id);
                 continue;
             }
 
-            if (room.status === 'in_progress' || room.status === 'waiting' || room.status === 'ready') {
-                console.log(`✅ Room ${room.roomId} (${room.mode}) recovered — status: ${room.status}`);
+            if (room.status === 'ACTIVE' || room.status === 'WAITING' || room.status === 'READY') {
+                console.log(`✅ Room ${room.id} (${room.mode}) recovered — status: ${room.status}`);
                 activeRooms.push(room);
             }
         }

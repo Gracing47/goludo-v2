@@ -956,9 +956,9 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     // V2: Sync to Redis (write-through)
     if (stateManager) {
         stateManager.saveRoom({
-            roomId, mode: 'classic',
-            status: 'waiting', creator: creatorAddress,
-            betAmount: stake, players: { [creatorColorIndex]: newRoom.players[creatorColorIndex]! },
+            id: roomId, mode: 'classic',
+            status: 'WAITING', creator: creatorAddress,
+            betAmount: stake, players: { [creatorColorIndex]: newRoom.players[creatorColorIndex]! as any },
             gameState: null, createdAt: Date.now(),
         }).catch(err => console.error('⚠️ Redis sync failed:', err.message));
     }
@@ -1085,10 +1085,15 @@ if (process.env.NODE_ENV !== 'test') {
                 const redisRooms = await stateManager.recoverState();
                 if (redisRooms && redisRooms.length > 0) {
                     console.log(`♻️ Recovered ${redisRooms.length} rooms from Redis`);
-                    // AAA Fix: Actually assign the recovered rooms to the active list
+                    // Redis recovery with normalization
                     redisRooms.forEach((r: any) => {
-                        if (!activeRooms.find(ar => ar.id === r.id)) {
-                            activeRooms.push(r);
+                        const normalizedRoom = {
+                            ...r,
+                            id: r.id || r.roomId, // Handle legacy property
+                            status: r.status?.toUpperCase() || 'WAITING'
+                        };
+                        if (!activeRooms.find(ar => ar.id === normalizedRoom.id)) {
+                            activeRooms.push(normalizedRoom);
                         }
                     });
                 }
@@ -1097,14 +1102,19 @@ if (process.env.NODE_ENV !== 'test') {
             }
         }
 
-        // Legacy: Blockchain recovery
+        // Legacy: Blockchain recovery with normalization
         try {
             const recovered = await recoverActiveRoomsFromBlockchain();
             if (recovered && recovered.length > 0) {
                 console.log(`♻️ Recovered ${recovered.length} active rooms from blockchain state`);
                 recovered.forEach((r: any) => {
-                    if (!activeRooms.find(ar => ar.id === r.id)) {
-                        activeRooms.push(r);
+                    const normalizedRoom = {
+                        ...r,
+                        id: r.id || (r as any).roomId,
+                        status: r.status?.toUpperCase() || 'WAITING'
+                    };
+                    if (!activeRooms.find(ar => ar.id === normalizedRoom.id)) {
+                        activeRooms.push(normalizedRoom);
                     }
                 });
             }
