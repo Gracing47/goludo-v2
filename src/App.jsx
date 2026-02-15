@@ -600,20 +600,51 @@ function App() {
                                     onComplete={() => { }}
                                 />
                             ))}
+
+                            {/* AAA: ON-FIELD UI - POT DISPLAY (Bottom Right corner area) */}
+                            {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && (
+                                <div className="on-field-pot">
+                                    <div className="pot-glass-card">
+                                        <span className="pot-icon">💰</span>
+                                        <div className="pot-info">
+                                            <span className="pot-amount-large">
+                                                {(parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(1)}
+                                            </span>
+                                            <span className="pot-currency-label">C2FLR</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* AAA: ON-FIELD UI - DICE (Bottom Center) */}
+                            {gameState.gamePhase !== 'WIN' && (
+                                <div className="on-field-dice-container">
+                                    <DiceArea
+                                        showCountdown={showCountdown}
+                                        countdown={gameCountdown}
+                                        playerName={
+                                            gameConfig.mode === 'web3' && account
+                                                ? gameConfig.players?.find(p =>
+                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                                )?.name
+                                                : gameConfig.players?.[0]?.name
+                                        }
+                                        playerColor={
+                                            gameConfig.mode === 'web3' && account
+                                                ? gameConfig.players?.find(p =>
+                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                                )?.color
+                                                : gameConfig.players?.[0]?.color || 'cyan'
+                                        }
+                                        diceValue={gameState.diceValue}
+                                        onRoll={handleRoll}
+                                        canRoll={canRoll}
+                                        isRolling={isRolling}
+                                    />
+                                </div>
+                            )}
                         </Board>
-
-                        {/* Pot Display - Center of Board (Web3 only) */}
-                        {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && (
-                            <div className="pot-display">
-                                <span className="pot-icon">💰</span>
-                                <span className="pot-amount">
-                                    {(parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(2)}
-                                </span>
-                                <span className="pot-currency">C2FLR</span>
-                            </div>
-                        )}
                     </div>
-
 
                     {/* 2. HUD LAYER (Overlay) */}
                     <GameHUD
@@ -659,38 +690,6 @@ function App() {
                     />
                 );
             })()}
-
-            {/* Web3 Claim Button removed - now integrated into VictoryCelebration */}
-
-            {/* D. CENTRAL DICE with Integrated Countdown */}
-            {gameState.gamePhase !== 'WIN' && (
-                <div className="central-dice-area">
-                    <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
-                        <DiceArea
-                            showCountdown={showCountdown}
-                            countdown={gameCountdown}
-                            playerName={
-                                gameConfig.mode === 'web3' && account
-                                    ? gameConfig.players?.find(p =>
-                                        p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                    )?.name
-                                    : gameConfig.players?.[0]?.name
-                            }
-                            playerColor={
-                                gameConfig.mode === 'web3' && account
-                                    ? gameConfig.players?.find(p =>
-                                        p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                    )?.color
-                                    : gameConfig.players?.[0]?.color || 'cyan'
-                            }
-                            diceValue={gameState.diceValue}
-                            onRoll={handleRoll}
-                            canRoll={canRoll}
-                            isRolling={isRolling}
-                        />
-                    </div>
-                </div>
-            )}
 
             {/* E. FLOATING MENU BUTTON */}
             <div className="menu-dropdown-container">

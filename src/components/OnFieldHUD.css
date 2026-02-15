@@ -1,0 +1,80 @@
+/* OnFieldHUD.css - Grid-anchored Game UI */
+
+.on-field-pot {
+    grid-row: 10 / 14;
+    grid-column: 2 / 7;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    /* Let clicks pass through to tokens if needed, though usually this area is base */
+    transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
+    /* Keep upright */
+    transition: transform 0.5s ease;
+}
+
+.pot-glass-card {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    /* Pill shape */
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: float-pot 3s infinite ease-in-out;
+}
+
+.on-field-dice-container {
+    grid-row: 12 / 16;
+    grid-column: 7 / 10;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
+    /* Keep upright */
+    transition: transform 0.5s ease;
+    pointer-events: auto;
+}
+
+@keyframes float-pot {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Ensure the DiceArea fits well on-field */
+.on-field-dice-container .dice-area-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Adjustments for the pot text */
+.pot-amount-large {
+    color: #ffcc00;
+    /* Gold */
+    font-size: 1.2rem;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+}
+
+.pot-currency-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
