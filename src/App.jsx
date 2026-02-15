@@ -47,8 +47,7 @@ import {
 import { useGameStateDerivation } from './hooks/useGameStateDerivation';
 import GameHUD from './components/HUD/GameHUD';
 import Token from './components/Token';
-import CaptureExplosion from './components/CaptureExplosion';
-import SpawnSparkle from './components/SpawnSparkle';
+import { CaptureExplosion, SpawnSparkle } from './components/ParticleEffects';
 
 function App() {
     // ============================================
@@ -582,8 +581,10 @@ function App() {
                                 <CaptureExplosion
                                     key={effect.id}
                                     color={effect.color}
-                                    row={effect.row}
-                                    col={effect.col}
+                                    position={{
+                                        x: (effect.col + 0.5) * (100 / 15) + '%',
+                                        y: (effect.row + 0.5) * (100 / 15) + '%'
+                                    }}
                                 />
                             ))}
 
