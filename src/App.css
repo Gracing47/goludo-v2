@@ -471,16 +471,13 @@ body {
    ============================================ */
 
 .central-dice-area {
-    /* Debug: Visualize hit area */
-    /* border: 2px solid red; */
-
     grid-row: 5;
     /* Footer Row */
     grid-column: 1;
     position: relative;
     pointer-events: auto !important;
     /* FORCE CLICK */
-    z-index: 9999;
+    z-index: 70;
     /* ABSOLUTE TOP */
     display: flex;
     align-items: center;

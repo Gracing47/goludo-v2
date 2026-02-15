@@ -17,7 +17,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
-import DiceArea from './components/DiceArea';
+import Dice from './components/Dice';
+// import DiceArea from './components/DiceArea'; // Reverted to legacy Dice
+import VictoryCelebration from './components/VictoryCelebration';
 import soundManager from './services/SoundManager';
 
 
@@ -629,23 +631,16 @@ function App() {
 
                     {gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
                         <div className="central-dice-area">
-                            <DiceArea
-                                showCountdown={showCountdown}
-                                countdown={gameCountdown}
-                                playerName={
-                                    gameConfig.mode === 'web3' && account
-                                        ? gameConfig.players?.find(p => p?.address?.toLowerCase() === account.address?.toLowerCase())?.name
-                                        : gameConfig.players?.[gameState.activePlayer]?.name || `Player ${gameState.activePlayer + 1}`
-                                }
-                                playerColor={
-                                    gameConfig.mode === 'web3' && account
-                                        ? gameConfig.players?.find(p => p?.address?.toLowerCase() === account.address?.toLowerCase())?.color
-                                        : gameConfig.players?.[gameState.activePlayer]?.color || PLAYER_COLORS[gameState.activePlayer]
-                                }
-                                diceValue={gameState.diceValue}
+                            <Dice
+                                value={gameState.diceValue}
                                 onRoll={handleRoll}
-                                canRoll={canRoll}
+                                disabled={!canRoll}
                                 isRolling={isRolling}
+                                color={
+                                    gameConfig.mode === 'web3' && account
+                                        ? PLAYER_COLORS[gameState.activePlayer] // Web3: Active Player Color
+                                        : PLAYER_COLORS[gameState.activePlayer] // Classic: Active Player Color
+                                }
                             />
                         </div>
                     )}
