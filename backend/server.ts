@@ -398,15 +398,14 @@ function handleNextTurn(io: Server, room: BackendRoom) {
     const colorName = currentPlayer.color || 'unknown';
     console.log(`🔄 Turn switched to Player ${currentPlayerIndex} (${colorName})`);
 
-    // Check if player is connected
-    if (currentPlayer.socketId) {
-        console.log(`👤 Waiting for Human Player ${currentPlayer.name} (Socket ${currentPlayer.socketId})`);
-        // Start normal turn timer
-        startTurnTimer(io, room, currentPlayerIndex, room.gameState.gamePhase);
-    } else {
-        // Player is disconnected - they might already have a forfeit timer running from the 'disconnect' event
-        console.log(`⚠️ Player ${currentPlayerIndex} (${currentPlayer.name}) is disconnected. Waiting for forfeit watchdog...`);
-        broadcastState(room, `⚠️ ${currentPlayer.name} is offline. Turn paused for recovery.`);
+    // Unified turn flow: Always start the timer.
+    // This prevents the game from "freezing" when a player is offline.
+    // If they re-join, the timer is already ticking. If they don't, handleTurnTimeout will trigger a skip.
+    console.log(`👤 Waiting for Player ${currentPlayer.name} (Status: ${currentPlayer.socketId ? 'Online' : 'Offline'})`);
+    startTurnTimer(io, room, currentPlayerIndex, room.gameState.gamePhase);
+
+    if (!currentPlayer.socketId) {
+        broadcastState(room, `⚠️ ${currentPlayer.name} is offline. Countdown active for recovery...`);
     }
 }
 
@@ -558,14 +557,15 @@ io.on('connection', (socket) => {
 
         // Support both old string format and new object format
         const roomId = ((typeof data === 'object') ? data.roomId : data)?.toLowerCase();
-        const playerAddress = (typeof data === 'object') ? data.playerAddress : null;
+        const playerAddress = (typeof data === 'object') ? data.playerAddress?.toLowerCase() : null;
 
         socket.join(roomId);
 
         // Map Socket ID to Player
         const room = activeRooms.find(r => r.id?.toLowerCase() === roomId);
         if (room && playerAddress) {
-            const playerIndex = room.players.findIndex((p: any) => p && p.address?.toLowerCase() === playerAddress.toLowerCase());
+            // Case-insensitive address search for better robustness
+            const playerIndex = room.players.findIndex((p: any) => p && p.address?.toLowerCase() === playerAddress);
             const player = room.players[playerIndex];
 
             if (player) {
