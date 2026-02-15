@@ -273,8 +273,26 @@
 }
 
 @media (max-width: 480px) {
+    /* Expanded touch target for WCAG compliance */
+    .token.clickable {
+        /* Invisible expanded hit area - 44x44px minimum */
+        min-width: 44px;
+        min-height: 44px;
+        padding: 11px;
+        margin: -11px;
+    }
+
     .token-inner {
-        width: 80%;
-        height: 80%;
+        width: 85%;  /* Slightly larger visual size for mobile */
+        height: 85%;
+    }
+
+    /* Enhanced stack badge visibility */
+    .token-stack-badge {
+        font-size: 12px;  /* Increased from 11px */
+        min-width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        background: rgba(0, 0, 0, 0.95);
     }
 }

@@ -333,42 +333,44 @@
 
 @media (max-width: 480px) {
     .dice-button {
-        padding: 8px;
+        padding: 10px;  /* Increased for better touch target */
+        min-width: 56px;
+        min-height: 56px;
     }
 
     .dice {
-        width: 48px;
-        height: 48px;
+        width: 50px;  /* Slightly larger for better visibility */
+        height: 50px;
     }
 
     .dice-face {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
         padding: 6px;
     }
 
     .face-1 {
-        transform: translateZ(24px);
+        transform: translateZ(25px);  /* Adjusted for 50px dice */
     }
 
     .face-2 {
-        transform: rotateY(90deg) translateZ(24px);
+        transform: rotateY(90deg) translateZ(25px);
     }
 
     .face-3 {
-        transform: rotateY(180deg) translateZ(24px);
+        transform: rotateY(180deg) translateZ(25px);
     }
 
     .face-4 {
-        transform: rotateY(-90deg) translateZ(24px);
+        transform: rotateY(-90deg) translateZ(25px);
     }
 
     .face-5 {
-        transform: rotateX(90deg) translateZ(24px);
+        transform: rotateX(90deg) translateZ(25px);
     }
 
     .face-6 {
-        transform: rotateX(-90deg) translateZ(24px);
+        transform: rotateX(-90deg) translateZ(25px);
     }
 
     .dot {

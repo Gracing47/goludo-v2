@@ -27,6 +27,15 @@
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Mobile-specific CSS Variables for optimized layout */
+@media (max-width: 480px) {
+    :root {
+        --header-height: 28px;     /* Reduced from 50px → 22px saved */
+        --pod-height: 44px;        /* Reduced from 48px → 4px saved, WCAG compliant */
+        --bottom-bar-height: 56px; /* Reduced from 60px → 4px saved */
+    }
+}
+
 body {
     margin: 0;
     background: var(--bg-dark);
@@ -156,6 +165,13 @@ body {
 }
 
 @media (max-width: 480px) {
+    /* Board Layer - Reduced padding for more board space */
+    .board-layer {
+        padding: 4px;
+        padding-top: 32px;  /* Reduced from 45px */
+        padding-bottom: 4px;
+    }
+
     .pot-display {
         padding: 4px 10px;
         bottom: 80px;
@@ -163,7 +179,7 @@ body {
     }
 
     .pot-amount {
-        font-size: 0.9rem;
+        font-size: 1rem;  /* Increased from 0.9rem for better readability */
     }
 
     .pot-icon {
@@ -620,28 +636,37 @@ body {
 
 @media (max-width: 480px) {
     .player-pods-container {
-        /* Slightly looser on mobile to use corner space */
-        width: calc(100vw - 16px);
-        height: calc(min(95vw, calc(100dvh - 200px), 500px) + 80px);
+        /* Adjusted for larger board - prevents overlap */
+        width: calc(min(98vw, calc(100dvh - 140px)) + 40px);
+        height: calc(min(98vw, calc(100dvh - 140px)) + 70px);
     }
 
+    /* Corner positions - more offset for breathing room */
+    .pos-0 { top: -14px; left: -14px; }
+    .pos-1 { top: -14px; right: -14px; }
+    .pos-2 { bottom: -14px; right: -14px; }
+    .pos-3 { bottom: -14px; left: -14px; }
+
     .player-pod {
-        min-width: auto;
-        padding: 4px 12px 4px 4px;
-        height: 40px;
+        min-width: 100px;
+        padding: 6px 14px 6px 6px;
+        height: 44px;  /* WCAG compliant touch target (was 40px) */
         background: rgba(10, 10, 20, 0.8);
-        /* Darker for contrast */
+        gap: 6px;
     }
 
     .pod-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+        width: 36px;   /* Increased for better touch target (was 32px) */
+        height: 36px;
+        font-size: 16px;
     }
 
     .pod-name {
-        font-size: 10px;
-        max-width: 60px;
+        font-size: 11px;  /* Improved readability (was 10px) */
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        line-height: 1.3;
+        max-width: 75px;  /* More space for names (was 60px) */
         overflow: hidden;
         text-overflow: ellipsis;
     }

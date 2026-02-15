@@ -98,4 +98,24 @@
         display: none;
         /* Hide links on mobile, use a drawer if needed later */
     }
+
+    /* Game Mode - Compact Header for maximum board space */
+    .global-header.game-mode {
+        padding: 6px 12px;
+        padding-top: calc(6px + env(safe-area-inset-top));
+        background: rgba(10, 10, 26, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .global-header.game-mode .logo-text {
+        display: none;  /* Hide logo text in game to save space */
+    }
+
+    .global-header.game-mode .aaa-connect-button {
+        padding: 6px 12px !important;
+        font-size: 0.8rem !important;
+        border-radius: 8px !important;
+    }
 }
