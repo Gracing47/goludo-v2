@@ -54,6 +54,7 @@ export function createInitialState(
         winner: null,
         message: '',
         mode,
+        sequenceNumber: 0
     } as unknown as GameState;
 }
 
@@ -77,7 +78,8 @@ export function rollDice(state: GameState, forcedValue: number | null = null): G
         ...state,
         diceValue,
         consecutiveSixes: diceValue === 6 ? (state.consecutiveSixes || 0) + 1 : 0,
-        message: ''
+        message: '',
+        sequenceNumber: (state.sequenceNumber || 0) + 1
     };
 
     // Triple-6 penalty check
@@ -174,7 +176,8 @@ export function moveToken(state: GameState, move: Move): GameState {
         tokens: newTokens,
         bonusMoves: bonus,
         gamePhase: 'ANIMATING' as any,
-        message: bonus > 0 ? `+${bonus} bonus moves!` : ''
+        message: bonus > 0 ? `+${bonus} bonus moves!` : '',
+        sequenceNumber: (state.sequenceNumber || 0) + 1
     };
 }
 
@@ -189,7 +192,8 @@ export function completeMoveAnimation(state: GameState): GameState {
             ...state,
             winner,
             gamePhase: 'WIN' as any,
-            message: `🎉 Player ${winner + 1} wins!`
+            message: `🎉 Player ${winner + 1} wins!`,
+            sequenceNumber: (state.sequenceNumber || 0) + 1
         };
     }
 
@@ -211,7 +215,8 @@ export function completeMoveAnimation(state: GameState): GameState {
                 gamePhase: 'BONUS_MOVE' as any,
                 validMoves: validBonusMoves,
                 bonusMoves: 0,
-                message: `BONUS! Move ${currentState.bonusMoves} spaces!`
+                message: `BONUS! Move ${currentState.bonusMoves} spaces!`,
+                sequenceNumber: (currentState.sequenceNumber || 0) + 1
             };
         }
 
@@ -235,7 +240,8 @@ export function completeMoveAnimation(state: GameState): GameState {
         diceValue: null,
         validMoves: [],
         consecutiveSixes: 0,
-        bonusMoves: 0
+        bonusMoves: 0,
+        sequenceNumber: (currentState.sequenceNumber || 0) + 1
     };
 }
 

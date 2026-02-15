@@ -318,20 +318,24 @@ function startTurnTimer(io: Server, room: BackendRoom, playerIndex: number, phas
     // We still keep the timeout for server-side enforcement,
     // but we can remove the 1s interval emit to save bandwidth
     const timeoutId = setTimeout(() => {
-        console.log(`⏰ TIMEOUT! Player ${currentPlayer?.name || 'Unknown'} didn't act in ${TURN_TIMEOUT_MS / 1000}s. Skipping turn...`);
-        // The timer is cleared by clearRoomTimers when the next turn starts or game ends.
-        // For this specific timeout, we just need to handle the game logic.
-        // activeTurnTimers.delete(room.id) is handled by clearRoomTimers or when a new timer is set.
+        // AAA: 1.5s Grace Period for network jitter
+        setTimeout(() => {
+            // Re-check if room still exists and it's still the same player's turn relative to the timer
+            const currentTimer = activeTurnTimers.get(roomId);
+            if (!currentTimer || currentTimer.timeoutId !== timeoutId) return;
 
-        // Broadcast timeout event
-        io.to(room.id).emit('turn_timeout', {
-            playerIndex,
-            playerName: currentPlayer?.name || 'Unknown',
-            phase
-        });
+            console.log(`⏰ TIMEOUT! Player ${currentPlayer?.name || 'Unknown'} didn't act in ${TURN_TIMEOUT_MS / 1000}s (+grace). Skipping turn...`);
 
-        // Handle timeout based on game phase
-        handleTurnTimeout(io, room, playerIndex, phase);
+            // Broadcast timeout event
+            io.to(room.id).emit('turn_timeout', {
+                playerIndex,
+                playerName: currentPlayer?.name || 'Unknown',
+                phase
+            });
+
+            // Handle timeout based on game phase
+            handleTurnTimeout(io, room, playerIndex, phase);
+        }, 1500);
     }, TURN_TIMEOUT_MS);
 
     // Store timeout ID for cleanup

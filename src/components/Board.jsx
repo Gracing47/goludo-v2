@@ -32,11 +32,29 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
 
     const [boardSize, setBoardSize] = useState(getBoardSize());
 
+    // AAA: Dynamic Camera State
+    const [focusClass, setFocusClass] = useState('');
+
     useEffect(() => {
         const handleResize = () => setBoardSize(getBoardSize());
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    // AAA: Trigger Focus based on active player and phase
+    // Zooms in during Roll/Select to create engagement
+    useEffect(() => {
+        // Logic to apply focus
+        // We'll zoom in during rolls and when a token is being selected
+        // This makes the board feel "alive"
+        const isFocusPhase = true; // Placeholder for more complex logic if needed
+
+        // Simple heuristic: zoom in slightly during active turn interactions
+        setFocusClass('focus-active');
+
+        // Return to normal zoom after a delay or on phase change?
+        // For now, let's keep it subtle.
+    }, [activePlayer]);
 
     const cells = React.useMemo(() => {
         const result = [];
@@ -64,15 +82,17 @@ const Board = ({ children, rotation = 0, activePlayer = 0 }) => {
 
     return (
         <div className="board-wrapper">
-            <div className="ludo-board" style={{
-                transform: `rotate(${rotation}deg)`,
-                transition: 'transform 0.5s ease',
-                '--board-rotation': `${rotation}deg`,
-                '--board-size': `${boardSize}px`
-            }}>
-                {cells}
-                <div className="token-layer" style={{ transform: `rotate(0deg)` }}>
-                    {children}
+            <div className={`board-focus-wrapper ${focusClass}`}>
+                <div className="ludo-board" style={{
+                    transform: `rotate(${rotation}deg)`,
+                    transition: 'transform 0.5s ease',
+                    '--board-rotation': `${rotation}deg`,
+                    '--board-size': `${boardSize}px`
+                }}>
+                    {cells}
+                    <div className="token-layer" style={{ transform: `rotate(0deg)` }}>
+                        {children}
+                    </div>
                 </div>
             </div>
         </div>

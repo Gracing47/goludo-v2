@@ -48,13 +48,13 @@ export const useGameVFX = () => {
 
         setIsShaking(true);
         soundManager.play('capture');
-        if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Stronger vibration
 
         setTimeout(() => {
             setCaptureEffects(prev => prev.filter(e => e.id !== id));
         }, 500);
 
-        setTimeout(() => setIsShaking(false), 500);
+        setTimeout(() => setIsShaking(false), 400); // Shorter shake for snappiness
     }, [setIsShaking]);
 
     /**

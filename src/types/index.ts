@@ -126,6 +126,9 @@ export interface GameState {
 
     /** Game mode identifier (V2) */
     mode?: GameModeId;
+
+    /** AAA: Sequence number to prevent out-of-order state updates (Jitter control) */
+    sequenceNumber: number;
 }
 
 export interface Capture {

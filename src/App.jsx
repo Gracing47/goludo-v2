@@ -44,7 +44,11 @@ import {
     completeMoveAnimation
 } from './engine/gameLogic';
 
-import { calculateAIMove } from './engine/aiEngine';
+import { useGameStateDerivation } from './hooks/useGameStateDerivation';
+import GameHUD from './components/HUD/GameHUD';
+import Token from './components/Token';
+import CaptureExplosion from './components/CaptureExplosion';
+import SpawnSparkle from './components/SpawnSparkle';
 
 function App() {
     // ============================================
@@ -130,139 +134,16 @@ function App() {
     } = useGameVFX();
 
     // ============================================
-    // DATA DERIVATION (Memos & Helpers)
+    // DATA DERIVATION (Extracted to Hook)
     // ============================================
-
-    // Get token coordinates with stacking info
-    const getTokensWithCoords = useCallback(() => {
-        if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
-            return [];
-        }
-
-        // 1. Group by grid position
-        const cellMap = new Map();
-
-        gameState.tokens.forEach((playerTokens, playerIdx) => {
-            if (!Array.isArray(playerTokens)) return;
-            playerTokens.forEach((position, tokenIdx) => {
-                let coords = null;
-                let inYard = false;
-
-                if (position === POSITION.IN_YARD) {
-                    coords = YARD_COORDS[playerIdx][tokenIdx];
-                    inYard = true;
-                } else if (position === POSITION.FINISHED) {
-                    // Anchor to player's corner in the goal area
-                    const goalCoords = [
-                        { r: 6, c: 6 }, // Red (Top Left)
-                        { r: 6, c: 8 }, // Green (Top Right)
-                        { r: 8, c: 8 }, // Yellow (Bottom Right)
-                        { r: 8, c: 6 }  // Blue (Bottom Left)
-                    ];
-                    coords = goalCoords[playerIdx];
-                } else if (position >= 100 && position < 106) {
-                    coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
-                } else if (position >= 0 && position < MASTER_LOOP.length) {
-                    coords = MASTER_LOOP[position];
-                }
-
-                if (!coords) return;
-
-                const posKey = inYard ? `yard-${playerIdx}-${tokenIdx}` : `${coords.r}-${coords.c}`;
-                if (!cellMap.has(posKey)) cellMap.set(posKey, new Map());
-
-                // Nest group by playerIdx to collapse same colors
-                const playersInCell = cellMap.get(posKey);
-                if (!playersInCell.has(playerIdx)) {
-                    playersInCell.set(playerIdx, {
-                        playerIdx,
-                        tokenIndices: [],
-                        coords,
-                        inYard,
-                        position
-                    });
-                }
-                playersInCell.get(playerIdx).tokenIndices.push(tokenIdx);
-            });
-        });
-
-        // 2. Flatten into visual tokens
-        const visualTokens = [];
-        cellMap.forEach((playersInCell) => {
-            const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
-            const firstGroup = playersInCell.get(playerIndices[0]);
-
-            // 🛡️ Rule: Always visually stack if multiple players are in the same cell
-            // This ensures tokens are never hidden, even if safe zone logic fails or during transit
-            const isSafePos = SAFE_POSITIONS.includes(firstGroup.position);
-            const isYard = firstGroup.inYard;
-            const isGoal = firstGroup.position === POSITION.FINISHED;
-            const allowStacking = playerIndices.length > 1 || isSafePos || isYard || isGoal;
-
-            const stackSize = allowStacking ? playerIndices.length : 1;
-
-            playerIndices.forEach((playerIdx, stackIndex) => {
-                const group = playersInCell.get(playerIdx);
-                visualTokens.push({
-                    playerIdx: group.playerIdx,
-                    tokenIdx: group.tokenIndices[0],
-                    tokenCount: group.tokenIndices.length,
-                    coords: group.coords,
-                    inYard: group.inYard,
-                    stackIndex: allowStacking ? stackIndex : 0,
-                    stackSize,
-                    allTokenIndices: group.tokenIndices
-                });
-            });
-        });
-
-        return visualTokens;
-    }, [gameState]);
-
-    // Memoize expensive calculations for performance
-    const tokensWithCoords = useMemo(() => {
-        return getTokensWithCoords();
-    }, [getTokensWithCoords]);
-
-    const currentPlayer = useMemo(() => {
-        if (!gameState || !gameConfig?.players) return null;
-        return gameConfig.players[gameState.activePlayer] || null;
-    }, [gameConfig?.players, gameState?.activePlayer]);
-
-    const currentColor = useMemo(() => {
-        if (!gameState) return null;
-        return PLAYER_COLORS[gameState.activePlayer];
-    }, [gameState?.activePlayer]);
-
-    const isAITurn = useMemo(() =>
-        currentPlayer?.isAI || false,
-        [currentPlayer]
-    );
-
-    // Turn Logic - MEMOIZED to prevent loop
-    const isLocalPlayerTurn = useMemo(() => {
-        if (!gameConfig) return false;
-
-        // For Web3 mode: compare addresses
-        if (gameConfig.mode === 'web3') {
-            if (!currentPlayer || !account?.address) {
-                return false;
-            }
-            const currentAddr = currentPlayer?.address?.toLowerCase();
-            const myAddr = account.address.toLowerCase();
-            return currentAddr === myAddr;
-        }
-
-        // For Local/AI mode: human can always play (when not AI turn)
-        return !isAITurn;
-    }, [gameConfig?.mode, currentPlayer?.address, account?.address, isAITurn, gameState?.gamePhase]);
-
-    const canRoll = useMemo(() => {
-        if (!gameState) return false;
-        const phase = gameState.gamePhase;
-        const canRollPhase = phase === 'ROLL_DICE' || phase === 'WAITING_FOR_ROLL';
-        return canRollPhase && !isRolling && !isMoving && isLocalPlayerTurn;
-    }, [gameState?.gamePhase, isRolling, isMoving, isLocalPlayerTurn]);
+    const {
+        tokensWithCoords,
+        currentPlayer,
+        currentColor,
+        isAITurn,
+        isLocalPlayerTurn,
+        canRoll
+    } = useGameStateDerivation(account);
 
     // Moving token path state is now in useGameStore: activeMovingToken, setActiveMovingToken
 
@@ -591,17 +472,6 @@ function App() {
         }
     }, [payoutProof, isClaiming, handleClaimPayout]);
 
-    /**
-     * Helper: Calculate visual rotation for player pods (0-3)
-     * Adjusts the index based on the board's visual rotation so names match corners.
-     */
-    const getVisualPositionIndex = useCallback((rawIndex) => {
-        // boardRotation is in degrees (0, 90, 180, 270)
-        // Each 90 degrees shifts the perspective by 1 spot
-        const rotationSteps = (boardRotation / 90) % 4;
-        // Formula: (OriginalIndex + RotationSteps) % 4
-        return (rawIndex + rotationSteps + 4) % 4;
-    }, [boardRotation]);
 
 
 
@@ -745,153 +615,104 @@ function App() {
 
 
                     {/* 2. HUD LAYER (Overlay) */}
-                    <div className="game-hud">
+                    <GameHUD
+                        gameState={gameState}
+                        gameConfig={gameConfig}
+                        account={account}
+                        turnTimer={turnTimer}
+                        boardRotation={boardRotation}
+                        isConnected={isConnected}
+                        appState={appState}
+                    />
+                </div>
+            )}
 
-                        {/* Turn Timer - Top Center */}
-                        {gameState.gamePhase !== 'WIN' && turnTimer > 0 && (
-                            <div className="turn-timer-container">
-                                <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
-                                    ⏱️ {turnTimer}s
-                                </div>
-                            </div>
-                        )}
+            {/* B. SERVER MESSAGE TOAST */}
+            {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
 
-                        {/* A. PLAYER POD CORNER ANCHORS */}
-                        <div className="player-pods-container">
-                            {gameConfig.players.map((p, idx) => {
-                                if (!p) return null;
-                                const visualPos = getVisualPositionIndex(idx);
-                                const isActive = gameState.activePlayer === idx;
-                                const color = PLAYER_COLORS[idx];
-                                const isMe = gameConfig.mode === 'web3'
-                                    ? p.address?.toLowerCase() === account?.address?.toLowerCase()
-                                    : !p.isAI && idx === 0;
+            {/* C. WIN SCREEN */}
+            {gameState.gamePhase === 'WIN' && (() => {
+                // Determine if current player is the winner
+                const winnerPlayer = gameConfig.players[gameState.winner];
+                const amIWinner = gameConfig.mode === 'web3'
+                    ? winnerPlayer?.address?.toLowerCase() === account?.address?.toLowerCase()
+                    : !winnerPlayer?.isAI; // In local, human player is always "you"
 
-                                // NEW: Get skip/forfeit data from state
-                                const metadata = gameState.playersMetadata?.[idx];
-                                const skipCount = metadata?.skipCount || 0;
-                                const isForfeited = metadata?.forfeited || false;
+                // Calculate pot amount for display
+                const potDisplay = gameConfig.mode === 'web3' && gameConfig.stake
+                    ? (parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(2)
+                    : null;
 
-                                return (
-                                    <div key={idx} className={`pod-anchor pos-${visualPos}`}>
-                                        <div className={`player-pod ${color} ${isActive ? 'active' : ''} ${isForfeited ? 'forfeited' : ''}`}>
-                                            <div className={`pod-avatar ${color}`}>
-                                                {isForfeited ? '💀' : (p.isAI ? '🤖' : '👤')}
-                                                {isActive && !isForfeited && <div className="pod-turn-indicator" />}
-                                            </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                                <span className="pod-name">{p.name}{isMe && ' •'}</span>
-                                                <div className="pod-skips">
-                                                    <div className={`skip-dot ${skipCount >= 1 ? 'active' : ''}`} title="1 Skip" />
-                                                    <div className={`skip-dot ${skipCount >= 2 ? 'active' : ''}`} title="2 Skips" />
-                                                    <div className={`skip-dot ${skipCount >= 3 ? 'active' : ''}`} title="FORFEIT" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                return (
+                    <VictoryCelebration
+                        winner={gameState.winner}
+                        playerName={winnerPlayer?.name || `Player ${gameState.winner + 1}`}
+                        isWeb3Match={gameConfig.mode === 'web3'}
+                        isWinner={amIWinner}
+                        payoutProof={payoutProof}
+                        isClaiming={isClaiming}
+                        isClaimed={isClaimed}
+                        onClaim={onClaimClick}
+                        onClose={handleBackToLobby}
+                        potAmount={potDisplay}
+                    />
+                );
+            })()}
 
-                        {/* SPECIAL: DISCONNECT OVERLAY (Web3 Only) */}
-                        {!isConnected && appState === 'game' && gameState && gameConfig?.mode === 'web3' && (
-                            <div className="disconnect-overlay">
-                                <div className="spinner"></div>
-                                <div>Connection Lost. Reconnecting...</div>
-                            </div>
-                        )}
+            {/* Web3 Claim Button removed - now integrated into VictoryCelebration */}
 
-                        {/* B. SERVER MESSAGE TOAST */}
-                        {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
-
-                        {/* C. WIN SCREEN */}
-                        {gameState.gamePhase === 'WIN' && (() => {
-                            // Determine if current player is the winner
-                            const winnerPlayer = gameConfig.players[gameState.winner];
-                            const amIWinner = gameConfig.mode === 'web3'
-                                ? winnerPlayer?.address?.toLowerCase() === account?.address?.toLowerCase()
-                                : !winnerPlayer?.isAI; // In local, human player is always "you"
-
-                            // Calculate pot amount for display
-                            const potDisplay = gameConfig.mode === 'web3' && gameConfig.stake
-                                ? (parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(2)
-                                : null;
-
-                            return (
-                                <VictoryCelebration
-                                    winner={gameState.winner}
-                                    playerName={winnerPlayer?.name || `Player ${gameState.winner + 1}`}
-                                    isWeb3Match={gameConfig.mode === 'web3'}
-                                    isWinner={amIWinner}
-                                    payoutProof={payoutProof}
-                                    isClaiming={isClaiming}
-                                    isClaimed={isClaimed}
-                                    onClaim={onClaimClick}
-                                    onClose={handleBackToLobby}
-                                    potAmount={potDisplay}
-                                />
-                            );
-                        })()}
-
-                        {/* Web3 Claim Button removed - now integrated into VictoryCelebration */}
-
-                        {/* D. CENTRAL DICE with Integrated Countdown */}
-                        {gameState.gamePhase !== 'WIN' && (
-                            <div className="central-dice-area">
-                                <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
-                                    <DiceArea
-                                        showCountdown={showCountdown}
-                                        countdown={gameCountdown}
-                                        playerName={
-                                            gameConfig.mode === 'web3' && account
-                                                ? gameConfig.players?.find(p =>
-                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                                )?.name
-                                                : gameConfig.players?.[0]?.name
-                                        }
-                                        playerColor={
-                                            gameConfig.mode === 'web3' && account
-                                                ? gameConfig.players?.find(p =>
-                                                    p?.address?.toLowerCase() === account.address?.toLowerCase()
-                                                )?.color
-                                                : gameConfig.players?.[0]?.color || 'cyan'
-                                        }
-                                        diceValue={gameState.diceValue}
-                                        onRoll={handleRoll}
-                                        canRoll={canRoll}
-                                        isRolling={isRolling}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* E. FLOATING MENU BUTTON */}
-                        <div className="menu-dropdown-container">
-                            <button className="menu-btn-floating" onClick={(e) => {
-                                e.stopPropagation();
-                                setMenuOpen(!menuOpen);
-                            }}>
-                                ☰
-                            </button>
-                            {menuOpen && (
-                                <div className="menu-dropdown">
-                                    <button onClick={() => { setMenuOpen(false); window.location.href = '/lobby'; }}>
-                                        🏠 Lobby
-                                    </button>
-                                    <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
-                                        {isMuted ? '🔇 Unmute' : '🔊 Mute'}
-                                    </button>
-                                    <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
-                                        🚪 Leave Game
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+            {/* D. CENTRAL DICE with Integrated Countdown */}
+            {gameState.gamePhase !== 'WIN' && (
+                <div className="central-dice-area">
+                    <div className={`dice-wrapper ${isRolling ? 'throwing' : 'idle'} ${isLocalPlayerTurn ? 'my-turn' : 'opponent-turn'}`}>
+                        <DiceArea
+                            showCountdown={showCountdown}
+                            countdown={gameCountdown}
+                            playerName={
+                                gameConfig.mode === 'web3' && account
+                                    ? gameConfig.players?.find(p =>
+                                        p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                    )?.name
+                                    : gameConfig.players?.[0]?.name
+                            }
+                            playerColor={
+                                gameConfig.mode === 'web3' && account
+                                    ? gameConfig.players?.find(p =>
+                                        p?.address?.toLowerCase() === account.address?.toLowerCase()
+                                    )?.color
+                                    : gameConfig.players?.[0]?.color || 'cyan'
+                            }
+                            diceValue={gameState.diceValue}
+                            onRoll={handleRoll}
+                            canRoll={canRoll}
+                            isRolling={isRolling}
+                        />
                     </div>
                 </div>
             )}
 
-            {/* 4. CHAT/SOCIAL OVERLAY (Future) */}
+            {/* E. FLOATING MENU BUTTON */}
+            <div className="menu-dropdown-container">
+                <button className="menu-btn-floating" onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(!menuOpen);
+                }}>
+                    ☰
+                </button>
+                {menuOpen && (
+                    <div className="menu-dropdown">
+                        <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
+                            🏠 Lobby
+                        </button>
+                        <button onClick={() => { handleToggleMute(); setMenuOpen(false); }}>
+                            {isMuted ? '🔇 Unmute' : '🔊 Mute'}
+                        </button>
+                        <button onClick={() => { setMenuOpen(false); handleBackToLobby(); }}>
+                            🚪 Leave Game
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

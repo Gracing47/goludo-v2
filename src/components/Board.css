@@ -252,9 +252,7 @@
 .start-blue {
     position: relative;
     border-radius: 50%;
-    /* Start cells are circles! */
     transform: scale(0.85);
-    /* Slightly smaller to fit in grid */
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -283,7 +281,6 @@
 .start-yellow::after,
 .start-blue::after {
     content: '▶';
-    /* Arrow instead of star for start */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -350,7 +347,7 @@
 }
 
 /* ============================================
-   RESPONSIVE
+   RESPONSIVE & AAA EFFECTS
    ============================================ */
 
 /* Small Mobile (iPhone SE etc) */
@@ -377,4 +374,57 @@
         inset: 10px;
         gap: 3px;
     }
+}
+
+/* AAA ENHANCEMENTS: SHAKE & FOCUS - GLOBALLY RESPONSIVE */
+
+/* Screen Shake Animation */
+.shake-active .ludo-board {
+    animation: board-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+@keyframes board-shake {
+
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+
+/* Dynamic Camera / Focus System */
+.board-focus-wrapper {
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.focus-active {
+    transform: scale(1.05);
+}
+
+.focus-zoom-in {
+    transform: scale(1.15);
 }

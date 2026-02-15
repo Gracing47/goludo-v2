@@ -74,24 +74,24 @@ const Token = ({
         if (hasPositionChanged && !inYard) {
             setIsAnimating(true);
 
-            // Snappy Hop Animation - faster for path traversal (120ms)
-            const hopDuration = isBonusMove ? 0.08 : 0.12;
+            // AAA: Juicy Hop Animation - faster for path traversal (100ms)
+            const hopDuration = isBonusMove ? 0.08 : 0.1;
 
             controls.start({
-                y: [0, -18, 0], // Quick, punchy hop
-                scale: [1, 1.08, 0.96, 1], // Subtle compression
-                rotate: [0, 3, -2, 0], // Minimal wobble
+                y: [0, -22, 0], // More pronounced hop
+                scale: [1, 1.15, 0.9, 1], // More classic squash & stretch
+                rotate: [0, 5, -3, 0], // Added a bit more wobble
                 transition: {
                     duration: hopDuration,
-                    times: [0, 0.35, 0.75, 1],
-                    ease: "easeOut"
+                    times: [0, 0.3, 0.7, 1],
+                    ease: "anticipate" // More dramatic easing
                 }
             }).then(() => {
                 setIsAnimating(false);
                 // Only show impact on final landing (determined by caller)
                 if (!isBonusMove) {
                     setShowImpact(true);
-                    setTimeout(() => setShowImpact(false), 200);
+                    setTimeout(() => setShowImpact(false), 250.0);
                 }
             });
         }
