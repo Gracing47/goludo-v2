@@ -635,12 +635,12 @@ function App() {
                                 playerName={
                                     gameConfig.mode === 'web3' && account
                                         ? gameConfig.players?.find(p => p?.address?.toLowerCase() === account.address?.toLowerCase())?.name
-                                        : gameConfig.players?.[0]?.name
+                                        : gameConfig.players?.[gameState.activePlayer]?.name || `Player ${gameState.activePlayer + 1}`
                                 }
                                 playerColor={
                                     gameConfig.mode === 'web3' && account
                                         ? gameConfig.players?.find(p => p?.address?.toLowerCase() === account.address?.toLowerCase())?.color
-                                        : gameConfig.players?.[0]?.color || 'cyan'
+                                        : gameConfig.players?.[gameState.activePlayer]?.color || PLAYER_COLORS[gameState.activePlayer]
                                 }
                                 diceValue={gameState.diceValue}
                                 onRoll={handleRoll}

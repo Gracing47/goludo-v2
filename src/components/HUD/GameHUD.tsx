@@ -21,6 +21,20 @@ const GameHUD: React.FC<GameHUDProps> = ({
     isConnected,
     appState
 }) => {
+    // Grace period to prevent "Reconnecting" flash on start
+    const [showDisconnect, setShowDisconnect] = React.useState(false);
+
+    React.useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (!isConnected) {
+            // Only show after 3 seconds of disconnection
+            timer = setTimeout(() => setShowDisconnect(true), 3000);
+        } else {
+            setShowDisconnect(false);
+        }
+        return () => clearTimeout(timer);
+    }, [isConnected]);
+
     return (
         <div className="game-hud">
             {/* MODE BADGE - Top Right (below timer) */}
@@ -47,7 +61,7 @@ const GameHUD: React.FC<GameHUDProps> = ({
             />
 
             {/* SPECIAL: DISCONNECT OVERLAY (Web3 Only) */}
-            {!isConnected && appState === 'game' && gameState && gameConfig?.mode === 'web3' && (
+            {showDisconnect && appState === 'game' && gameState && gameConfig?.mode === 'web3' && (
                 <div className="disconnect-overlay">
                     <div className="spinner"></div>
                     <div>Connection Lost. Reconnecting...</div>

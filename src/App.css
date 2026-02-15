@@ -430,24 +430,22 @@ body {
    ============================================ */
 
 .central-dice-area {
-    position: fixed;
-    bottom: calc(var(--safe-area-bottom) + 10px);
-    left: 50%;
-    transform: translateX(-50%);
+    grid-row: 5;
+    /* Footer Row */
+    grid-column: 1;
+    position: relative;
     pointer-events: none;
+    /* Children have auto */
     z-index: 60;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Ensure it fits in footer */
-    height: 60px;
+    /* Ensure it fits in footer but allows overflow for scale effects */
+    height: 100%;
+    width: 100%;
 }
 
-@media (min-width: 768px) {
-    .central-dice-area {
-        bottom: 40px;
-    }
-}
+/* Remove media query override as grid handles it */
 
 /* ============================================
    TURN TIMER - Header Integration
