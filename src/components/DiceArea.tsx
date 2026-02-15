@@ -128,7 +128,21 @@ const DiceArea: React.FC<DiceAreaProps> = ({
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </AnimatePresence>
+            
+            {/* DEBUG LAYER - CATCH ALL CLICKS if Button fails */ }
+    <div
+        style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 10,
+            cursor: 'pointer'
+        }}
+        onClick={() => {
+            if (canRoll && !isRolling) onRoll();
+        }}
+    />
+        </div >
     );
 };
 
