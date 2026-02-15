@@ -53,8 +53,47 @@ export const HOME_STRETCH_START = 100;
 export const HOME_STRETCH_LENGTH = 6;
 
 // ============================================
-// USA STANDARD RULE CONFIGURATION
+// MODULAR RULE SYSTEM (V2 - DRY)
 // ============================================
+
+export interface ModeConfig {
+    id: 'classic' | 'rapid';
+    name: string;
+    getInitialTokens: (colorIndex: number) => TokenPosition[];
+    checkWinner: (tokens: TokenPosition[][], activeColors: number[]) => number | null;
+}
+
+const PLAYER_START_POSITIONS_CORE = [0, 13, 26, 39];
+
+export const GAME_MODES: Record<string, ModeConfig> = {
+    classic: {
+        id: 'classic',
+        name: 'Classic',
+        getInitialTokens: () => [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD],
+        checkWinner: (tokens, activeColors) => {
+            for (const playerIdx of activeColors) {
+                const allFinished = tokens[playerIdx]!.every(pos => pos === POSITION.FINISHED);
+                if (allFinished) return playerIdx;
+            }
+            return null;
+        }
+    },
+    rapid: {
+        id: 'rapid',
+        name: 'Rapid',
+        getInitialTokens: (colorIndex) => {
+            const startPos = PLAYER_START_POSITIONS_CORE[colorIndex] as TokenPosition;
+            return [startPos, startPos, POSITION.IN_YARD, POSITION.IN_YARD];
+        },
+        checkWinner: (tokens, activeColors) => {
+            for (const playerIdx of activeColors) {
+                const anyFinished = tokens[playerIdx]!.some(pos => pos === POSITION.FINISHED);
+                if (anyFinished) return playerIdx;
+            }
+            return null;
+        }
+    }
+};
 
 export const RULES = {
     ENTRY_ROLL: 6,

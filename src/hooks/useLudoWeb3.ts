@@ -53,7 +53,7 @@ export const useLudoWeb3 = () => {
     };
 
     // 4. Create Room Flow
-    const handleCreateRoom = async (stakeAmount: string | number, maxPlayers: number, creatorName: string, color: string) => {
+    const handleCreateRoom = async (stakeAmount: string | number, maxPlayers: number, creatorName: string, color: string, mode: string = 'classic') => {
         if (!account) return alert("Please connect wallet first");
 
         setIsProcessing(true);
@@ -82,7 +82,8 @@ export const useLudoWeb3 = () => {
                 maxPlayers,
                 creatorName,
                 creatorAddress: account.address,
-                color
+                color,
+                mode
             });
 
             console.log("✅ Room created successfully!", roomId);

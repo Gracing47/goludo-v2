@@ -70,6 +70,7 @@ const Lobby = ({ onStartGame }) => {
     const [openRooms, setOpenRooms] = useState([]);
     const [waitingRoomId, setWaitingRoomId] = useState(null);
     const [selectedRoom, setSelectedRoom] = useState(null); // Track room being joined
+    const [gameVariant, setGameVariant] = useState('classic'); // classic, rapid
     const [players, setPlayers] = useState([
         { name: 'Player 1', color: 'red', isAI: false },
         { name: 'Player 2', color: 'green', isAI: false },
@@ -158,7 +159,7 @@ const Lobby = ({ onStartGame }) => {
     const handleCreateRoomUI = async () => {
         try {
             const player = players[0];
-            const roomId = await handleCreateRoom(betAmount, playerCount, player.name, player.color);
+            const roomId = await handleCreateRoom(betAmount, playerCount, player.name, player.color, gameVariant);
             setWaitingRoomId(roomId);
             setStep('waiting');
         } catch (err) {
@@ -281,6 +282,7 @@ const Lobby = ({ onStartGame }) => {
         // Local / AI start
         onStartGame({
             mode: gameMode,
+            gameMode: gameVariant, // Pass variant to engine
             playerCount,
             players: players.slice(0, playerCount).map(p => ({
                 ...p,
@@ -495,6 +497,37 @@ const Lobby = ({ onStartGame }) => {
                                             {amount}
                                         </button>
                                     ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Game Variant */}
+                        {!selectedRoom && (
+                            <div className="setup-section">
+                                <label className="setup-label">Game Variant</label>
+                                <div className="variant-selector">
+                                    <button
+                                        className={`variant-btn ${gameVariant === 'classic' ? 'active' : ''}`}
+                                        onClick={() => setGameVariant('classic')}
+                                        title="USA Standard Rules: All 4 tokens must reach home to win."
+                                    >
+                                        <span className="variant-icon">🐢</span>
+                                        <div className="variant-info">
+                                            <strong>Classic</strong>
+                                            <span>All 4 home</span>
+                                        </div>
+                                    </button>
+                                    <button
+                                        className={`variant-btn ${gameVariant === 'rapid' ? 'active' : ''}`}
+                                        onClick={() => setGameVariant('rapid')}
+                                        title="Rapid Mode: First player to get any 1 token home wins! Start with 2 tokens on board."
+                                    >
+                                        <span className="variant-icon">⚡</span>
+                                        <div className="variant-info">
+                                            <strong>Rapid</strong>
+                                            <span>First to 1 wins</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         )}

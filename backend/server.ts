@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
-import { signPayout, walletAddress } from './signer.js';
+import { signPayout, walletAddress } from './services/signer.js';
 import path from 'path';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -52,13 +52,13 @@ interface BackendRoom {
 }
 
 // Room Lifecycle Manager (prevents memory leaks at scale)
-import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob, clearSpecificTimer } from './roomManager.js';
+import { registerRoomTimer, clearAllRoomTimers, cleanupRoom, startCleanupJob, clearSpecificTimer } from './services/roomManager.js';
 
 // Blockchain Verification (Phase 5: On-Chain Security)
-import { verifyRoomCreation, verifyRoomJoin, recoverActiveRoomsFromBlockchain, getRoomStateFromContract } from './contractVerifier.js';
+import { verifyRoomCreation, verifyRoomJoin, recoverActiveRoomsFromBlockchain, getRoomStateFromContract } from './services/contractVerifier.js';
 
 // Input Validation (Phase 6: Audit Readiness)
-import { validateRequest, createRoomSchema, payoutSignSchema, joinRoomSchema } from './validation.js';
+import { validateRequest, createRoomSchema, payoutSignSchema, joinRoomSchema } from './utils/validation.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -523,7 +523,7 @@ function startGameCountdown(io: Server, room: BackendRoom, roomId: string) {
                 const activeColors = room.players
                     .map((p, idx: number) => p ? idx : null)
                     .filter((idx) => idx !== null) as number[];
-                room.gameState = createInitialState(4, activeColors);
+                room.gameState = createInitialState(4, activeColors, (room as any).mode || 'classic');
             }
 
             room.status = "ACTIVE";
@@ -936,6 +936,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
         // Initialize with 4 empty slots to match board colors (0-Red, 1-Green, 2-Yellow, 3-Blue)
         players: [null, null, null, null] as (BackendPlayer | null)[],
         gameState: null,
+        mode: req.body.mode || 'classic', // Track game variant
         status: "WAITING",
         createdAt: Date.now() // Track creation time for cleanup
     };
@@ -956,7 +957,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     // V2: Sync to Redis (write-through)
     if (stateManager) {
         stateManager.saveRoom({
-            id: roomId, mode: 'classic',
+            id: roomId, mode: (req.body.mode || 'classic') as any,
             status: 'WAITING', creator: creatorAddress,
             betAmount: stake, players: { [creatorColorIndex]: newRoom.players[creatorColorIndex]! as any },
             gameState: null, createdAt: Date.now(),

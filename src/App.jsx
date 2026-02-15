@@ -8,13 +8,9 @@ import { AnimatePresence } from 'framer-motion';
 import { useGameSocket } from './hooks/useGameSocket';
 import { ethers } from 'ethers';
 import Board from './components/Board';
-import Token from './components/Token';
-import Dice from './components/Dice';
+import Board from './components/Board';
 
-const BUILD_VERSION = "v4.4.6 - Socket Stability Fixes";
-import CaptureExplosion from './components/CaptureExplosion';
-import VictoryCelebration from './components/VictoryCelebration';
-import { SpawnSparkle } from './components/ParticleEffects';
+const BUILD_VERSION = "v4.4.6 - Code Quality Cleanup";
 import { useGameVFX } from './hooks/useGameVFX';
 import { useGameAI } from './hooks/useGameAI';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';

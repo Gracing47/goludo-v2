@@ -349,6 +349,79 @@
 }
 
 /* ============================================
+   VARIANT SELECTOR
+   ============================================ */
+
+.variant-selector {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.variant-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #ffffff;
+    text-align: left;
+}
+
+.variant-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.variant-btn.active {
+    background: rgba(255, 0, 122, 0.1);
+    border-color: #ff007a;
+    box-shadow: 0 0 20px rgba(255, 0, 122, 0.15);
+}
+
+.variant-icon {
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.variant-btn.active .variant-icon {
+    background: rgba(255, 0, 122, 0.2);
+}
+
+.variant-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.variant-info strong {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.variant-info span {
+    font-family: 'Exo 2', sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================
    PLAYER LIST - Touch Scrollable
    ============================================ */
 

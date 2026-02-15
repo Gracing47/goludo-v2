@@ -4,6 +4,7 @@
  */
 
 import {
+    GAME_MODES,
     GAME_PHASE,
     POSITION,
     RULES,
@@ -18,18 +19,8 @@ import {
 import { GameState, GameModeId, Move, TokenPosition } from '../types';
 
 // ============================================
-// MODE-SPECIFIC TOKEN INITIALIZATION
+// STATE INITIALIZATION
 // ============================================
-
-const PLAYER_START_POSITIONS = [0, 13, 26, 39];
-
-function getInitialTokensForMode(colorIndex: number, mode: GameModeId): TokenPosition[] {
-    if (mode === 'rapid') {
-        const startPos = PLAYER_START_POSITIONS[colorIndex] as TokenPosition;
-        return [startPos, startPos, POSITION.IN_YARD, POSITION.IN_YARD];
-    }
-    return [POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD, POSITION.IN_YARD];
-}
 
 // ============================================
 // STATE INITIALIZATION
@@ -42,11 +33,13 @@ export function createInitialState(
 ): GameState {
     const sortedColors = [...activeColors].sort((a, b) => a - b);
 
+    const modeConfig = GAME_MODES[mode] || GAME_MODES.classic;
+
     const tokens: TokenPosition[][] = [
-        getInitialTokensForMode(0, mode),
-        getInitialTokensForMode(1, mode),
-        getInitialTokensForMode(2, mode),
-        getInitialTokensForMode(3, mode),
+        modeConfig.getInitialTokens(0),
+        modeConfig.getInitialTokens(1),
+        modeConfig.getInitialTokens(2),
+        modeConfig.getInitialTokens(3),
     ];
 
     return {
@@ -251,15 +244,10 @@ export function completeMoveAnimation(state: GameState): GameState {
 // ============================================
 
 function checkWinner(state: GameState): number | null {
-    const { activeColors } = state;
+    const { activeColors, mode, tokens } = state;
+    const modeConfig = GAME_MODES[mode] || GAME_MODES.classic;
 
-    for (const playerIdx of activeColors) {
-        const allFinished = state.tokens[playerIdx]!.every(
-            pos => pos === POSITION.FINISHED
-        );
-        if (allFinished) return playerIdx;
-    }
-    return null;
+    return modeConfig.checkWinner(tokens, activeColors);
 }
 
 // ============================================
