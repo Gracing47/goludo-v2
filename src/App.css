@@ -81,6 +81,9 @@ body {
     padding: 4px;
     width: 100%;
     height: 100%;
+    /* CONSTRAINT: Never grow larger than available space minus pods */
+    max-height: 65vh;
+    /* Safe limit for mobile */
     overflow: hidden;
 }
 

@@ -255,40 +255,41 @@ function App() {
         navigate('/'); // Go back to root
     }, [resetStore, navigate]);
 
-    // Roll dice
+    // Roll dice with visual delay
     const handleRoll = useCallback(() => {
         if (!gameState || isRolling || isMoving) return;
         const phase = gameState.gamePhase;
         if (phase !== 'ROLL_DICE' && phase !== 'WAITING_FOR_ROLL') return;
 
-        if (gameConfig?.mode === 'web3') {
-            const success = emitRoll();
-            if (!success) {
-                setServerMsg("📡 Reconnected! Try rolling again.");
-                socketConnect();
-                return;
-            }
-            setIsRolling(true);
-            return;
-        }
-
         setIsRolling(true);
         playSound('roll');
+
+        // Combined Delay: 1000ms for "Juice"
         setTimeout(() => {
-            const newState = rollDice(gameState);
-            setGameState(newState);
-            setIsRolling(false);
+            if (gameConfig?.mode === 'web3') {
+                const success = emitRoll();
+                // Note: isRolling will be set to false when backend sends 'diceRolled' event
+                if (!success) {
+                    setServerMsg("📡 Reconnected! Try rolling again.");
+                    socketConnect();
+                    setIsRolling(false);
+                }
+            } else {
+                // Local Mode
+                const newState = rollDice(gameState);
+                setGameState(newState);
+                setIsRolling(false);
 
-            // Handle Triple-6 penalty
-            if (newState.message && newState.message.includes('Triple 6')) {
-                triggerPenalty();
-                setServerMsg(newState.message);
-                setTimeout(() => setServerMsg(null), 2500);
+                // Handle Triple-6 penalty
+                if (newState.message && newState.message.includes('Triple 6')) {
+                    triggerPenalty();
+                    setServerMsg(newState.message);
+                    setTimeout(() => setServerMsg(null), 2500);
+                }
+                aiActionInProgress.current = false;
             }
-
-            aiActionInProgress.current = false;
-        }, 800);
-    }, [gameState, isRolling, isMoving, gameConfig, playSound, triggerPenalty]);
+        }, 1000);
+    }, [gameState, isRolling, isMoving, gameConfig, playSound, triggerPenalty, emitRoll, socketConnect]);
 
     // Execute a move (for both human and AI)
     const executeMove = useCallback((move) => {

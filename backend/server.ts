@@ -259,6 +259,16 @@ function handlePlayerSkip(io: Server, room: BackendRoom, playerIndex: number, re
         // CRITICAL: If the active player forfeited, advance the turn immediately
         if (room.gameState!.activePlayer === playerIndex) {
             console.log(`⏩ Active player ${player.name} forfeited - advancing turn`);
+
+            // FIX: Calculate next player BEFORE calling handleNextTurn
+            const nextIdx = getNextPlayer(playerIndex, room.gameState!.activeColors);
+            room.gameState!.activePlayer = nextIdx;
+
+            // Reset state for new turn
+            room.gameState!.gamePhase = GAME_PHASE.ROLL_DICE; // Use string 'ROLL_DICE' if constant not available in this scope, or GAME_PHASE.ROLL_DICE
+            room.gameState!.diceValue = null;
+            room.gameState!.validMoves = [];
+
             handleNextTurn(io, room);
         }
 
