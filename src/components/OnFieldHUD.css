@@ -1,16 +1,17 @@
 /* OnFieldHUD.css - Grid-anchored Game UI */
 
+/* POT: Move to Top Center to avoid "free space" feeling on the left */
 .on-field-pot {
-    grid-row: 10 / 14;
-    grid-column: 2 / 7;
+    grid-row: 2 / 6;
+    /* Top Area */
+    grid-column: 5 / 12;
+    /* Center-ish spanning columns 5-11 */
     z-index: 20;
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    /* Let clicks pass through to tokens if needed, though usually this area is base */
     transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
-    /* Keep upright */
     transition: transform 0.5s ease;
 }
 
@@ -20,8 +21,8 @@
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 100px;
-    /* Pill shape */
-    padding: 8px 16px;
+    padding: 6px 14px;
+    /* Slightly smaller for mobile compaction */
     display: flex;
     align-items: center;
     gap: 8px;
@@ -29,15 +30,18 @@
     animation: float-pot 3s infinite ease-in-out;
 }
 
+/* DICE: Force Bottom Center spanning full width to prevent "left" misalignment */
 .on-field-dice-container {
-    grid-row: 12 / 16;
-    grid-column: 7 / 10;
+    grid-row: 13 / 16;
+    /* Bottom 3 rows */
+    grid-column: 1 / -1;
+    /* Span entire width */
     z-index: 30;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Strictly center */
     transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
-    /* Keep upright */
     transition: transform 0.5s ease;
     pointer-events: auto;
 }
@@ -54,32 +58,28 @@
     }
 }
 
-/* Ensure the DiceArea fits well on-field */
 .on-field-dice-container .dice-area-container {
-    width: 100%;
-    height: 100%;
+    /* No scale needed, let existing components handle size */
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Adjustments for the pot text */
 .pot-amount-large {
     color: #ffcc00;
-    /* Gold */
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 800;
     font-family: 'Outfit', sans-serif;
 }
 
 .pot-currency-label {
     color: rgba(255, 255, 255, 0.6);
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 500;
     text-transform: uppercase;
 }
 
-/* Board Game Over State (Moved here for reliability) */
+/* Board Game Over State */
 .board-wrapper.game-over-dim {
     filter: brightness(0.3) blur(2px) grayscale(0.5);
     pointer-events: none;
