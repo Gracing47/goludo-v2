@@ -358,6 +358,24 @@
     }
 }
 
+/* Mobile Optimization - Maximized Board Size */
+@media (max-width: 480px) {
+    .ludo-board {
+        /* Optimized sizing: more aggressive space usage */
+        width: min(98vw, calc(100dvh - 140px));  /* Was calc(100dvh - 200px) */
+        height: min(98vw, calc(100dvh - 140px));
+        max-width: none; /* Remove 500px constraint for mobile */
+        padding: 6px;
+        gap: 1.5px;
+        border-radius: 24px; /* Proportionally smaller for mobile */
+    }
+
+    .token-layer {
+        inset: 6px; /* Match board padding */
+        gap: 1.5px;
+    }
+}
+
 /* Tablet / Desktop */
 @media (min-width: 768px) {
     .ludo-board {

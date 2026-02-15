@@ -38,6 +38,7 @@ const GlobalHeader: React.FC = () => {
     }, []);
 
     const isLanding = location.pathname === ROUTES.LANDING;
+    const isGameMode = location.pathname.startsWith('/game/'); // Detect game room pages
 
     const handleLogoClick = () => {
         // Force full page refresh to landing
@@ -45,7 +46,7 @@ const GlobalHeader: React.FC = () => {
     };
 
     return (
-        <header className={`global-header ${scrolled ? 'scrolled' : ''} ${isLanding ? 'is-landing' : ''}`}>
+        <header className={`global-header ${scrolled ? 'scrolled' : ''} ${isLanding ? 'is-landing' : ''} ${isGameMode ? 'game-mode' : ''}`}>
             <div className="header-container">
                 <div className="header-left" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
                     <div className="logo-container">
