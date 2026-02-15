@@ -88,6 +88,15 @@ export function CaptureExplosion({ position, color, onComplete }) {
                 top: position.y
             }}
         >
+            {/* Shockwave Ring */}
+            <motion.div
+                className="shockwave-ring"
+                initial={{ scale: 0, opacity: 0.8, borderWidth: '4px' }}
+                animate={{ scale: 4, opacity: 0, borderWidth: '0px' }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                style={{ borderColor: PLAYER_COLORS[color] || '#fff' }}
+            />
+
             {/* Central flash */}
             <motion.div
                 className="explosion-flash"
@@ -113,7 +122,8 @@ export function CaptureExplosion({ position, color, onComplete }) {
                             x: particle.x,
                             y: particle.y,
                             scale: 0,
-                            opacity: 0
+                            opacity: 0,
+                            rotate: Math.random() * 360
                         }}
                         transition={{
                             duration: particle.duration,
@@ -124,7 +134,7 @@ export function CaptureExplosion({ position, color, onComplete }) {
                             width: particle.size,
                             height: particle.size,
                             backgroundColor: particle.color,
-                            boxShadow: `0 0 ${particle.size}px ${particle.color}`
+                            boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`
                         }}
                     />
                 ))}
@@ -240,6 +250,15 @@ export function SpawnSparkle({ position, color, onComplete }) {
             className="particle-container sparkle"
             style={{ left: position.x, top: position.y }}
         >
+            {/* Vertical Beam */}
+            <motion.div
+                className="light-beam"
+                initial={{ height: 0, opacity: 0.8, y: 0 }}
+                animate={{ height: 100, opacity: 0, y: -50 }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+                style={{ backgroundColor: PLAYER_COLORS[color] || '#fff' }}
+            />
+
             {sparkles.map(sparkle => (
                 <motion.div
                     key={sparkle.id}
@@ -249,7 +268,8 @@ export function SpawnSparkle({ position, color, onComplete }) {
                         x: sparkle.x,
                         y: sparkle.y,
                         scale: [0, 1.5, 0],
-                        opacity: [1, 1, 0]
+                        opacity: [1, 1, 0],
+                        rotate: Math.random() * 180
                     }}
                     transition={{ duration: 0.4, ease: 'easeOut' }}
                     style={{ backgroundColor: sparkle.color }}

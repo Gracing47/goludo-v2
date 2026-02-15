@@ -19,6 +19,7 @@ import { API_URL, SOCKET_URL } from './config/api';
 import WarpTransition from './components/WarpTransition';
 import Dice from './components/Dice';
 // import DiceArea from './components/DiceArea'; // Reverted to legacy Dice
+import AmbientLight from './components/VFX/AmbientLight';
 import VictoryCelebration from './components/VictoryCelebration';
 import soundManager from './services/SoundManager';
 
@@ -541,6 +542,9 @@ function App() {
             {/* 3. GAME VIEW (Render board once data is ready) */}
             {appState === 'game' && gameState && gameConfig?.players && (
                 <div className={`app aaa-layout ${isShaking ? 'shake-active' : ''}`}>
+
+                    {/* 0. AMBIENT LIGHTING (Underlay) */}
+                    <AmbientLight activePlayer={gameState.activePlayer} />
 
                     {/* 1. BOARD LAYER (Centered) */}
                     <div className="board-layer">
