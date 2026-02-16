@@ -77,7 +77,8 @@ const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false })
                     transform: `rotate(${rotation}deg)`,
                     transition: 'transform 0.5s ease',
                     '--board-rotation': `${rotation}deg`,
-                    '--board-size': `${boardSize}px`
+                    '--board-size': `${boardSize}px`,
+                    '--crown-rotation': `${[-45, 45, 135, 225][activePlayer] || 0}deg`
                 }}>
                     {cells}
                     <div className="token-layer" style={{ transform: `rotate(0deg)` }}>

@@ -307,6 +307,20 @@
     font-size: clamp(20px, 4.5vw, 32px);
     filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
     animation: crown-float 3s infinite ease-in-out;
+    /* Crown rotates to face active player's base direction */
+    transform: rotate(var(--crown-rotation, 0deg));
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes crown-float {
+    0%, 100% {
+        translate: 0 0;
+        filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+    }
+    50% {
+        translate: 0 -4px;
+        filter: drop-shadow(0 0 25px rgba(255, 215, 0, 1));
+    }
 }
 
 /* ============================================
@@ -379,10 +393,11 @@
 }
 
 /* Tablet / Desktop */
+/* Tablet (768px+) - Use consistent sizing */
 @media (min-width: 768px) {
     .ludo-board {
-        width: min(75vw, calc(100vh - 160px), 600px);
-        height: min(75vw, calc(100vh - 160px), 600px);
+        width: var(--board-size, min(75vw, calc(100vh - 160px), 600px));
+        height: var(--board-size, min(75vw, calc(100vh - 160px), 600px));
         padding: 10px;
         gap: 3px;
         border-radius: 40px;
@@ -391,6 +406,40 @@
     .token-layer {
         inset: 10px;
         gap: 3px;
+    }
+}
+
+/* Desktop (1024px+) - Premium sizing with better proportions */
+@media (min-width: 1024px) {
+    .ludo-board {
+        padding: 12px;
+        gap: 3px;
+        border-radius: 44px;
+        box-shadow:
+            0 32px 90px rgba(0, 0, 0, 0.9),
+            inset 0 0 80px rgba(34, 211, 238, 0.08),
+            0 0 40px rgba(34, 211, 238, 0.15);
+    }
+
+    .token-layer {
+        inset: 12px;
+        gap: 3px;
+    }
+}
+
+/* Large Desktop (1440px+) - Maximum visual impact */
+@media (min-width: 1440px) {
+    .ludo-board {
+        padding: 14px;
+        border-radius: 48px;
+        box-shadow:
+            0 40px 120px rgba(0, 0, 0, 0.95),
+            inset 0 0 100px rgba(34, 211, 238, 0.1),
+            0 0 50px rgba(34, 211, 238, 0.2);
+    }
+
+    .token-layer {
+        inset: 14px;
     }
 }
 

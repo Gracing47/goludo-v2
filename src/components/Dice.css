@@ -231,6 +231,62 @@
     }
 }
 
+/* Desktop enhancements (768px+) */
+@media (min-width: 768px) {
+    .dice-button {
+        padding: 16px;
+        min-width: 64px;
+        min-height: 64px;
+        border-radius: 18px;
+    }
+
+    .dice {
+        width: 56px;
+        height: 56px;
+    }
+
+    .dice-face {
+        width: 56px;
+        height: 56px;
+        padding: 8px;
+        font-size: 20px;
+    }
+
+    .face-1 {
+        transform: translateZ(28px);
+    }
+
+    .face-2 {
+        transform: rotateY(90deg) translateZ(28px);
+    }
+
+    .face-3 {
+        transform: rotateY(180deg) translateZ(28px);
+    }
+
+    .face-4 {
+        transform: rotateY(-90deg) translateZ(28px);
+    }
+
+    .face-5 {
+        transform: rotateX(90deg) translateZ(28px);
+    }
+
+    .face-6 {
+        transform: rotateX(-90deg) translateZ(28px);
+    }
+
+    .dot {
+        width: 7px;
+        height: 7px;
+    }
+
+    .dice-bonus-overlay {
+        font-size: 18px;
+    }
+}
+}
+
 .dice-bonus-overlay {
     position: absolute;
     inset: 0;
