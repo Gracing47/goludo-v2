@@ -18,9 +18,9 @@
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
 
-    /* Mobile First: Fill width, but respect max height to leave room for HUD */
-    width: min(var(--board-mobile-width), var(--board-mobile-height), var(--board-max-size));
-    height: min(var(--board-mobile-width), var(--board-mobile-height), var(--board-max-size));
+    /* Mobile First: Square board constrained by width, max-size, and available height */
+    width: min(var(--board-mobile-width), var(--board-max-size));
+    height: min(var(--board-mobile-width), var(--board-max-size));
     aspect-ratio: 1;
 
     /* Ultra-Premium Glass Effect */
@@ -375,15 +375,15 @@
 /* Mobile Optimization - Maximized Board Size */
 @media (max-width: 480px) {
     .ludo-board {
-        /* AAA Mobile Sizing: fill available space perfectly
-           Grid overhead: header(28) + 2*pod(44) + footer(80) = 196px + 20px margin = 216px */
-        width: min(96vw, calc(100dvh - 220px));
-        height: min(96vw, calc(100dvh - 220px));
-        max-width: none; /* Remove 500px constraint for mobile */
-        max-height: 100%; /* Never overflow grid cell */
+        /* Mobile Sizing: fill available space perfectly
+           Grid overhead: header(28) + 2*pod(44) + footer(56) = 172px + safe areas */
+        width: min(96vw, calc(100dvh - 180px));
+        height: min(96vw, calc(100dvh - 180px));
+        max-width: none;
+        max-height: 100%;
         padding: 6px;
         gap: 1.5px;
-        border-radius: 24px; /* Proportionally smaller for mobile */
+        border-radius: 24px;
     }
 
     .token-layer {
@@ -412,6 +412,8 @@
 /* Desktop (1024px+) - Premium sizing with better proportions */
 @media (min-width: 1024px) {
     .ludo-board {
+        width: var(--board-size, min(80vh, 60vw, 650px));
+        height: var(--board-size, min(80vh, 60vw, 650px));
         padding: 12px;
         gap: 3px;
         border-radius: 44px;
@@ -494,4 +496,11 @@
 
 .focus-zoom-in {
     transform: scale(1.15);
+}
+
+/* Board Game Over State (moved from deprecated OnFieldHUD.css) */
+.board-wrapper.game-over-dim {
+    filter: brightness(0.3) blur(2px) grayscale(0.5);
+    pointer-events: none;
+    transition: filter 1s ease 0.5s;
 }

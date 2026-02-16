@@ -15,13 +15,13 @@
     :root {
         --header-height: 28px;     /* Reduced from 50px → 22px saved */
         --pod-height: 44px;        /* Reduced from 48px → 4px saved, WCAG compliant */
-        --bottom-bar-height: 56px; /* Reduced from 60px → 4px saved */
+        --footer-height: 56px;     /* Reduced from 80px for mobile */
     }
 }
 
 body {
     margin: 0;
-    background: var(--bg-dark);
+    background: var(--bg-primary);
     font-family: 'Exo 2', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -40,8 +40,8 @@ body {
     grid-template-rows:
         var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--footer-height);
     grid-template-columns: 1fr;
-    padding-top: var(--safe-area-top);
-    padding-bottom: var(--safe-area-bottom);
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
     background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     overflow: hidden;
 }
@@ -74,19 +74,12 @@ body {
     }
 }
 
-40%,
-60% {
-    transform: translate3d(4px, 0, 0);
-}
-}
-
 /* ============================================
    BOARD LAYER - Centered with Anchors
    ============================================ */
 
 .board-layer {
     grid-row: 3;
-    /* Center Row */
     grid-column: 1;
     position: relative;
     display: flex;
@@ -96,8 +89,8 @@ body {
     padding: 4px;
     width: 100%;
     height: 100%;
-    /* CONSTRAINT: Grid handles sizing perfectly - no max-height needed */
-    overflow: hidden;
+    min-height: 0; /* Allow grid item to shrink below content size */
+    overflow: visible;
 }
 
 /* ============================================
@@ -106,7 +99,7 @@ body {
 
 .pot-display {
     position: absolute;
-    top: calc(var(--safe-area-top) + 8px);
+    top: calc(var(--safe-top) + 8px);
     left: 12px;
     height: 36px;
     display: flex;
@@ -158,10 +151,8 @@ body {
 }
 
 @media (max-width: 480px) {
-    /* Board Layer - Grid handles centering, minimal padding */
     .board-layer {
         padding: 2px;
-        overflow: hidden; /* Prevent any overflow */
     }
 
     .pot-display {
@@ -174,10 +165,6 @@ body {
         font-size: 1rem;  /* Increased from 0.9rem for better readability */
     }
 }
-
-/* ============================================
-   PLAYER PODS CONTAINER - Grid Mapped
-   ============================================ */
 
 /* ============================================
    PLAYER PODS CONTAINER
@@ -305,7 +292,7 @@ body {
     pointer-events: none;
     z-index: var(--z-hud);
     display: grid;
-    grid-template-rows: var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--bottom-bar-height);
+    grid-template-rows: var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--footer-height);
 }
 
 /* ============================================
@@ -314,7 +301,7 @@ body {
 .disconnect-overlay {
     position: absolute;
     inset: 0;
-    z-index: 9999;
+    z-index: 110;
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(10px);
     display: flex;
@@ -333,7 +320,7 @@ body {
     width: 40px;
     height: 40px;
     border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--neon-blue);
+    border-top-color: var(--color-tertiary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -487,10 +474,6 @@ body {
 }
 
 /* ============================================
-   CENTRAL DICE - POLISHED
-   ============================================ */
-
-/* ============================================
    CENTRAL DICE - Footer Integration
    ============================================ */
 
@@ -519,17 +502,17 @@ body {
 
 .turn-timer-container {
     position: absolute;
-    top: calc(var(--safe-area-top) + 12px);
+    top: calc(var(--safe-top) + 12px);
     left: 50%;
     transform: translateX(-50%);
-    z-index: 100;
+    z-index: 15;
 }
 
 .turn-timer {
     font-family: 'Orbitron', sans-serif;
     font-size: 13px;
     font-weight: 700;
-    color: var(--neon-blue);
+    color: var(--color-tertiary);
     background: rgba(10, 10, 20, 0.8);
     backdrop-filter: blur(4px);
     padding: 6px 14px;
@@ -562,7 +545,7 @@ body {
    ============================================ */
 .mode-badge {
     position: absolute;
-    top: calc(var(--safe-area-top) + 12px);
+    top: calc(var(--safe-top) + 12px);
     right: 12px;
     padding: 4px 12px;
     border-radius: 99px;
@@ -597,7 +580,7 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 100;
+    z-index: 90;
 }
 
 .menu-btn-floating {
@@ -633,7 +616,7 @@ body {
     border-radius: 30px;
     font-weight: 700;
     font-size: 12px;
-    z-index: 200;
+    z-index: 80;
     animation: slide-down 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 8px 20px rgba(255, 71, 87, 0.4);
 }

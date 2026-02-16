@@ -306,9 +306,9 @@ body {
 
 .btn-secondary {
   background: transparent;
-  border: 2px solid var(--accent-primary);
+  border: 2px solid var(--color-primary);
   border-radius: var(--radius-md);
-  color: var(--accent-primary);
+  color: var(--color-primary);
   font-weight: 600;
   padding: 12px 22px;
   cursor: pointer;

@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 105;
 }
 
 .aaa-countdown-card {
@@ -39,7 +39,7 @@
 }
 
 .aaa-countdown-content h3 {
-    font-family: 'var(--font-display)', 'system-ui', sans-serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     font-size: 1.2rem;
     color: rgba(255, 255, 255, 0.6);
     letter-spacing: 2px;
@@ -80,7 +80,7 @@
 }
 
 .aaa-countdown-number {
-    font-family: 'var(--font-display)', 'system-ui', sans-serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     font-size: 5rem;
     font-weight: 800;
     color: white;
@@ -89,7 +89,7 @@
 }
 
 .aaa-countdown-content p {
-    font-family: 'var(--font-body)', sans-serif;
+    font-family: var(--font-body), sans-serif;
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.4);
     letter-spacing: 1px;

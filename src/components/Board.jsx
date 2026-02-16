@@ -8,9 +8,8 @@
  * - Center goal area with crown
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './Board.css';
-import './OnFieldHUD.css'; // AAA: On-field UI Positioning
 import {
     GRID_SIZE,
     BOARD_LAYOUT,
@@ -21,31 +20,6 @@ import {
 } from '../engine/constants';
 
 const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false }) => {
-    // Calculate responsive board size - Full Size approach
-    // CSS-driven sizing now handles this. We removed the JS logic to prevent
-    // layout thrashing on mobile address bar scrolls.
-    const boardSize = 600; // Legacy prop fallback if needed strings, but mostly unused now.
-
-    // AAA: Dynamic Camera State
-    const [focusClass, setFocusClass] = useState('');
-
-    /* Sizing logic moved to CSS [width: min(var(--board-mobile-width), ...)] */
-
-    // AAA: Trigger Focus based on active player and phase
-    // Zooms in during Roll/Select to create engagement
-    useEffect(() => {
-        // Logic to apply focus
-        // We'll zoom in during rolls and when a token is being selected
-        // This makes the board feel "alive"
-        const isFocusPhase = true; // Placeholder for more complex logic if needed
-
-        // Simple heuristic: zoom in slightly during active turn interactions
-        setFocusClass('focus-active');
-
-        // Return to normal zoom after a delay or on phase change?
-        // For now, let's keep it subtle.
-    }, [activePlayer]);
-
     const cells = React.useMemo(() => {
         const result = [];
         for (let row = 0; row < GRID_SIZE; row++) {
@@ -68,16 +42,15 @@ const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false })
             }
         }
         return result;
-    }, [activePlayer, rotation, boardSize]);
+    }, [activePlayer, rotation]);
 
     return (
         <div className={`board-wrapper ${isGameOver ? 'game-over-dim' : ''}`}>
-            <div className={`board-focus-wrapper ${focusClass}`}>
+            <div className="board-focus-wrapper">
                 <div className="ludo-board" style={{
                     transform: `rotate(${rotation}deg)`,
                     transition: 'transform 0.5s ease',
                     '--board-rotation': `${rotation}deg`,
-                    '--board-size': `${boardSize}px`,
                     '--crown-rotation': `${[-45, 45, 135, 225][activePlayer] || 0}deg`
                 }}>
                     {cells}
