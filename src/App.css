@@ -13,8 +13,8 @@
 /* Mobile-specific CSS Variables for optimized layout */
 @media (max-width: 480px) {
     :root {
-        --header-height: 28px;     /* Reduced from 50px → 22px saved */
-        --pod-height: 44px;        /* Reduced from 48px → 4px saved, WCAG compliant */
+        --header-height: 52px;     /* Accounts for game-mode header + safe-area on mobile */
+        --pod-height: 36px;        /* Compact pods */
         --footer-height: 56px;     /* Reduced from 80px for mobile */
     }
 }

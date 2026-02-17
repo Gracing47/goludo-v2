@@ -399,9 +399,9 @@
 @media (max-width: 480px) {
     .ludo-board {
         /* Mobile Sizing: fill available space perfectly
-           Grid overhead: header(28) + 2*pod(44) + footer(56) = 172px + safe areas */
-        width: min(96vw, calc(100dvh - 180px));
-        height: min(96vw, calc(100dvh - 180px));
+           Grid overhead: header(52) + 2*pod(36) + footer(56) = 180px + safe areas ~220px */
+        width: min(96vw, calc(100dvh - 220px));
+        height: min(96vw, calc(100dvh - 220px));
         max-width: none;
         max-height: 100%;
         padding: 6px;
