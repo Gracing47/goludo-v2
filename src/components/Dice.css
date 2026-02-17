@@ -208,34 +208,38 @@
 
 @media (max-width: 480px) {
     .dice-button {
-        padding: 8px;
-        min-width: 48px;
-        min-height: 48px;
-        border-radius: 12px;
+        padding: 10px;
+        min-width: 56px;
+        min-height: 56px;
+        border-radius: 14px;
+        box-shadow:
+            0 8px 28px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .dice {
-        width: 40px;
-        height: 40px;
+        width: 44px;
+        height: 44px;
     }
 
     .dice-face {
-        width: 40px;
-        height: 40px;
-        padding: 5px;
-        border-radius: 8px;
+        width: 44px;
+        height: 44px;
+        padding: 6px;
+        border-radius: 10px;
     }
 
-    .face-1 { transform: translateZ(20px); }
-    .face-2 { transform: rotateY(90deg) translateZ(20px); }
-    .face-3 { transform: rotateY(180deg) translateZ(20px); }
-    .face-4 { transform: rotateY(-90deg) translateZ(20px); }
-    .face-5 { transform: rotateX(90deg) translateZ(20px); }
-    .face-6 { transform: rotateX(-90deg) translateZ(20px); }
+    .face-1 { transform: translateZ(22px); }
+    .face-2 { transform: rotateY(90deg) translateZ(22px); }
+    .face-3 { transform: rotateY(180deg) translateZ(22px); }
+    .face-4 { transform: rotateY(-90deg) translateZ(22px); }
+    .face-5 { transform: rotateX(90deg) translateZ(22px); }
+    .face-6 { transform: rotateX(-90deg) translateZ(22px); }
 
     .dot {
-        width: 5px;
-        height: 5px;
+        width: 6px;
+        height: 6px;
     }
 
     .dice-bonus-overlay {

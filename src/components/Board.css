@@ -30,21 +30,22 @@
     height: min(var(--board-mobile-width), var(--board-max-size));
     aspect-ratio: 1;
 
-    /* Ultra-Premium Glass Effect */
-    background: rgba(5, 5, 15, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* Ultra-Premium Glass Effect - deeper, richer */
+    background: rgba(5, 5, 15, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 
     border-radius: 36px;
     padding: 8px;
     gap: 2px;
     /* Tight gap for seamless feel */
 
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow:
-        0 24px 70px rgba(0, 0, 0, 0.8),
-        inset 0 0 60px rgba(34, 211, 238, 0.05),
-        0 0 30px rgba(34, 211, 238, 0.1);
+        0 28px 80px rgba(0, 0, 0, 0.85),
+        0 4px 20px rgba(0, 0, 0, 0.4),
+        inset 0 0 60px rgba(34, 211, 238, 0.04),
+        0 0 40px rgba(34, 211, 238, 0.08);
 
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -401,13 +402,13 @@
     }
 }
 
-/* Mobile Optimization - Maximized Board Size */
+/* Mobile Optimization - Balanced Board Size with breathing room */
 @media (max-width: 480px) {
     .ludo-board {
-        /* Mobile Sizing: fill available space perfectly
-           Overhead: header(52) + footer(56) + 2*pods(32) outside + safe(~40) = ~212px */
-        width: min(94vw, calc(100dvh - 210px));
-        height: min(94vw, calc(100dvh - 210px));
+        /* Mobile Sizing: header(52) + pods(2*32+2*10=84) + dice-area(~80) + gaps(~40) + safe(~20) = ~276px
+           Use 88vw to leave horizontal margins, dvh - 276 for vertical fit */
+        width: min(88vw, calc(100dvh - 280px));
+        height: min(88vw, calc(100dvh - 280px));
         max-width: none;
         max-height: 100%;
         padding: 6px;
