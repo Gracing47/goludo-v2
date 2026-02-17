@@ -5,17 +5,18 @@
     right: 0;
     z-index: 120;
     padding: 16px 24px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     /* Account for mobile safe areas */
     padding-top: calc(16px + env(safe-area-inset-top));
 }
 
 .global-header.scrolled {
     padding: 12px 24px;
-    background: rgba(10, 10, 26, 0.7);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(8, 8, 22, 0.75);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .header-container {
@@ -36,8 +37,13 @@
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
     font-weight: 800;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     color: var(--text-primary);
+    transition: opacity 0.2s ease;
+}
+
+.logo-text:hover {
+    opacity: 0.85;
 }
 
 .logo-text .accent {
@@ -60,28 +66,50 @@
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: all 0.25s ease;
+    position: relative;
+    padding: 4px 0;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--accent-pink);
+    border-radius: 1px;
+    transition: all 0.25s ease;
+    transform: translateX(-50%);
 }
 
 .nav-link:hover {
     color: var(--accent-pink);
 }
 
+.nav-link:hover::after {
+    width: 100%;
+}
+
 /* Connect Button Polish */
 .aaa-connect-button {
-    background: rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
+    border-radius: 14px !important;
     color: white !important;
     font-weight: 600 !important;
-    padding: 10px 20px !important;
-    transition: all 0.2s ease !important;
+    padding: 10px 22px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .aaa-connect-button:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
     border-color: var(--accent-pink) !important;
-    box-shadow: 0 0 15px rgba(255, 0, 122, 0.2);
+    box-shadow: 0 0 20px rgba(255, 0, 122, 0.15), 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {

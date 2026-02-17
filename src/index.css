@@ -71,12 +71,13 @@ body {
   justify-content: center;
   background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
   color: white;
-  gap: 16px;
+  gap: 20px;
 }
 
 .loader-spinner {
   font-size: 3rem;
-  animation: spin 1s linear infinite;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.3));
 }
 
 /* ============================================
@@ -116,14 +117,17 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+    linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
   color: white;
-  gap: 16px;
+  gap: 20px;
 }
 
 .loading-spinner {
   font-size: 3rem;
-  animation: spin 1s linear infinite;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.3));
 }
 
 /* ============================================
@@ -155,13 +159,26 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   transition: all 0.4s var(--ease-premium);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  pointer-events: none;
 }
 
 .glass-card:hover {
   background: var(--bg-card-hover);
   border-color: var(--glass-border-bright);
   transform: translateY(-4px) scale(1.02);
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-lg), 0 0 24px rgba(255, 255, 255, 0.04);
 }
 
 /* ============================================
@@ -204,21 +221,22 @@ body {
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 0, 122, 0.5);
+  background: rgba(255, 0, 122, 0.35);
   border-radius: 3px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 0, 122, 0.7);
+  background: rgba(255, 0, 122, 0.6);
 }
 
 /* ============================================

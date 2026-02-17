@@ -5,7 +5,9 @@
 .game-browser {
     min-height: 100vh;
     min-height: 100dvh;
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+    background:
+        radial-gradient(circle at 30% 70%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     color: white;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -18,13 +20,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 24px;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(24px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     position: sticky;
     top: 0;
     z-index: 100;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .browser-header h1 {
@@ -38,19 +42,23 @@
 }
 
 .btn-back {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 22px;
+    border-radius: 14px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .btn-back:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateX(-2px);
 }
 
 .header-spacer {
@@ -78,15 +86,28 @@
 }
 
 .game-tile {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 32px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 28px;
+    padding: 36px;
     text-align: center;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Top reflection line */
+.game-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    pointer-events: none;
 }
 
 .game-tile.available {
@@ -94,14 +115,18 @@
 }
 
 .game-tile.available:hover {
-    transform: translateY(-8px);
-    border-color: rgba(0, 243, 255, 0.5);
-    box-shadow: 0 20px 60px rgba(0, 243, 255, 0.15);
+    transform: translateY(-10px);
+    border-color: rgba(0, 243, 255, 0.35);
+    box-shadow:
+        0 24px 64px rgba(0, 243, 255, 0.12),
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        inset 0 0 30px rgba(0, 243, 255, 0.02);
 }
 
 .game-tile.locked {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
+    filter: grayscale(0.2);
 }
 
 .tile-lock {
@@ -143,18 +168,37 @@
     background: linear-gradient(135deg, #00f3ff 0%, #0099ff 100%);
     color: #000;
     border: none;
-    padding: 14px 32px;
-    border-radius: 14px;
+    padding: 14px 36px;
+    border-radius: 16px;
     font-size: 1rem;
     font-weight: 700;
+    letter-spacing: 0.5px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 20px rgba(0, 243, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 20px rgba(0, 243, 255, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-play::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: btn-shine-browser 3.5s ease-in-out infinite;
+}
+
+@keyframes btn-shine-browser {
+    0% { left: -100%; }
+    50%, 100% { left: 100%; }
 }
 
 .btn-play:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 30px rgba(0, 243, 255, 0.4);
+    transform: scale(1.06) translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 243, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ============================================

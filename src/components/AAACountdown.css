@@ -9,7 +9,8 @@
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.88);
-    backdrop-filter: blur(24px);
+    backdrop-filter: blur(28px) saturate(0.9);
+    -webkit-backdrop-filter: blur(28px) saturate(0.9);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -18,13 +19,17 @@
 
 .aaa-countdown-card {
     position: relative;
-    width: min(340px, 90vw);
-    padding: 36px 28px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 32px;
+    width: min(360px, 90vw);
+    padding: 40px 32px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 36px;
     text-align: center;
-    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
+    box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
     overflow: hidden;
 }
 
@@ -76,12 +81,19 @@
 .aaa-player-chip {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid color-mix(in srgb, var(--chip-color) 40%, transparent);
-    border-radius: 20px;
+    gap: 7px;
+    padding: 7px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
+    border-radius: 22px;
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.aaa-player-chip:hover {
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-1px);
 }
 
 .aaa-chip-dot {
@@ -139,10 +151,12 @@
 
 .aaa-countdown-number {
     font-family: var(--font-display), system-ui, sans-serif;
-    font-size: 4rem;
-    font-weight: 800;
+    font-size: 4.5rem;
+    font-weight: 900;
     color: white;
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    text-shadow:
+        0 0 30px rgba(255, 255, 255, 0.3),
+        0 0 60px rgba(0, 243, 255, 0.15);
     perspective: 1000px;
     line-height: 1;
 }

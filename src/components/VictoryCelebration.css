@@ -15,9 +15,9 @@
 .victory-backdrop {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.95) 100%);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.95) 100%);
+    backdrop-filter: blur(20px) saturate(0.8);
+    -webkit-backdrop-filter: blur(20px) saturate(0.8);
 }
 
 /* ============================================
@@ -32,11 +32,28 @@
     align-items: center;
     text-align: center;
     padding: 2.5rem;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: rgba(10, 10, 25, 0.75);
+    backdrop-filter: blur(32px) saturate(1.2);
+    -webkit-backdrop-filter: blur(32px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg), 0 0 50px rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 32px 80px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     max-width: 90vw;
+    overflow: hidden;
+}
+
+.victory-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent);
+    pointer-events: none;
 }
 
 /* ============================================
@@ -133,12 +150,14 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.2);
     border-radius: var(--radius-md);
-    padding: 1rem 2rem;
+    padding: 1.2rem 2rem;
     margin-bottom: 2rem;
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
+    box-shadow: 0 0 24px rgba(255, 215, 0, 0.1), inset 0 0 20px rgba(255, 215, 0, 0.03);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .prize-icon {
@@ -178,23 +197,44 @@
 .victory-btn.primary {
     background: var(--accent-gradient, linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%));
     color: white;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 6px 24px rgba(139, 92, 246, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.victory-btn.primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    animation: victory-shine 3s ease-in-out infinite;
+}
+
+@keyframes victory-shine {
+    0% { left: -100%; }
+    50%, 100% { left: 100%; }
 }
 
 .victory-btn.primary:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 32px rgba(139, 92, 246, 0.5), 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .victory-btn.secondary {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .victory-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
 }
 
 /* ============================================
