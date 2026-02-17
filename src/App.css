@@ -99,9 +99,9 @@ body {
 
 .pot-display {
     position: absolute;
-    top: calc(var(--safe-top) + 8px);
+    top: 8px;
     left: 12px;
-    height: 36px;
+    height: 32px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -428,17 +428,14 @@ body {
 
 .central-dice-area {
     grid-row: 3;
-    /* Footer Row */
     grid-column: 1;
     position: relative;
     pointer-events: auto !important;
-    /* FORCE CLICK */
     z-index: 70;
-    /* ABSOLUTE TOP */
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    /* Ensure it fits in footer but allows overflow for scale effects */
+    padding-top: 4px;
     height: 100%;
     width: 100%;
 }
@@ -451,7 +448,7 @@ body {
 
 .turn-timer-container {
     position: absolute;
-    top: calc(var(--safe-top) + 8px);
+    top: 6px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
@@ -525,12 +522,12 @@ body {
    ============================================ */
 .mode-badge {
     position: absolute;
-    top: calc(var(--safe-top) + 12px);
+    top: 8px;
     right: 12px;
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: 99px;
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 1px;
     z-index: var(--z-hud);
