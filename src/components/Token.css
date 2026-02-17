@@ -38,8 +38,9 @@
     position: absolute;
     top: 50%;
     left: 50%;
+    /* Base transform; inline style adds counter-rotation */
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.92);
     color: #fff;
     font-family: system-ui, -apple-system, sans-serif;
     font-size: 10px;
@@ -50,7 +51,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
     z-index: 10;
     line-height: 1;
@@ -196,15 +197,15 @@
     }
 }
 
-/* Enhanced stacking visibility - Horizontal Tilt */
+/* Enhanced stacking visibility - Clear separation */
 .token.stacked {
-    filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.4));
-    animation: token-stack-bob 1.2s ease-in-out infinite;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
 }
 
 .token.stacked .token-inner {
-    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+                0 0 8px var(--token-glow, rgba(255, 255, 255, 0.3)),
                 inset 0 4px 8px rgba(255, 255, 255, 0.3),
                 inset 0 -4px 8px rgba(0, 0, 0, 0.3);
 }

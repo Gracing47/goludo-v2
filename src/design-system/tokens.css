@@ -34,6 +34,18 @@
     --color-info: #05d9e8;
     /* Holo Blue */
 
+    /* Brand Accent Colors (Pancake/Uniswap inspired) */
+    --pancake-cyan: #00f3ff;
+    --pancake-cyan-glow: 0 0 30px rgba(0, 243, 255, 0.25);
+    --accent-pink: #ff007a;
+    --accent-gradient: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
+    --color-blue: #3a86ff;
+    --color-red: #ff4757;
+    --color-green: #00d26a;
+    --color-yellow: #ffbe0b;
+    --pancake-yellow: #ffbe0b;
+    --shadow-glow-pink: 0 0 30px rgba(255, 0, 122, 0.25);
+
     /* Player Colors (High Vis Neon) */
     --player-red: #ff2a6d;
     --player-green: #00ff9d;

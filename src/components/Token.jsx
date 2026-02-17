@@ -23,42 +23,42 @@ const Token = ({
         if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
 
         if (total === 2) {
-            // Side-by-side split — each token takes ~half the cell
+            // Side-by-side split — clear separation
             const positions = [
-                { x: '-30%', y: '0%' },
-                { x: '30%', y: '0%' }
+                { x: '-35%', y: '0%' },
+                { x: '35%', y: '0%' }
             ];
             return {
                 ...positions[index % 2],
-                scale: 0.6,
+                scale: 0.65,
                 zIndex: 20 + index
             };
         }
 
         if (total === 3) {
-            // Triangle layout
+            // Triangle layout - wider spread
             const positions = [
-                { x: '-28%', y: '-22%' },
-                { x: '28%', y: '-22%' },
-                { x: '0%', y: '28%' }
+                { x: '-32%', y: '-26%' },
+                { x: '32%', y: '-26%' },
+                { x: '0%', y: '32%' }
             ];
             return {
                 ...positions[index % 3],
-                scale: 0.52,
+                scale: 0.55,
                 zIndex: 20 + index
             };
         }
 
-        // 4 tokens: 2x2 grid
+        // 4 tokens: 2x2 grid - wider spread
         const positions = [
-            { x: '-28%', y: '-28%' },
-            { x: '28%', y: '-28%' },
-            { x: '-28%', y: '28%' },
-            { x: '28%', y: '28%' }
+            { x: '-32%', y: '-32%' },
+            { x: '32%', y: '-32%' },
+            { x: '-32%', y: '32%' },
+            { x: '32%', y: '32%' }
         ];
         return {
             ...positions[index % 4],
-            scale: 0.48,
+            scale: 0.5,
             zIndex: 20 + index
         };
     };
@@ -170,9 +170,13 @@ const Token = ({
                 <div className="token-shine" aria-hidden="true" />
                 <div className="token-center-dot" aria-hidden="true" />
 
-                {/* 🔢 Stack Count Badge (moved to corner for visibility) */}
+                {/* 🔢 Stack Count Badge (counter-rotated to stay readable) */}
                 {tokenCount > 1 && (
-                    <div className="token-stack-badge" aria-label={`${tokenCount} tokens stacked`}>
+                    <div
+                        className="token-stack-badge"
+                        style={{ transform: `translate(-50%, -50%) rotate(calc(-1 * var(--rotation, 0deg)))` }}
+                        aria-label={`${tokenCount} tokens stacked`}
+                    >
                         {tokenCount}
                     </div>
                 )}
