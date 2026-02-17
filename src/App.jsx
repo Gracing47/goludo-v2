@@ -50,6 +50,7 @@ import {
 
 import { useGameStateDerivation } from './hooks/useGameStateDerivation';
 import GameHUD from './components/HUD/GameHUD';
+import PlayerPods from './components/HUD/PlayerPods';
 import Token from './components/Token';
 import { CaptureExplosion, SpawnSparkle } from './components/ParticleEffects';
 
@@ -549,7 +550,18 @@ function App() {
 
                     {/* 1. BOARD LAYER (Centered) */}
                     <div className="board-layer">
-                        <Board rotation={boardRotation} activePlayer={gameState.activePlayer}>
+                        <Board
+                            rotation={boardRotation}
+                            activePlayer={gameState.activePlayer}
+                            overlay={
+                                <PlayerPods
+                                    gameConfig={gameConfig}
+                                    gameState={gameState}
+                                    account={account}
+                                    boardRotation={boardRotation}
+                                />
+                            }
+                        >
                             {tokensWithCoords.map(({ playerIdx, tokenIdx, tokenCount, coords, inYard, stackIndex, stackSize, allTokenIndices }) => {
                                 const isValid = allTokenIndices.some(idx =>
                                     gameState.validMoves?.some(m => m.tokenIndex === idx)

@@ -36,9 +36,9 @@ body {
     position: fixed;
     inset: 0;
     display: grid;
-    /* Grid: Header | Top-Pods | Board | Bottom-Pods | Footer */
+    /* Simplified: Header | Board (pods are inside board-anchor) | Footer */
     grid-template-rows:
-        var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--footer-height);
+        var(--header-height) 1fr var(--footer-height);
     grid-template-columns: 1fr;
     padding-top: var(--safe-top);
     padding-bottom: var(--safe-bottom);
@@ -79,7 +79,7 @@ body {
    ============================================ */
 
 .board-layer {
-    grid-row: 3;
+    grid-row: 2;
     grid-column: 1;
     position: relative;
     display: flex;
@@ -90,7 +90,7 @@ body {
     width: 100%;
     height: 100%;
     min-height: 0; /* Allow grid item to shrink below content size */
-    overflow: hidden;
+    overflow: visible; /* Allow pods to extend beyond board edges */
 }
 
 /* ============================================
@@ -171,8 +171,8 @@ body {
    ============================================ */
 
 .player-pods-container {
-    /* Fixed overlay spanning entire viewport for absolute pod placement */
-    position: fixed;
+    /* Positioned within board-anchor - pods hug the board corners */
+    position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 50;
@@ -180,33 +180,35 @@ body {
 
 .pod-anchor {
     position: absolute;
-    display: flex;
-    align-items: center;
     pointer-events: none;
 }
 
-/* Top-left pod */
+/* Top-left pod (Red base corner) */
 .pos-0 {
-    top: calc(var(--header-height) + 4px);
-    left: 12px;
+    top: 0;
+    left: 0;
+    transform: translateY(calc(-100% - 6px));
 }
 
-/* Top-right pod */
+/* Top-right pod (Green base corner) */
 .pos-1 {
-    top: calc(var(--header-height) + 4px);
-    right: 12px;
+    top: 0;
+    right: 0;
+    transform: translateY(calc(-100% - 6px));
 }
 
-/* Bottom-left pod */
+/* Bottom-left pod (Blue base corner) */
 .pos-3 {
-    bottom: calc(var(--footer-height) + 4px);
-    left: 12px;
+    bottom: 0;
+    left: 0;
+    transform: translateY(calc(100% + 6px));
 }
 
-/* Bottom-right pod */
+/* Bottom-right pod (Yellow base corner) */
 .pos-2 {
-    bottom: calc(var(--footer-height) + 4px);
-    right: 12px;
+    bottom: 0;
+    right: 0;
+    transform: translateY(calc(100% + 6px));
 }
 
 /* Desktop enhancement */
@@ -241,8 +243,6 @@ body {
     inset: 0;
     pointer-events: none;
     z-index: var(--z-hud);
-    display: grid;
-    grid-template-rows: var(--header-height) var(--pod-height) 1fr var(--pod-height) var(--footer-height);
 }
 
 /* ============================================
@@ -427,7 +427,7 @@ body {
    ============================================ */
 
 .central-dice-area {
-    grid-row: 5;
+    grid-row: 3;
     /* Footer Row */
     grid-column: 1;
     position: relative;

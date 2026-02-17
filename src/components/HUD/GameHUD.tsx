@@ -62,14 +62,6 @@ const GameHUD: React.FC<GameHUDProps> = ({
                 </div>
             )}
 
-            {/* A. PLAYER POD CORNER ANCHORS */}
-            <PlayerPods
-                gameConfig={gameConfig}
-                gameState={gameState}
-                account={account}
-                boardRotation={boardRotation}
-            />
-
             {/* SPECIAL: DISCONNECT OVERLAY (Web3 Only) */}
             {showDisconnect && appState === 'game' && gameState && gameConfig?.mode === 'web3' && (
                 <div className="disconnect-overlay">

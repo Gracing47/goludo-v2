@@ -12,6 +12,13 @@
     padding: 0;
 }
 
+/* Anchor wrapper - matches board size, provides positioning context for overlays */
+.board-anchor {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+}
+
 .ludo-board {
     position: relative;
     display: grid;
@@ -399,9 +406,9 @@
 @media (max-width: 480px) {
     .ludo-board {
         /* Mobile Sizing: fill available space perfectly
-           Grid overhead: header(52) + 2*pod(36) + footer(56) = 180px + safe areas ~220px */
-        width: min(96vw, calc(100dvh - 220px));
-        height: min(96vw, calc(100dvh - 220px));
+           Overhead: header(52) + footer(56) + 2*pods(32) outside + safe(~40) = ~212px */
+        width: min(94vw, calc(100dvh - 210px));
+        height: min(94vw, calc(100dvh - 210px));
         max-width: none;
         max-height: 100%;
         padding: 6px;
@@ -419,9 +426,9 @@
 /* Tablet (768px+) - Use consistent sizing */
 @media (min-width: 768px) {
     .ludo-board {
-        /* 260px = header(60) + 2*pod(50) + footer(80) + padding(20) */
-        width: min(75vw, calc(100vh - 260px), 600px);
-        height: min(75vw, calc(100vh - 260px), 600px);
+        /* header(60) + footer(80) + 2*pods(40) outside + padding(20) = 240px */
+        width: min(75vw, calc(100vh - 240px), 600px);
+        height: min(75vw, calc(100vh - 240px), 600px);
         padding: 10px;
         gap: 3px;
         border-radius: 40px;
@@ -436,8 +443,9 @@
 /* Desktop (1024px+) - Premium sizing with better proportions */
 @media (min-width: 1024px) {
     .ludo-board {
-        width: var(--board-size, min(calc(100vh - 240px), 60vw, 650px));
-        height: var(--board-size, min(calc(100vh - 240px), 60vw, 650px));
+        /* header(60) + footer(80) + 2*pods(40) outside + padding = 220px */
+        width: var(--board-size, min(calc(100vh - 220px), 60vw, 650px));
+        height: var(--board-size, min(calc(100vh - 220px), 60vw, 650px));
         padding: 12px;
         gap: 3px;
         border-radius: 44px;

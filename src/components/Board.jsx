@@ -19,7 +19,7 @@ import {
     PLAYERS
 } from '../engine/constants';
 
-const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false }) => {
+const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver = false }) => {
     const cells = React.useMemo(() => {
         const result = [];
         for (let row = 0; row < GRID_SIZE; row++) {
@@ -47,16 +47,20 @@ const Board = ({ children, rotation = 0, activePlayer = 0, isGameOver = false })
     return (
         <div className={`board-wrapper ${isGameOver ? 'game-over-dim' : ''}`}>
             <div className="board-focus-wrapper">
-                <div className="ludo-board" style={{
-                    transform: `rotate(${rotation}deg)`,
-                    transition: 'transform 0.5s ease',
-                    '--board-rotation': `${rotation}deg`,
-                    '--crown-rotation': `${[-45, 45, 135, 225][activePlayer] || 0}deg`
-                }}>
-                    {cells}
-                    <div className="token-layer" style={{ transform: `rotate(0deg)` }}>
-                        {children}
+                <div className="board-anchor">
+                    <div className="ludo-board" style={{
+                        transform: `rotate(${rotation}deg)`,
+                        transition: 'transform 0.5s ease',
+                        '--board-rotation': `${rotation}deg`,
+                        '--crown-rotation': `${[-45, 45, 135, 225][activePlayer] || 0}deg`
+                    }}>
+                        {cells}
+                        <div className="token-layer" style={{ transform: `rotate(0deg)` }}>
+                            {children}
+                        </div>
                     </div>
+                    {/* Overlay elements positioned relative to board */}
+                    {overlay}
                 </div>
             </div>
         </div>
