@@ -19,46 +19,47 @@ const Token = ({
     isBonusMove = false
 }) => {
     // Grid-based positioning for stacked tokens (Different Players on same cell)
+    // Offsets are % of the cell, tokens shrink to fit without overlap
     const getStackOffset = (index, total) => {
         if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
 
         if (total === 2) {
-            // Side-by-side split — clear separation
+            // Side-by-side: each token in its own half
             const positions = [
-                { x: '-35%', y: '0%' },
-                { x: '35%', y: '0%' }
+                { x: '-38%', y: '0%' },
+                { x: '38%', y: '0%' }
             ];
             return {
                 ...positions[index % 2],
-                scale: 0.65,
+                scale: 0.58,
                 zIndex: 20 + index
             };
         }
 
         if (total === 3) {
-            // Triangle layout - wider spread
+            // Triangle layout - clear separation
             const positions = [
-                { x: '-32%', y: '-26%' },
-                { x: '32%', y: '-26%' },
-                { x: '0%', y: '32%' }
+                { x: '-36%', y: '-30%' },
+                { x: '36%', y: '-30%' },
+                { x: '0%', y: '36%' }
             ];
             return {
                 ...positions[index % 3],
-                scale: 0.55,
+                scale: 0.5,
                 zIndex: 20 + index
             };
         }
 
-        // 4 tokens: 2x2 grid - wider spread
+        // 4 tokens: 2x2 quadrant grid - each token in its own corner
         const positions = [
-            { x: '-32%', y: '-32%' },
-            { x: '32%', y: '-32%' },
-            { x: '-32%', y: '32%' },
-            { x: '32%', y: '32%' }
+            { x: '-38%', y: '-38%' },
+            { x: '38%', y: '-38%' },
+            { x: '-38%', y: '38%' },
+            { x: '38%', y: '38%' }
         ];
         return {
             ...positions[index % 4],
-            scale: 0.5,
+            scale: 0.45,
             zIndex: 20 + index
         };
     };
