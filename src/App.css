@@ -3,12 +3,12 @@
    Berechnete Größen für alle Screen-Sizes
    ========================================= */
 
-/* Mobile-specific CSS Variables for optimized layout */
+/* Mobile-specific CSS Variables */
 @media (max-width: 480px) {
     :root {
-        --header-height: 52px;     /* Accounts for game-mode header + safe-area on mobile */
-        --pod-height: 36px;        /* Compact pods */
-        --footer-height: 56px;     /* Reduced from 80px for mobile */
+        --header-height: 52px;
+        --pod-height: 36px;
+        --footer-height: 56px;
     }
 }
 
@@ -29,9 +29,8 @@ body {
     position: fixed;
     inset: 0;
     display: grid;
-    /* Simplified: Header | Board (pods are inside board-anchor) | Footer */
-    grid-template-rows:
-        var(--header-height) 1fr var(--footer-height);
+    /* Mobile: Header | Arena | (no footer — dice is in arena) */
+    grid-template-rows: var(--header-height) 1fr;
     grid-template-columns: 1fr;
     padding-top: var(--safe-top);
     padding-bottom: var(--safe-bottom);
@@ -44,50 +43,84 @@ body {
 }
 
 @keyframes screen-shake {
-
-    10%,
-    90% {
-        transform: translate3d(-2px, 1px, 0);
-    }
-
-    20%,
-    80% {
-        transform: translate3d(3px, -1px, 0);
-    }
-
-    30%,
-    50%,
-    70% {
-        transform: translate3d(-6px, 2px, 0);
-    }
-
-    40%,
-    60% {
-        transform: translate3d(6px, -2px, 0);
-    }
+    10%, 90% { transform: translate3d(-2px, 1px, 0); }
+    20%, 80% { transform: translate3d(3px, -1px, 0); }
+    30%, 50%, 70% { transform: translate3d(-6px, 2px, 0); }
+    40%, 60% { transform: translate3d(6px, -2px, 0); }
 }
 
 /* ============================================
-   BOARD LAYER - Centered with Anchors
+   GAME ARENA - Board + Side Panel
+   On mobile: column (board on top, dice below)
+   On desktop: row (board left, dice/timer right)
+   ============================================ */
+
+.game-arena {
+    grid-row: 2;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: visible;
+    gap: 4px;
+}
+
+/* ============================================
+   BOARD LAYER - Centered
    ============================================ */
 
 .board-layer {
-    grid-row: 2;
-    grid-column: 1;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: var(--z-board);
-    padding: 4px;
-    width: 100%;
-    height: 100%;
-    min-height: 0; /* Allow grid item to shrink below content size */
-    overflow: visible; /* Allow pods to extend beyond board edges */
+    flex-shrink: 0;
+    overflow: visible;
 }
 
 /* ============================================
-   POT DISPLAY - Center of Board
+   SIDE PANEL - Dice + Timer
+   Mobile: horizontal strip below board
+   Desktop: vertical panel right of board
+   ============================================ */
+
+.side-panel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 70;
+    pointer-events: auto;
+    padding: 4px 0;
+}
+
+/* Hide side-panel timer on mobile (shown via board-timer-anchor instead) */
+.side-timer {
+    display: none;
+}
+
+/* ============================================
+   BOARD TIMER ANCHOR - Mobile only
+   Positioned between top pods above board center
+   ============================================ */
+
+.board-timer-anchor {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, calc(-100% - 8px));
+    z-index: 60;
+    pointer-events: none;
+}
+
+/* ============================================
+   POT DISPLAY
    ============================================ */
 
 .pot-display {
@@ -130,41 +163,11 @@ body {
     margin-left: 2px;
 }
 
-@keyframes pot-float {
-
-    /* Removed large float, kept subtle */
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-2px);
-    }
-}
-
-@media (max-width: 480px) {
-    .board-layer {
-        padding: 2px;
-    }
-
-    .pot-display {
-        padding: 4px 10px;
-        bottom: 80px;
-        left: 10px;
-    }
-
-    .pot-amount {
-        font-size: 1rem;  /* Increased from 0.9rem for better readability */
-    }
-}
-
 /* ============================================
    PLAYER PODS CONTAINER
    ============================================ */
 
 .player-pods-container {
-    /* Positioned within board-anchor - pods hug the board corners */
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -176,55 +179,28 @@ body {
     pointer-events: none;
 }
 
-/* Top-left pod (Red base corner) */
 .pos-0 {
     top: 0;
     left: 0;
     transform: translateY(calc(-100% - 6px));
 }
 
-/* Top-right pod (Green base corner) */
 .pos-1 {
     top: 0;
     right: 0;
     transform: translateY(calc(-100% - 6px));
 }
 
-/* Bottom-left pod (Blue base corner) */
 .pos-3 {
     bottom: 0;
     left: 0;
     transform: translateY(calc(100% + 6px));
 }
 
-/* Bottom-right pod (Yellow base corner) */
 .pos-2 {
     bottom: 0;
     right: 0;
     transform: translateY(calc(100% + 6px));
-}
-
-/* Desktop enhancement */
-@media (min-width: 768px) {
-    .player-pod {
-        min-width: 120px;
-        padding: 6px 14px 6px 6px;
-        height: 40px;
-        gap: 8px;
-        background: rgba(20, 20, 35, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .pod-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 14px;
-    }
-
-    .pod-name {
-        font-size: 11px;
-        max-width: 80px;
-    }
 }
 
 /* ============================================
@@ -241,6 +217,7 @@ body {
 /* ============================================
    DISCONNECT OVERLAY
    ============================================ */
+
 .disconnect-overlay {
     position: absolute;
     inset: 0;
@@ -282,8 +259,6 @@ body {
     height: 36px;
     min-width: auto;
     pointer-events: auto;
-
-    /* Glassmorphism */
     background: rgba(20, 20, 35, 0.4);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -291,7 +266,6 @@ body {
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.2),
         inset 0 0 20px rgba(255, 255, 255, 0.02);
-
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.7;
     filter: grayscale(0.1);
@@ -316,24 +290,11 @@ body {
     border-color: rgba(255, 0, 0, 0.2);
 }
 
-/* Dynamic Colors */
-.player-pod.red {
-    --pod-glow-color: rgba(255, 71, 87, 0.6);
-}
+.player-pod.red { --pod-glow-color: rgba(255, 71, 87, 0.6); }
+.player-pod.green { --pod-glow-color: rgba(46, 213, 115, 0.6); }
+.player-pod.yellow { --pod-glow-color: rgba(255, 165, 2, 0.6); }
+.player-pod.blue { --pod-glow-color: rgba(52, 152, 219, 0.6); }
 
-.player-pod.green {
-    --pod-glow-color: rgba(46, 213, 115, 0.6);
-}
-
-.player-pod.yellow {
-    --pod-glow-color: rgba(255, 165, 2, 0.6);
-}
-
-.player-pod.blue {
-    --pod-glow-color: rgba(52, 152, 219, 0.6);
-}
-
-/* Avatar */
 .pod-avatar {
     width: 28px;
     height: 28px;
@@ -349,21 +310,10 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.pod-avatar.red {
-    background: linear-gradient(135deg, #ff4757, #c0392b);
-}
-
-.pod-avatar.green {
-    background: linear-gradient(135deg, #2ed573, #218c74);
-}
-
-.pod-avatar.yellow {
-    background: linear-gradient(135deg, #ffa502, #e67e22);
-}
-
-.pod-avatar.blue {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-}
+.pod-avatar.red { background: linear-gradient(135deg, #ff4757, #c0392b); }
+.pod-avatar.green { background: linear-gradient(135deg, #2ed573, #218c74); }
+.pod-avatar.yellow { background: linear-gradient(135deg, #ffa502, #e67e22); }
+.pod-avatar.blue { background: linear-gradient(135deg, #3498db, #2980b9); }
 
 .pod-turn-indicator {
     position: absolute;
@@ -375,17 +325,8 @@ body {
 }
 
 @keyframes ripple-pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.8;
-        stroke-width: 2px;
-    }
-
-    100% {
-        transform: scale(1.4);
-        opacity: 0;
-        stroke-width: 0px;
-    }
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.4); opacity: 0; }
 }
 
 .pod-name {
@@ -416,37 +357,8 @@ body {
 }
 
 /* ============================================
-   CENTRAL DICE - Footer Integration
+   TURN TIMER - Shared styles
    ============================================ */
-
-.central-dice-area {
-    grid-row: 3;
-    grid-column: 1;
-    position: relative;
-    pointer-events: auto !important;
-    z-index: 70;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 4px;
-    height: 100%;
-    width: 100%;
-}
-
-/* Remove media query override as grid handles it */
-
-/* ============================================
-   TURN TIMER - Header Integration
-   ============================================ */
-
-.turn-timer-container {
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 15;
-    pointer-events: none;
-}
 
 .turn-timer {
     position: relative;
@@ -492,7 +404,6 @@ body {
     font-weight: 900;
     color: var(--color-tertiary);
     line-height: 1;
-    font-variant-numeric: tabular-nums;
     text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
 }
 
@@ -504,10 +415,7 @@ body {
     animation: urgent-pulse 0.5s infinite alternate;
 }
 
-.turn-timer.urgent .turn-timer-progress {
-    stroke: #ff4757;
-}
-
+.turn-timer.urgent .turn-timer-progress { stroke: #ff4757; }
 .turn-timer.urgent .turn-timer-value {
     color: #ff4757;
     text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
@@ -519,8 +427,9 @@ body {
 }
 
 /* ============================================
-   MODE BADGE - Header Integration
+   MODE BADGE
    ============================================ */
+
 .mode-badge {
     position: absolute;
     top: 8px;
@@ -600,22 +509,56 @@ body {
 }
 
 @keyframes slide-down {
-    from {
-        transform: translateX(-50%) translateY(-20px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
+    from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
 
 /* ============================================
-   MOBILE SPECIFIC ADJUSTMENTS
+   MOBILE (<480px)
    ============================================ */
 
 @media (max-width: 480px) {
+    .game-arena {
+        gap: 2px;
+        padding: 0 2px;
+    }
+
+    /* Mobile pot: fixed top-left within game area */
+    .pot-display {
+        top: 6px;
+        left: 8px;
+        padding: 4px 10px;
+        height: 28px;
+    }
+
+    .pot-amount {
+        font-size: 0.85rem;
+    }
+
+    /* Side panel: horizontal below board */
+    .side-panel {
+        padding: 2px 0;
+    }
+
+    /* Hide side-panel timer on mobile (board-timer-anchor is used) */
+    .side-timer {
+        display: none;
+    }
+
+    /* Board timer: visible between top pods */
+    .board-timer-anchor {
+        display: block;
+    }
+
+    .board-timer-anchor .turn-timer {
+        width: 44px;
+        height: 44px;
+    }
+
+    .board-timer-anchor .turn-timer-value {
+        font-size: 15px;
+    }
+
     .player-pod {
         min-width: auto;
         padding: 4px 10px 4px 4px;
@@ -659,5 +602,82 @@ body {
         width: 36px;
         height: 36px;
         font-size: 16px;
+    }
+}
+
+/* ============================================
+   TABLET (768px+)
+   ============================================ */
+
+@media (min-width: 768px) {
+    .game-arena {
+        flex-direction: row;
+        gap: 24px;
+        padding: 0 16px;
+    }
+
+    /* Side panel: vertical column to the right of board */
+    .side-panel {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        min-width: 80px;
+    }
+
+    /* Show side-panel timer on desktop */
+    .side-timer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Hide board-timer-anchor on desktop */
+    .board-timer-anchor {
+        display: none;
+    }
+
+    .player-pod {
+        min-width: 120px;
+        padding: 6px 14px 6px 6px;
+        height: 40px;
+        gap: 8px;
+        background: rgba(20, 20, 35, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .pod-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+    }
+
+    .pod-name {
+        font-size: 11px;
+        max-width: 80px;
+    }
+}
+
+/* ============================================
+   DESKTOP (1024px+)
+   ============================================ */
+
+@media (min-width: 1024px) {
+    .game-arena {
+        gap: 32px;
+    }
+
+    .side-panel {
+        min-width: 90px;
+        gap: 24px;
+    }
+
+    .turn-timer {
+        width: 64px;
+        height: 64px;
+    }
+
+    .turn-timer-value {
+        font-size: 20px;
     }
 }

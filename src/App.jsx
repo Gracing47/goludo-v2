@@ -18,7 +18,6 @@ import { API_URL, SOCKET_URL } from './config/api';
 
 import WarpTransition from './components/WarpTransition';
 import Dice from './components/Dice';
-// import DiceArea from './components/DiceArea'; // Reverted to legacy Dice
 import AmbientLight from './components/VFX/AmbientLight';
 import VictoryCelebration from './components/VictoryCelebration';
 import AAACountdown from './components/AAACountdown';
@@ -548,19 +547,36 @@ function App() {
                     {/* 0. AMBIENT LIGHTING (Underlay) */}
                     <AmbientLight activePlayer={gameState.activePlayer} />
 
-                    {/* 1. BOARD LAYER (Centered) */}
-                    <div className="board-layer">
+                    {/* 1. GAME ARENA: Board + Side Panel */}
+                    <div className="game-arena">
+                      <div className="board-layer">
                         <Board
                             rotation={boardRotation}
                             activePlayer={gameState.activePlayer}
-                            overlay={
+                            overlay={<>
                                 <PlayerPods
                                     gameConfig={gameConfig}
                                     gameState={gameState}
                                     account={account}
                                     boardRotation={boardRotation}
                                 />
-                            }
+                                {/* Turn timer between top pods on mobile */}
+                                {gameState.gamePhase !== 'WIN' && turnTimer !== null && turnTimer > 0 && (
+                                    <div className="board-timer-anchor">
+                                        <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
+                                            <svg className="turn-timer-ring" viewBox="0 0 36 36">
+                                                <circle className="turn-timer-track" cx="18" cy="18" r="15" />
+                                                <circle
+                                                    className="turn-timer-progress"
+                                                    cx="18" cy="18" r="15"
+                                                    style={{ strokeDasharray: `${(turnTimer / 30) * 94.25} 94.25` }}
+                                                />
+                                            </svg>
+                                            <span className="turn-timer-value">{turnTimer}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </>}
                         >
                             {tokensWithCoords.map(({ playerIdx, tokenIdx, tokenCount, coords, inYard, stackIndex, stackSize, allTokenIndices }) => {
                                 const isValid = allTokenIndices.some(idx =>
@@ -621,6 +637,36 @@ function App() {
                                 />
                             ))}
                         </Board>
+                      </div>
+
+                      {/* SIDE PANEL: Dice + Timer (desktop: right of board, mobile: below board) */}
+                      {gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
+                        <div className="side-panel">
+                            {/* Timer in side panel (desktop only, mobile uses board-timer-anchor) */}
+                            {turnTimer !== null && turnTimer > 0 && (
+                                <div className="side-timer">
+                                    <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
+                                        <svg className="turn-timer-ring" viewBox="0 0 36 36">
+                                            <circle className="turn-timer-track" cx="18" cy="18" r="15" />
+                                            <circle
+                                                className="turn-timer-progress"
+                                                cx="18" cy="18" r="15"
+                                                style={{ strokeDasharray: `${(turnTimer / 30) * 94.25} 94.25` }}
+                                            />
+                                        </svg>
+                                        <span className="turn-timer-value">{turnTimer}</span>
+                                    </div>
+                                </div>
+                            )}
+                            <Dice
+                                value={gameState.diceValue}
+                                onRoll={handleRoll}
+                                disabled={!canRoll}
+                                isRolling={isRolling}
+                                color={PLAYER_COLORS[gameState.activePlayer]}
+                            />
+                        </div>
+                      )}
                     </div>
 
                     {/* 2. HUD LAYER (Overlay) */}
@@ -634,7 +680,7 @@ function App() {
                         appState={appState}
                     />
 
-                    {/* 3. GLOBAL UI (Pot & Dice - Moved out of Board for cleanup) */}
+                    {/* 3. POT DISPLAY */}
                     {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
                         <div className="pot-display">
                             <span className="pot-icon">💰</span>
@@ -644,22 +690,6 @@ function App() {
                                 </span>
                                 <span className="pot-currency">C2FLR</span>
                             </div>
-                        </div>
-                    )}
-
-                    {gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
-                        <div className="central-dice-area">
-                            <Dice
-                                value={gameState.diceValue}
-                                onRoll={handleRoll}
-                                disabled={!canRoll}
-                                isRolling={isRolling}
-                                color={
-                                    gameConfig.mode === 'web3' && account
-                                        ? PLAYER_COLORS[gameState.activePlayer] // Web3: Active Player Color
-                                        : PLAYER_COLORS[gameState.activePlayer] // Classic: Active Player Color
-                                }
-                            />
                         </div>
                     )}
                 </div>
