@@ -6,8 +6,8 @@
 .dice-button {
     background: rgba(20, 24, 38, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 14px;
+    border-radius: 14px;
+    padding: 10px;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     perspective: 1000px;
@@ -208,53 +208,38 @@
 
 @media (max-width: 480px) {
     .dice-button {
-        padding: 10px;  /* Increased for better touch target */
-        min-width: 56px;
-        min-height: 56px;
+        padding: 8px;
+        min-width: 48px;
+        min-height: 48px;
+        border-radius: 12px;
     }
 
     .dice {
-        width: 50px;  /* Slightly larger for better visibility */
-        height: 50px;
+        width: 40px;
+        height: 40px;
     }
 
     .dice-face {
-        width: 50px;
-        height: 50px;
-        padding: 6px;
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        border-radius: 8px;
     }
 
-    .face-1 {
-        transform: translateZ(25px);  /* Adjusted for 50px dice */
-    }
-
-    .face-2 {
-        transform: rotateY(90deg) translateZ(25px);
-    }
-
-    .face-3 {
-        transform: rotateY(180deg) translateZ(25px);
-    }
-
-    .face-4 {
-        transform: rotateY(-90deg) translateZ(25px);
-    }
-
-    .face-5 {
-        transform: rotateX(90deg) translateZ(25px);
-    }
-
-    .face-6 {
-        transform: rotateX(-90deg) translateZ(25px);
-    }
+    .face-1 { transform: translateZ(20px); }
+    .face-2 { transform: rotateY(90deg) translateZ(20px); }
+    .face-3 { transform: rotateY(180deg) translateZ(20px); }
+    .face-4 { transform: rotateY(-90deg) translateZ(20px); }
+    .face-5 { transform: rotateX(90deg) translateZ(20px); }
+    .face-6 { transform: rotateX(-90deg) translateZ(20px); }
 
     .dot {
-        width: 6px;
-        height: 6px;
+        width: 5px;
+        height: 5px;
     }
 
     .dice-bonus-overlay {
-        font-size: 16px;
+        font-size: 14px;
     }
 }
 

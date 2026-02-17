@@ -282,10 +282,30 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
     font-size: 10px;
     color: white;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Each arrow points in the direction the player moves from start */
+.start-red::after {
+    /* Red at (6,1) moves RIGHT → 0deg */
+    transform: translate(-50%, -50%) rotate(calc(0deg - var(--board-rotation, 0deg)));
+}
+
+.start-green::after {
+    /* Green at (1,8) moves DOWN → 90deg */
+    transform: translate(-50%, -50%) rotate(calc(90deg - var(--board-rotation, 0deg)));
+}
+
+.start-yellow::after {
+    /* Yellow at (8,13) moves LEFT → 180deg */
+    transform: translate(-50%, -50%) rotate(calc(180deg - var(--board-rotation, 0deg)));
+}
+
+.start-blue::after {
+    /* Blue at (13,6) moves UP → -90deg */
+    transform: translate(-50%, -50%) rotate(calc(-90deg - var(--board-rotation, 0deg)));
 }
 
 /* ============================================
@@ -304,8 +324,11 @@
 .board-cell.center[data-row="7"][data-col="7"]::after {
     content: '👑';
     position: absolute;
-    font-size: clamp(20px, 4.5vw, 32px);
-    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    font-size: clamp(14px, 3.5vw, 28px);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
     animation: crown-float 3s infinite ease-in-out;
     /* Counter-rotate against board rotation to stay upright */
     rotate: calc(-1 * var(--board-rotation, 0deg));

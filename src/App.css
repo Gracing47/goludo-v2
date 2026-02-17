@@ -209,26 +209,26 @@ body {
     right: 12px;
 }
 
-/* Desktop enhancement - Grid system remains consistent, just enhance visuals */
+/* Desktop enhancement */
 @media (min-width: 768px) {
     .player-pod {
-        min-width: 140px;
-        padding: 8px 18px 8px 8px;
-        height: 50px;
-        gap: 10px;
+        min-width: 120px;
+        padding: 6px 14px 6px 6px;
+        height: 40px;
+        gap: 8px;
         background: rgba(20, 20, 35, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
     .pod-avatar {
-        width: 38px;
-        height: 38px;
-        font-size: 18px;
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
     }
 
     .pod-name {
-        font-size: 12px;
-        max-width: 90px;
+        font-size: 11px;
+        max-width: 80px;
     }
 }
 
@@ -283,12 +283,11 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 16px 6px 6px;
+    gap: 6px;
+    padding: 4px 12px 4px 4px;
     border-radius: 999px;
-    /* Pill Shape */
-    height: 48px;
-    min-width: 120px;
+    height: 36px;
+    min-width: auto;
     pointer-events: auto;
 
     /* Glassmorphism */
@@ -343,13 +342,13 @@ body {
 
 /* Avatar */
 .pod-avatar {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 14px;
     flex-shrink: 0;
     position: relative;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
@@ -452,42 +451,73 @@ body {
 
 .turn-timer-container {
     position: absolute;
-    top: calc(var(--safe-top) + 12px);
+    top: calc(var(--safe-top) + 8px);
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
 }
 
 .turn-timer {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--color-tertiary);
-    background: rgba(10, 10, 20, 0.8);
-    backdrop-filter: blur(4px);
-    padding: 6px 14px;
-    border-radius: 12px;
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 20, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 50%;
     border: 1px solid rgba(0, 243, 255, 0.2);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.turn-timer-ring {
+    position: absolute;
+    inset: -2px;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    transform: rotate(-90deg);
+}
+
+.turn-timer-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 2;
+}
+
+.turn-timer-progress {
+    fill: none;
+    stroke: var(--color-tertiary);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    transition: stroke-dasharray 1s linear;
+}
+
+.turn-timer-value {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--color-tertiary);
+    line-height: 1;
 }
 
 .turn-timer.urgent {
-    color: #ff4757;
-    border-color: #ff4757;
-    box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+    border-color: rgba(255, 71, 87, 0.4);
+    box-shadow: 0 0 12px rgba(255, 71, 87, 0.3);
     animation: urgent-pulse 0.5s infinite alternate;
 }
 
-@keyframes urgent-pulse {
-    from {
-        opacity: 1;
-        transform: scale(1);
-    }
+.turn-timer.urgent .turn-timer-progress {
+    stroke: #ff4757;
+}
 
-    to {
-        opacity: 0.8;
-        transform: scale(0.95);
-    }
+.turn-timer.urgent .turn-timer-value {
+    color: #ff4757;
+}
+
+@keyframes urgent-pulse {
+    from { opacity: 1; }
+    to { opacity: 0.7; }
 }
 
 /* ============================================
@@ -539,9 +569,9 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: white;
     border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -588,28 +618,48 @@ body {
    ============================================ */
 
 @media (max-width: 480px) {
-    /* Keep grid-based pod positioning - don't override with absolute */
     .player-pod {
-        min-width: 100px;
-        padding: 6px 14px 6px 6px;
-        height: 44px;  /* WCAG compliant touch target (was 40px) */
+        min-width: auto;
+        padding: 4px 10px 4px 4px;
+        height: 32px;
         background: rgba(10, 10, 20, 0.85);
-        gap: 6px;
+        gap: 5px;
     }
 
     .pod-avatar {
-        width: 36px;   /* Increased for better touch target (was 32px) */
-        height: 36px;
-        font-size: 16px;
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
     }
 
     .pod-name {
-        font-size: 11px;  /* Improved readability (was 10px) */
+        font-size: 9px;
         font-weight: 700;
         letter-spacing: 0.3px;
-        line-height: 1.3;
-        max-width: 75px;  /* More space for names (was 60px) */
+        line-height: 1.2;
+        max-width: 60px;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .pod-skips {
+        gap: 2px;
+        margin-top: 1px;
+    }
+
+    .skip-dot {
+        width: 4px;
+        height: 4px;
+    }
+
+    .menu-dropdown-container {
+        bottom: 12px;
+        right: 12px;
+    }
+
+    .menu-btn-floating {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
     }
 }

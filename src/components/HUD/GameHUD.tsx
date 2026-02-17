@@ -43,11 +43,21 @@ const GameHUD: React.FC<GameHUDProps> = ({
                     {gameState.mode === 'rapid' ? '⚡ RAPID' : '🎲 CLASSIC'}
                 </div>
             )}
-            {/* Turn Timer - Top Center */}
+            {/* Turn Timer - Top Center with circular progress */}
             {gameState.gamePhase !== 'WIN' && turnTimer !== null && turnTimer > 0 && (
                 <div className="turn-timer-container">
                     <div className={`turn-timer ${turnTimer <= 10 ? 'urgent' : ''}`}>
-                        ⏱️ {turnTimer}s
+                        <svg className="turn-timer-ring" viewBox="0 0 36 36">
+                            <circle className="turn-timer-track" cx="18" cy="18" r="15" />
+                            <circle
+                                className="turn-timer-progress"
+                                cx="18" cy="18" r="15"
+                                style={{
+                                    strokeDasharray: `${(turnTimer / 30) * 94.25} 94.25`
+                                }}
+                            />
+                        </svg>
+                        <span className="turn-timer-value">{turnTimer}</span>
                     </div>
                 </div>
             )}
