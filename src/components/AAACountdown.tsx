@@ -2,35 +2,27 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './AAACountdown.css';
 
-interface AAACountdownProps {
-    countdown: number;
-    playerName?: string;
-    playerColor?: string;
+interface Player {
+    name: string;
+    color: string;
 }
 
-/**
- * AAACountdown - Premium Uniswap/PancakeSwap style countdown
- * Features glassmorphism, neon glows, and smooth motion.
- */
-const AAACountdown: React.FC<AAACountdownProps> = ({
-    countdown,
-    playerName,
-    playerColor = '#00f3ff'
-}) => {
-    // Map player color name to actual hex/rgb if needed
-    const getColorValue = (color: string) => {
-        const map: Record<string, string> = {
-            'red': '#ff4d4d',
-            'green': '#00ff88',
-            'yellow': '#ffcc00',
-            'blue': '#3399ff',
-            'cyan': '#00f3ff'
-        };
-        return map[color] || color;
-    };
+interface AAACountdownProps {
+    countdown: number;
+    players: Player[];
+}
 
-    const activeColor = getColorValue(playerColor);
+const COLOR_MAP: Record<string, string> = {
+    'red': '#ff4d4d',
+    'green': '#00ff88',
+    'yellow': '#ffcc00',
+    'blue': '#3399ff',
+    'cyan': '#00f3ff'
+};
 
+const getHex = (color: string) => COLOR_MAP[color] || color;
+
+const AAACountdown: React.FC<AAACountdownProps> = ({ countdown, players }) => {
     return (
         <div className="aaa-countdown-overlay">
             <motion.div
@@ -40,8 +32,19 @@ const AAACountdown: React.FC<AAACountdownProps> = ({
                 exit={{ opacity: 0, scale: 1.1, y: -20 }}
                 transition={{ duration: 0.4, ease: "circOut" }}
             >
-                {/* Neon Glow Backdrop */}
-                <div className="aaa-countdown-glow" style={{ backgroundColor: activeColor }} />
+                {/* Multi-color glow from all players */}
+                <div className="aaa-countdown-glow-ring">
+                    {players.map((p, i) => (
+                        <div
+                            key={i}
+                            className="aaa-glow-segment"
+                            style={{
+                                backgroundColor: getHex(p.color),
+                                transform: `rotate(${i * (360 / players.length)}deg) translateY(-60px)`,
+                            }}
+                        />
+                    ))}
+                </div>
 
                 <div className="aaa-countdown-content">
                     <motion.h3
@@ -49,20 +52,35 @@ const AAACountdown: React.FC<AAACountdownProps> = ({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                     >
-                        {playerName ? (
-                            <>Ready, <span style={{ color: activeColor }}>{playerName}</span>?</>
-                        ) : (
-                            "GET READY"
-                        )}
+                        GET READY
                     </motion.h3>
 
+                    {/* Player roster */}
+                    <div className="aaa-player-roster">
+                        {players.map((p, i) => (
+                            <motion.div
+                                key={i}
+                                className="aaa-player-chip"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 + i * 0.1 }}
+                                style={{
+                                    '--chip-color': getHex(p.color),
+                                } as React.CSSProperties}
+                            >
+                                <span className="aaa-chip-dot" />
+                                <span className="aaa-chip-name">{p.name}</span>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Timer ring */}
                     <div className="aaa-countdown-timer-wrapper">
                         <svg className="aaa-countdown-svg" viewBox="0 0 100 100">
                             <circle className="aaa-timer-track" cx="50" cy="50" r="45" />
                             <motion.circle
                                 className="aaa-timer-progress"
                                 cx="50" cy="50" r="45"
-                                style={{ stroke: activeColor }}
                                 initial={{ pathLength: 1 }}
                                 animate={{ pathLength: countdown / 5 }}
                                 transition={{ duration: 1, ease: "linear" }}
@@ -77,7 +95,6 @@ const AAACountdown: React.FC<AAACountdownProps> = ({
                                 animate={{ scale: 1, opacity: 1, rotateX: 0 }}
                                 exit={{ scale: 1.5, opacity: 0, rotateX: -90 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                                style={{ color: countdown === 0 ? activeColor : '#fff' }}
                             >
                                 {countdown > 0 ? countdown : "GO!"}
                             </motion.div>

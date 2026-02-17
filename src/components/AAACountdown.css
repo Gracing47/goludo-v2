@@ -1,11 +1,15 @@
+/* ============================================
+   AAA COUNTDOWN - Premium Game Start Overlay
+   ============================================ */
+
 .aaa-countdown-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(24px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,44 +18,98 @@
 
 .aaa-countdown-card {
     position: relative;
-    width: 320px;
-    padding: 40px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 40px;
+    width: min(340px, 90vw);
+    padding: 36px 28px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 32px;
     text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6);
     overflow: hidden;
 }
 
-.aaa-countdown-glow {
+/* Multi-color glow ring from all player colors */
+.aaa-countdown-glow-ring {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 150px;
-    height: 150px;
-    background: #00f3ff;
-    filter: blur(80px);
-    opacity: 0.2;
-    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
     pointer-events: none;
-    border-radius: 50%;
 }
+
+.aaa-glow-segment {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.25;
+    transform-origin: center center;
+}
+
+/* ============================================
+   CONTENT
+   ============================================ */
 
 .aaa-countdown-content h3 {
     font-family: var(--font-display), system-ui, sans-serif;
-    font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.6);
-    letter-spacing: 2px;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 3px;
     text-transform: uppercase;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
+
+/* ============================================
+   PLAYER ROSTER - Color chips
+   ============================================ */
+
+.aaa-player-roster {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.aaa-player-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid color-mix(in srgb, var(--chip-color) 40%, transparent);
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+}
+
+.aaa-chip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--chip-color);
+    box-shadow: 0 0 8px var(--chip-color);
+    flex-shrink: 0;
+}
+
+.aaa-chip-name {
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.5px;
+}
+
+/* ============================================
+   TIMER RING
+   ============================================ */
 
 .aaa-countdown-timer-wrapper {
     position: relative;
-    width: 180px;
-    height: 180px;
-    margin: 0 auto 30px;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -68,29 +126,58 @@
 
 .aaa-timer-track {
     fill: none;
-    stroke: rgba(255, 255, 255, 0.05);
-    stroke-width: 4;
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 3;
 }
 
 .aaa-timer-progress {
     fill: none;
     stroke: #00f3ff;
-    stroke-width: 4;
+    stroke-width: 3;
     stroke-linecap: round;
 }
 
 .aaa-countdown-number {
     font-family: var(--font-display), system-ui, sans-serif;
-    font-size: 5rem;
+    font-size: 4rem;
     font-weight: 800;
     color: white;
-    text-shadow: 0 0 30px currentColor;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
     perspective: 1000px;
+    line-height: 1;
 }
 
 .aaa-countdown-content p {
     font-family: var(--font-body), sans-serif;
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.35);
     letter-spacing: 1px;
+}
+
+/* ============================================
+   MOBILE ADJUSTMENTS
+   ============================================ */
+
+@media (max-width: 480px) {
+    .aaa-countdown-card {
+        padding: 28px 20px;
+        border-radius: 24px;
+    }
+
+    .aaa-countdown-timer-wrapper {
+        width: 120px;
+        height: 120px;
+    }
+
+    .aaa-countdown-number {
+        font-size: 3.2rem;
+    }
+
+    .aaa-player-chip {
+        padding: 5px 10px;
+    }
+
+    .aaa-chip-name {
+        font-size: 0.75rem;
+    }
 }

@@ -658,7 +658,10 @@ function App() {
                 {showCountdown && (
                     <AAACountdown
                         countdown={gameCountdown}
-                        playerColor={PLAYER_COLORS[gameState?.activePlayer] || '#00f3ff'}
+                        players={gameConfig?.players?.map((p, i) => ({
+                            name: p.name || `Player ${i + 1}`,
+                            color: PLAYER_COLORS[i]
+                        })) || PLAYER_COLORS.map((c, i) => ({ name: `Player ${i + 1}`, color: c }))}
                     />
                 )}
             </AnimatePresence>
