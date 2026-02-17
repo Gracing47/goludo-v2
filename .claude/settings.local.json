@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)",
+      "Bash(gh repo list:*)",
+      "Bash(git checkout:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx vite build)",
+      "Bash(find:*)"
+    ]
+  }
+}

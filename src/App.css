@@ -3,13 +3,6 @@
    Berechnete Größen für alle Screen-Sizes
    ========================================= */
 
-:root {
-    /* Theme overrides specific to App.css if needed */
-    --z-board: 1;
-    --z-hud: 10;
-    --z-modal: 100;
-}
-
 /* Mobile-specific CSS Variables for optimized layout */
 @media (max-width: 480px) {
     :root {

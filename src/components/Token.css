@@ -21,14 +21,6 @@
     box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
 }
 
-.token.clickable {
-    cursor: pointer;
-}
-
-.token.clickable:active {
-    transform: scale(0.95);
-}
-
 /* Screen Reader Only */
 .token .sr-only {
     position: absolute;
@@ -65,19 +57,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Separation for multi-player overlaps */
-.token.stacked .token-inner {
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-}
-
-@media (max-width: 480px) {
-    .token-stack-badge {
-        font-size: 11px;
-        min-width: 16px;
-        height: 16px;
-    }
-}
 
 /* ============================================
    TOKEN INNER - LIQUID GLASS STYLE
@@ -182,6 +161,10 @@
 
 .token.clickable {
     cursor: pointer;
+}
+
+.token.clickable:active {
+    transform: scale(0.95);
 }
 
 /* Hop animation when token moves to a new cell */
