@@ -307,9 +307,9 @@
     font-size: clamp(20px, 4.5vw, 32px);
     filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.8));
     animation: crown-float 3s infinite ease-in-out;
-    /* Crown rotates to face active player's base direction */
-    transform: rotate(var(--crown-rotation, 0deg));
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Counter-rotate against board rotation to stay upright */
+    rotate: calc(-1 * var(--board-rotation, 0deg));
+    transition: rotate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes crown-float {
@@ -396,8 +396,9 @@
 /* Tablet (768px+) - Use consistent sizing */
 @media (min-width: 768px) {
     .ludo-board {
-        width: var(--board-size, min(75vw, calc(100vh - 160px), 600px));
-        height: var(--board-size, min(75vw, calc(100vh - 160px), 600px));
+        /* 260px = header(60) + 2*pod(50) + footer(80) + padding(20) */
+        width: min(75vw, calc(100vh - 260px), 600px);
+        height: min(75vw, calc(100vh - 260px), 600px);
         padding: 10px;
         gap: 3px;
         border-radius: 40px;
@@ -412,8 +413,8 @@
 /* Desktop (1024px+) - Premium sizing with better proportions */
 @media (min-width: 1024px) {
     .ludo-board {
-        width: var(--board-size, min(80vh, 60vw, 650px));
-        height: var(--board-size, min(80vh, 60vw, 650px));
+        width: var(--board-size, min(calc(100vh - 240px), 60vw, 650px));
+        height: var(--board-size, min(calc(100vh - 240px), 60vw, 650px));
         padding: 12px;
         gap: 3px;
         border-radius: 44px;

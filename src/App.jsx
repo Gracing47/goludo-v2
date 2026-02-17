@@ -21,6 +21,7 @@ import Dice from './components/Dice';
 // import DiceArea from './components/DiceArea'; // Reverted to legacy Dice
 import AmbientLight from './components/VFX/AmbientLight';
 import VictoryCelebration from './components/VictoryCelebration';
+import AAACountdown from './components/AAACountdown';
 import soundManager from './services/SoundManager';
 
 
@@ -651,6 +652,16 @@ function App() {
                     )}
                 </div>
             )}
+
+            {/* A. COUNTDOWN OVERLAY */}
+            <AnimatePresence>
+                {showCountdown && (
+                    <AAACountdown
+                        countdown={gameCountdown}
+                        playerColor={PLAYER_COLORS[gameState?.activePlayer] || '#00f3ff'}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* B. SERVER MESSAGE TOAST */}
             {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}

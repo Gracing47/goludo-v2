@@ -157,7 +157,34 @@
         0 0 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Face transforms preserved ... */
+/* Dot layouts for each face */
+.face-1 { grid-template: 1fr / 1fr; }
+.face-2 { grid-template: 1fr 1fr / 1fr; }
+.face-2 .dot:first-child { justify-self: end; align-self: start; }
+.face-2 .dot:last-child { justify-self: start; align-self: end; }
+.face-3 { grid-template: 1fr 1fr 1fr / 1fr; }
+.face-3 .dot:first-child { justify-self: end; align-self: start; }
+.face-3 .dot:last-child { justify-self: start; align-self: end; }
+.face-4 { grid-template: 1fr 1fr / 1fr 1fr; }
+.face-5 { grid-template: 1fr 1fr 1fr / 1fr 1fr; }
+.face-5 .dot:nth-child(3) { grid-column: 1 / -1; }
+.face-6 { grid-template: 1fr 1fr 1fr / 1fr 1fr; }
+
+/* Face positioning - standard 3D cube (60px) */
+.face-1 { transform: translateZ(30px); }
+.face-2 { transform: rotateY(90deg) translateZ(30px); }
+.face-3 { transform: rotateY(180deg) translateZ(30px); }
+.face-4 { transform: rotateY(-90deg) translateZ(30px); }
+.face-5 { transform: rotateX(90deg) translateZ(30px); }
+.face-6 { transform: rotateX(-90deg) translateZ(30px); }
+
+/* Show specific face by rotating cube */
+.show-1 { transform: rotateY(0deg); }
+.show-2 { transform: rotateY(-90deg); }
+.show-3 { transform: rotateY(-180deg); }
+.show-4 { transform: rotateY(90deg); }
+.show-5 { transform: rotateX(-90deg); }
+.show-6 { transform: rotateX(90deg); }
 
 /* ============================================
    DOTS - Dynamic Glow
