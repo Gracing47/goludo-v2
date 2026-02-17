@@ -184,6 +184,18 @@
     cursor: pointer;
 }
 
+/* Hop animation when token moves to a new cell */
+.token.animating .token-inner {
+    animation: token-hop 0.12s ease-out;
+}
+
+@keyframes token-hop {
+    0% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-18px) scale(1.12); }
+    70% { transform: translateY(-4px) scale(0.92); }
+    100% { transform: translateY(0) scale(1); }
+}
+
 /* Floating animation for tokens that are ready to move */
 .token.highlighted .token-inner {
     animation: token-float 2s infinite ease-in-out;

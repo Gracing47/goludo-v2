@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import './Token.css';
 
 const Token = ({
@@ -18,16 +18,19 @@ const Token = ({
     rotation = 0,
     isBonusMove = false
 }) => {
-    // Grid-based positioning for stacked tokens (Different Players)
+    // Grid-based positioning for stacked tokens (Different Players on same cell)
     const getStackOffset = (index, total) => {
         if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
 
         if (total === 2) {
-            // High-separation horizontal split
+            // Side-by-side split — each token takes ~half the cell
+            const positions = [
+                { x: '-30%', y: '0%' },
+                { x: '30%', y: '0%' }
+            ];
             return {
-                x: index === 0 ? '-38%' : '38%',
-                y: 1,
-                scale: 0.55,
+                ...positions[index % 2],
+                scale: 0.6,
                 zIndex: 20 + index
             };
         }
@@ -35,9 +38,9 @@ const Token = ({
         if (total === 3) {
             // Triangle layout
             const positions = [
-                { x: '-34%', y: '-34%' },
-                { x: '34%', y: '-34%' },
-                { x: '0%', y: '34%' }
+                { x: '-28%', y: '-22%' },
+                { x: '28%', y: '-22%' },
+                { x: '0%', y: '28%' }
             ];
             return {
                 ...positions[index % 3],
@@ -48,56 +51,47 @@ const Token = ({
 
         // 4 tokens: 2x2 grid
         const positions = [
-            { x: '-34%', y: '-34%' },
-            { x: '34%', y: '-34%' },
-            { x: '-34%', y: '34%' },
-            { x: '34%', y: '34%' }
+            { x: '-28%', y: '-28%' },
+            { x: '28%', y: '-28%' },
+            { x: '-28%', y: '28%' },
+            { x: '28%', y: '28%' }
         ];
         return {
             ...positions[index % 4],
-            scale: 0.5,
+            scale: 0.48,
             zIndex: 20 + index
         };
     };
 
     const offset = getStackOffset(stackIndex, stackSize);
 
-    const controls = useAnimation();
     const prevPos = useRef({ row, col });
     const [isAnimating, setIsAnimating] = useState(false);
     const [showImpact, setShowImpact] = useState(false);
 
-    // Animate when position changes
+    // Animate when position changes — use CSS class for hop
     useEffect(() => {
         const hasPositionChanged = prevPos.current.row !== row || prevPos.current.col !== col;
 
         if (hasPositionChanged && !inYard) {
             setIsAnimating(true);
 
-            // AAA: Juicy Hop Animation - faster for path traversal (100ms)
-            const hopDuration = isBonusMove ? 0.08 : 0.1;
+            const hopDuration = isBonusMove ? 80 : 120;
 
-            controls.start({
-                y: [0, -22, 0], // More pronounced hop
-                scale: [1, 1.15, 0.9, 1], // More classic squash & stretch
-                rotate: [0, 5, -3, 0], // Added a bit more wobble
-                transition: {
-                    duration: hopDuration,
-                    times: [0, 0.3, 0.7, 1],
-                    ease: "anticipate" // More dramatic easing
-                }
-            }).then(() => {
+            const timer = setTimeout(() => {
                 setIsAnimating(false);
-                // Only show impact on final landing (determined by caller)
                 if (!isBonusMove) {
                     setShowImpact(true);
-                    setTimeout(() => setShowImpact(false), 250.0);
+                    setTimeout(() => setShowImpact(false), 250);
                 }
-            });
+            }, hopDuration);
+
+            prevPos.current = { row, col };
+            return () => clearTimeout(timer);
         }
 
         prevPos.current = { row, col };
-    }, [row, col, inYard, controls, isBonusMove]);
+    }, [row, col, inYard, isBonusMove]);
 
     // Accessibility: Describe token state for screen readers
     const getAriaLabel = () => {
@@ -135,13 +129,12 @@ const Token = ({
         <motion.div
             className={classes}
             animate={{
-                ...controls,
                 x: offset.x,
-                y: isAnimating ? undefined : offset.y,
-                scale: isAnimating ? undefined : offset.scale
+                y: offset.y,
+                scale: offset.scale
             }}
             layout
-            layoutId={`token-${playerIndex}-${tokenIndex}`} // Stable layout ID
+            layoutId={`token-${playerIndex}-${tokenIndex}`}
             style={{
                 gridRow: row + 1,
                 gridColumn: col + 1,
@@ -154,11 +147,13 @@ const Token = ({
                     type: "spring",
                     stiffness: 400,
                     damping: 30
-                }
+                },
+                x: { type: "spring", stiffness: 300, damping: 25 },
+                y: { type: "spring", stiffness: 300, damping: 25 },
+                scale: { type: "spring", stiffness: 300, damping: 25 }
             }}
             whileHover={onClick ? {
                 scale: offset.scale * 1.25,
-                y: offset.y - 10,
                 zIndex: 200,
                 transition: { type: "spring", stiffness: 300 }
             } : {}}
