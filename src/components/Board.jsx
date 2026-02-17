@@ -45,7 +45,7 @@ const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver =
     }, [activePlayer, rotation]);
 
     return (
-        <div className={`board-wrapper ${isGameOver ? 'game-over-dim' : ''}`}>
+        <div className="board-wrapper">
             <div className="board-focus-wrapper">
                 <div className="board-anchor">
                     <div className="ludo-board" style={{

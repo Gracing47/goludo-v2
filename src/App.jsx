@@ -395,7 +395,7 @@ function App() {
 
     // Reset game
     const handleReset = useCallback(() => {
-        setGameState(createInitialState(gameConfig?.playerCount || 4));
+        setGameState(createInitialState(gameConfig?.playerCount || 4, state?.activeColors, gameConfig?.gameMode || 'classic'));
         setIsRolling(false);
         setIsMoving(false);
         setIsClaimed(false); // Reset claim status

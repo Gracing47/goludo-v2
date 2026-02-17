@@ -39,7 +39,7 @@ const LudoLobby: React.FC = () => {
 
         // Create initial game state for ALL game modes
         // For Web3: This provides initial state; server updates will override via socket
-        const initialState = createInitialState(4, activeColors);
+        const initialState = createInitialState(4, activeColors, config.gameMode || 'classic');
         setGameState(initialState as any);
 
         // Perspective rotation (for local human player)

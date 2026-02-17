@@ -241,7 +241,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
             setConfig({
                 mode: 'web3',
-                gameMode: 'classic',
+                gameMode: room.mode || 'classic',
                 roomId: room.id,
                 stake: room.stake,
                 playerCount: room.players.filter((p: Player) => p).length,
@@ -289,7 +289,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
             setConfig({
                 mode: 'web3',
-                gameMode: 'classic',
+                gameMode: room.mode || 'classic',
                 roomId: room.id,
                 stake: room.stake,
                 playerCount: room.players.filter((p: Player) => p).length,
@@ -310,7 +310,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                 setGameState(room.gameState);
             } else {
                 console.log("🆕 Starting fresh game state");
-                setGameState(createInitialState(4, activeColors) as any);
+                setGameState(createInitialState(4, activeColors, room.mode || 'classic') as any);
             }
 
             setShowCountdown(false); // Hide countdown overlay

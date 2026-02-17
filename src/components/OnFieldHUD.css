@@ -1,0 +1,53 @@
+/* OnFieldHUD.css - Grid-anchored Game UI */
+
+/* POT: Move to Top Center to avoid "free space" feeling on the left */
+.on-field-pot {
+    grid-row: 2 / 6;
+    /* Top Area */
+    grid-column: 5 / 12;
+    /* Center-ish spanning columns 5-11 */
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    /* Let clicks pass through to tokens */
+}
+
+/* DICE: Move to Bottom Center - span whole width to force center */
+.on-field-dice {
+    grid-row: 10 / 14;
+    /* Bottom Area - centered vertically in that row range */
+    grid-column: 1 / 16;
+    /* Span whole board width */
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* The actual clickable components inside need pointer events */
+.on-field-pot>*,
+.on-field-dice>* {
+    pointer-events: auto;
+}
+
+/* Utility classes for animations */
+.hud-fade-enter {
+    opacity: 0;
+}
+
+.hud-fade-enter-active {
+    opacity: 1;
+    transition: opacity 300ms ease;
+}
+
+.hud-fade-exit {
+    opacity: 1;
+}
+
+.hud-fade-exit-active {
+    opacity: 0;
+    transition: opacity 300ms ease;
+}
