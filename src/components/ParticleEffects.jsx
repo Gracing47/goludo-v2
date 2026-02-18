@@ -279,49 +279,8 @@ export function SpawnSparkle({ position, color, onComplete }) {
     );
 }
 
-/**
- * Game Effects Manager - Centralized effect triggering
- */
-export function useGameEffects() {
-    const [captureEffect, setCaptureEffect] = useState(null);
-    const [spawnEffect, setSpawnEffect] = useState(null);
-    const [victoryActive, setVictoryActive] = useState(false);
-    const [winnerColor, setWinnerColor] = useState(null);
-
-    const triggerCapture = (position, color) => {
-        setCaptureEffect({ position, color, key: Date.now() });
-    };
-
-    const triggerSpawn = (position, color) => {
-        setSpawnEffect({ position, color, key: Date.now() });
-    };
-
-    const triggerVictory = (color) => {
-        setWinnerColor(color);
-        setVictoryActive(true);
-    };
-
-    const clearCapture = () => setCaptureEffect(null);
-    const clearSpawn = () => setSpawnEffect(null);
-    const clearVictory = () => setVictoryActive(false);
-
-    return {
-        captureEffect,
-        spawnEffect,
-        victoryActive,
-        winnerColor,
-        triggerCapture,
-        triggerSpawn,
-        triggerVictory,
-        clearCapture,
-        clearSpawn,
-        clearVictory
-    };
-}
-
 export default {
     CaptureExplosion,
     VictoryConfetti,
-    SpawnSparkle,
-    useGameEffects
+    SpawnSparkle
 };

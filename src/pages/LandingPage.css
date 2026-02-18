@@ -3,8 +3,7 @@
    Design System: Gaming / Web3 / Play-to-Earn
    ========================================= */
 
-/* Google Fonts: Orbitron for gaming feel */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
+/* Fonts loaded globally via index.css */
 
 /* ============================================
    PAGE CONTAINER
@@ -115,7 +114,7 @@
     width: 100px;
     height: 100px;
     margin: 0 auto;
-    animation: dice-float 4s ease-in-out infinite;
+    animation: landing-dice-float 4s ease-in-out infinite;
     transform-style: preserve-3d;
 }
 
@@ -125,7 +124,7 @@
     filter: drop-shadow(0 20px 40px rgba(0, 243, 255, 0.3));
 }
 
-@keyframes dice-float {
+@keyframes landing-dice-float {
 
     0%,
     100% {

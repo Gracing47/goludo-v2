@@ -3,8 +3,7 @@
    Matches Landing Page Design System
    ============================================ */
 
-/* Google Fonts: Orbitron for gaming feel */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
+/* Fonts loaded globally via index.css */
 
 /* ============================================
    BASE LAYOUT - Mobile First
@@ -93,18 +92,6 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
-}
-
-@keyframes gradient-flow {
-
-    0%,
-    100% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
 }
 
 /* ============================================
@@ -958,17 +945,7 @@
     color: var(--pancake-cyan);
 }
 
-@keyframes float {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-8px);
-    }
-}
+/* @keyframes float - defined globally in index.css */
 
 .no-rooms p {
     margin: 0;
@@ -1008,15 +985,7 @@
     animation: spin 2s linear infinite;
 }
 
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
-}
+/* @keyframes spin - defined globally in index.css */
 
 .waiting-content h3 {
     font-size: 20px;
@@ -1070,15 +1039,7 @@
     animation: fadeIn 0.2s ease;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
+/* @keyframes fadeIn - defined globally in index.css */
 
 .modal-content {
     background: rgba(16, 16, 28, 0.96);
@@ -1270,18 +1231,8 @@
 
 .spinner-ludo {
     color: var(--pancake-cyan, #00f3ff);
-    animation: spin-slow 3s linear infinite;
+    animation: spin 3s linear infinite;
     filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.5));
-}
-
-@keyframes spin-slow {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .waiting-stats {
