@@ -1,20 +1,61 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const PLAYER_COLORS = ['#ff4757', '#00d26a', '#ffbe0b', '#3a86ff'];
+// ── IRIS palette — matches token vars but resolved for inline styles ──
+// Player colours remapped to neon palette (not original game tokens)
+const PLAYER_COLORS = [
+    '#ff2a6d',   // player 0 — neon-pink / red
+    '#00ff9d',   // player 1 — matrix-green
+    '#ffcc00',   // player 2 — cyber-gold
+    '#05d9e8',   // player 3 — neon-cyan / blue
+];
 
-// Positioning for the 4 corners/sides
-const POSITIONS = [
-    { top: '20%', left: '20%' }, // Red (Top Left)
-    { top: '20%', right: '20%' }, // Green (Top Right)
-    { bottom: '20%', right: '20%' }, // Yellow (Bottom Right)
-    { bottom: '20%', left: '20%' }  // Blue (Bottom Left)
+// Dominant neon for ambient bloom — same order
+const BLOOM_COLORS = [
+    'rgba(255, 0, 122,  0.18)',   // pink
+    'rgba(0,  255, 157, 0.14)',   // green
+    'rgba(255, 204,   0, 0.16)',  // gold
+    'rgba(  0, 243, 255, 0.18)', // cyan
+];
+
+// Secondary accent for the cross-fade stripe
+const STRIPE_COLORS = [
+    'rgba(58, 134, 255, 0.08)',   // blue stripe with pink player
+    'rgba( 0, 243, 255, 0.07)',   // cyan stripe with green player
+    'rgba(255, 0, 122,  0.07)',   // pink stripe with gold player
+    'rgba(58, 134, 255, 0.08)',   // blue stripe with cyan player
+];
+
+// Radial origin anchored to board corners
+const ORIGINS = [
+    { x: '18%', y: '20%' },  // top-left   — player 0
+    { x: '82%', y: '20%' },  // top-right  — player 1
+    { x: '82%', y: '80%' },  // bot-right  — player 2
+    { x: '18%', y: '80%' },  // bot-left   — player 3
 ];
 
 export const AmbientLight = ({ activePlayer }) => {
-    // If no active player (e.g. game over), default to index 0 or hide
-    const color = PLAYER_COLORS[activePlayer] || 'transparent';
-    const pos = POSITIONS[activePlayer] || { top: '50%', left: '50%' };
+    const idx      = typeof activePlayer === 'number' ? activePlayer : 0;
+    const color    = PLAYER_COLORS[idx]  ?? 'transparent';
+    const bloom    = BLOOM_COLORS[idx]   ?? 'rgba(0,243,255,0.12)';
+    const stripe   = STRIPE_COLORS[idx]  ?? 'rgba(58,134,255,0.06)';
+    const origin   = ORIGINS[idx]        ?? { x: '50%', y: '50%' };
+
+    // Spotlight CSS position for the motion.div
+    const spotStyle = {
+        position: 'absolute',
+        left: origin.x,
+        top:  origin.y,
+        width: '70vw',
+        height: '70vw',
+        maxWidth: '600px',
+        maxHeight: '600px',
+        borderRadius: '50%',
+        filter: 'blur(72px)',
+        transform: 'translate(-50%, -50%)',
+        willChange: 'background, transform',
+        pointerEvents: 'none',
+    };
 
     return (
         <div
@@ -23,45 +64,70 @@ export const AmbientLight = ({ activePlayer }) => {
                 inset: 0,
                 overflow: 'hidden',
                 pointerEvents: 'none',
-                zIndex: 0 // Behind everything
+                zIndex: 0,
             }}
         >
+            {/* ── Wide ambient wash — fills entire background ── */}
             <motion.div
                 animate={{
-                    background: `radial-gradient(circle at ${pos.left ? '25%' : '75%'} ${pos.top ? '25%' : '75%'}, ${color}15 0%, transparent 70%)`
+                    background:
+                        `radial-gradient(ellipse 90% 70% at ${origin.x} ${origin.y},` +
+                        ` ${bloom} 0%,` +
+                        ` ${stripe} 45%,` +
+                        ` transparent 75%)`
                 }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
+                transition={{ duration: 1.8, ease: [0.4, 0, 0.2, 1] }}
                 style={{
                     position: 'absolute',
                     inset: 0,
                     width: '100%',
-                    height: '100%'
+                    height: '100%',
+                    pointerEvents: 'none',
                 }}
             />
 
-            {/* Moving Spotlight */}
+            {/* ── Tight neon spotlight that tracks the active corner ── */}
             <motion.div
-                className="spotlight"
                 initial={false}
                 animate={{
-                    top: pos.top || 'auto',
-                    bottom: pos.bottom || 'auto',
-                    left: pos.left || 'auto',
-                    right: pos.right || 'auto',
-                    background: `radial-gradient(circle, ${color}33 0%, transparent 60%)`
+                    left: origin.x,
+                    top:  origin.y,
+                    background:
+                        `radial-gradient(circle, ${color}30 0%, ${color}12 30%, transparent 65%)`,
                 }}
                 transition={{
-                    type: "spring",
+                    type: 'spring',
+                    stiffness: 42,
+                    damping: 18,
+                }}
+                style={spotStyle}
+            />
+
+            {/* ── Hard neon corona at the player's corner — tiny but vivid ── */}
+            <motion.div
+                animate={{
+                    left: origin.x,
+                    top:  origin.y,
+                    background:
+                        `radial-gradient(circle, ${color}55 0%, ${color}20 20%, transparent 50%)`,
+                    boxShadow: `0 0 80px 20px ${color}18`,
+                }}
+                transition={{
+                    type: 'spring',
                     stiffness: 50,
-                    damping: 20
+                    damping: 16,
                 }}
                 style={{
                     position: 'absolute',
-                    width: '60vw',
-                    height: '60vw',
+                    width: '28vw',
+                    height: '28vw',
+                    maxWidth: '220px',
+                    maxHeight: '220px',
                     borderRadius: '50%',
-                    filter: 'blur(60px)',
-                    transform: 'translate(-50%, -50%)', // Center on coords? No, using CSS positioning props directly
+                    filter: 'blur(28px)',
+                    transform: 'translate(-50%, -50%)',
+                    willChange: 'background, transform',
+                    pointerEvents: 'none',
                 }}
             />
         </div>

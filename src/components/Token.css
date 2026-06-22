@@ -1,7 +1,9 @@
 /* ============================================
-   TOKEN FOUNDATION
+   TOKEN — IRIS DEEP SPACE NEON
+   Premium game pieces: material depth + spring motion
    ============================================ */
 
+/* ---- foundation ---- */
 .token {
     position: relative;
     width: 100%;
@@ -13,15 +15,17 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Keyboard Focus */
+/* ---- keyboard focus ring ---- */
 .token:focus-visible {
-    outline: 3px solid var(--color-tertiary);
-    outline-offset: 2px;
+    outline: 2px solid var(--neon-cyan);
+    outline-offset: 3px;
     border-radius: 50%;
-    box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+    box-shadow:
+        0 0 0 2px var(--neon-cyan),
+        var(--bloom-cyan);
 }
 
-/* Screen Reader Only */
+/* ---- sr-only ---- */
 .token .sr-only {
     position: absolute;
     width: 1px;
@@ -34,32 +38,37 @@
     border-width: 0;
 }
 
+/* ============================================
+   STACK COUNT BADGE
+   ============================================ */
+
 .token-stack-badge {
     position: absolute;
     top: 50%;
     left: 50%;
-    /* Base transform; inline style adds counter-rotation */
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.92);
+    background: rgba(0, 0, 0, 0.95);
     color: #fff;
-    font-family: system-ui, -apple-system, sans-serif;
-    font-size: 10px;
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-size: 9px;
+    font-weight: var(--font-extrabold);
+    letter-spacing: var(--tracking-wide);
     min-width: 16px;
     height: 16px;
-    border-radius: 50%;
+    border-radius: var(--radius-full);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+        0 0 10px rgba(0, 0, 0, 0.9),
+        var(--bloom-cyan);
     z-index: 10;
     line-height: 1;
 }
 
-
 /* ============================================
-   TOKEN INNER - LIQUID GLASS STYLE
+   TOKEN INNER — liquid glass sphere
    ============================================ */
 
 .token-inner {
@@ -67,231 +76,229 @@
     height: 85%;
     border-radius: 50%;
     position: relative;
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    /* border set per color below */
+    border: 2px solid rgba(255, 255, 255, 0.22);
     box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 4px 8px rgba(255, 255, 255, 0.3),
-        inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+        0 6px 18px rgba(0, 0, 0, 0.55),
+        inset 0 4px 10px rgba(255, 255, 255, 0.32),
+        inset 0 -4px 8px  rgba(0, 0, 0, 0.35);
     z-index: 2;
     overflow: hidden;
+    /* GPU layer */
+    will-change: transform;
+    transition:
+        box-shadow var(--dur-fast) var(--ease-out),
+        filter     var(--dur-fast) var(--ease-out);
 }
 
-.token-center-dot {
-    position: absolute;
-    inset: 32%;
-    border-radius: 50%;
-    background: white;
-    box-shadow: 0 0 10px white;
-    opacity: 0.6;
-}
-
+/* ---- specular highlight ---- */
 .token-shine {
     position: absolute;
     top: 5%;
-    left: 15%;
-    width: 50%;
-    height: 30%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), transparent);
-    border-radius: 50% / 100% 100% 0 0;
-    transform: rotate(-15deg);
-    transition: opacity 0.3s ease;
+    left: 12%;
+    width: 52%;
+    height: 28%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0.10) 60%,
+        transparent
+    );
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    transform: rotate(-18deg);
+    pointer-events: none;
 }
 
-/* Shimmer effect for highlighted tokens */
 .token.highlighted .token-shine {
-    animation: token-shimmer 2s ease-in-out infinite;
+    animation: token-shimmer 1.8s var(--ease-in-out) infinite;
 }
 
-/* Impact Shockwave */
+/* ---- center pip (material depth cue) ---- */
+.token-center-dot {
+    position: absolute;
+    inset: 35%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow:
+        0 0 8px rgba(255, 255, 255, 0.7),
+        0 0 16px rgba(255, 255, 255, 0.3);
+    opacity: 0.55;
+}
+
+/* ============================================
+   TOKEN COLORS — radial-gradient spheres + glow
+   ============================================ */
+
+/* Red token — player-red / neon-pink family */
+.token-red .token-inner {
+    background:
+        radial-gradient(circle at 32% 28%,
+            #ff8098 0%,
+            #ff2a6d 45%,
+            #990030 100%);
+    border-color: rgba(255, 42, 109, 0.55);
+    box-shadow:
+        0 6px 20px rgba(255, 42, 109, 0.50),
+        inset 0 4px 10px rgba(255, 160, 160, 0.30),
+        inset 0 -4px 8px  rgba(100, 0, 30, 0.40);
+    --token-glow: #ff2a6d;
+}
+
+/* Green token */
+.token-green .token-inner {
+    background:
+        radial-gradient(circle at 32% 28%,
+            #60ffcc 0%,
+            #00ff9d 45%,
+            #005a38 100%);
+    border-color: rgba(0, 255, 157, 0.50);
+    box-shadow:
+        0 6px 20px rgba(0, 255, 157, 0.45),
+        inset 0 4px 10px rgba(100, 255, 200, 0.30),
+        inset 0 -4px 8px  rgba(0, 50, 30, 0.45);
+    --token-glow: #00ff9d;
+}
+
+/* Yellow token — neon-gold */
+.token-yellow .token-inner {
+    background:
+        radial-gradient(circle at 32% 28%,
+            #fff0a0 0%,
+            #ffcc00 45%,
+            #885500 100%);
+    border-color: rgba(255, 204, 0, 0.55);
+    box-shadow:
+        0 6px 20px rgba(255, 204, 0, 0.50),
+        inset 0 4px 10px rgba(255, 240, 120, 0.35),
+        inset 0 -4px 8px  rgba(80, 40, 0, 0.45);
+    --token-glow: #ffcc00;
+}
+
+/* Blue token — player-blue / neon-cyan family */
+.token-blue .token-inner {
+    background:
+        radial-gradient(circle at 32% 28%,
+            #80f4ff 0%,
+            #05d9e8 45%,
+            #004560 100%);
+    border-color: rgba(5, 217, 232, 0.50);
+    box-shadow:
+        0 6px 20px rgba(5, 217, 232, 0.45),
+        inset 0 4px 10px rgba(100, 230, 255, 0.30),
+        inset 0 -4px 8px  rgba(0, 40, 60, 0.45);
+    --token-glow: #05d9e8;
+}
+
+/* ============================================
+   INTERACTION & STATE
+   ============================================ */
+
+.token.clickable { cursor: pointer; }
+
+/* Active press — instant snap down */
+.token.clickable:active {
+    transform: scale(0.93);
+    transition: transform var(--dur-instant) var(--ease-press);
+}
+
+/* ---- Highlighted — ready to move ---- */
+.token.highlighted .token-inner {
+    animation: token-float 1.8s var(--ease-in-out) infinite;
+    filter: drop-shadow(0 0 10px var(--token-glow)) brightness(1.15);
+    border-color: rgba(255, 255, 255, 0.55) !important;
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.5),
+        0 0 20px var(--token-glow),
+        inset 0 4px 10px rgba(255, 255, 255, 0.35),
+        inset 0 -4px 8px  rgba(0, 0, 0, 0.30);
+}
+
+/* ---- Glow aura halo ---- */
+.token-glow-aura {
+    position: absolute;
+    inset: -30%;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        var(--token-glow, var(--neon-cyan)) 0%,
+        transparent 65%
+    );
+    opacity: 0.35;
+    filter: blur(10px);
+    z-index: 1;
+    pointer-events: none;
+    transition:
+        opacity var(--dur-fast) var(--ease-out),
+        filter  var(--dur-fast) var(--ease-out);
+}
+
+.token.highlighted .token-glow-aura {
+    opacity: 0.65;
+    filter: blur(8px);
+    animation: glow-pulse 1.6s var(--ease-in-out) infinite;
+}
+
+/* ---- Drop shadow that breathes with float ---- */
+.token.highlighted::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 12%;
+    width: 76%;
+    height: 6px;
+    background: var(--token-glow, rgba(0, 0, 0, 0.5));
+    filter: blur(6px);
+    border-radius: 50%;
+    opacity: 0.45;
+    animation: token-shadow-pulse 1.8s var(--ease-in-out) infinite;
+    z-index: -1;
+}
+
+/* ---- Movement hop ---- */
+.token.animating .token-inner {
+    animation: token-hop 0.13s var(--ease-spring);
+}
+
+/* ---- Impact flash ---- */
 .token-impact-wave {
     position: absolute;
     inset: -50%;
-    border: 2px solid var(--token-glow);
+    border: 2px solid var(--token-glow, var(--neon-cyan));
     border-radius: 50%;
     pointer-events: none;
     filter: blur(2px);
 }
 
-/* Glow Aura for active moves */
-.token-glow-aura {
-    position: absolute;
-    inset: -25%;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--token-glow) 0%, transparent 70%);
-    opacity: 0.4;
-    filter: blur(8px);
-    z-index: 1;
-    transition: opacity 0.3s ease, filter 0.3s ease;
+.token.impacted .token-inner {
+    animation: impact-flicker 0.28s var(--ease-out);
 }
 
-/* Enhanced glow for highlighted/active tokens */
-.token.highlighted .token-glow-aura {
-    opacity: 0.7;
-    filter: blur(6px);
-    animation: glow-pulse 1.5s infinite ease-in-out;
-}
-
-/* ============================================
-   TOKEN COLORS - Iridescent Gradients
-   ============================================ */
-
-.token-red .token-inner {
-    background: radial-gradient(circle at 30% 30%, #ff5e5e, #c41e3a);
-    --token-glow: #ff3e3e;
-}
-
-.token-green .token-inner {
-    background: radial-gradient(circle at 30% 30%, #10ff9c, #00874e);
-    --token-glow: #00ff88;
-}
-
-.token-yellow .token-inner {
-    background: radial-gradient(circle at 30% 30%, #ffdf40, #b29000);
-    --token-glow: #ffcc00;
-}
-
-.token-blue .token-inner {
-    background: radial-gradient(circle at 30% 30%, #4da6ff, #1e4bb2);
-    --token-glow: #00a2ff;
-}
-
-/* ============================================
-   ANIMATION & INTERACTION
-   ============================================ */
-
-.token.clickable {
-    cursor: pointer;
-}
-
-.token.clickable:active {
-    transform: scale(0.95);
-}
-
-/* Hop animation when token moves to a new cell */
-.token.animating .token-inner {
-    animation: token-hop 0.12s ease-out;
-}
-
-@keyframes token-hop {
-    0% { transform: translateY(0) scale(1); }
-    30% { transform: translateY(-18px) scale(1.12); }
-    70% { transform: translateY(-4px) scale(0.92); }
-    100% { transform: translateY(0) scale(1); }
-}
-
-/* Floating animation for tokens that are ready to move */
-.token.highlighted .token-inner {
-    animation: token-float 2s infinite ease-in-out;
-    filter: drop-shadow(0 0 8px var(--token-glow));
-}
-
-@keyframes token-float {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-8px);
-    }
-}
-
-/* Enhanced stacking visibility - Clear separation with color glow */
+/* ---- Stacked tokens ---- */
 .token.stacked {
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.75));
 }
 
 .token.stacked .token-inner {
-    width: 90%;
-    height: 90%;
-    border: 2.5px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7),
-                0 0 10px var(--token-glow, rgba(255, 255, 255, 0.3)),
-                inset 0 3px 6px rgba(255, 255, 255, 0.35),
-                inset 0 -3px 6px rgba(0, 0, 0, 0.3);
+    width: 92%;
+    height: 92%;
+    border-width: 2.5px;
+    border-color: rgba(255, 255, 255, 0.75) !important;
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.7),
+        0 0 14px var(--token-glow, rgba(255, 255, 255, 0.3)),
+        inset 0 3px 8px rgba(255, 255, 255, 0.35),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.35);
 }
 
-/* Shadow that pulses while token is floating */
-.token.highlighted::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 15%;
-    width: 70%;
-    height: 6px;
-    background: rgba(0, 0, 0, 0.4);
-    filter: blur(4px);
-    border-radius: 50%;
-    animation: token-shadow-pulse 2s infinite ease-in-out;
-    z-index: -1;
+/* ---- Yard / home base state ---- */
+.token.in-yard .token-inner {
+    width: 68%;
+    height: 68%;
+    opacity: 0.68;
+    filter: saturate(0.75) brightness(0.9);
 }
 
-@keyframes token-shadow-pulse {
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.4;
-    }
-
-    50% {
-        transform: scale(1.3);
-        opacity: 0.2;
-    }
-}
-
-/* Shimmer animation - light moves across token */
-@keyframes token-shimmer {
-    0%, 100% {
-        opacity: 0.4;
-        left: 15%;
-    }
-
-    50% {
-        opacity: 0.8;
-        left: 55%;
-    }
-}
-
-/* Glow pulse animation */
-@keyframes glow-pulse {
-    0%, 100% {
-        opacity: 0.5;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.8;
-        transform: scale(1.1);
-    }
-}
-
-/* Stacked token bobbing animation */
-@keyframes token-stack-bob {
-    0%, 100% {
-        transform: translateY(0) scale(1);
-    }
-
-    50% {
-        transform: translateY(-4px) scale(1.02);
-    }
-}
-
-.token.impacted .token-inner {
-    animation: impact-flicker 0.3s ease-out;
-}
-
-@keyframes impact-flicker {
-    0% {
-        filter: brightness(2) contrast(1.5);
-    }
-
-    100% {
-        filter: brightness(1) contrast(1);
-    }
-}
-
-/* Particles Trail */
+/* ---- Trail particles ---- */
 .token-trail-particles {
     position: absolute;
     bottom: 0;
@@ -300,27 +307,60 @@
     display: flex;
     justify-content: center;
     gap: 2px;
+    pointer-events: none;
 }
 
 .particle {
     width: 4px;
     height: 4px;
-    background: var(--token-glow);
+    background: var(--token-glow, var(--neon-cyan));
     border-radius: 50%;
+    box-shadow: 0 0 6px var(--token-glow, var(--neon-cyan));
 }
 
-/* Yard state: Subdued but glass */
-.token.in-yard .token-inner {
-    width: 70%;
-    height: 70%;
-    opacity: 0.7;
-    filter: saturate(0.8);
+/* ============================================
+   KEYFRAMES
+   ============================================ */
+
+@keyframes token-float {
+    0%, 100% { transform: translateY(0)    scale(1); }
+    50%       { transform: translateY(-7px) scale(1.04); }
 }
+
+@keyframes token-hop {
+    0%   { transform: translateY(0)     scale(1); }
+    35%  { transform: translateY(-16px) scale(1.14); }
+    70%  { transform: translateY(-3px)  scale(0.93); }
+    100% { transform: translateY(0)     scale(1); }
+}
+
+@keyframes token-shadow-pulse {
+    0%, 100% { transform: scaleX(1);   opacity: 0.45; }
+    50%       { transform: scaleX(1.4); opacity: 0.20; }
+}
+
+@keyframes token-shimmer {
+    0%, 100% { opacity: 0.4; left: 12%; }
+    50%       { opacity: 0.9; left: 50%; }
+}
+
+@keyframes glow-pulse {
+    0%, 100% { opacity: 0.50; transform: scale(1);    }
+    50%       { opacity: 0.80; transform: scale(1.12); }
+}
+
+@keyframes impact-flicker {
+    0%   { filter: brightness(2.2) contrast(1.4) saturate(1.5); }
+    100% { filter: brightness(1)   contrast(1)   saturate(1); }
+}
+
+/* ============================================
+   MOBILE (480px)
+   ============================================ */
 
 @media (max-width: 480px) {
-    /* Expanded touch target for WCAG compliance */
+    /* WCAG 44×44 touch target */
     .token.clickable {
-        /* Invisible expanded hit area - 44x44px minimum */
         min-width: 44px;
         min-height: 44px;
         padding: 11px;
@@ -328,36 +368,34 @@
     }
 
     .token-inner {
-        width: 85%;  /* Slightly larger visual size for mobile */
-        height: 85%;
+        width: 87%;
+        height: 87%;
     }
 
-    /* Enhanced glow for mobile visibility */
-    .token-glow-aura {
+    .token-glow-aura  { filter: blur(12px); }
+
+    .token.highlighted .token-glow-aura {
+        opacity: 0.85;
         filter: blur(10px);
     }
 
-    .token.highlighted .token-glow-aura {
-        opacity: 0.8;
-        filter: blur(8px);
-    }
-
-    /* Enhanced stack badge visibility */
     .token-stack-badge {
-        font-size: 12px;  /* Increased from 11px */
+        font-size: 11px;
         min-width: 20px;
         height: 20px;
         border: 2px solid rgba(255, 255, 255, 0.9);
         background: rgba(0, 0, 0, 0.95);
-        box-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
     }
 
-    /* Brighter shine on mobile */
     .token-shine {
-        background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5), transparent);
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0.60),
+            transparent 60%
+        );
     }
 
     .token.highlighted .token-shine {
-        animation: token-shimmer 1.5s ease-in-out infinite;
+        animation: token-shimmer 1.4s var(--ease-in-out) infinite;
     }
 }

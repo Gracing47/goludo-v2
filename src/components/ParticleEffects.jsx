@@ -1,20 +1,31 @@
 /**
  * PARTICLE EFFECTS COMPONENT
- * Premium AAA-quality particle effects for game events
- * Supports: capture explosions, victory confetti, spawn sparkles
+ * Iris AAA — capture explosions, victory confetti, spawn sparkles
+ * GPU-only: animates transform + opacity only
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './ParticleEffects.css';
 
-// Color map for player particles
+// Iris neon palette — no purple
 const PLAYER_COLORS = {
-    red: '#ff4757',
-    green: '#00d26a',
+    red:    '#ff4757',
+    green:  '#00d26a',
     yellow: '#ffbe0b',
-    blue: '#3a86ff'
+    blue:   '#3a86ff'
 };
+
+// Iris confetti palette — vivid neon mix, no purple
+const CONFETTI_COLORS = [
+    '#ff4757', // neon red
+    '#00d26a', // neon green
+    '#ffbe0b', // neon gold
+    '#3a86ff', // neon blue
+    '#00f3ff', // neon cyan
+    '#ff007a', // neon pink
+    '#ffd700'  // gold
+];
 
 /**
  * Generate random particles for explosion effect
@@ -23,8 +34,8 @@ function generateExplosionParticles(count, color) {
     const particles = [];
     for (let i = 0; i < count; i++) {
         const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
-        const velocity = 80 + Math.random() * 60;
-        const size = 4 + Math.random() * 6;
+        const velocity = 90 + Math.random() * 70;
+        const size = 4 + Math.random() * 7;
 
         particles.push({
             id: i,
@@ -32,8 +43,8 @@ function generateExplosionParticles(count, color) {
             y: Math.sin(angle) * velocity,
             size,
             color,
-            delay: Math.random() * 0.1,
-            duration: 0.4 + Math.random() * 0.3
+            delay: Math.random() * 0.08,
+            duration: 0.38 + Math.random() * 0.28
         });
     }
     return particles;
@@ -43,19 +54,17 @@ function generateExplosionParticles(count, color) {
  * Generate confetti particles for victory
  */
 function generateConfettiParticles(count) {
-    const colors = ['#ff4757', '#00d26a', '#ffbe0b', '#3a86ff', '#a855f7', '#ff007a'];
     const particles = [];
-
     for (let i = 0; i < count; i++) {
         particles.push({
             id: i,
-            x: (Math.random() - 0.5) * 300,
-            y: -200 - Math.random() * 200,
+            x: (Math.random() - 0.5) * 320,
+            y: -220 - Math.random() * 180,
             rotation: Math.random() * 720,
-            size: 6 + Math.random() * 8,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            delay: Math.random() * 0.5,
-            duration: 2 + Math.random() * 1
+            size: 6 + Math.random() * 9,
+            color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+            delay: Math.random() * 0.55,
+            duration: 2 + Math.random() * 1.2
         });
     }
     return particles;
@@ -69,11 +78,11 @@ export function CaptureExplosion({ position, color, onComplete }) {
 
     useEffect(() => {
         const particleColor = PLAYER_COLORS[color] || '#ffffff';
-        setParticles(generateExplosionParticles(16, particleColor));
+        setParticles(generateExplosionParticles(18, particleColor));
 
         const timer = setTimeout(() => {
             onComplete?.();
-        }, 800);
+        }, 850);
 
         return () => clearTimeout(timer);
     }, [color, onComplete]);
@@ -88,12 +97,21 @@ export function CaptureExplosion({ position, color, onComplete }) {
                 top: position.y
             }}
         >
-            {/* Shockwave Ring */}
+            {/* Shockwave ring */}
             <motion.div
                 className="shockwave-ring"
-                initial={{ scale: 0, opacity: 0.8, borderWidth: '4px' }}
-                animate={{ scale: 4, opacity: 0, borderWidth: '0px' }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                initial={{ scale: 0, opacity: 0.9, borderWidth: '4px' }}
+                animate={{ scale: 4.5, opacity: 0, borderWidth: '0px' }}
+                transition={{ duration: 0.65, ease: 'easeOut' }}
+                style={{ borderColor: PLAYER_COLORS[color] || '#fff' }}
+            />
+
+            {/* Second shockwave — trailing echo */}
+            <motion.div
+                className="shockwave-ring"
+                initial={{ scale: 0, opacity: 0.5, borderWidth: '2px' }}
+                animate={{ scale: 3.5, opacity: 0, borderWidth: '0px' }}
+                transition={{ duration: 0.75, ease: 'easeOut', delay: 0.1 }}
                 style={{ borderColor: PLAYER_COLORS[color] || '#fff' }}
             />
 
@@ -101,8 +119,8 @@ export function CaptureExplosion({ position, color, onComplete }) {
             <motion.div
                 className="explosion-flash"
                 initial={{ scale: 0, opacity: 1 }}
-                animate={{ scale: 2.5, opacity: 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
+                animate={{ scale: 3, opacity: 0 }}
+                transition={{ duration: 0.32, ease: 'easeOut' }}
                 style={{ backgroundColor: PLAYER_COLORS[color] || '#fff' }}
             />
 
@@ -151,13 +169,15 @@ export function VictoryConfetti({ active, winnerColor }) {
 
     useEffect(() => {
         if (active) {
-            setParticles(generateConfettiParticles(50));
+            setParticles(generateConfettiParticles(60));
         } else {
             setParticles([]);
         }
     }, [active]);
 
     if (!active) return null;
+
+    const glowColor = PLAYER_COLORS[winnerColor] || '#00f3ff';
 
     return (
         <div className="confetti-container">
@@ -173,42 +193,41 @@ export function VictoryConfetti({ active, winnerColor }) {
                             opacity: 1
                         }}
                         animate={{
-                            x: particle.x + (Math.random() - 0.5) * 100,
-                            y: 400,
+                            x: particle.x + (Math.random() - 0.5) * 120,
+                            y: 500,
                             rotate: particle.rotation,
                             opacity: [1, 1, 0]
                         }}
                         transition={{
                             duration: particle.duration,
                             delay: particle.delay,
-                            ease: 'easeIn'
+                            ease: [0.22, 1, 0.36, 1]
                         }}
                         style={{
                             width: particle.size,
-                            height: particle.size * 1.5,
+                            height: particle.size * 1.6,
                             backgroundColor: particle.color,
-                            borderRadius: '2px'
+                            borderRadius: '2px',
+                            boxShadow: `0 0 6px ${particle.color}88`
                         }}
                     />
                 ))}
             </AnimatePresence>
 
-            {/* Winner glow pulse */}
+            {/* Winner glow bloom */}
             <motion.div
                 className="winner-glow"
-                initial={{ scale: 0.5, opacity: 0 }}
+                initial={{ scale: 0.4, opacity: 0 }}
                 animate={{
-                    scale: [0.5, 1.2, 1],
-                    opacity: [0, 0.6, 0.3]
+                    scale: [0.4, 1.3, 1],
+                    opacity: [0, 0.5, 0.2]
                 }}
                 transition={{
-                    duration: 1.5,
+                    duration: 1.6,
                     repeat: Infinity,
                     repeatType: 'loop'
                 }}
-                style={{
-                    backgroundColor: PLAYER_COLORS[winnerColor] || '#a855f7'
-                }}
+                style={{ backgroundColor: glowColor }}
             />
         </div>
     );
@@ -228,8 +247,8 @@ export function SpawnSparkle({ position, color, onComplete }) {
             const angle = (Math.PI * 2 * i) / 8;
             newSparkles.push({
                 id: i,
-                x: Math.cos(angle) * 30,
-                y: Math.sin(angle) * 30,
+                x: Math.cos(angle) * 32,
+                y: Math.sin(angle) * 32,
                 color: particleColor
             });
         }
@@ -238,7 +257,7 @@ export function SpawnSparkle({ position, color, onComplete }) {
 
         const timer = setTimeout(() => {
             onComplete?.();
-        }, 500);
+        }, 520);
 
         return () => clearTimeout(timer);
     }, [color, onComplete]);
@@ -250,12 +269,12 @@ export function SpawnSparkle({ position, color, onComplete }) {
             className="particle-container sparkle"
             style={{ left: position.x, top: position.y }}
         >
-            {/* Vertical Beam */}
+            {/* Vertical light beam */}
             <motion.div
                 className="light-beam"
-                initial={{ height: 0, opacity: 0.8, y: 0 }}
-                animate={{ height: 100, opacity: 0, y: -50 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
+                initial={{ height: 0, opacity: 0.9, y: 0 }}
+                animate={{ height: 110, opacity: 0, y: -55 }}
+                transition={{ duration: 0.55, ease: 'easeOut' }}
                 style={{ backgroundColor: PLAYER_COLORS[color] || '#fff' }}
             />
 
@@ -267,11 +286,11 @@ export function SpawnSparkle({ position, color, onComplete }) {
                     animate={{
                         x: sparkle.x,
                         y: sparkle.y,
-                        scale: [0, 1.5, 0],
+                        scale: [0, 1.6, 0],
                         opacity: [1, 1, 0],
                         rotate: Math.random() * 180
                     }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    transition={{ duration: 0.42, ease: 'easeOut' }}
                     style={{ backgroundColor: sparkle.color }}
                 />
             ))}

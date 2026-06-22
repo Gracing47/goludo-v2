@@ -32,7 +32,7 @@ const GameHUD: React.FC<GameHUDProps> = ({
 
     return (
         <div className="game-hud">
-            {/* MODE BADGE */}
+            {/* MODE BADGE — Iris HUD Chip */}
             {gameState && (
                 <div className={`mode-badge ${gameState.mode === 'rapid' ? 'rapid-mode' : 'classic-mode'}`}>
                     {gameState.mode === 'rapid' ? '⚡ RAPID' : '🎲 CLASSIC'}
@@ -43,7 +43,7 @@ const GameHUD: React.FC<GameHUDProps> = ({
             {showDisconnect && appState === 'game' && gameState && gameConfig?.mode === 'web3' && (
                 <div className="disconnect-overlay">
                     <div className="spinner"></div>
-                    <div>Connection Lost. Reconnecting...</div>
+                    <div className="disconnect-msg">Connection Lost — Reconnecting…</div>
                 </div>
             )}
         </div>

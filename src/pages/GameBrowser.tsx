@@ -1,11 +1,11 @@
 /**
  * Game Browser
- * 
+ *
  * Dashboard showing available games to play.
  * Users can browse games, see stats, and navigate to lobbies.
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/routes';
 import './GameBrowser.css';
@@ -28,7 +28,7 @@ const GAMES: GameInfo[] = [
         icon: '🎲',
         description: 'Classic board game. Race your tokens home!',
         players: '2-4 Players',
-        stakeRange: '0.01 - 1 ETH',
+        stakeRange: '0.01 – 1 ETH',
         route: ROUTES.LUDO_LOBBY,
         available: true,
     },
@@ -54,8 +54,32 @@ const GAMES: GameInfo[] = [
     },
 ];
 
+/** Stagger float animation delay per tile so they drift out of phase */
+const FLOAT_DELAYS = ['0ms', '700ms', '1400ms', '350ms', '1050ms', '1750ms'];
+
 const GameBrowser: React.FC = () => {
     const navigate = useNavigate();
+    const gridRef = useRef<HTMLDivElement>(null);
+
+    // IntersectionObserver-driven stagger reveal
+    useEffect(() => {
+        const grid = gridRef.current;
+        if (!grid) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+                if (entry && entry.isIntersecting) {
+                    grid.classList.add('is-visible');
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        observer.observe(grid);
+        return () => observer.disconnect();
+    }, []);
 
     const handleGameClick = (game: GameInfo) => {
         if (game.available && game.route) {
@@ -80,23 +104,48 @@ const GameBrowser: React.FC = () => {
 
             {/* Game Grid */}
             <main className="browser-content">
-                <div className="games-grid">
-                    {GAMES.map((game) => (
+                <div className="browser-section-label">
+                    <h2>Select Arena</h2>
+                </div>
+
+                <div
+                    className="games-grid reveal-up reveal-stagger"
+                    ref={gridRef}
+                >
+                    {GAMES.map((game, i) => (
                         <div
                             key={game.id}
                             className={`game-tile ${game.available ? 'available' : 'locked'}`}
+                            style={{ '--tile-float-delay': FLOAT_DELAYS[i % FLOAT_DELAYS.length] } as React.CSSProperties}
                             onClick={() => handleGameClick(game)}
                         >
-                            {!game.available && <div className="tile-lock">🔒</div>}
-                            <div className="tile-icon">{game.icon}</div>
+                            {/* Grain texture layer */}
+                            <div className="tile-grain" aria-hidden="true" />
+
+                            {!game.available && (
+                                <div className="tile-lock" aria-label="Coming soon">🔒</div>
+                            )}
+
+                            <div className="tile-icon" aria-hidden="true">
+                                {game.icon}
+                            </div>
+
                             <h3>{game.name}</h3>
                             <p>{game.description}</p>
+
                             <div className="tile-meta">
-                                <span>{game.players}</span>
-                                <span>{game.stakeRange}</span>
+                                <span className="tile-meta-badge players">
+                                    {game.players}
+                                </span>
+                                <span className={`tile-meta-badge ${game.available ? 'stake' : 'coming-soon'}`}>
+                                    {game.stakeRange}
+                                </span>
                             </div>
+
                             {game.available && (
-                                <button className="btn-play">Play Now</button>
+                                <button className="btn-play" onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}>
+                                    Play Now
+                                </button>
                             )}
                         </div>
                     ))}

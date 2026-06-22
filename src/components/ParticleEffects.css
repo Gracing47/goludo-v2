@@ -1,8 +1,9 @@
 /* ============================================
-   PARTICLE EFFECTS - Premium AAA Gaming
+   IRIS — PARTICLE EFFECTS
+   Capture explosions · Victory confetti · Sparkles
    ============================================ */
 
-/* Container for positioned effects */
+/* Base container for positioned effects */
 .particle-container {
     position: absolute;
     pointer-events: none;
@@ -21,11 +22,12 @@
 
 .explosion-flash {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    filter: blur(8px);
+    /* Saturated blur for high-impact flash */
+    filter: blur(10px) saturate(1.8);
 }
 
 .explosion-particle {
@@ -34,6 +36,7 @@
     top: 0;
     left: 0;
     transform: translate(-50%, -50%);
+    /* Each particle inherits its color as box-shadow via inline style */
 }
 
 .shockwave-ring {
@@ -47,6 +50,7 @@
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 101;
+    /* ring color set via inline style from framer-motion */
 }
 
 /* ============================================
@@ -68,18 +72,23 @@
     position: absolute;
     top: 50%;
     left: 50%;
+    border-radius: 2px;
+    /* Iris brand colors are set via inline style in JS */
 }
 
+/* Winner bloom glow — deep neon radial */
 .winner-glow {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 300px;
-    height: 300px;
+    width: 380px;
+    height: 380px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    filter: blur(80px);
-    opacity: 0.3;
+    /* Heavy blur so it bleeds through confetti */
+    filter: blur(100px);
+    opacity: 0.25;
+    mix-blend-mode: screen;
 }
 
 /* ============================================
@@ -93,35 +102,35 @@
 
 .sparkle-particle {
     position: absolute;
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     top: 0;
     left: 0;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 8px currentColor;
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
 }
 
 .light-beam {
     position: absolute;
-    width: 4px;
+    width: 3px;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     border-radius: 4px;
-    filter: blur(2px);
+    filter: blur(2px) saturate(1.6);
     z-index: 102;
     transform-origin: bottom center;
 }
 
 /* ============================================
-   VICTORY OVERLAY
+   LEGACY VICTORY OVERLAY (fallback)
    ============================================ */
 
 .victory-overlay {
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.75) 100%);
     pointer-events: none;
     z-index: 150;
     display: flex;
@@ -131,56 +140,34 @@
 }
 
 .victory-text {
-    font-size: clamp(2rem, 8vw, 4rem);
-    font-weight: 800;
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: clamp(2rem, 8vw, 4.5rem);
+    font-weight: var(--font-black, 900);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: white;
     text-shadow:
         0 0 20px currentColor,
-        0 0 40px currentColor,
-        0 4px 8px rgba(0, 0, 0, 0.5);
+        0 0 50px currentColor,
+        0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
-.victory-text.red {
-    color: #ff4757;
-}
-
-.victory-text.green {
-    color: #00d26a;
-}
-
-.victory-text.yellow {
-    color: #ffbe0b;
-}
-
-.victory-text.blue {
-    color: #3a86ff;
-}
+.victory-text.red    { color: var(--neon-pink, #ff4757); }
+.victory-text.green  { color: #00d26a; }
+.victory-text.yellow { color: var(--neon-gold, #ffbe0b); }
+.victory-text.blue   { color: var(--neon-blue, #3a86ff); }
 
 .victory-subtext {
-    font-size: clamp(1rem, 3vw, 1.5rem);
-    color: rgba(255, 255, 255, 0.8);
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    color: rgba(255, 255, 255, 0.75);
     margin-top: 1rem;
     font-weight: 500;
 }
 
 /* ============================================
-   REDUCED MOTION
+   SPOTLIGHT (ambient usage)
    ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-
-    .particle-container,
-    .confetti-container,
-    .explosion-flash,
-    .explosion-particle,
-    .confetti-particle,
-    .sparkle-particle {
-        animation: none !important;
-        transition: none !important;
-    }
-}
 
 .spotlight {
     position: absolute;
@@ -190,6 +177,25 @@
     filter: blur(60px);
     pointer-events: none;
     z-index: 0;
-    /* Move center point */
     transform: translate(-50%, -50%);
+    mix-blend-mode: screen;
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .particle-container,
+    .confetti-container,
+    .explosion-flash,
+    .explosion-particle,
+    .confetti-particle,
+    .sparkle-particle,
+    .winner-glow,
+    .light-beam,
+    .shockwave-ring {
+        animation: none !important;
+        transition: none !important;
+    }
 }

@@ -43,11 +43,19 @@ const PlayerPods: React.FC<PlayerPodsProps> = ({
                 return (
                     <div key={idx} className={`pod-anchor pos-${visualPos}`}>
                         <div className={`player-pod ${color} ${isActive ? 'active' : ''} ${isForfeited ? 'forfeited' : ''}`}>
+                            {/* Avatar circle with optional turn-indicator orbital rings */}
                             <div className={`pod-avatar ${color}`}>
                                 {isForfeited ? '💀' : (p.isAI ? '🤖' : '👤')}
-                                {isActive && !isForfeited && <div className="pod-turn-indicator" />}
+                                {isActive && !isForfeited && (
+                                    <>
+                                        <div className="pod-turn-indicator" />
+                                        <div className="pod-turn-indicator-2" />
+                                    </>
+                                )}
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+
+                            {/* Name + skip dots */}
+                            <div className="pod-info">
                                 <span className="pod-name">{p.name}{isMe && ' •'}</span>
                                 <div className="pod-skips">
                                     <div className={`skip-dot ${skipCount >= 1 ? 'active' : ''}`} title="1 Skip" />

@@ -1,5 +1,6 @@
 /* ============================================
-   AAA COUNTDOWN - Premium Game Start Overlay
+   IRIS — AAA COUNTDOWN
+   Cinematic pre-game overlay
    ============================================ */
 
 .aaa-countdown-overlay {
@@ -8,66 +9,127 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.88);
-    backdrop-filter: blur(28px) saturate(0.9);
-    -webkit-backdrop-filter: blur(28px) saturate(0.9);
+    /* Deep space backdrop */
+    background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0, 243, 255, 0.05) 0%, transparent 70%),
+        rgba(6, 6, 15, 0.92);
+    backdrop-filter: blur(32px) saturate(1.6);
+    -webkit-backdrop-filter: blur(32px) saturate(1.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 105;
-}
-
-.aaa-countdown-card {
-    position: relative;
-    width: min(360px, 90vw);
-    padding: 40px 32px;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 36px;
-    text-align: center;
-    box-shadow:
-        0 32px 80px rgba(0, 0, 0, 0.7),
-        inset 0 1px 0 rgba(255, 255, 255, 0.04);
     overflow: hidden;
 }
 
-/* Multi-color glow ring from all player colors */
-.aaa-countdown-glow-ring {
+/* ============================================
+   AMBIENT BLOOM BLOBS — player color halos
+   behind the card, never inside it
+   ============================================ */
+
+.aaa-ambient-blooms {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
+    inset: 0;
     pointer-events: none;
 }
 
-.aaa-glow-segment {
+.aaa-bloom-blob {
     position: absolute;
-    width: 80px;
-    height: 80px;
+    top: 50%;
+    left: 50%;
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.25;
-    transform-origin: center center;
+    background: var(--blob-color, #00f3ff);
+    filter: blur(80px);
+    opacity: 0.18;
+    transform:
+        rotate(var(--blob-angle, 0deg))
+        translateY(-160px)
+        translate(-50%, -50%);
+    animation: blob-pulse var(--dur-crawl, 2400ms) ease-in-out infinite alternate;
+}
+
+@keyframes blob-pulse {
+    from { opacity: 0.12; transform: rotate(var(--blob-angle, 0deg)) translateY(-160px) translate(-50%, -50%) scale(1); }
+    to   { opacity: 0.22; transform: rotate(var(--blob-angle, 0deg)) translateY(-160px) translate(-50%, -50%) scale(1.15); }
+}
+
+/* ============================================
+   CARD
+   ============================================ */
+
+.aaa-countdown-card {
+    position: relative;
+    width: min(380px, 92vw);
+    padding: 44px 36px 40px;
+    /* Iris glass panel */
+    background: var(--glass-bg, rgba(255, 255, 255, 0.03));
+    backdrop-filter: var(--glass-blur, blur(24px)) var(--glass-saturation, saturate(1.6));
+    -webkit-backdrop-filter: var(--glass-blur, blur(24px)) var(--glass-saturation, saturate(1.6));
+    border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.07));
+    border-radius: 36px;
+    text-align: center;
+    box-shadow:
+        var(--elev-3,
+            0 4px 12px rgba(0,0,0,0.5),
+            0 16px 48px rgba(0,0,0,0.35),
+            0 48px 96px rgba(0,0,0,0.2)),
+        0 0 60px rgba(0, 243, 255, 0.06);
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Iris top-edge light */
+.aaa-card-edge-light {
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.35), transparent);
+    border-radius: 1px;
+    pointer-events: none;
+}
+
+/* Grain texture overlay */
+.aaa-countdown-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    border-radius: 36px;
 }
 
 /* ============================================
    CONTENT
    ============================================ */
 
-.aaa-countdown-content h3 {
-    font-family: var(--font-display), system-ui, sans-serif;
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.5);
-    letter-spacing: 3px;
+.aaa-countdown-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+/* Pre-title — HUD label spec */
+.aaa-pretitle {
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: var(--text-xs, 0.7rem);
+    font-weight: var(--font-bold, 700);
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: var(--tracking-widest, 3px);
     text-transform: uppercase;
     margin-bottom: 20px;
 }
 
 /* ============================================
-   PLAYER ROSTER - Color chips
+   PLAYER ROSTER
    ============================================ */
 
 .aaa-player-roster {
@@ -75,25 +137,28 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
 .aaa-player-chip {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
     padding: 7px 16px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid color-mix(in srgb, var(--chip-color) 35%, transparent);
-    border-radius: 22px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: all 0.3s ease;
+    /* Iris glass chip */
+    background: color-mix(in srgb, var(--chip-color) 8%, rgba(255, 255, 255, 0.02));
+    border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
+    border-radius: 99px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform var(--dur-fast, 180ms) var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275)),
+                box-shadow var(--dur-fast, 180ms) ease;
+    box-shadow: 0 0 0 0 transparent;
 }
 
 .aaa-player-chip:hover {
-    background: rgba(255, 255, 255, 0.07);
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--chip-color) 30%, transparent);
 }
 
 .aaa-chip-dot {
@@ -101,27 +166,29 @@
     height: 10px;
     border-radius: 50%;
     background: var(--chip-color);
-    box-shadow: 0 0 8px var(--chip-color);
+    box-shadow:
+        0 0 8px var(--chip-color),
+        0 0 20px color-mix(in srgb, var(--chip-color) 50%, transparent);
     flex-shrink: 0;
 }
 
 .aaa-chip-name {
-    font-family: var(--font-body), sans-serif;
-    font-size: 0.8rem;
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: 0.82rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
-    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.88);
+    letter-spacing: 0.3px;
 }
 
 /* ============================================
-   TIMER RING
+   TIMER RING — cinematic dual-ring
    ============================================ */
 
 .aaa-countdown-timer-wrapper {
     position: relative;
-    width: 140px;
-    height: 140px;
-    margin: 0 auto 20px;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,62 +203,122 @@
     transform: rotate(-90deg);
 }
 
+/* Second, inner ring — slightly smaller, offset phase */
+.aaa-countdown-svg-inner {
+    opacity: 0.45;
+}
+
 .aaa-timer-track {
     fill: none;
     stroke: rgba(255, 255, 255, 0.06);
-    stroke-width: 3;
+    stroke-width: 2.5;
 }
 
+/* Outer progress ring — neon cyan */
 .aaa-timer-progress {
     fill: none;
-    stroke: #00f3ff;
+    stroke: var(--neon-cyan, #00f3ff);
     stroke-width: 3;
     stroke-linecap: round;
+    filter: drop-shadow(0 0 6px rgba(0, 243, 255, 0.7));
 }
 
-.aaa-countdown-number {
-    font-family: var(--font-display), system-ui, sans-serif;
-    font-size: 4.5rem;
-    font-weight: 900;
-    color: white;
-    text-shadow:
-        0 0 30px rgba(255, 255, 255, 0.3),
-        0 0 60px rgba(0, 243, 255, 0.15);
-    perspective: 1000px;
-    line-height: 1;
-}
-
-.aaa-countdown-content p {
-    font-family: var(--font-body), sans-serif;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.35);
-    letter-spacing: 1px;
+/* Inner accent ring — neon blue */
+.aaa-timer-progress-inner {
+    fill: none;
+    stroke: var(--neon-blue, #3a86ff);
+    stroke-width: 2;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgba(58, 134, 255, 0.6));
 }
 
 /* ============================================
-   MOBILE ADJUSTMENTS
+   NUMBER — hero display type
+   ============================================ */
+
+.aaa-countdown-number {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: clamp(3.5rem, 12vw, 5rem);
+    font-weight: var(--font-black, 900);
+    color: #fff;
+    text-shadow:
+        0 0 24px rgba(0, 243, 255, 0.5),
+        0 0 60px rgba(0, 243, 255, 0.2),
+        0 2px 8px rgba(0, 0, 0, 0.5);
+    line-height: 1;
+    perspective: 800px;
+    letter-spacing: -1px;
+}
+
+/* GO! state — hot pink blast */
+.aaa-countdown-go {
+    color: var(--neon-pink, #ff007a);
+    text-shadow:
+        0 0 20px rgba(255, 0, 122, 0.7),
+        0 0 50px rgba(255, 0, 122, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.5);
+    letter-spacing: 2px;
+    animation: go-blast var(--dur-normal, 360ms) var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275)) forwards;
+}
+
+@keyframes go-blast {
+    0%   { transform: scale(0.7); opacity: 0; }
+    60%  { transform: scale(1.12); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Sub-label */
+.aaa-countdown-sublabel {
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.32);
+    letter-spacing: 1px;
+    margin: 0;
+    text-transform: lowercase;
+}
+
+/* ============================================
+   MOBILE
    ============================================ */
 
 @media (max-width: 480px) {
     .aaa-countdown-card {
-        padding: 28px 20px;
-        border-radius: 24px;
+        padding: 32px 20px 28px;
+        border-radius: 26px;
+        width: min(340px, 92vw);
     }
 
     .aaa-countdown-timer-wrapper {
-        width: 120px;
-        height: 120px;
+        width: 130px;
+        height: 130px;
     }
 
     .aaa-countdown-number {
-        font-size: 3.2rem;
+        font-size: clamp(3rem, 14vw, 4rem);
     }
 
-    .aaa-player-chip {
-        padding: 5px 10px;
+    .aaa-player-chip { padding: 5px 12px; }
+
+    .aaa-chip-name { font-size: 0.75rem; }
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .aaa-blob-pulse,
+    .aaa-countdown-go {
+        animation: none !important;
     }
 
-    .aaa-chip-name {
-        font-size: 0.75rem;
+    .aaa-countdown-card,
+    .aaa-pretitle,
+    .aaa-player-chip,
+    .aaa-countdown-number,
+    .aaa-countdown-sublabel {
+        transition: none !important;
     }
 }

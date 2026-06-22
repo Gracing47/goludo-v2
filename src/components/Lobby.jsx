@@ -325,43 +325,51 @@ const Lobby = ({ onStartGame }) => {
                 {/* Main Menu */}
                 {step === 'menu' && (
                     <div className="lobby-menu">
+                        <div className="lobby-menu-heading">
+                            <h2>Choose<br />Your Battle</h2>
+                            <p>Select a game mode to begin</p>
+                        </div>
+
                         <button
                             className="menu-button primary"
                             onClick={() => handleModeSelect('local')}
                         >
-                            <span className="menu-icon" style={{ color: 'var(--pancake-cyan)' }}>
+                            <span className="menu-icon">
                                 <UsersIcon />
                             </span>
                             <span className="menu-text">
                                 <strong>Local Game</strong>
                                 <small>Play with friends offline</small>
                             </span>
+                            <span className="mode-badge">2–4 Players</span>
                         </button>
 
                         <button
                             className="menu-button secondary"
                             onClick={() => handleModeSelect('ai')}
                         >
-                            <span className="menu-icon" style={{ color: 'var(--color-blue)' }}>
+                            <span className="menu-icon">
                                 <CpuIcon />
                             </span>
                             <span className="menu-text">
                                 <strong>vs Computer</strong>
                                 <small>Challenge the AI</small>
                             </span>
+                            <span className="mode-badge">Solo</span>
                         </button>
 
                         <button
-                            className={`menu-button web3 ${!account ? 'disabled' : ''}`}
+                            className={`menu-button web3${!account ? ' disabled' : ''}`}
                             onClick={() => handleModeSelect('web3')}
                         >
-                            <span className="menu-icon" style={{ color: 'var(--accent-pink)' }}>
+                            <span className="menu-icon">
                                 <GlobeIcon />
                             </span>
                             <span className="menu-text">
                                 <strong>Web3 Match</strong>
                                 <small>Play on Flare Network</small>
                             </span>
+                            <span className="mode-badge">Stake</span>
                         </button>
 
                         {account && (
@@ -382,7 +390,7 @@ const Lobby = ({ onStartGame }) => {
                     <div className="web3-lobby">
                         <header className="lobby-header">
                             <h2 className="setup-title">
-                                <span className="setup-title-icon"><DiceIcon size={24} /></span>
+                                <span className="setup-title-icon"><DiceIcon size={22} /></span>
                                 Open Matches
                             </h2>
                             <button className="create-game-btn" onClick={() => setStep('setup')}>
@@ -480,8 +488,11 @@ const Lobby = ({ onStartGame }) => {
                 {step === 'setup' && (
                     <div className="lobby-setup">
                         <h2 className="setup-title">
-                            {gameMode === 'local' ? '👥 Local Game' :
-                                gameMode === 'web3' ? '🔗 Web3 Match' : '🤖 vs Computer'}
+                            <span className="setup-title-icon">
+                                {gameMode === 'local' ? <UsersIcon /> : gameMode === 'web3' ? <GlobeIcon /> : <CpuIcon />}
+                            </span>
+                            {gameMode === 'local' ? 'Local Game' :
+                                gameMode === 'web3' ? 'Web3 Match' : 'vs Computer'}
                         </h2>
 
                         {gameMode === 'web3' && (

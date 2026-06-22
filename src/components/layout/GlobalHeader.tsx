@@ -50,7 +50,11 @@ const GlobalHeader: React.FC = () => {
             <div className="header-container">
                 <div className="header-left" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
                     <div className="logo-container">
-                        <span className="logo-text">$GO<span className="accent">Ludo</span></span>
+                        <span className="logo-text">
+                            <span className="logo-prefix">$GO</span>
+                            <span className="logo-sep" aria-hidden="true" />
+                            <span className="accent">Ludo</span>
+                        </span>
                     </div>
                 </div>
 
