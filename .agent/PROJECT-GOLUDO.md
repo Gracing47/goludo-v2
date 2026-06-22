@@ -35,10 +35,16 @@ Kept in `docs/_internal/`, separate from the formal `docs/` audits and the `task
 - ✅ **Boot-safe:** `web3.ts` degrades gracefully when `VITE_THIRDWEB_CLIENT_ID` missing (was white-screening).
 - ✅ **UI:** DEEP SPACE NEON overhaul live across all surfaces; build green, 0 console errors.
 - ✅ **thirdweb** updated to **5.120.1**.
+- ✅ **Production-readiness push** (PROD-1…6, commit 7fc7d04): fund-safety, audio pipeline, in-game juice, web3 lazy-load, currency, mobile-QA.
+- ✅ **Fund-safety (AAA-C1/C2)** at contract level: `claimPayout` pot-bound (`amount == room.pot`), OZ **Pausable** + guardian, WAITING-room refunds, single-source `feeBps`. **19/19 hardhat tests pass.**
+- ✅ **Currency** unified to **C2FLR** via `src/config/currency.ts` (no more "ETH").
+- ✅ **Bundle:** main app chunk split 1304→284 KB (thirdweb lazy chunks).
 
 ## Known issues / next
 
-- 🔴 **P0 fund-safety** (before any real money): `LudoVault.claimPayout` has no `require(amount <= room.pot)` (whole vault drainable, `AAA-C`), no Pausable, single-process in-memory state/timers.
-- ⚠️ **Login needs the real `VITE_THIRDWEB_CLIENT_ID`** — placeholder returns `KEY_NOT_FOUND`/401; social login + wallet-connect won't work until set.
-- ⚠️ **Bundle weight** ~1.9MB gzipped JS (thirdweb-dominated; main chunk >1MB) — first-load latency on mobile/slow networks.
-- ⚠️ **Currency label** shows "ETH" (mock) — should be FLR/C2FLR (`LEO-D` economy).
+- 🔴 **P0 scale (AAA-C3)** still open: single-process in-memory room state + turn timers (server.ts) — not horizontally scalable, games freeze on deploy. (Fund-safety is done; this is the other P0.)
+- ⚠️ **Post-deploy ops:** `setGuardian()` must be called (defaults to owner); move signer key to KMS; `VAULT_FEE_BPS` env must match on-chain `feeBps`.
+- ⚠️ **Login needs the real `VITE_THIRDWEB_CLIENT_ID`** — placeholder returns `KEY_NOT_FOUND`/401.
+- ⚠️ **Bundle:** `web3-vendor` (~534 KB) still boots because `GlobalHeader` statically imports `web3.ts` — fully defer thirdweb to finish PROD-3.
+- ⚠️ **Audio assets** absent (`public/sounds/*.mp3`) — pipeline plays upgraded synth until real assets generated/added.
+- ⚠️ **Perf:** heavy continuous effects (blur/bloom/particles) stall the GPU-less headless renderer; add a device-tier / reduced-effects mode and verify FPS on real low-end mobile.
