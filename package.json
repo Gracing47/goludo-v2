@@ -30,17 +30,17 @@
     "express-rate-limit": "^8.2.1",
     "framer-motion": "^12.26.2",
     "helmet": "^8.1.0",
+    "ioredis": "^5.9.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.12.0",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
-    "thirdweb": "^5.116.1",
+    "thirdweb": "^5.120.1",
     "tsx": "^4.21.0",
     "vite": "^5.0.11",
     "zod": "^4.3.6",
-    "zustand": "^5.0.9",
-    "ioredis": "^5.9.3"
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
