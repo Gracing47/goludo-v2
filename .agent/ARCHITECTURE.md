@@ -7,9 +7,11 @@
 ## 📋 Overview
 
 Antigravity Kit is a modular system consisting of:
-- **16 Specialist Agents** - Role-based AI personas
+- **17 Specialist Agents** - Role-based AI personas
 - **40 Skills** - Domain-specific knowledge modules
 - **11 Workflows** - Slash command procedures
+
+> **goludo-v2 project context:** read `.agent/PROJECT-GOLUDO.md` (personas Daniel/Leo/Iris, inside-tickets, locked decisions, current state) and `skills/frontend-design/goludo-deep-space-neon.md` (the project's design language).
 
 ---
 
@@ -49,6 +51,7 @@ Specialist AI personas for different domains.
 | `seo-specialist` | Ranking, visibility | seo-fundamentals, geo-fundamentals |
 | `documentation-writer` | Manuals, docs | documentation-templates |
 | `explorer-agent` | Codebase analysis | - |
+| `iris` | Bold AAA visual design, design systems | frontend-design, react-patterns, tailwind-patterns |
 
 ---
 
@@ -204,7 +207,7 @@ skill-name/
 
 | Metric | Value |
 |--------|-------|
-| **Total Agents** | 16 |
+| **Total Agents** | 17 |
 | **Total Skills** | 40 |
 | **Total Workflows** | 11 |
 | **Coverage** | ~90% web/mobile development |
