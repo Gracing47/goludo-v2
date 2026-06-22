@@ -167,7 +167,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                                 setGameState((prev) => {
                                     if (!prev) return prev;
                                     const newTokens = prev.tokens.map((arr) => [...arr]);
-                                    newTokens[p][t] = pos;
+                                    newTokens[p]![t] = pos;
 
                                     // Trigger move sound
                                     soundManager.play('move');

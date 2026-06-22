@@ -15,15 +15,13 @@ import App from '../App';
 import { ROUTES } from '../config/routes';
 import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
-import { createInitialState } from '../engine/gameLogic';
 
 const GameRoom: React.FC = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const navigate = useNavigate();
     const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
 
-    const { appState, config, state, setAppState, setConfig, setGameState } = useGameStore(useShallow((s) => ({
-        appState: s.appState,
+    const { config, state, setAppState, setConfig, setGameState } = useGameStore(useShallow((s) => ({
         config: s.config,
         state: s.state,
         setAppState: s.setAppState,

@@ -15,7 +15,7 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { LobbyState, Player, Room, GameType, GameModeId } from '@types/index';
+import type { LobbyState, Player } from '../types';
 
 /**
  * Initial player configuration
@@ -68,7 +68,9 @@ export const useLobbyStore = create<LobbyState>()(
 
             updatePlayer: (index, updates) => set((state) => {
                 const newPlayers = [...state.players];
-                newPlayers[index] = { ...newPlayers[index], ...updates };
+                const existing = newPlayers[index];
+                if (!existing) return {};
+                newPlayers[index] = { ...existing, ...updates };
                 return { players: newPlayers };
             }, false, 'updatePlayer'),
 

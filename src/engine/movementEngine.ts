@@ -16,7 +16,7 @@ import { GameState, TokenPosition, Move, Capture } from '../types';
  */
 
 // Logging helper to track logic in console
-const logMove = (msg: string, ...args: any[]) => {
+const logMove = (_msg: string, ..._args: unknown[]) => {
     // console.log(`[MoveEngine] ${msg}`, ...args);
 };
 
@@ -113,7 +113,7 @@ export function calculateDestinationWithPath(
     return { destination: path[targetIndex]!, path: traversePath };
 }
 
-export function isBlockedByBlockade(state: GameState, movingPlayer: number, position: TokenPosition): boolean {
+export function isBlockedByBlockade(state: GameState, _movingPlayer: number, position: TokenPosition): boolean {
     if (!RULES.BLOCKADE_STRICT) return false;
 
     // Cannot blockade inside home stretch or yard

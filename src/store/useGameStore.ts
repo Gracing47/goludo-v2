@@ -13,7 +13,7 @@
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 import type { Socket } from 'socket.io-client';
-import type { GameStoreState, GameConfig, GameState, PayoutProof } from '../types';
+import type { GameStoreState } from '../types';
 
 /**
  * Game Store - Single Source of Truth
@@ -32,7 +32,7 @@ import type { GameStoreState, GameConfig, GameState, PayoutProof } from '../type
  */
 export const useGameStore = create<GameStoreState>()(
     devtools(
-        subscribeWithSelector((set, get) => ({
+        subscribeWithSelector((set) => ({
             // ============================================
             // STATE
             // ============================================

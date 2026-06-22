@@ -5,7 +5,7 @@ import { ConnectButton } from 'thirdweb/react';
 import { client } from '../../config/web3';
 import './GlobalHeader.css';
 
-import { inAppWallet, createWallet } from 'thirdweb/wallets';
+import { inAppWallet, createWallet, type Wallet } from 'thirdweb/wallets';
 import { coston2 } from '../../config/web3';
 
 const wallets = [
@@ -59,7 +59,7 @@ const GlobalHeader: React.FC = () => {
                         {/* Thirdweb Connect Button with custom Styling via CSS variables */}
                         <ConnectButton
                             client={client}
-                            wallets={wallets}
+                            wallets={wallets as Wallet[]}
                             accountAbstraction={{
                                 chain: coston2,
                                 sponsorGas: true

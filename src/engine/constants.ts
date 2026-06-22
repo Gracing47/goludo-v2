@@ -133,7 +133,6 @@ export const CELL_TYPE = {
 // BOARD MATRIX (15x15)
 // ============================================
 
-const E = CELL_TYPE.EMPTY;
 const P = CELL_TYPE.PATH;
 const S = CELL_TYPE.SAFE;
 const C = CELL_TYPE.CENTER;

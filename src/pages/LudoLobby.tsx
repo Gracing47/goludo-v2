@@ -8,7 +8,7 @@
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Lobby from '../components/Lobby';
-import { gameRoute, ROUTES } from '../config/routes';
+import { gameRoute } from '../config/routes';
 import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
 import { createInitialState } from '../engine/gameLogic';
@@ -44,7 +44,7 @@ const LudoLobby: React.FC = () => {
 
         // Perspective rotation (for local human player)
         if (config.players[0]) {
-            const humanColorIndex = colorMap[config.players[0].color];
+            const humanColorIndex = colorMap[config.players[0].color] ?? 0;
             setBoardRotation((3 - humanColorIndex) * 90);
         }
 
@@ -68,10 +68,6 @@ const LudoLobby: React.FC = () => {
             navigate(gameRoute(newGameId));
         }
     }, [navigate, setConfig, setAppState, setGameState, setBoardRotation, setGameCountdown, setShowCountdown]);
-
-    const handleBack = useCallback(() => {
-        navigate(ROUTES.LANDING);
-    }, [navigate]);
 
     return (
         <div className="ludo-lobby-page">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type MotionStyle } from 'framer-motion';
 import './AAACountdown.css';
 
 interface Player {
@@ -66,7 +66,7 @@ const AAACountdown: React.FC<AAACountdownProps> = ({ countdown, players }) => {
                                 transition={{ delay: 0.3 + i * 0.1 }}
                                 style={{
                                     '--chip-color': getHex(p.color),
-                                } as React.CSSProperties}
+                                } as MotionStyle}
                             >
                                 <span className="aaa-chip-dot" />
                                 <span className="aaa-chip-name">{p.name}</span>

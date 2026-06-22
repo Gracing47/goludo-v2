@@ -7,8 +7,28 @@ import {
     POSITION,
     SAFE_POSITIONS
 } from '../engine/constants';
+import type { Coordinates, TokenPosition } from '../types';
 import { useGameStore } from '../store/useGameStore';
 import { useShallow } from 'zustand/shallow';
+
+interface CellGroup {
+    playerIdx: number;
+    tokenIndices: number[];
+    coords: Coordinates;
+    inYard: boolean;
+    position: TokenPosition;
+}
+
+interface VisualToken {
+    playerIdx: number;
+    tokenIdx: number;
+    tokenCount: number;
+    coords: Coordinates;
+    inYard: boolean;
+    stackIndex: number;
+    stackSize: number;
+    allTokenIndices: number[];
+}
 
 export const useGameStateDerivation = (account: any) => {
     const {
@@ -24,42 +44,42 @@ export const useGameStateDerivation = (account: any) => {
     })));
 
     // Get token coordinates with stacking info
-    const getTokensWithCoords = useCallback(() => {
+    const getTokensWithCoords = useCallback((): VisualToken[] => {
         if (!gameState || !gameState.tokens || !Array.isArray(gameState.tokens)) {
             return [];
         }
 
-        const cellMap = new Map();
+        const cellMap = new Map<string, Map<number, CellGroup>>();
 
         gameState.tokens.forEach((playerTokens, playerIdx) => {
             if (!Array.isArray(playerTokens)) return;
             playerTokens.forEach((position, tokenIdx) => {
-                let coords = null;
+                let coords: Coordinates | null = null;
                 let inYard = false;
 
                 if (position === POSITION.IN_YARD) {
-                    coords = YARD_COORDS[playerIdx][tokenIdx];
+                    coords = YARD_COORDS[playerIdx]?.[tokenIdx] ?? null;
                     inYard = true;
                 } else if (position === POSITION.FINISHED) {
-                    const goalCoords = [
+                    const goalCoords: Coordinates[] = [
                         { r: 6, c: 6 }, // Red (Top Left)
                         { r: 6, c: 8 }, // Green (Top Right)
                         { r: 8, c: 8 }, // Yellow (Bottom Right)
                         { r: 8, c: 6 }  // Blue (Bottom Left)
                     ];
-                    coords = goalCoords[playerIdx];
-                } else if (position >= 100 && position < 106) {
-                    coords = HOME_STRETCH_COORDS[playerIdx][position - 100];
-                } else if (position >= 0 && position < MASTER_LOOP.length) {
-                    coords = MASTER_LOOP[position];
+                    coords = goalCoords[playerIdx] ?? null;
+                } else if (typeof position === 'number' && position >= 100 && position < 106) {
+                    coords = HOME_STRETCH_COORDS[playerIdx]?.[position - 100] ?? null;
+                } else if (typeof position === 'number' && position >= 0 && position < MASTER_LOOP.length) {
+                    coords = MASTER_LOOP[position] ?? null;
                 }
 
                 if (!coords) return;
 
                 const posKey = inYard ? `yard-${playerIdx}-${tokenIdx}` : `${coords.r}-${coords.c}`;
-                if (!cellMap.has(posKey)) cellMap.set(posKey, new Map());
+                if (!cellMap.has(posKey)) cellMap.set(posKey, new Map<number, CellGroup>());
 
-                const playersInCell = cellMap.get(posKey);
+                const playersInCell = cellMap.get(posKey)!;
                 if (!playersInCell.has(playerIdx)) {
                     playersInCell.set(playerIdx, {
                         playerIdx,
@@ -69,16 +89,19 @@ export const useGameStateDerivation = (account: any) => {
                         position
                     });
                 }
-                playersInCell.get(playerIdx).tokenIndices.push(tokenIdx);
+                playersInCell.get(playerIdx)!.tokenIndices.push(tokenIdx);
             });
         });
 
-        const visualTokens = [];
+        const visualTokens: VisualToken[] = [];
         cellMap.forEach((playersInCell) => {
             const playerIndices = Array.from(playersInCell.keys()).sort((a, b) => a - b);
-            const firstGroup = playersInCell.get(playerIndices[0]);
+            const firstKey = playerIndices[0];
+            if (firstKey === undefined) return;
+            const firstGroup = playersInCell.get(firstKey);
+            if (!firstGroup) return;
 
-            const isSafePos = SAFE_POSITIONS.includes(firstGroup.position);
+            const isSafePos = typeof firstGroup.position === 'number' && SAFE_POSITIONS.includes(firstGroup.position);
             const isYard = firstGroup.inYard;
             const isGoal = firstGroup.position === POSITION.FINISHED;
             const allowStacking = playerIndices.length > 1 || isSafePos || isYard || isGoal;
@@ -87,9 +110,10 @@ export const useGameStateDerivation = (account: any) => {
 
             playerIndices.forEach((playerIdx, stackIndex) => {
                 const group = playersInCell.get(playerIdx);
+                if (!group) return;
                 visualTokens.push({
                     playerIdx: group.playerIdx,
-                    tokenIdx: group.tokenIndices[0],
+                    tokenIdx: group.tokenIndices[0] ?? 0,
                     tokenCount: group.tokenIndices.length,
                     coords: group.coords,
                     inYard: group.inYard,

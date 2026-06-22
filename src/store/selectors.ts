@@ -18,7 +18,7 @@
 
 import { useGameStore } from './useGameStore';
 import { useShallow } from 'zustand/shallow';
-import type { GameStoreState, GameState } from '../types';
+import type { GameStoreState } from '../types';
 
 // ============================================
 // ATOMIC SELECTORS (Single Value)

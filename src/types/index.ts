@@ -74,9 +74,11 @@ export interface GameMode {
 
 export type GamePhase =
     | 'COUNTDOWN'
+    | 'WAITING_FOR_ROLL'
     | 'ROLL_DICE'
     | 'SELECT_TOKEN'
     | 'BONUS_MOVE'
+    | 'MOVING'
     | 'ANIMATING'
     | 'WIN';
 
@@ -129,6 +131,17 @@ export interface GameState {
 
     /** AAA: Sequence number to prevent out-of-order state updates (Jitter control) */
     sequenceNumber: number;
+
+    /** Per-player runtime metadata (skips, forfeit status) sent by the server */
+    playersMetadata?: PlayerMetadata[];
+}
+
+export interface PlayerMetadata {
+    /** Number of turns skipped while AFK */
+    skipCount?: number;
+
+    /** Whether the player has forfeited the match */
+    forfeited?: boolean;
 }
 
 export interface Capture {

@@ -48,7 +48,7 @@ export function gameRoute(roomId: string): string {
  */
 export function extractRoomId(path: string): string | null {
     const match = path.match(/^\/game\/([a-zA-Z0-9-]+)$/);
-    return match ? match[1] : null;
+    return match?.[1] ?? null;
 }
 
 // ============================================

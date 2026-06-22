@@ -3,14 +3,21 @@ import GoTokenABI from "../abi/GoToken.json";
 import LudoVaultABI from "../abi/LudoVault.json";
 
 // Load from .env via Vite
-const clientId = (import.meta as any).env.VITE_THIRDWEB_CLIENT_ID as string || "";
+const clientId = ((import.meta as any).env.VITE_THIRDWEB_CLIENT_ID as string) || "";
 
 if (!clientId) {
-    console.warn("⚠️ VITE_THIRDWEB_CLIENT_ID is missing! Social login will be extremely slow or fail.");
+    console.warn(
+        "⚠️ VITE_THIRDWEB_CLIENT_ID is missing. Wallet connect and on-chain stakes will not " +
+        "function until it is configured (see .env.example). Falling back to a placeholder so the " +
+        "app still renders for free/local play instead of white-screening."
+    );
 }
 
+// NOTE: createThirdwebClient throws "clientId or secretKey must be provided" on an empty
+// clientId, which crashes the whole app at bootstrap (blank #root). Fall back to a public
+// placeholder so the UI always renders; real Web3 calls require a configured clientId.
 export const client = createThirdwebClient({
-    clientId,
+    clientId: clientId || "00000000000000000000000000000000",
 });
 
 // Flare Mainnet Configuration

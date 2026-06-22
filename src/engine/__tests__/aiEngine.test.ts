@@ -42,12 +42,12 @@ describe('AI Engine', () => {
         // Setup a state where moving leads to danger
         // This is a bit more complex to mock perfectly, but we can verify the function returns A move
         let state = createInitialState(2, [0, 1]);
-        state.tokens[1][0] = 20; // Enemy at 20
+        state.tokens[1]![0] = 20; // Enemy at 20
         state.activePlayer = 0;
         state.diceValue = 2;
         state.validMoves = [
-            { tokenIndex: 0, fromPosition: 18, toPosition: 20 }, // Bad move (captured) - wait, this is a capture for us?
-            { tokenIndex: 1, fromPosition: 5, toPosition: 7 }   // Safer move
+            { tokenIndex: 0, fromPosition: 18, toPosition: 20, captures: [] }, // Bad move (captured) - wait, this is a capture for us?
+            { tokenIndex: 1, fromPosition: 5, toPosition: 7, captures: [] }   // Safer move
         ];
 
         const move = calculateAIMove(state as any);

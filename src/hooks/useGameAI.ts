@@ -91,6 +91,8 @@ export const useGameAI = (handleRoll: () => void, executeMove: (move: Move) => v
                 break;
             }
         }
+
+        return undefined;
     }, [gameState, gameConfig, appState, isRolling, isMoving, handleRoll, executeMove]);
 
     return { aiActionInProgress };

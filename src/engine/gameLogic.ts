@@ -33,7 +33,7 @@ export function createInitialState(
 ): GameState {
     const sortedColors = [...activeColors].sort((a, b) => a - b);
 
-    const modeConfig = GAME_MODES[mode] || GAME_MODES.classic;
+    const modeConfig = GAME_MODES[mode] || GAME_MODES.classic!;
 
     const tokens: TokenPosition[][] = [
         modeConfig.getInitialTokens(0),
@@ -55,7 +55,7 @@ export function createInitialState(
         message: '',
         mode,
         sequenceNumber: 0
-    } as unknown as GameState;
+    };
 }
 
 // ============================================
@@ -251,7 +251,7 @@ export function completeMoveAnimation(state: GameState): GameState {
 
 function checkWinner(state: GameState): number | null {
     const { activeColors, mode, tokens } = state;
-    const modeConfig = GAME_MODES[mode] || GAME_MODES.classic;
+    const modeConfig = GAME_MODES[mode ?? 'classic'] || GAME_MODES.classic!;
 
     return modeConfig.checkWinner(tokens, activeColors);
 }

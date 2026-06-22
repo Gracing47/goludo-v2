@@ -1,8 +1,13 @@
-import React, { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import './WarpTransition.css';
 
-const WarpTransition = ({ mode = 'literal', children }) => {
+interface WarpTransitionProps {
+    mode?: 'literal' | 'subtle';
+    children?: ReactNode;
+}
+
+const WarpTransition = ({ mode = 'literal', children }: WarpTransitionProps) => {
     const stars = useMemo(() => Array.from({ length: 50 }).map((_, i) => ({
         id: i,
         angle: Math.random() * Math.PI * 2,
