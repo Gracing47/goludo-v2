@@ -8,6 +8,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/routes';
+import { NATIVE_CURRENCY_SYMBOL } from '../config/currency';
 import './GameBrowser.css';
 
 interface GameInfo {
@@ -28,7 +29,7 @@ const GAMES: GameInfo[] = [
         icon: '🎲',
         description: 'Classic board game. Race your tokens home!',
         players: '2-4 Players',
-        stakeRange: '0.01 – 1 ETH',
+        stakeRange: `0.01 – 1 ${NATIVE_CURRENCY_SYMBOL}`,
         route: ROUTES.LUDO_LOBBY,
         available: true,
     },

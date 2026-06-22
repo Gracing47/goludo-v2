@@ -10,8 +10,8 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 
 /**
  * GoLudo Backend Signer
- * 
- * Verifies game results and generates EIP-712 signatures 
+ *
+ * Verifies game results and generates EIP-712 signatures
  * that the LudoVault smart contract will accept for payouts.
  */
 
@@ -19,6 +19,21 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 const SIGNER_PRIVATE_KEY = process.env.SERVER_SIGNER_PRIVATE_KEY;
 const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS || process.env.LUDOVAULT_ADDRESS;
 const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114"); // Default to Coston2, override for Mainnet
+
+/**
+ * Contract feeBps — single source of truth for server-side fee math.
+ *
+ * Must match the value deployed in LudoVault.  Set VAULT_FEE_BPS in .env to
+ * mirror the constructor argument (or onchain setFee() calls).  Defaults to
+ * 500 (5%) to match legacy behaviour but should be overridden to match the
+ * actual deployed contract value.
+ *
+ * This value is used ONLY for profile-stats accounting (non-blocking, observer
+ * pattern).  The authoritative fee calculation always happens on-chain inside
+ * claimPayout() which reads its own feeBps storage slot.
+ */
+export const CONTRACT_FEE_BPS = BigInt(process.env.VAULT_FEE_BPS ?? "500");
+export const BPS_DENOMINATOR = 10000n;
 
 if (!SIGNER_PRIVATE_KEY || !VAULT_ADDRESS) {
     console.error("❌ SIGNER_PRIVATE_KEY or LUDOVAULT_ADDRESS missing in .env");
@@ -31,15 +46,37 @@ if (SIGNER_PRIVATE_KEY) {
 }
 
 /**
- * Generates an EIP-712 signature for a winner payout
- * 
+ * Generates an EIP-712 signature for a winner payout.
+ *
+ * PRE-SIGN CROSS-CHECK (AAA-C2):
+ *   Before signing, verifies that `amountInWei` (the pot fetched from the
+ *   contract) equals `entryAmountInWei * participantCount`.  A mismatch
+ *   indicates a data inconsistency between the server room state and the
+ *   on-chain pot — in that case we refuse to sign to prevent fund loss.
+ *
  * @param {string} roomId The bytes32 ID of the room
  * @param {string} winnerAddress The Ethereum address of the winner
- * @param {string} amountInWei Total pot amount to be paid out (before fee)
+ * @param {string} amountInWei Total pot amount (must equal entryAmount * participants on-chain)
+ * @param {string|undefined} entryAmountInWei Per-player entry amount (Wei) — used for cross-check
+ * @param {number|undefined} participantCount Number of participants — used for cross-check
  * @returns {Promise<Object>} Object containing the signature and parameters
  */
-export async function signPayout(roomId, winnerAddress, amountInWei) {
+export async function signPayout(roomId, winnerAddress, amountInWei, entryAmountInWei, participantCount) {
     if (!wallet) throw new Error("Signer wallet not initialized");
+
+    // AAA-C2: Pre-sign cross-check — pot must equal entryAmount * participants.
+    // Only enforced when both optional parameters are supplied.
+    if (entryAmountInWei !== undefined && participantCount !== undefined && participantCount > 0) {
+        const expectedPot = BigInt(entryAmountInWei) * BigInt(participantCount);
+        const actualPot   = BigInt(amountInWei);
+        if (expectedPot !== actualPot) {
+            throw new Error(
+                `Pre-sign pot mismatch: expected ${expectedPot} (entryAmount ${entryAmountInWei} * ${participantCount} players) ` +
+                `but on-chain pot is ${actualPot}. Refusing to sign — possible accounting error.`
+            );
+        }
+        console.log(`✅ Pre-sign cross-check passed: pot=${actualPot} = ${entryAmountInWei} * ${participantCount}`);
+    }
 
     // 1. Prepare unique nonce and deadline (24 hours from now)
     const nonce = ethers.hexlify(ethers.randomBytes(32));

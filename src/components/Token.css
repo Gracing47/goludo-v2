@@ -1,6 +1,7 @@
 /* ============================================
    TOKEN — IRIS DEEP SPACE NEON
    Premium game pieces: material depth + spring motion
+   Per-hop squash/stretch · punchy selected · clean reactions
    ============================================ */
 
 /* ---- foundation ---- */
@@ -13,6 +14,7 @@
     justify-content: center;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    will-change: transform;
 }
 
 /* ---- keyboard focus ring ---- */
@@ -59,7 +61,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    border: 1.5px solid rgba(255, 255, 255, 0.70);
     box-shadow:
         0 0 10px rgba(0, 0, 0, 0.9),
         var(--bloom-cyan);
@@ -76,7 +78,6 @@
     height: 85%;
     border-radius: 50%;
     position: relative;
-    /* border set per color below */
     border: 2px solid rgba(255, 255, 255, 0.22);
     box-shadow:
         0 6px 18px rgba(0, 0, 0, 0.55),
@@ -84,11 +85,12 @@
         inset 0 -4px 8px  rgba(0, 0, 0, 0.35);
     z-index: 2;
     overflow: hidden;
-    /* GPU layer */
-    will-change: transform;
+    /* GPU-only composite layer */
+    will-change: transform, filter;
     transition:
         box-shadow var(--dur-fast) var(--ease-out),
-        filter     var(--dur-fast) var(--ease-out);
+        filter     var(--dur-fast) var(--ease-out),
+        transform  var(--dur-fast) var(--ease-spring);
 }
 
 /* ---- specular highlight ---- */
@@ -195,21 +197,36 @@
 
 .token.clickable { cursor: pointer; }
 
-/* Active press — instant snap down */
+/* Active press — instant snap down with squash */
 .token.clickable:active {
-    transform: scale(0.93);
+    transform: scale(0.91) scaleY(0.88);
     transition: transform var(--dur-instant) var(--ease-press);
 }
 
-/* ---- Highlighted — ready to move ---- */
+/* ---- Highlighted — punchy ready-to-move state ---- */
+/* Outer token: scale pop + spring bounce loop */
+.token.highlighted {
+    animation: token-selected-bounce 1.9s var(--ease-spring) infinite;
+}
+
+@keyframes token-selected-bounce {
+    0%   { transform: translateY(0)    scale(1);     }
+    22%  { transform: translateY(-9px) scale(1.08, 0.94); }
+    40%  { transform: translateY(-11px) scale(0.96, 1.05); }
+    58%  { transform: translateY(-7px) scale(1.04, 0.97); }
+    72%  { transform: translateY(-9px) scale(0.99, 1.02); }
+    85%  { transform: translateY(-8px) scale(1.01, 0.99); }
+    100% { transform: translateY(0)    scale(1);     }
+}
+
 .token.highlighted .token-inner {
-    animation: token-float 1.8s var(--ease-in-out) infinite;
-    filter: drop-shadow(0 0 10px var(--token-glow)) brightness(1.15);
-    border-color: rgba(255, 255, 255, 0.55) !important;
+    filter: drop-shadow(0 0 12px var(--token-glow)) brightness(1.18);
+    border-color: rgba(255, 255, 255, 0.60) !important;
     box-shadow:
-        0 10px 28px rgba(0, 0, 0, 0.5),
-        0 0 20px var(--token-glow),
-        inset 0 4px 10px rgba(255, 255, 255, 0.35),
+        0 12px 32px rgba(0, 0, 0, 0.55),
+        0 0 22px var(--token-glow),
+        0 0 50px color-mix(in srgb, var(--token-glow, var(--neon-cyan)) 40%, transparent),
+        inset 0 4px 10px rgba(255, 255, 255, 0.38),
         inset 0 -4px 8px  rgba(0, 0, 0, 0.30);
 }
 
@@ -233,9 +250,9 @@
 }
 
 .token.highlighted .token-glow-aura {
-    opacity: 0.65;
+    opacity: 0.70;
     filter: blur(8px);
-    animation: glow-pulse 1.6s var(--ease-in-out) infinite;
+    animation: glow-pulse 1.55s var(--ease-in-out) infinite;
 }
 
 /* ---- Drop shadow that breathes with float ---- */
@@ -250,16 +267,25 @@
     filter: blur(6px);
     border-radius: 50%;
     opacity: 0.45;
-    animation: token-shadow-pulse 1.8s var(--ease-in-out) infinite;
+    animation: token-shadow-pulse 1.9s var(--ease-in-out) infinite;
     z-index: -1;
 }
 
-/* ---- Movement hop ---- */
+/* ---- Movement hop — squash on launch, stretch at apex, squash on land ---- */
 .token.animating .token-inner {
-    animation: token-hop 0.13s var(--ease-spring);
+    animation: token-hop 0.15s var(--ease-spring);
 }
 
-/* ---- Impact flash ---- */
+@keyframes token-hop {
+    0%   { transform: scaleX(1.08)  scaleY(0.92)  translateY(0);     }  /* squash launch */
+    20%  { transform: scaleX(0.90)  scaleY(1.14)  translateY(-18px); }  /* stretch up */
+    55%  { transform: scaleX(0.94)  scaleY(1.10)  translateY(-12px); }  /* float */
+    78%  { transform: scaleX(1.10)  scaleY(0.90)  translateY(-2px);  }  /* pre-land squash */
+    90%  { transform: scaleX(0.96)  scaleY(1.06)  translateY(1px);   }  /* overshoot */
+    100% { transform: scaleX(1)     scaleY(1)     translateY(0);     }
+}
+
+/* ---- Impact flash + splat on landing ---- */
 .token-impact-wave {
     position: absolute;
     inset: -50%;
@@ -270,7 +296,19 @@
 }
 
 .token.impacted .token-inner {
-    animation: impact-flicker 0.28s var(--ease-out);
+    animation: impact-flicker 0.30s var(--ease-out);
+}
+
+/* ---- Spawn reaction — clean scale-up from center ---- */
+.token.spawning .token-inner {
+    animation: token-spawn 0.38s var(--ease-spring);
+}
+
+@keyframes token-spawn {
+    0%   { transform: scale(0.25) rotate(-20deg); opacity: 0; filter: brightness(2.5); }
+    55%  { transform: scale(1.15) rotate(5deg);  opacity: 1; filter: brightness(1.5); }
+    80%  { transform: scale(0.94) rotate(-2deg); opacity: 1; filter: brightness(1.1); }
+    100% { transform: scale(1)    rotate(0deg);  opacity: 1; filter: brightness(1); }
 }
 
 /* ---- Stacked tokens ---- */
@@ -282,10 +320,10 @@
     width: 92%;
     height: 92%;
     border-width: 2.5px;
-    border-color: rgba(255, 255, 255, 0.75) !important;
+    border-color: rgba(255, 255, 255, 0.78) !important;
     box-shadow:
         0 4px 12px rgba(0, 0, 0, 0.7),
-        0 0 14px var(--token-glow, rgba(255, 255, 255, 0.3)),
+        0 0 16px var(--token-glow, rgba(255, 255, 255, 0.3)),
         inset 0 3px 8px rgba(255, 255, 255, 0.35),
         inset 0 -3px 6px rgba(0, 0, 0, 0.35);
 }
@@ -327,13 +365,6 @@
     50%       { transform: translateY(-7px) scale(1.04); }
 }
 
-@keyframes token-hop {
-    0%   { transform: translateY(0)     scale(1); }
-    35%  { transform: translateY(-16px) scale(1.14); }
-    70%  { transform: translateY(-3px)  scale(0.93); }
-    100% { transform: translateY(0)     scale(1); }
-}
-
 @keyframes token-shadow-pulse {
     0%, 100% { transform: scaleX(1);   opacity: 0.45; }
     50%       { transform: scaleX(1.4); opacity: 0.20; }
@@ -345,13 +376,14 @@
 }
 
 @keyframes glow-pulse {
-    0%, 100% { opacity: 0.50; transform: scale(1);    }
-    50%       { opacity: 0.80; transform: scale(1.12); }
+    0%, 100% { opacity: 0.55; transform: scale(1);    }
+    50%       { opacity: 0.85; transform: scale(1.15); }
 }
 
 @keyframes impact-flicker {
-    0%   { filter: brightness(2.2) contrast(1.4) saturate(1.5); }
-    100% { filter: brightness(1)   contrast(1)   saturate(1); }
+    0%   { filter: brightness(2.4) contrast(1.5) saturate(1.6); transform: scale(1.12); }
+    50%  { filter: brightness(1.4) contrast(1.1) saturate(1.2); transform: scale(1.04); }
+    100% { filter: brightness(1)   contrast(1)   saturate(1);   transform: scale(1);    }
 }
 
 /* ============================================
@@ -375,7 +407,7 @@
     .token-glow-aura  { filter: blur(12px); }
 
     .token.highlighted .token-glow-aura {
-        opacity: 0.85;
+        opacity: 0.88;
         filter: blur(10px);
     }
 

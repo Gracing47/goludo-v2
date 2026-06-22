@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import './Lobby.css';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
+import { NATIVE_CURRENCY_SYMBOL } from '../config/currency';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -411,7 +412,7 @@ const Lobby = ({ onStartGame }) => {
                                 openRooms.filter(r => r.status === 'WAITING').map(room => (
                                     <div key={room.id} className="room-card">
                                         <div className="room-details">
-                                            <span className="room-stake">💰 {room.stake} {balanceSymbol || '$GO'}</span>
+                                            <span className="room-stake">💰 {room.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</span>
                                             <span className="room-players">👤 {room.players.filter(p => p).length}/{room.maxPlayers}</span>
                                         </div>
                                         <button
@@ -453,7 +454,7 @@ const Lobby = ({ onStartGame }) => {
                                     <span className="player-progress">
                                         👥 <strong>{playerCount}/{maxPlayers}</strong> Players
                                     </span>
-                                    <span>💰 <strong>{betAmount} {balanceSymbol || 'C2FLR'}</strong></span>
+                                    <span>💰 <strong>{betAmount} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</strong></span>
                                 </div>
 
                                 {/* Joined Players List */}
@@ -666,7 +667,7 @@ const Lobby = ({ onStartGame }) => {
                     <div className="modal-content join-modal">
                         <header className="modal-header">
                             <h3>Join Match</h3>
-                            <div className="stake-badge">💰 {selectedRoom.stake} {balanceSymbol || 'C2FLR'}</div>
+                            <div className="stake-badge">💰 {selectedRoom.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</div>
                         </header>
 
                         <div className="modal-body">

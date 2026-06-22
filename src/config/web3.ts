@@ -1,6 +1,9 @@
 import { createThirdwebClient, getContract, defineChain } from "thirdweb";
 import GoTokenABI from "../abi/GoToken.json";
 import LudoVaultABI from "../abi/LudoVault.json";
+// PROD-4: Re-export the single currency source-of-truth so consumers can
+// import it from web3 without reaching into config/currency directly.
+export { NATIVE_CURRENCY_SYMBOL, formatStake } from "./currency";
 
 // Load from .env via Vite
 const clientId = ((import.meta as any).env.VITE_THIRDWEB_CLIENT_ID as string) || "";

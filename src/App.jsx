@@ -15,6 +15,7 @@ import { useGameAI } from './hooks/useGameAI';
 import { useLudoWeb3 } from './hooks/useLudoWeb3';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_URL, SOCKET_URL } from './config/api';
+import { NATIVE_CURRENCY_SYMBOL } from './config/currency';
 
 import WarpTransition from './components/WarpTransition';
 import Dice from './components/Dice';
@@ -125,6 +126,17 @@ function App() {
     // Local state for claiming (not needed in global store)
     const [isClaiming, setIsClaiming] = useState(false);
     const [isClaimed, setIsClaimed] = useState(false);
+
+    // Screen-shake: ref guards against stacked timeouts
+    const shakeTimeoutRef = useRef(null);
+    const triggerShake = useCallback(() => {
+        if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
+        setIsShaking(true);
+        shakeTimeoutRef.current = setTimeout(() => {
+            setIsShaking(false);
+            shakeTimeoutRef.current = null;
+        }, 450); // slightly longer than the 0.4s keyframe
+    }, [setIsShaking]);
 
     // VFX Hook
     const {
@@ -338,6 +350,7 @@ function App() {
                 // Audio/Feedback
                 if (hasCapture) {
                     playSound('capture');
+                    triggerShake();
                     if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
                 } else if (move.isHome) playSound('home');
                 else playSound('land');
@@ -354,6 +367,7 @@ function App() {
                         // Impact/Capture
                         if (hasCapture) {
                             playSound('capture');
+                            triggerShake();
                             const coords = MASTER_LOOP[move.toPosition] || (move.toPosition >= 100 ? HOME_STRETCH_COORDS[playerIdx][move.toPosition - 100] : null);
                             if (coords) triggerCapture(move.captures[0].player, coords.r, coords.c);
                         } else if (move.isHome) playSound('home');
@@ -371,7 +385,7 @@ function App() {
                 }
             }
         }, path.length * hopDuration + 100);
-    }, [gameState, gameConfig, emitMove, playSound, triggerSpawn, triggerCapture]);
+    }, [gameState, gameConfig, emitMove, playSound, triggerSpawn, triggerCapture, triggerShake]);
 
     // Human token click
     const handleTokenClick = useCallback((playerIndex, tokenIndex) => {
@@ -424,6 +438,13 @@ function App() {
             return () => clearTimeout(timer);
         }
     }, [gameState?.validMoves, gameState?.gamePhase, isLocalPlayerTurn, isRolling, isMoving, executeMove]);
+
+    // Screen-shake on WIN
+    useEffect(() => {
+        if (gameState?.gamePhase === 'WIN') {
+            triggerShake();
+        }
+    }, [gameState?.gamePhase]); // intentionally omit triggerShake — stable callback, no stale-closure risk
 
     // Web3 Payout Proof Handler (Sound now handled by VictoryCelebration)
     useEffect(() => {
@@ -688,7 +709,7 @@ function App() {
                                 <span className="pot-amount">
                                     {(parseFloat(gameConfig.stake) * gameConfig.playerCount).toFixed(1)}
                                 </span>
-                                <span className="pot-currency">C2FLR</span>
+                                <span className="pot-currency">{NATIVE_CURRENCY_SYMBOL}</span>
                             </div>
                         </div>
                     )}

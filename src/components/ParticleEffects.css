@@ -1,6 +1,7 @@
 /* ============================================
    IRIS — PARTICLE EFFECTS
-   Capture explosions · Victory confetti · Sparkles
+   Capture explosions · Home burst · Victory confetti · Sparkles
+   GPU-only: transform + opacity
    ============================================ */
 
 /* Base container for positioned effects */
@@ -9,25 +10,29 @@
     pointer-events: none;
     z-index: 100;
     transform: translate(-50%, -50%);
+    /* Ensure children render above board tokens */
+    will-change: contents;
 }
 
 /* ============================================
    CAPTURE EXPLOSION
    ============================================ */
 
-.particle-container.explosion {
+.particle-container.explosion,
+.particle-container.home-burst {
     width: 0;
     height: 0;
 }
 
 .explosion-flash {
     position: absolute;
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     /* Saturated blur for high-impact flash */
-    filter: blur(10px) saturate(1.8);
+    filter: blur(12px) saturate(2.0);
+    will-change: transform, opacity;
 }
 
 .explosion-particle {
@@ -36,7 +41,7 @@
     top: 0;
     left: 0;
     transform: translate(-50%, -50%);
-    /* Each particle inherits its color as box-shadow via inline style */
+    will-change: transform, opacity;
 }
 
 .shockwave-ring {
@@ -50,7 +55,14 @@
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 101;
-    /* ring color set via inline style from framer-motion */
+    will-change: transform, opacity;
+    /* ring color set via inline style */
+}
+
+/* Extra faint shimmer ring */
+.shockwave-ring.shockwave-shimmer {
+    filter: blur(2px);
+    mix-blend-mode: screen;
 }
 
 /* ============================================
@@ -73,6 +85,7 @@
     top: 50%;
     left: 50%;
     border-radius: 2px;
+    will-change: transform, opacity;
     /* Iris brand colors are set via inline style in JS */
 }
 
@@ -81,14 +94,23 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 380px;
-    height: 380px;
+    width: 420px;
+    height: 420px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     /* Heavy blur so it bleeds through confetti */
-    filter: blur(100px);
+    filter: blur(110px);
     opacity: 0.25;
     mix-blend-mode: screen;
+    will-change: transform, opacity;
+}
+
+/* Secondary gold glow ring */
+.winner-glow-secondary {
+    width: 600px;
+    height: 600px;
+    filter: blur(140px);
+    opacity: 0.18;
 }
 
 /* ============================================
@@ -108,7 +130,8 @@
     top: 0;
     left: 0;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
+    will-change: transform, opacity;
 }
 
 .light-beam {
@@ -118,9 +141,10 @@
     left: 50%;
     transform: translateX(-50%);
     border-radius: 4px;
-    filter: blur(2px) saturate(1.6);
+    filter: blur(2px) saturate(1.8);
     z-index: 102;
     transform-origin: bottom center;
+    will-change: height, opacity;
 }
 
 /* ============================================
@@ -152,10 +176,10 @@
         0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
-.victory-text.red    { color: var(--neon-pink, #ff4757); }
-.victory-text.green  { color: #00d26a; }
-.victory-text.yellow { color: var(--neon-gold, #ffbe0b); }
-.victory-text.blue   { color: var(--neon-blue, #3a86ff); }
+.victory-text.red    { color: var(--neon-pink, #ff2a6d); }
+.victory-text.green  { color: var(--color-success, #00ff9d); }
+.victory-text.yellow { color: var(--neon-gold, #ffcc00); }
+.victory-text.blue   { color: var(--player-blue, #05d9e8); }
 
 .victory-subtext {
     font-family: var(--font-body, 'Outfit', sans-serif);
@@ -182,7 +206,7 @@
 }
 
 /* ============================================
-   REDUCED MOTION
+   REDUCED MOTION — hide all particle layers
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -193,9 +217,9 @@
     .confetti-particle,
     .sparkle-particle,
     .winner-glow,
+    .winner-glow-secondary,
     .light-beam,
     .shockwave-ring {
-        animation: none !important;
-        transition: none !important;
+        display: none !important;
     }
 }

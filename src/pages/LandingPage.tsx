@@ -14,6 +14,7 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
 import { ROUTES } from '../config/routes';
+import { formatStake } from '../config/currency';
 import './LandingPage.css';
 
 // ─── SVG Icons ───────────────────────────────────────────────────────────────
@@ -70,7 +71,7 @@ const CoinsIcon = () => (
 
 const MOCK_STATS = {
     gamesPlayed: 12847,
-    totalEarned: '245.8 ETH',
+    totalEarned: formatStake('245.8'),
     activePlayers: 342,
     avgGameTime: '8 min',
 };

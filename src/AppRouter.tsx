@@ -11,7 +11,11 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from './config/routes';
-import GlobalHeader from './components/layout/GlobalHeader';
+
+// PROD-3: GlobalHeader contains a static import of thirdweb/react (ConnectButton).
+// Lazy-loading it ensures the thirdweb chunk is NOT pulled into the initial
+// critical bundle, so the landing page renders before the SDK is fetched.
+const GlobalHeader = lazy(() => import('./components/layout/GlobalHeader'));
 
 // Lazy load pages for code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -55,7 +59,11 @@ const PageLoader: React.FC = () => (
 const AppRouter: React.FC = () => {
     return (
         <div className="app-shell">
-            <GlobalHeader />
+            {/* Header has its own Suspense so the ConnectButton chunk loading
+                never blocks the page content from rendering. */}
+            <Suspense fallback={null}>
+                <GlobalHeader />
+            </Suspense>
             <main className="main-content">
                 <Suspense fallback={<PageLoader />}>
                     <Routes>

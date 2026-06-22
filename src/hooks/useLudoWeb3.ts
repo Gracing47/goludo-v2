@@ -3,6 +3,7 @@ import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb
 import { prepareContractCall, toWei } from "thirdweb";
 import { ethers } from "ethers";
 import { ludoVaultContract, coston2, client } from "../config/web3";
+import { NATIVE_CURRENCY_SYMBOL } from "../config/currency";
 import { API_URL } from "../config/api";
 import { PayoutProof } from "../types";
 
@@ -25,7 +26,10 @@ export const useLudoWeb3 = () => {
     });
 
     const balance = walletBalance?.displayValue || "0";
-    const balanceSymbol = walletBalance?.symbol || "C2FLR";
+    // PROD-4: fall back to the single currency source-of-truth rather than a
+    // hardcoded string, so a chain switch (testnet → mainnet) only needs
+    // one change in src/config/currency.ts.
+    const balanceSymbol = walletBalance?.symbol || NATIVE_CURRENCY_SYMBOL;
 
     const refetchBalance = useCallback(() => {
         // Handled by hook polling automatically if data is accessed

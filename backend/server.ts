@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
-import { signPayout, walletAddress } from './services/signer.js';
+import { signPayout, walletAddress, CONTRACT_FEE_BPS, BPS_DENOMINATOR } from './services/signer.js';
 import path from 'path';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -444,9 +444,14 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
 
     // V2: Profile updates (Observer pattern — async, non-blocking)
     if (winner?.address && room.stake && profileManager) {
-        const betAmount = BigInt(Math.floor(parseFloat(room.stake) * 1e18));
-        const feeAmount = (betAmount * 5n) / 100n;
-        const payoutAmount = betAmount * 2n - feeAmount;
+        // PROD-6 / AAA-C2: Single source of truth for fee math.
+        // pot  = entryAmount * actualParticipantCount  (not hardcoded * 2)
+        // fee  = pot * CONTRACT_FEE_BPS / BPS_DENOMINATOR  (not hardcoded 5%)
+        const betAmount        = BigInt(Math.floor(parseFloat(room.stake) * 1e18));
+        const actualPlayers    = BigInt(room.players.filter(Boolean).length);
+        const potAmount        = betAmount * actualPlayers;
+        const feeAmount        = (potAmount * CONTRACT_FEE_BPS) / BPS_DENOMINATOR;
+        const payoutAmount     = potAmount - feeAmount;
         const gameMode = (room.gameState.mode || 'classic') as 'classic' | 'rapid';
         const playerAddresses = room.players.filter(Boolean).map((p: any) => p.address);
         const loser = room.players.find((p, i) => p && i !== winnerIdx);
@@ -901,10 +906,23 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
 
     try {
         // 🔗 PHASE 5: Fetch pot amount directly from blockchain (trustless)
-        const contractRoom = await getRoomStateFromContract(roomId) as { pot: string; status: number };
+        const contractRoom = await getRoomStateFromContract(roomId) as {
+            pot: string;
+            status: number;
+            entryAmount: string;
+            participants: string[];
+        };
         const potAmount = contractRoom.pot;
 
-        const payoutProof = await signPayout(roomId, winner, potAmount);
+        // AAA-C2: Pass entry amount and participant count so signPayout can
+        // cross-check that potAmount == entryAmount * participantCount before signing.
+        const payoutProof = await signPayout(
+            roomId,
+            winner,
+            potAmount,
+            contractRoom.entryAmount,
+            contractRoom.participants.length
+        );
         res.json(payoutProof);
     } catch (e: any) {
         console.error("❌ Sign Payout Error:", e);
