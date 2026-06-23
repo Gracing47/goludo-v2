@@ -863,6 +863,143 @@ body {
 }
 
 /* ============================================
+   SMALL PHONE (≤390px) — 380px viewport tuning
+   Layered on top of the 480px block above.
+   ============================================ */
+
+@media (max-width: 390px) {
+    /* Root overrides for smallest screens */
+    :root {
+        --header-height: 48px;
+        --pod-height: 30px;
+    }
+
+    /* Tighten arena gap so board + side-panel both fit */
+    .game-arena {
+        gap: 8px;
+        padding: 0 2px;
+    }
+
+    /* ---- turn-status pill: shrink so it never overlaps header or top pods ---- */
+    .turn-status {
+        /* Keep centered but pull closer to safe top edge */
+        top: 8px;
+        /* Tighter horizontal padding; allow wrapping on long player names */
+        padding: 5px 10px 5px 8px;
+        gap: 7px;
+        /* Let text wrap rather than overflow */
+        border-radius: 14px;
+        /* Hard cap so it never bleeds beyond the viewport */
+        max-width: calc(100vw - 24px);
+    }
+
+    .turn-status-dot {
+        width: 9px;
+        height: 9px;
+        flex-shrink: 0;
+    }
+
+    .turn-status-label {
+        font-size: 0.62rem;
+        letter-spacing: 0.04em;
+        /* Allow wrapping to a second line on tiny screens */
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .turn-status-action {
+        font-size: 0.60rem;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    /* ---- player-pod: tighter for narrow screens ---- */
+    .player-pod {
+        padding: 3px 8px 3px 3px;
+        height: 28px;
+        gap: 4px;
+        /* Prevent pod from exceeding half the board width */
+        max-width: 44vw;
+    }
+
+    .pod-avatar {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+    }
+
+    .pod-name {
+        font-size: 8px;
+        letter-spacing: 0;
+        max-width: 52px;
+    }
+
+    /* ---- pod-progress pips: keep them readable but compact ---- */
+    .pod-progress {
+        gap: 2px;
+        margin-top: 2px;
+    }
+
+    .home-pip {
+        width: 5px;
+        height: 5px;
+    }
+
+    /* ---- skip dots ---- */
+    .skip-dot { width: 4px; height: 4px; }
+
+    /* ---- side-panel + dice: tighter padding, still ≥44px touch target ---- */
+    .side-panel {
+        padding: 6px 14px;
+        gap: 12px;
+        border-radius: 14px;
+    }
+
+    /* ---- pot-display: slightly smaller to avoid HUD crowding ---- */
+    .pot-display {
+        top: 4px;
+        left: 6px;
+        padding: 3px 8px;
+        height: 26px;
+        gap: 6px;
+    }
+
+    .pot-icon { font-size: 0.9rem; }
+
+    .pot-amount { font-size: 0.75rem; }
+
+    .pot-currency { font-size: 0.55rem; letter-spacing: 1px; }
+
+    /* ---- mode-badge: same corner, just a touch smaller ---- */
+    .mode-badge {
+        top: 4px;
+        right: 8px;
+        padding: 3px 8px;
+        font-size: 0.55rem;
+        min-height: 24px;
+    }
+
+    /* ---- board-anchor timer on tiny phones ---- */
+    .board-timer-anchor .turn-timer {
+        width: 40px;
+        height: 40px;
+    }
+
+    .board-timer-anchor .turn-timer-value { font-size: 13px; }
+
+    /* ---- menu button stays 44px (required touch target) ---- */
+    .menu-btn-floating {
+        width: 44px;
+        height: 44px;
+    }
+
+    .menu-dropdown-container {
+        bottom: 12px;
+        right: 12px;
+    }
+}
+
+/* ============================================
    TABLET (768px+)
    ============================================ */
 

@@ -382,6 +382,57 @@
     .dice-bonus-overlay { font-size: 14px; }
 }
 
+/* ============================================
+   SMALL PHONE (≤390px) — dice-specific tuning
+   Layered on top of the 480px block above.
+   ============================================ */
+
+@media (max-width: 390px) {
+    /* Keep the 3D cube at 40px — face half = 20px.
+       Touch target is fulfilled by the button shell (≥44px via min-width/height). */
+    .dice-button {
+        padding: 8px;
+        /* Enforce 44px touch target on all axes */
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: var(--radius-sm);
+    }
+
+    .dice {
+        width: 40px;
+        height: 40px;
+    }
+
+    .dice-face {
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        border-radius: 9px;
+    }
+
+    /* face half = 20px */
+    .face-1 { transform: translateZ(20px); }
+    .face-2 { transform: rotateY(90deg)   translateZ(20px); }
+    .face-3 { transform: rotateY(180deg)  translateZ(20px); }
+    .face-4 { transform: rotateY(-90deg)  translateZ(20px); }
+    .face-5 { transform: rotateX(90deg)   translateZ(20px); }
+    .face-6 { transform: rotateX(-90deg)  translateZ(20px); }
+
+    .dot {
+        width: 5px;
+        height: 5px;
+    }
+
+    /* Raise the hint slightly — less gap needed with smaller button */
+    .dice-hint {
+        bottom: -18px;
+        font-size: 0.52rem;
+        letter-spacing: 0.10em;
+    }
+
+    .dice-bonus-overlay { font-size: 13px; }
+}
+
 @media (min-width: 768px) {
     .dice-button {
         padding: 16px;

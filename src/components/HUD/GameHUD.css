@@ -1,0 +1,129 @@
+/* ============================================
+   GAME HUD — TOAST SYSTEM
+   Deep Space Neon theme — slide/fade, GPU only
+   ============================================ */
+
+/* ---- Container ---- */
+.hud-toast-region {
+    position: fixed;
+    /* bottom-centre, above board, below modals */
+    bottom: calc(var(--footer-height, 80px) + var(--safe-bottom, 20px) + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column-reverse; /* newest on top */
+    align-items: center;
+    gap: var(--space-2, 8px);
+    pointer-events: none;
+    z-index: var(--z-toast, 300);
+    /* Never overflow at 380 px viewport */
+    width: min(360px, calc(100vw - 32px));
+}
+
+/* ---- Individual toast ---- */
+.hud-toast {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3, 12px);
+    padding: var(--space-2, 8px) var(--space-4, 16px);
+    border-radius: var(--radius-full, 9999px);
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: var(--font-semibold, 600);
+    line-height: var(--leading-snug, 1.3);
+    color: var(--text-primary, #fff);
+    background: rgba(10, 10, 25, 0.88);
+    border: 1px solid var(--border-white-lo, rgba(255,255,255,0.06));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0,0,0,.60),
+            0 16px 40px rgba(0,0,0,.50),
+            inset 0 1px 0 rgba(255,255,255,.07));
+    /* Clamp width so emoji + text never wraps on mobile */
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* GPU-only entrance animation */
+    will-change: transform, opacity;
+    animation: toast-slide-in var(--dur-normal, 360ms) var(--ease-spring, cubic-bezier(0.175,0.885,0.32,1.275)) forwards;
+}
+
+/* Colour accent variants */
+.hud-toast--capture {
+    border-color: var(--border-pink, rgba(255,0,122,.30));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0,0,0,.60),
+            0 16px 40px rgba(0,0,0,.50),
+            inset 0 1px 0 rgba(255,255,255,.07)),
+        var(--bloom-pink,
+            0 0 16px rgba(255,0,122,.30),
+            0 0 48px rgba(255,0,122,.14));
+}
+
+.hud-toast--six {
+    border-color: var(--border-gold, rgba(255,215,0,.25));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0,0,0,.60),
+            0 16px 40px rgba(0,0,0,.50),
+            inset 0 1px 0 rgba(255,255,255,.07)),
+        var(--bloom-gold,
+            0 0 16px rgba(255,215,0,.25),
+            0 0 48px rgba(255,215,0,.12));
+}
+
+.hud-toast--home {
+    border-color: var(--border-cyan, rgba(0,243,255,.25));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0,0,0,.60),
+            0 16px 40px rgba(0,0,0,.50),
+            inset 0 1px 0 rgba(255,255,255,.07)),
+        var(--bloom-cyan,
+            0 0 16px rgba(0,243,255,.25),
+            0 0 48px rgba(0,243,255,.12));
+}
+
+/* Exit animation class added by JS before removal */
+.hud-toast--exit {
+    animation: toast-fade-out var(--dur-normal, 360ms) var(--ease-in, cubic-bezier(0.4,0,1,1)) forwards;
+}
+
+/* ---- Keyframes ---- */
+@keyframes toast-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toast-fade-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+    .hud-toast,
+    .hud-toast--exit {
+        animation: none !important;
+        opacity: 1;
+        transform: none;
+    }
+    .hud-toast--exit {
+        opacity: 0;
+    }
+}

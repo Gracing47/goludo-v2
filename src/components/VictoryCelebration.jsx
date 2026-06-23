@@ -19,6 +19,38 @@ const PLAYER_COLORS = {
     3: { name: 'Blue',   color: '#05d9e8', class: 'blue'   }
 };
 
+// FINISHED sentinel from engine/constants — kept local to avoid circular import
+const TOKEN_FINISHED = 999;
+const TOKENS_PER_PLAYER = 4;
+
+/**
+ * Build a sorted standings array from the new optional props.
+ * Returns [] when props are absent/empty so caller can skip rendering.
+ */
+function buildStandings(players, finalTokens) {
+    if (!Array.isArray(players) || players.length === 0) return [];
+    if (!Array.isArray(finalTokens) || finalTokens.length === 0) return [];
+
+    return players
+        .map((player, idx) => {
+            const tokens = finalTokens[idx];
+            const total  = Array.isArray(tokens) ? tokens.length : TOKENS_PER_PLAYER;
+            const home   = Array.isArray(tokens)
+                ? tokens.filter(pos => pos === TOKEN_FINISHED).length
+                : 0;
+            const colorData = PLAYER_COLORS[idx] || PLAYER_COLORS[0];
+            return {
+                idx,
+                name:  player.name || colorData.name,
+                color: player.color || colorData.color,
+                home,
+                total,
+                isAI:  Boolean(player.isAI),
+            };
+        })
+        .sort((a, b) => b.home - a.home); // winner (most-home) first
+}
+
 export default function VictoryCelebration({
     winner,
     playerName,
@@ -29,7 +61,11 @@ export default function VictoryCelebration({
     isClaiming = false,
     isClaimed = false,
     onClaim = () => { },
-    potAmount = null
+    potAmount = null,
+    // GP-2 — end-game standings (optional; graceful no-op when absent)
+    players = null,
+    finalTokens = null,
+    gameMode = null,
 }) {
     const [showContent, setShowContent] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
@@ -67,6 +103,10 @@ export default function VictoryCelebration({
     const prizeLabel = potAmount
         ? `You won ${formatStake(potAmount)}!`
         : `Claim your prize from the vault!`;
+
+    // GP-2 — standings (derived; empty array = don't render)
+    const standings = buildStandings(players, finalTokens);
+    const hasStandings = standings.length > 0;
 
     return (
         <AnimatePresence>
@@ -155,6 +195,52 @@ export default function VictoryCelebration({
                                     )
                                 }
                             </motion.p>
+
+                            {/* GP-2 — End-game standings panel */}
+                            {hasStandings && (
+                                <motion.div
+                                    className="standings-panel"
+                                    initial={{ y: 24, opacity: 0 }}
+                                    animate={{ y: 0,  opacity: 1 }}
+                                    transition={{ delay: 0.70, duration: 0.38, ease: [0, 0, 0.2, 1] }}
+                                    aria-label="Final standings"
+                                >
+                                    <div className="standings-header">STANDINGS</div>
+                                    <ol className="standings-list" role="list">
+                                        {standings.map((row, rank) => {
+                                            const isTopRow = rank === 0;
+                                            return (
+                                                <li
+                                                    key={row.idx}
+                                                    className={[
+                                                        'standings-row',
+                                                        isTopRow ? 'standings-row--winner' : '',
+                                                    ].filter(Boolean).join(' ')}
+                                                >
+                                                    <span className="standings-rank">{rank + 1}</span>
+                                                    <span
+                                                        className="standings-swatch"
+                                                        style={{ background: row.color }}
+                                                        aria-hidden="true"
+                                                    />
+                                                    <span className="standings-name">
+                                                        {row.name}
+                                                        {row.isAI && (
+                                                            <span className="standings-ai-badge">AI</span>
+                                                        )}
+                                                    </span>
+                                                    <span className="standings-score">
+                                                        <span className="standings-home">{row.home}</span>
+                                                        <span className="standings-sep">/</span>
+                                                        <span className="standings-total">{row.total}</span>
+                                                        <span className="standings-label">home</span>
+                                                    </span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ol>
+                                </motion.div>
+                            )}
 
                             {/* Orbital glow ring */}
                             <motion.div

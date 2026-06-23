@@ -172,6 +172,9 @@ function App() {
     }, [gameState?.diceValue, isRolling]);
 
 
+    // Move telegraphing: which highlighted token is currently hovered/focused
+    const [hoveredTokenKey, setHoveredTokenKey] = useState(null);
+
     // Menu Dropdown State
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -501,6 +504,34 @@ function App() {
 
 
     // ============================================
+    // MOVE TELEGRAPHING — destination ghost coords
+    // ============================================
+    const destGhostCoords = useMemo(() => {
+        if (!hoveredTokenKey || !gameState?.validMoves) return null;
+
+        // hoveredTokenKey is "playerIdx-tokenIdx"
+        const [pStr, tStr] = hoveredTokenKey.split('-');
+        const playerIdx = parseInt(pStr, 10);
+        const tokenIdx  = parseInt(tStr, 10);
+
+        // Find the valid move for this token (or any token at same stack index)
+        const move = gameState.validMoves.find(m => m.tokenIndex === tokenIdx);
+        if (!move) return null;
+
+        const toPos = move.toPosition;
+        if (toPos === POSITION.FINISHED) return null; // going home — centre cell, skip ghost
+
+        // Map toPosition → board coords (mirrors useGameStateDerivation coord logic exactly)
+        if (typeof toPos === 'number' && toPos >= 100 && toPos < 106) {
+            return HOME_STRETCH_COORDS[playerIdx]?.[toPos - 100] ?? null;
+        }
+        if (typeof toPos === 'number' && toPos >= 0 && toPos < MASTER_LOOP.length) {
+            return MASTER_LOOP[toPos] ?? null;
+        }
+        return null;
+    }, [hoveredTokenKey, gameState?.validMoves]);
+
+    // ============================================
     // RENDER LOGIC
     // ============================================
 
@@ -609,9 +640,11 @@ function App() {
                                     !isAITurn &&
                                     isLocalPlayerTurn;
 
+                                const tokenKey = `${playerIdx}-${tokenIdx}`;
+
                                 return (
                                     <Token
-                                        key={`${playerIdx}-${tokenIdx}`}
+                                        key={tokenKey}
                                         playerIndex={playerIdx}
                                         tokenIndex={tokenIdx}
                                         tokenCount={tokenCount}
@@ -629,9 +662,24 @@ function App() {
                                         stackSize={stackSize}
                                         rotation={-boardRotation}
                                         isBonusMove={activeMovingToken?.tokenIdx === tokenIdx && activeMovingToken?.playerIdx === playerIdx && activeMovingToken?.isBonus}
+                                        onHoverChange={isHighlighted ? (isHovered) => {
+                                            setHoveredTokenKey(isHovered ? tokenKey : null);
+                                        } : undefined}
                                     />
                                 );
                             })}
+
+                            {/* Move telegraphing: ghost destination ring */}
+                            {destGhostCoords && (
+                                <div
+                                    className="token-dest-ghost"
+                                    style={{
+                                        gridRow: destGhostCoords.r + 1,
+                                        gridColumn: destGhostCoords.c + 1,
+                                    }}
+                                    aria-hidden="true"
+                                />
+                            )}
 
                             {/* 💥 Capture Explosions */}
                             {captureEffects.map(effect => (
@@ -759,6 +807,9 @@ function App() {
                         onClaim={onClaimClick}
                         onClose={handleBackToLobby}
                         potAmount={potDisplay}
+                        players={gameConfig.players}
+                        finalTokens={gameState.tokens}
+                        gameMode={gameState.mode}
                     />
                 );
             })()}

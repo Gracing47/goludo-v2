@@ -16,7 +16,8 @@ const Token = ({
     stackIndex = 0,
     stackSize = 1,
     rotation = 0,
-    isBonusMove = false
+    isBonusMove = false,
+    onHoverChange
 }) => {
     // Grid-based positioning for stacked tokens (Different Players on same cell)
     // Offsets are % of the cell, tokens shrink to fit without overlap
@@ -115,6 +116,12 @@ const Token = ({
         }
     };
 
+    // Telegraphing: notify parent when hover/focus state changes
+    const handleHoverStart = () => { onHoverChange?.(true); };
+    const handleHoverEnd   = () => { onHoverChange?.(false); };
+    const handleFocus      = () => { onHoverChange?.(true); };
+    const handleBlur       = () => { onHoverChange?.(false); };
+
     const classes = [
         'token',
         `token-${color}`,
@@ -160,6 +167,10 @@ const Token = ({
             } : {}}
             onClick={onClick}
             onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onHoverStart={handleHoverStart}
+            onHoverEnd={handleHoverEnd}
             // Accessibility attributes
             role={onClick ? "button" : undefined}
             tabIndex={onClick ? 0 : -1}
