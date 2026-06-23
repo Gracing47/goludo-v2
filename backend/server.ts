@@ -81,6 +81,7 @@ const ALLOWED_ORIGINS = (origin: string | undefined, callback: (err: Error | nul
     const validDomains = [
         /https:\/\/goludo(-v2)?\.netlify\.app$/,
         /https:\/\/goludo(-v2)?-production\.up\.railway\.app$/,
+        /https:\/\/[a-z0-9-]+\.vercel\.app$/, // Vercel frontend (preview + production)
         /http:\/\/localhost:(3000|5173)$/
     ];
 
