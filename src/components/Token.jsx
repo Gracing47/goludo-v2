@@ -180,7 +180,7 @@ const Token = ({
             aria-pressed={isHighlighted}
             aria-disabled={!onClick}
         >
-            <div className={`token-inner liquid-glass ${color}`}>
+            <div className={`token-inner ${color}`}>
                 <div className="token-shine" aria-hidden="true" />
                 <div className="token-center-dot" aria-hidden="true" />
 
@@ -210,21 +210,9 @@ const Token = ({
                 </AnimatePresence>
             </div>
 
+            {/* glow aura — animated via CSS (GPU), not a JS-thread framer-motion loop */}
             {isHighlighted && (
-                <motion.div
-                    className="token-glow-aura"
-                    animate={{
-                        opacity: [0.3, 0.7, 0.3],
-                        scale: [1, 1.3, 1],
-                        rotate: [0, 180]
-                    }}
-                    transition={{
-                        repeat: Infinity,
-                        duration: 2,
-                        ease: "linear"
-                    }}
-                    aria-hidden="true"
-                />
+                <div className="token-glow-aura" aria-hidden="true" />
             )}
 
             {/* Movement Particles (Simplified) */}

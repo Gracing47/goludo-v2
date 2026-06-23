@@ -48,8 +48,10 @@ body {
     position: fixed;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    opacity: 0.028;
-    mix-blend-mode: overlay;
+    opacity: 0.035;
+    /* PERF: dropped mix-blend-mode — a full-screen blend layer forces the whole
+       game view to recomposite on every in-game frame (per-hop setGameState +
+       screen-shake). Faint plain grain instead. */
     pointer-events: none;
     z-index: 0;
 }
@@ -123,10 +125,10 @@ body {
     pointer-events: auto;
     padding: 8px 20px;
     border-radius: 24px;
-    /* Iris glass panel spec */
-    background: var(--glass-bg, rgba(255, 255, 255, 0.03));
-    backdrop-filter: var(--glass-blur, blur(24px)) var(--glass-saturation, saturate(1.6));
-    -webkit-backdrop-filter: var(--glass-blur, blur(24px)) var(--glass-saturation, saturate(1.6));
+    /* PERF: solid translucent panel instead of backdrop-filter — the dice panel
+       is ALWAYS visible in-game and its backdrop blur recomposited the board
+       behind it on every move-animation frame. */
+    background: rgba(10, 12, 26, 0.66);
     border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.06));
     box-shadow: var(--elev-2,
         0 4px 16px rgba(0, 0, 0, 0.4),
@@ -179,10 +181,8 @@ body {
     flex-direction: row;
     align-items: center;
     gap: 8px;
-    /* Iris HUD Chip — gold variant */
-    background: var(--tint-gold-8, rgba(255, 215, 0, 0.08));
-    backdrop-filter: blur(16px) saturate(1.6);
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    /* PERF: solid HUD chip (no backdrop-filter) — always visible in-game. */
+    background: rgba(30, 24, 4, 0.82);
     border-radius: 99px;
     padding: 0 14px;
     z-index: var(--z-hud, 10);
