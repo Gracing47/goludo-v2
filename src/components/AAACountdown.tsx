@@ -1,6 +1,11 @@
 import React from 'react';
-import { motion, AnimatePresence, type MotionStyle } from 'framer-motion';
 import './AAACountdown.css';
+
+/**
+ * AAACountdown — framer-motion REMOVED (perf sprint)
+ * All enter/exit animations now use CSS keyframes.
+ * The countdown number flip uses a CSS animation class toggled per key.
+ */
 
 interface Player {
     name: string;
@@ -41,110 +46,80 @@ const AAACountdown: React.FC<AAACountdownProps> = ({ countdown, players }) => {
                 ))}
             </div>
 
-            <motion.div
-                className="aaa-countdown-card"
-                initial={{ opacity: 0, scale: 0.88, y: 28 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 1.06, y: -24 }}
-                transition={{
-                    duration: 0.5,
-                    ease: [0.175, 0.885, 0.32, 1.275] /* ease-spring */
-                }}
-            >
+            {/* Card — CSS fade-in-up (replaces framer-motion initial/animate/exit) */}
+            <div className="aaa-countdown-card aaa-card-enter">
                 {/* Top-edge light */}
                 <div className="aaa-card-edge-light" aria-hidden="true" />
 
                 <div className="aaa-countdown-content">
-                    {/* Pre-title label */}
-                    <motion.div
-                        className="aaa-pretitle"
-                        initial={{ opacity: 0, y: -12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25, duration: 0.4 }}
-                    >
+                    {/* Pre-title label — CSS stagger delay */}
+                    <div className="aaa-pretitle aaa-stagger-1">
                         GET READY
-                    </motion.div>
+                    </div>
 
-                    {/* Player roster chips */}
+                    {/* Player roster chips — CSS stagger per chip */}
                     <div className="aaa-player-roster">
                         {players.map((p, i) => (
-                            <motion.div
+                            <div
                                 key={i}
-                                className="aaa-player-chip"
-                                initial={{ opacity: 0, x: -18, scale: 0.9 }}
-                                animate={{ opacity: 1, x: 0, scale: 1 }}
-                                transition={{
-                                    delay: 0.3 + i * 0.1,
-                                    type: 'spring',
-                                    stiffness: 380,
-                                    damping: 20
-                                }}
+                                className="aaa-player-chip aaa-chip-enter"
                                 style={{
                                     '--chip-color': getHex(p.color),
-                                } as MotionStyle}
+                                    animationDelay: `${0.3 + i * 0.1}s`,
+                                } as React.CSSProperties}
                             >
                                 <span className="aaa-chip-dot" />
                                 <span className="aaa-chip-name">{p.name}</span>
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
 
                     {/* Big countdown ring */}
                     <div className="aaa-countdown-timer-wrapper">
-                        {/* Outer glow ring — static track */}
                         <svg className="aaa-countdown-svg" viewBox="0 0 100 100" aria-hidden="true">
                             <circle className="aaa-timer-track" cx="50" cy="50" r="44" />
-                            <motion.circle
+                            {/* CSS stroke-dashoffset transition replaces motion.circle pathLength */}
+                            <circle
                                 className="aaa-timer-progress"
                                 cx="50" cy="50" r="44"
-                                initial={{ pathLength: 1 }}
-                                animate={{ pathLength: isGo ? 0 : countdown / 5 }}
-                                transition={{ duration: isGo ? 0.3 : 1, ease: 'linear' }}
+                                style={{
+                                    strokeDasharray: '276.46',
+                                    strokeDashoffset: `${276.46 * (1 - (isGo ? 0 : countdown / 5))}`,
+                                    transition: `stroke-dashoffset ${isGo ? 0.3 : 1}s linear`,
+                                }}
                             />
                         </svg>
 
-                        {/* Inner glow ring accent */}
                         <svg className="aaa-countdown-svg aaa-countdown-svg-inner" viewBox="0 0 100 100" aria-hidden="true">
-                            <motion.circle
+                            <circle
                                 className="aaa-timer-progress-inner"
                                 cx="50" cy="50" r="38"
-                                initial={{ pathLength: 1 }}
-                                animate={{ pathLength: isGo ? 0 : countdown / 5 }}
-                                transition={{ duration: isGo ? 0.3 : 1, ease: 'linear', delay: 0.05 }}
+                                style={{
+                                    strokeDasharray: '238.76',
+                                    strokeDashoffset: `${238.76 * (1 - (isGo ? 0 : countdown / 5))}`,
+                                    transition: `stroke-dashoffset ${isGo ? 0.3 : 1}s linear 0.05s`,
+                                }}
                             />
                         </svg>
 
-                        {/* The number / GO text */}
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={countdown}
-                                className={`aaa-countdown-number${isGo ? ' aaa-countdown-go' : ''}`}
-                                initial={{ scale: 0.4, opacity: 0, rotateX: 80 }}
-                                animate={{ scale: 1, opacity: 1, rotateX: 0 }}
-                                exit={{ scale: 1.6, opacity: 0, rotateX: -60 }}
-                                transition={{
-                                    type: 'spring',
-                                    stiffness: 500,
-                                    damping: 18
-                                }}
-                            >
-                                {isGo ? 'GO!' : countdown}
-                            </motion.div>
-                        </AnimatePresence>
+                        {/* Number flip — CSS keyframe keyed by countdown value */}
+                        <div
+                            key={countdown}
+                            className={`aaa-countdown-number aaa-number-flip${isGo ? ' aaa-countdown-go' : ''}`}
+                        >
+                            {isGo ? 'GO!' : countdown}
+                        </div>
                     </div>
 
                     {/* Sub-label */}
-                    <motion.p
-                        className="aaa-countdown-sublabel"
+                    <p
                         key={isGo ? 'go' : 'wait'}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.35 }}
+                        className="aaa-countdown-sublabel aaa-stagger-2"
                     >
                         {isGo ? 'Good luck!' : 'Preparing the board…'}
-                    </motion.p>
+                    </p>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };

@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { useGameSocket } from './hooks/useGameSocket';
 import { ethers } from 'ethers';
 import Board from './components/Board';
@@ -859,19 +858,17 @@ function App() {
             )}
 
             {/* A. COUNTDOWN OVERLAY */}
-            <AnimatePresence>
-                {showCountdown && (
-                    <AAACountdown
-                        countdown={gameCountdown}
-                        players={gameConfig?.players
-                            ?.filter(Boolean)
-                            .map((p, i) => ({
-                                name: p.name || `Player ${i + 1}`,
-                                color: PLAYER_COLORS[i]
-                            })) || PLAYER_COLORS.map((c, i) => ({ name: `Player ${i + 1}`, color: c }))}
-                    />
-                )}
-            </AnimatePresence>
+            {showCountdown && (
+                <AAACountdown
+                    countdown={gameCountdown}
+                    players={gameConfig?.players
+                        ?.filter(Boolean)
+                        .map((p, i) => ({
+                            name: p.name || `Player ${i + 1}`,
+                            color: PLAYER_COLORS[i]
+                        })) || PLAYER_COLORS.map((c, i) => ({ name: `Player ${i + 1}`, color: c }))}
+                />
+            )}
 
             {/* B. SERVER MESSAGE TOAST */}
             {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}

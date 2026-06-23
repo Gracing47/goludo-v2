@@ -2,10 +2,11 @@
  * VICTORY CELEBRATION COMPONENT
  * Iris AAA — premium victory screen
  * Currency: NATIVE_CURRENCY_SYMBOL / formatStake from ../config/currency
+ *
+ * framer-motion REMOVED (perf sprint) — all animations CSS-only
  */
 
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { VictoryConfetti } from './ParticleEffects';
 import { useGameVFX } from '../hooks/useGameVFX';
 import { NATIVE_CURRENCY_SYMBOL, formatStake } from '../config/currency';
@@ -117,262 +118,172 @@ export default function VictoryCelebration({
     const hasStandings = standings.length > 0;
 
     return (
-        <AnimatePresence>
-            <motion.div
-                className="victory-celebration"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.45 }}
-            >
-                {/* Deep cosmos backdrop */}
-                <motion.div
-                    className="victory-backdrop"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                />
+        // CSS fade-in replaces framer-motion AnimatePresence outer wrapper
+        <div className="victory-celebration vc-fade-in">
+            {/* Deep cosmos backdrop */}
+            <div className="victory-backdrop vc-backdrop-in" />
 
-                {/* Confetti — winner only */}
-                {isWinner && <VictoryConfetti active={showConfetti} winnerColor={winnerData.class} />}
+            {/* Confetti — winner only */}
+            {isWinner && <VictoryConfetti active={showConfetti} winnerColor={winnerData.class} />}
 
-                {/* Main card */}
-                <AnimatePresence>
-                    {showContent && (
-                        <motion.div
-                            className="victory-content"
-                            initial={{ scale: 0.80, opacity: 0, y: 44 }}
-                            animate={{ scale: 1,    opacity: 1, y: 0  }}
-                            exit={{ scale: 1.06,   opacity: 0, y: -22 }}
-                            transition={{
-                                type:      'spring',
-                                stiffness: 300,
-                                damping:   18,
-                                delay:     0.08
-                            }}
-                        >
-                            {/* Trophy — spring pop with over-rotate settle */}
-                            <motion.div
-                                className="victory-trophy"
-                                initial={{ scale: 0, rotate: -28, y: 10 }}
-                                animate={{ scale: 1, rotate: 0,   y: 0  }}
-                                transition={{
-                                    type:      'spring',
-                                    stiffness: 380,
-                                    damping:   12,
-                                    delay:     0.28
-                                }}
-                            >
-                                🏆
-                            </motion.div>
+            {/* Main card — conditional CSS enter */}
+            {showContent && (
+                <div className="victory-content vc-card-enter">
+                    {/* Trophy — CSS spring-pop with over-rotate settle */}
+                    <div className="victory-trophy vc-trophy-pop">
+                        🏆
+                    </div>
 
-                            {/* Title */}
-                            <motion.h1
-                                className={titleClass}
-                                initial={{ y: 32, opacity: 0, scale: 0.88 }}
-                                animate={{ y: 0,  opacity: 1, scale: 1    }}
-                                transition={{
-                                    delay: 0.44,
-                                    type:  'spring',
-                                    stiffness: 320,
-                                    damping:   20
-                                }}
-                                style={!isWinner ? { color: '#ff2a6d' } : undefined}
-                            >
-                                {titleText}
-                            </motion.h1>
+                    {/* Title */}
+                    <h1
+                        className={`${titleClass} vc-stagger-1`}
+                        style={!isWinner ? { color: '#ff2a6d' } : undefined}
+                    >
+                        {titleText}
+                    </h1>
 
-                            {/* Winner name / congratulations */}
-                            <motion.p
-                                className="victory-winner"
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0,  opacity: 1 }}
-                                transition={{ delay: 0.60 }}
-                            >
-                                {isWinner
-                                    ? (isClaimed
-                                        ? `Funds transferred to your wallet.`
-                                        : 'Congratulations!')
-                                    : (
-                                        <>
-                                            <span style={{ color: winnerData.color, fontWeight: 700 }}>
-                                                {playerName || `${winnerData.name} Player`}
-                                            </span>
-                                            {' '}Wins!
-                                        </>
-                                    )
-                                }
-                            </motion.p>
-
-                            {/* GP-2 — End-game standings panel */}
-                            {hasStandings && (
-                                <motion.div
-                                    className="standings-panel"
-                                    initial={{ y: 24, opacity: 0 }}
-                                    animate={{ y: 0,  opacity: 1 }}
-                                    transition={{ delay: 0.70, duration: 0.38, ease: [0, 0, 0.2, 1] }}
-                                    aria-label="Final standings"
-                                >
-                                    <div className="standings-header">STANDINGS</div>
-                                    <ol className="standings-list" role="list">
-                                        {standings.map((row, rank) => {
-                                            const isTopRow = rank === 0;
-                                            return (
-                                                <li
-                                                    key={row.idx}
-                                                    className={[
-                                                        'standings-row',
-                                                        isTopRow ? 'standings-row--winner' : 'standings-row--receded',
-                                                    ].filter(Boolean).join(' ')}
-                                                >
-                                                    <motion.span
-                                                        className="standings-rank"
-                                                        {...(isTopRow ? {
-                                                            initial:    { scale: 0.6, opacity: 0 },
-                                                            animate:    { scale: 1,   opacity: 1 },
-                                                            transition: {
-                                                                type:      'spring',
-                                                                stiffness: 400,
-                                                                damping:   14,
-                                                                delay:     0.82
-                                                            }
-                                                        } : {})}
-                                                    >{rank + 1}</motion.span>
-                                                    <span
-                                                        className="standings-swatch"
-                                                        style={{ background: row.color }}
-                                                        aria-hidden="true"
-                                                    />
-                                                    <span className="standings-name">
-                                                        {row.name}
-                                                        {row.isAI && (
-                                                            <span className="standings-ai-badge">AI</span>
-                                                        )}
-                                                    </span>
-                                                    <span className="standings-score">
-                                                        <span className="standings-home">{row.home}</span>
-                                                        <span className="standings-sep">/</span>
-                                                        <span className="standings-total">{row.total}</span>
-                                                        <span className="standings-label">home</span>
-                                                    </span>
-                                                </li>
-                                            );
-                                        })}
-                                    </ol>
-                                </motion.div>
-                            )}
-
-                            {/* Orbital glow ring */}
-                            <motion.div
-                                className="victory-ring"
-                                style={{ borderColor: isClaimed ? '#ffd700' : winnerData.color }}
-                                initial={{ scale: 0.65, opacity: 0 }}
-                                animate={{
-                                    scale:   [0.65, 1.18, 0.92, 1.06, 1],
-                                    opacity: [0,    0.45, 0.22, 0.32, 0.24]
-                                }}
-                                transition={{
-                                    duration:    2.8,
-                                    times:       [0, 0.28, 0.50, 0.72, 1],
-                                    repeat:      Infinity,
-                                    repeatType:  'loop',
-                                    repeatDelay: 0.4
-                                }}
-                            />
-
-                            {/* Web3 Prize Info — currency-agnostic via config */}
-                            {isWeb3Match && isWinner && !isClaimed && (
-                                <motion.div
-                                    className="victory-prize"
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0,  opacity: 1 }}
-                                    transition={{ delay: 0.75 }}
-                                >
-                                    <span className="prize-icon">💰</span>
-                                    <span className="prize-text">
-                                        {prizeLabel}
+                    {/* Winner name / congratulations */}
+                    <p className="victory-winner vc-stagger-2">
+                        {isWinner
+                            ? (isClaimed
+                                ? `Funds transferred to your wallet.`
+                                : 'Congratulations!')
+                            : (
+                                <>
+                                    <span style={{ color: winnerData.color, fontWeight: 700 }}>
+                                        {playerName || `${winnerData.name} Player`}
                                     </span>
-                                </motion.div>
-                            )}
+                                    {' '}Wins!
+                                </>
+                            )
+                        }
+                    </p>
 
-                            {/* Loser message */}
-                            {!isWinner && (
-                                <motion.div
-                                    className="loser-message"
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0,  opacity: 1 }}
-                                    transition={{ delay: 0.75 }}
-                                >
-                                    <span>Better luck next time! 🎲</span>
-                                </motion.div>
-                            )}
+                    {/* GP-2 — End-game standings panel */}
+                    {hasStandings && (
+                        <div
+                            className="standings-panel vc-stagger-3"
+                            aria-label="Final standings"
+                        >
+                            <div className="standings-header">STANDINGS</div>
+                            <ol className="standings-list" role="list">
+                                {standings.map((row, rank) => {
+                                    const isTopRow = rank === 0;
+                                    return (
+                                        <li
+                                            key={row.idx}
+                                            className={[
+                                                'standings-row',
+                                                isTopRow ? 'standings-row--winner' : 'standings-row--receded',
+                                            ].filter(Boolean).join(' ')}
+                                        >
+                                            <span
+                                                className={`standings-rank${isTopRow ? ' vc-rank-pop' : ''}`}
+                                            >{rank + 1}</span>
+                                            <span
+                                                className="standings-swatch"
+                                                style={{ background: row.color }}
+                                                aria-hidden="true"
+                                            />
+                                            <span className="standings-name">
+                                                {row.name}
+                                                {row.isAI && (
+                                                    <span className="standings-ai-badge">AI</span>
+                                                )}
+                                            </span>
+                                            <span className="standings-score">
+                                                <span className="standings-home">{row.home}</span>
+                                                <span className="standings-sep">/</span>
+                                                <span className="standings-total">{row.total}</span>
+                                                <span className="standings-label">home</span>
+                                            </span>
+                                        </li>
+                                    );
+                                })}
+                            </ol>
+                        </div>
+                    )}
 
-                            {/* Action buttons */}
-                            <motion.div
-                                className="victory-actions"
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0,  opacity: 1 }}
-                                transition={{ delay: 0.92 }}
-                            >
-                                {/* Winner + Web3 */}
-                                {isWinner && isWeb3Match && (
-                                    <>
-                                        {isClaimed ? (
-                                            <button
-                                                className="victory-btn primary"
-                                                onClick={onClose}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, #00d26a 0%, #16a34a 100%)',
-                                                    boxShadow: '0 0 24px rgba(0, 210, 106, 0.4)'
-                                                }}
-                                            >
-                                                🏠 Back to Lobby
-                                            </button>
-                                        ) : payoutProof ? (
-                                            <button
-                                                className="victory-btn primary claim-btn"
-                                                onClick={onClaim}
-                                                disabled={isClaiming}
-                                            >
-                                                {isClaiming ? '⏳ Claiming…' : `💰 Claim ${NATIVE_CURRENCY_SYMBOL}`}
-                                            </button>
-                                        ) : (
-                                            <div className="verifying-payout">
-                                                <span className="spinner">⏳</span>
-                                                Verifying on Blockchain…
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                    {/* Orbital glow ring — CSS keyframe infinite */}
+                    <div
+                        className="victory-ring vc-ring-pulse"
+                        style={{ borderColor: isClaimed ? '#ffd700' : winnerData.color }}
+                    />
 
-                                {/* Winner + local */}
-                                {isWinner && !isWeb3Match && (
+                    {/* Web3 Prize Info */}
+                    {isWeb3Match && isWinner && !isClaimed && (
+                        <div className="victory-prize vc-stagger-4">
+                            <span className="prize-icon">💰</span>
+                            <span className="prize-text">{prizeLabel}</span>
+                        </div>
+                    )}
+
+                    {/* Loser message */}
+                    {!isWinner && (
+                        <div className="loser-message vc-stagger-4">
+                            <span>Better luck next time! 🎲</span>
+                        </div>
+                    )}
+
+                    {/* Action buttons */}
+                    <div className="victory-actions vc-stagger-5">
+                        {/* Winner + Web3 */}
+                        {isWinner && isWeb3Match && (
+                            <>
+                                {isClaimed ? (
                                     <button
                                         className="victory-btn primary"
                                         onClick={onClose}
                                         style={{
-                                            background: `linear-gradient(135deg, ${winnerData.color} 0%, rgba(0,0,0,0.2) 100%)`,
-                                            boxShadow: `0 0 24px ${winnerData.color}55`
+                                            background: 'linear-gradient(135deg, #00d26a 0%, #16a34a 100%)',
+                                            boxShadow: '0 0 24px rgba(0, 210, 106, 0.4)'
                                         }}
-                                    >
-                                        Continue
-                                    </button>
-                                )}
-
-                                {/* Loser */}
-                                {!isWinner && (
-                                    <button
-                                        className="victory-btn secondary"
-                                        onClick={onClose}
                                     >
                                         🏠 Back to Lobby
                                     </button>
+                                ) : payoutProof ? (
+                                    <button
+                                        className="victory-btn primary claim-btn"
+                                        onClick={onClaim}
+                                        disabled={isClaiming}
+                                    >
+                                        {isClaiming ? '⏳ Claiming…' : `💰 Claim ${NATIVE_CURRENCY_SYMBOL}`}
+                                    </button>
+                                ) : (
+                                    <div className="verifying-payout">
+                                        <span className="spinner">⏳</span>
+                                        Verifying on Blockchain…
+                                    </div>
                                 )}
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
-        </AnimatePresence>
+                            </>
+                        )}
+
+                        {/* Winner + local */}
+                        {isWinner && !isWeb3Match && (
+                            <button
+                                className="victory-btn primary"
+                                onClick={onClose}
+                                style={{
+                                    background: `linear-gradient(135deg, ${winnerData.color} 0%, rgba(0,0,0,0.2) 100%)`,
+                                    boxShadow: `0 0 24px ${winnerData.color}55`
+                                }}
+                            >
+                                Continue
+                            </button>
+                        )}
+
+                        {/* Loser */}
+                        {!isWinner && (
+                            <button
+                                className="victory-btn secondary"
+                                onClick={onClose}
+                            >
+                                🏠 Back to Lobby
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

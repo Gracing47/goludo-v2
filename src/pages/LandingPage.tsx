@@ -5,16 +5,15 @@
  * - Asymmetric hero: display text offset left, dice cluster anchored top-right
  * - Scroll-triggered staggered reveals (IntersectionObserver) on stats + features
  * - Parallax depth on background orbs via CSS custom property
- * - Spring-physics motion via framer-motion + CSS --ease-spring
  * - Premium tactile CTA (shimmer sweep + bloom)
  * - Full IRIS token consumption — zero purple
  */
 
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, type Variants } from 'framer-motion';
 import { ROUTES } from '../config/routes';
 import { formatStake } from '../config/currency';
+import { useIdlePrefetch } from '../hooks/useIdlePrefetch';
 import './LandingPage.css';
 
 // ─── SVG Icons ───────────────────────────────────────────────────────────────
@@ -97,36 +96,8 @@ const FEATURES = [
     },
 ];
 
-// ─── Spring variants (Framer) ─────────────────────────────────────────────────
-
-const heroTextVariants: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    visible: (delay: number) => ({
-        opacity: 1,
-        y: 0,
-        transition: {
-            type: 'spring',
-            stiffness: 120,
-            damping: 14,
-            delay,
-        },
-    }),
-};
-
-const diceVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.7, rotate: -15 },
-    visible: {
-        opacity: 1,
-        scale: 1,
-        rotate: 0,
-        transition: {
-            type: 'spring',
-            stiffness: 80,
-            damping: 12,
-            delay: 0.1,
-        },
-    },
-};
+// CSS keyframe delays match the former framer-motion spring delays
+const HERO_DELAYS = [0, 0.08, 0.18, 0.26, 0.34];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -136,53 +107,56 @@ const LandingPage: React.FC = () => {
     const statsRef = useRef<HTMLElement>(null);
     const featuresRef = useRef<HTMLElement>(null);
 
+    // Prefetch heavy chunks on idle
+    useIdlePrefetch();
+
     const handleLaunchApp = () => {
         navigate(ROUTES.LUDO_LOBBY);
     };
 
-    // Parallax: drive --hero-scroll CSS custom property on the hero background
+    // Parallax background orbit tracking
     useEffect(() => {
-        const hero = heroRef.current;
-        if (!hero) return;
-
-        const onScroll = () => {
-            const scrollY = window.scrollY;
-            hero.style.setProperty('--hero-scroll', `${scrollY}px`);
+        const handleScroll = () => {
+            if (heroRef.current) {
+                heroRef.current.style.setProperty('--hero-scroll', `${window.scrollY}px`);
+            }
         };
-
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Scroll-triggered reveals for stats and features sections
+    // IntersectionObserver for reveal animations
     useEffect(() => {
-        const targets = [
-            ...(statsRef.current?.querySelectorAll<HTMLElement>('.reveal-up') ?? []),
-            ...(featuresRef.current?.querySelectorAll<HTMLElement>('.reveal-up') ?? []),
-        ];
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.12,
+        };
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.15 }
-        );
+        const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
+            });
+        };
 
-        targets.forEach((el) => observer.observe(el));
-        return () => observer.disconnect();
+        const observer = new IntersectionObserver(handleIntersect, observerOptions);
+
+        const revealElements = document.querySelectorAll('.reveal-up, .reveal-stagger');
+        revealElements.forEach(el => observer.observe(el));
+
+        return () => {
+            revealElements.forEach(el => observer.unobserve(el));
+        };
     }, []);
 
     return (
-        <div className="landing-page is-landing">
+        <div className="landing-page">
 
-            {/* ── Fixed Deep-Space Background ── */}
+            {/* Ambient stardust field */}
             <div className="stars-bg" aria-hidden="true">
-                {[...Array(24)].map((_, i) => (
+                {Array.from({ length: 28 }).map((_, i) => (
                     <div
                         key={i}
                         className="star"
@@ -211,181 +185,154 @@ const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Decorative over-sized dice — anchored top-right, breaks the grid */}
-                <motion.div
+                <div
                     className="hero-dice-cluster"
-                    variants={diceVariants}
-                    initial="hidden"
-                    animate="visible"
                     aria-hidden="true"
                 >
-                    {/* Primary large die */}
-                    <div className="dice-3d dice-primary">
-                        <svg viewBox="0 0 120 120" className="dice-svg" role="img" aria-label="Decorative dice">
-                            <defs>
-                                <linearGradient id="diceGradPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="rgba(0,243,255,0.18)" />
-                                    <stop offset="100%" stopColor="rgba(58,134,255,0.12)" />
-                                </linearGradient>
-                                <filter id="diceShadowPrimary">
-                                    <feDropShadow dx="0" dy="6" stdDeviation="12" floodColor="#00f3ff" floodOpacity="0.35" />
-                                    <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000" floodOpacity="0.6" />
-                                </filter>
-                            </defs>
-                            <rect x="8" y="8" width="104" height="104" rx="18"
-                                fill="url(#diceGradPrimary)"
-                                stroke="rgba(0,243,255,0.30)"
-                                strokeWidth="1.5"
-                                filter="url(#diceShadowPrimary)" />
-                            {/* top-edge highlight */}
-                            <rect x="8" y="8" width="104" height="2" rx="2" fill="rgba(255,255,255,0.12)" />
-                            {/* Dots — 5 face */}
-                            <circle cx="36" cy="36" r="9" fill="var(--neon-cyan)" opacity="0.9">
-                                <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" />
-                            </circle>
-                            <circle cx="84" cy="36" r="9" fill="var(--neon-cyan)" opacity="0.9" />
-                            <circle cx="60" cy="60" r="9" fill="var(--neon-pink)">
-                                <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite" />
-                            </circle>
-                            <circle cx="36" cy="84" r="9" fill="var(--neon-cyan)" opacity="0.9" />
-                            <circle cx="84" cy="84" r="9" fill="var(--neon-cyan)" opacity="0.9" />
-                        </svg>
+                    <div className="hero-dice-enter-wrapper hero-dice-enter">
+                        {/* Primary large die */}
+                        <div className="dice-3d dice-primary">
+                            <svg viewBox="0 0 120 120" className="dice-svg" role="img" aria-label="Decorative dice">
+                                <defs>
+                                    <linearGradient id="diceGradPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="rgba(0,243,255,0.18)" />
+                                        <stop offset="100%" stopColor="rgba(58,134,255,0.12)" />
+                                    </linearGradient>
+                                    <filter id="diceShadowPrimary">
+                                        <feDropShadow dx="0" dy="6" stdDeviation="12" floodColor="#00f3ff" floodOpacity="0.35" />
+                                        <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000" floodOpacity="0.6" />
+                                    </filter>
+                                </defs>
+                                <rect x="8" y="8" width="104" height="104" rx="18"
+                                    fill="url(#diceGradPrimary)"
+                                    stroke="rgba(0,243,255,0.30)"
+                                    strokeWidth="1.5"
+                                    filter="url(#diceShadowPrimary)" />
+                                {/* top-edge highlight */}
+                                <rect x="8" y="8" width="104" height="2" rx="2" fill="rgba(255,255,255,0.12)" />
+                                {/* Dots — 5 face */}
+                                <circle cx="36" cy="36" r="9" fill="var(--neon-cyan)" opacity="0.9">
+                                    <animate attributeName="opacity" values="0.9;1;0.9" dur="3s" repeatCount="indefinite" />
+                                </circle>
+                                <circle cx="84" cy="36" r="9" fill="var(--neon-cyan)" opacity="0.9" />
+                                <circle cx="60" cy="60" r="9" fill="var(--neon-pink)">
+                                    <animate attributeName="opacity" values="1;0.7;1" dur="2s" repeatCount="indefinite" />
+                                </circle>
+                                <circle cx="36" cy="84" r="9" fill="var(--neon-cyan)" opacity="0.9" />
+                                <circle cx="84" cy="84" r="9" fill="var(--neon-cyan)" opacity="0.9" />
+                            </svg>
+                        </div>
+                        {/* Secondary smaller die — offset */}
+                        <div className="dice-3d dice-secondary">
+                            <svg viewBox="0 0 100 100" className="dice-svg" role="img" aria-label="">
+                                <defs>
+                                    <linearGradient id="diceGradSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="rgba(255,0,122,0.16)" />
+                                        <stop offset="100%" stopColor="rgba(58,134,255,0.10)" />
+                                    </linearGradient>
+                                    <filter id="diceShadowSecondary">
+                                        <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#ff007a" floodOpacity="0.30" />
+                                    </filter>
+                                </defs>
+                                <rect x="6" y="6" width="88" height="88" rx="14"
+                                    fill="url(#diceGradSecondary)"
+                                    stroke="rgba(255,0,122,0.25)"
+                                    strokeWidth="1"
+                                    filter="url(#diceShadowSecondary)" />
+                                <rect x="6" y="6" width="88" height="2" rx="2" fill="rgba(255,255,255,0.10)" />
+                                {/* Dots — 3 face */}
+                                <circle cx="32" cy="32" r="7" fill="var(--neon-pink)" opacity="0.85" />
+                                <circle cx="50" cy="50" r="7" fill="var(--neon-gold)" opacity="0.9" />
+                                <circle cx="68" cy="68" r="7" fill="var(--neon-pink)" opacity="0.85" />
+                            </svg>
+                        </div>
+                        {/* Tertiary tiny accent die */}
+                        <div className="dice-3d dice-tertiary">
+                            <svg viewBox="0 0 80 80" className="dice-svg" role="img" aria-label="">
+                                <defs>
+                                    <linearGradient id="diceGradTertiary" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="rgba(255,215,0,0.14)" />
+                                        <stop offset="100%" stopColor="rgba(0,243,255,0.08)" />
+                                    </linearGradient>
+                                    <filter id="diceShadowTertiary">
+                                        <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#ffd700" floodOpacity="0.28" />
+                                    </filter>
+                                </defs>
+                                <rect x="5" y="5" width="70" height="70" rx="12"
+                                    fill="url(#diceGradTertiary)"
+                                    stroke="rgba(255,215,0,0.22)"
+                                    strokeWidth="1"
+                                    filter="url(#diceShadowTertiary)" />
+                                {/* Single center dot — 1 face */}
+                                <circle cx="40" cy="40" r="8" fill="var(--neon-gold)" opacity="0.9">
+                                    <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite" />
+                                </circle>
+                            </svg>
+                        </div>
                     </div>
-                    {/* Secondary smaller die — offset */}
-                    <div className="dice-3d dice-secondary">
-                        <svg viewBox="0 0 100 100" className="dice-svg" role="img" aria-label="">
-                            <defs>
-                                <linearGradient id="diceGradSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="rgba(255,0,122,0.16)" />
-                                    <stop offset="100%" stopColor="rgba(58,134,255,0.10)" />
-                                </linearGradient>
-                                <filter id="diceShadowSecondary">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#ff007a" floodOpacity="0.30" />
-                                </filter>
-                            </defs>
-                            <rect x="6" y="6" width="88" height="88" rx="14"
-                                fill="url(#diceGradSecondary)"
-                                stroke="rgba(255,0,122,0.25)"
-                                strokeWidth="1"
-                                filter="url(#diceShadowSecondary)" />
-                            <rect x="6" y="6" width="88" height="2" rx="2" fill="rgba(255,255,255,0.10)" />
-                            {/* Dots — 3 face; H2: pushed inward from 30/50/70 to 32/50/68
-                                so no pip edge crosses the die border (border at x=6, pip edge
-                                was at 30-7=23px; now 32-7=25px, comfortable clearance all round) */}
-                            <circle cx="32" cy="32" r="7" fill="var(--neon-pink)" opacity="0.85" />
-                            <circle cx="50" cy="50" r="7" fill="var(--neon-gold)" opacity="0.9" />
-                            <circle cx="68" cy="68" r="7" fill="var(--neon-pink)" opacity="0.85" />
-                        </svg>
-                    </div>
-                    {/* Tertiary tiny accent die */}
-                    <div className="dice-3d dice-tertiary">
-                        <svg viewBox="0 0 80 80" className="dice-svg" role="img" aria-label="">
-                            <defs>
-                                <linearGradient id="diceGradTertiary" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stopColor="rgba(255,215,0,0.14)" />
-                                    <stop offset="100%" stopColor="rgba(0,243,255,0.08)" />
-                                </linearGradient>
-                                <filter id="diceShadowTertiary">
-                                    <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#ffd700" floodOpacity="0.28" />
-                                </filter>
-                            </defs>
-                            <rect x="5" y="5" width="70" height="70" rx="12"
-                                fill="url(#diceGradTertiary)"
-                                stroke="rgba(255,215,0,0.22)"
-                                strokeWidth="1"
-                                filter="url(#diceShadowTertiary)" />
-                            {/* Single center dot — 1 face */}
-                            <circle cx="40" cy="40" r="8" fill="var(--neon-gold)" opacity="0.9">
-                                <animate attributeName="opacity" values="0.9;1;0.9" dur="4s" repeatCount="indefinite" />
-                            </circle>
-                        </svg>
-                    </div>
-                </motion.div>
+                </div>
 
                 {/* Hero text — offset left */}
                 <div className="hero-text-block">
 
                     {/* Eyebrow chip */}
-                    <motion.div
-                        className="hero-eyebrow"
-                        variants={heroTextVariants}
-                        custom={0}
-                        initial="hidden"
-                        animate="visible"
+                    <div
+                        className="hero-eyebrow hero-fade-up"
+                        style={{ animationDelay: `${HERO_DELAYS[0]}s` }}
                     >
                         <span className="hud-chip">
                             <span className="pulse-dot" />
                             Live on Flare Network
                         </span>
-                    </motion.div>
+                    </div>
 
                     {/* Main title */}
-                    <motion.h1
-                        className="hero-title"
-                        variants={heroTextVariants}
-                        custom={0.08}
-                        initial="hidden"
-                        animate="visible"
+                    <h1
+                        className="hero-title hero-fade-up"
+                        style={{ animationDelay: `${HERO_DELAYS[1]}s` }}
                     >
                         <span className="hero-title-line hero-title-go">Go</span>
                         <span className="hero-title-line gradient-text-hero">Ludo</span>
-                    </motion.h1>
+                    </h1>
 
                     {/* Tagline words — staggered */}
-                    <motion.div
-                        className="hero-tagline"
-                        variants={heroTextVariants}
-                        custom={0.18}
-                        initial="hidden"
-                        animate="visible"
+                    <div
+                        className="hero-tagline hero-fade-up"
+                        style={{ animationDelay: `${HERO_DELAYS[2]}s` }}
                     >
                         <span className="tag-word tag-play">Play.</span>
                         <span className="tag-separator" aria-hidden="true" />
                         <span className="tag-word tag-stake">Stake.</span>
                         <span className="tag-separator" aria-hidden="true" />
                         <span className="tag-word tag-win">Win.</span>
-                    </motion.div>
+                    </div>
 
                     {/* Description */}
-                    <motion.p
-                        className="hero-description"
-                        variants={heroTextVariants}
-                        custom={0.26}
-                        initial="hidden"
-                        animate="visible"
+                    <p
+                        className="hero-description hero-fade-up"
+                        style={{ animationDelay: `${HERO_DELAYS[3]}s` }}
                     >
                         The classic board game, reimagined on-chain. Stake real assets, roll verifiable dice, and claim your winnings instantly — no house, no middlemen.
-                    </motion.p>
+                    </p>
 
                     {/* CTA group */}
-                    <motion.div
-                        className="hero-cta-group"
-                        variants={heroTextVariants}
-                        custom={0.34}
-                        initial="hidden"
-                        animate="visible"
+                    <div
+                        className="hero-cta-group hero-fade-up"
+                        style={{ animationDelay: `${HERO_DELAYS[4]}s` }}
                     >
-                        <motion.button
+                        <button
                             className="btn-launch shimmer"
                             onClick={handleLaunchApp}
-                            whileHover={{
-                                y: -4,
-                                scale: 1.03,
-                                transition: { type: 'spring', stiffness: 400, damping: 18 },
-                            }}
-                            whileTap={{
-                                scale: 0.97,
-                                transition: { duration: 0.08, ease: [0.25, 1.4, 0.5, 1] },
-                            }}
                         >
                             <span className="btn-icon" aria-hidden="true"><RocketIcon /></span>
                             <span className="btn-text">Launch App</span>
                             <span className="btn-glow" aria-hidden="true" />
-                        </motion.button>
+                        </button>
 
                         <a href="#features" className="btn-ghost">
                             Explore Features
                         </a>
-                    </motion.div>
+                    </div>
 
                 </div>
             </section>
@@ -442,15 +389,9 @@ const LandingPage: React.FC = () => {
 
                     <div className="features-grid reveal-stagger">
                         {FEATURES.map((feature, index) => (
-                            <motion.div
+                            <div
                                 key={index}
                                 className={`feature-card feature-card--${feature.accent} glass-card reveal-up`}
-                                whileHover={{
-                                    y: -8,
-                                    scale: 1.015,
-                                    transition: { type: 'spring', stiffness: 300, damping: 20 },
-                                }}
-                                whileTap={{ scale: 0.98 }}
                             >
                                 <div className={`feature-icon feature-icon--${feature.accent}`} aria-hidden="true">
                                     {feature.icon}
@@ -459,7 +400,7 @@ const LandingPage: React.FC = () => {
                                 <p className="feature-desc">{feature.description}</p>
                                 {/* Accent edge bar */}
                                 <div className="feature-accent-bar" aria-hidden="true" />
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
                 </div>

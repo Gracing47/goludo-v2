@@ -1,5 +1,4 @@
 import { useMemo, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
 import './WarpTransition.css';
 
 interface WarpTransitionProps {
@@ -19,27 +18,15 @@ const WarpTransition = ({ mode = 'literal', children }: WarpTransitionProps) => 
 
     if (mode === 'subtle') {
         return (
-            <motion.div
-                className="warp-container subtle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.36, ease: [0.23, 1, 0.32, 1] }}
-            >
+            <div className="warp-container subtle warp-fade-in">
                 <div className="iridescent-pulse" />
                 {children}
-            </motion.div>
+            </div>
         );
     }
 
     return (
-        <motion.div
-            className="warp-container literal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.36, ease: [0.23, 1, 0.32, 1] }}
-        >
+        <div className="warp-container literal warp-fade-in">
             {/* Rotating neon vortex grid */}
             <div className="warp-vortex" />
 
@@ -64,7 +51,7 @@ const WarpTransition = ({ mode = 'literal', children }: WarpTransitionProps) => 
             <div className="warp-content">
                 {children}
             </div>
-        </motion.div>
+        </div>
     );
 };
 

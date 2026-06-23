@@ -3,6 +3,15 @@
    Route-change overlay: hyperspace streaks + glass flash
    ============================================================ */
 
+/* ── Fade-in — replaces framer-motion animate={{ opacity: 0→1 }} ── */
+@keyframes warp-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.warp-fade-in {
+    animation: warp-fade-in 0.36s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
 /* ── Outer container ────────────────────────────────────── */
 .warp-container {
     position: fixed;

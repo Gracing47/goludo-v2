@@ -3,10 +3,13 @@
  * Iris AAA — capture explosions, victory confetti, spawn sparkles
  * GPU-only: animates transform + opacity only
  * Pooled / capped particle counts · prefers-reduced-motion
+ *
+ * framer-motion REMOVED (perf sprint) — replaced with Web Animations API
+ * (element.animate()) which runs on the compositor thread and is tree-shaken
+ * away from framer-motion's 39 kB gzip bundle.
  */
 
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import './ParticleEffects.css';
 
 // ---------------------------------------------------------------------------
@@ -20,19 +23,13 @@ const PLAYER_COLORS = {
     blue:   '#05d9e8'
 };
 
-// Confetti palette — vivid neon mix mapped to design tokens, no purple
 const CONFETTI_COLORS = [
-    '#ff2a6d', // --player-red   / --color-error
-    '#00ff9d', // --player-green / --color-success
-    '#ffcc00', // --player-yellow / --color-warning
-    '#05d9e8', // --player-blue  / --color-info
-    '#3a86ff', // --neon-blue
-    '#ff007a', // --neon-pink
-    '#ffd700'  // --neon-gold
+    '#ff2a6d', '#00ff9d', '#ffcc00', '#05d9e8',
+    '#3a86ff', '#ff007a', '#ffd700'
 ];
 
 // ---------------------------------------------------------------------------
-// Reduced-motion detection — single shared check at module scope
+// Reduced-motion detection
 // ---------------------------------------------------------------------------
 
 function prefersReducedMotion() {
@@ -44,8 +41,8 @@ function prefersReducedMotion() {
 // Particle factories — capped counts for perf
 // ---------------------------------------------------------------------------
 
-const MAX_EXPLOSION  = 16; // was 18 — trimmed for GPU budget
-const MAX_CONFETTI   = 48; // was 60
+const MAX_EXPLOSION  = 16;
+const MAX_CONFETTI   = 48;
 const MAX_SPARKLE    = 8;
 
 function generateExplosionParticles(count, color) {
@@ -56,21 +53,15 @@ function generateExplosionParticles(count, color) {
         const velocity = 80 + Math.random() * 80;
         const size     = 4 + Math.random() * 7;
         particles.push({
-            id: i,
-            x: Math.cos(angle) * velocity,
-            y: Math.sin(angle) * velocity,
-            size,
-            color,
-            rotate: Math.random() * 360,
-            delay:    Math.random() * 0.07,
-            duration: 0.36 + Math.random() * 0.30
+            id: i, x: Math.cos(angle) * velocity, y: Math.sin(angle) * velocity,
+            size, color, rotate: Math.random() * 360,
+            delay: Math.random() * 0.07, duration: 0.36 + Math.random() * 0.30
         });
     }
     return particles;
 }
 
 function generateHomeParticles(count, color) {
-    // Celebratory upward burst for home-arrival / win moment
     const cap = Math.min(count, MAX_EXPLOSION);
     const particles = [];
     for (let i = 0; i < cap; i++) {
@@ -78,14 +69,10 @@ function generateHomeParticles(count, color) {
         const velocity = 60 + Math.random() * 100;
         const size     = 5 + Math.random() * 8;
         particles.push({
-            id: i,
-            x: Math.cos(angle) * velocity,
-            y: Math.sin(angle) * velocity,
-            size,
-            color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+            id: i, x: Math.cos(angle) * velocity, y: Math.sin(angle) * velocity,
+            size, color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
             rotate: Math.random() * 540,
-            delay:    Math.random() * 0.12,
-            duration: 0.50 + Math.random() * 0.40
+            delay: Math.random() * 0.12, duration: 0.50 + Math.random() * 0.40
         });
     }
     return particles;
@@ -95,23 +82,36 @@ function generateConfettiParticles(count, winnerHex) {
     const cap = Math.min(count, MAX_CONFETTI);
     const particles = [];
     for (let i = 0; i < cap; i++) {
-        // Every 3rd particle uses the winner's neon color for cohesion
         const useWinnerColor = winnerHex && i % 3 === 0;
         particles.push({
             id: i,
-            x:        (Math.random() - 0.5) * 340,
-            destX:    (Math.random() - 0.5) * 140,
-            y:        -200 - Math.random() * 200,
+            x: (Math.random() - 0.5) * 340, destX: (Math.random() - 0.5) * 140,
+            y: -200 - Math.random() * 200,
             rotation: Math.random() * 720,
-            size:     6 + Math.random() * 9,
-            color:    useWinnerColor
+            size: 6 + Math.random() * 9,
+            color: useWinnerColor
                 ? winnerHex
                 : CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
-            delay:    Math.random() * 0.60,
-            duration: 2.2 + Math.random() * 1.3
+            delay: Math.random() * 0.60, duration: 2.2 + Math.random() * 1.3
         });
     }
     return particles;
+}
+
+// ---------------------------------------------------------------------------
+// useParticleRefs — runs Web Animations on mounted particle elements
+// ---------------------------------------------------------------------------
+
+function useParticleAnimation(containerRef, particles, animateFn) {
+    useEffect(() => {
+        if (!containerRef.current || !particles.length) return;
+        const els = containerRef.current.querySelectorAll('[data-particle]');
+        els.forEach((el, i) => {
+            const p = particles[i];
+            if (!p) return;
+            animateFn(el, p);
+        });
+    }, [particles]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 // ---------------------------------------------------------------------------
@@ -120,173 +120,110 @@ function generateConfettiParticles(count, winnerHex) {
 
 export function CaptureExplosion({ position, color, onComplete }) {
     const [particles, setParticles] = useState([]);
+    const containerRef = useRef(null);
     const reduced = prefersReducedMotion();
 
     useEffect(() => {
         const particleColor = PLAYER_COLORS[color] || '#ffffff';
-        if (!reduced) {
-            setParticles(generateExplosionParticles(MAX_EXPLOSION, particleColor));
-        }
-
-        const timer = setTimeout(() => {
-            onComplete?.();
-        }, reduced ? 0 : 880);
-
+        if (!reduced) setParticles(generateExplosionParticles(MAX_EXPLOSION, particleColor));
+        const timer = setTimeout(() => { onComplete?.(); }, reduced ? 0 : 880);
         return () => clearTimeout(timer);
     }, [color, onComplete, reduced]);
 
-    if (!position) return null;
-    if (reduced) return null; // skip rendering entirely under prefers-reduced-motion
+    useParticleAnimation(containerRef, particles, (el, p) => {
+        el.animate(
+            [
+                { transform: `translate(0, 0) scale(1) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${p.x}px, ${p.y}px) scale(0) rotate(${p.rotate}deg)`, opacity: 0 },
+            ],
+            { duration: p.duration * 1000, delay: p.delay * 1000, easing: 'ease-out', fill: 'both' }
+        );
+    });
+
+    if (!position || reduced) return null;
 
     const ringColor = PLAYER_COLORS[color] || '#ffffff';
 
     return (
         <div
+            ref={containerRef}
             className="particle-container explosion"
             style={{ left: position.x, top: position.y }}
         >
-            {/* Primary shockwave ring */}
-            <motion.div
-                className="shockwave-ring"
-                initial={{ scale: 0,   opacity: 0.95, borderWidth: '4px' }}
-                animate={{ scale: 5,   opacity: 0,    borderWidth: '0px' }}
-                transition={{ duration: 0.62, ease: 'easeOut' }}
-                style={{ borderColor: ringColor }}
-            />
+            {/* Shockwave rings — CSS keyframe */}
+            <div className="shockwave-ring shockwave-1" style={{ borderColor: ringColor }} />
+            <div className="shockwave-ring shockwave-2" style={{ borderColor: ringColor }} />
+            <div className="shockwave-ring shockwave-shimmer shockwave-3" style={{ borderColor: ringColor }} />
+            <div className="explosion-flash flash-1" style={{ backgroundColor: ringColor }} />
 
-            {/* Echo shockwave */}
-            <motion.div
-                className="shockwave-ring"
-                initial={{ scale: 0,   opacity: 0.55, borderWidth: '2px' }}
-                animate={{ scale: 3.8, opacity: 0,    borderWidth: '0px' }}
-                transition={{ duration: 0.75, ease: 'easeOut', delay: 0.10 }}
-                style={{ borderColor: ringColor }}
-            />
-
-            {/* Third shimmer ring — premium extra */}
-            <motion.div
-                className="shockwave-ring shockwave-shimmer"
-                initial={{ scale: 0, opacity: 0.30, borderWidth: '1px' }}
-                animate={{ scale: 7, opacity: 0,    borderWidth: '0px' }}
-                transition={{ duration: 0.95, ease: 'easeOut', delay: 0.18 }}
-                style={{ borderColor: ringColor }}
-            />
-
-            {/* Central flash */}
-            <motion.div
-                className="explosion-flash"
-                initial={{ scale: 0, opacity: 1    }}
-                animate={{ scale: 3, opacity: 0    }}
-                transition={{ duration: 0.28, ease: 'easeOut' }}
-                style={{ backgroundColor: ringColor }}
-            />
-
-            {/* Particles */}
-            <AnimatePresence>
-                {particles.map(p => (
-                    <motion.div
-                        key={p.id}
-                        className="explosion-particle"
-                        initial={{ x: 0,    y: 0,    scale: 1, opacity: 1 }}
-                        animate={{ x: p.x,  y: p.y,  scale: 0, opacity: 0, rotate: p.rotate }}
-                        transition={{
-                            duration: p.duration,
-                            delay:    p.delay,
-                            ease:     'easeOut'
-                        }}
-                        style={{
-                            width:      p.size,
-                            height:     p.size,
-                            backgroundColor: p.color,
-                            boxShadow: `0 0 ${p.size * 2}px ${p.color}`
-                        }}
-                    />
-                ))}
-            </AnimatePresence>
+            {particles.map(p => (
+                <div
+                    key={p.id}
+                    data-particle
+                    className="explosion-particle"
+                    style={{
+                        width: p.size, height: p.size,
+                        backgroundColor: p.color,
+                        boxShadow: `0 0 ${p.size * 2}px ${p.color}`
+                    }}
+                />
+            ))}
         </div>
     );
 }
 
 // ---------------------------------------------------------------------------
-// HomeArrivalBurst — celebratory upward burst when token reaches home/wins
+// HomeArrivalBurst — celebratory upward burst
 // ---------------------------------------------------------------------------
 
 export function HomeArrivalBurst({ position, color, onComplete }) {
     const [particles, setParticles] = useState([]);
+    const containerRef = useRef(null);
     const reduced = prefersReducedMotion();
 
     useEffect(() => {
         const baseColor = PLAYER_COLORS[color] || '#ffd700';
-        if (!reduced) {
-            setParticles(generateHomeParticles(MAX_EXPLOSION, baseColor));
-        }
-
-        const timer = setTimeout(() => {
-            onComplete?.();
-        }, reduced ? 0 : 1100);
-
+        if (!reduced) setParticles(generateHomeParticles(MAX_EXPLOSION, baseColor));
+        const timer = setTimeout(() => { onComplete?.(); }, reduced ? 0 : 1100);
         return () => clearTimeout(timer);
     }, [color, onComplete, reduced]);
 
-    if (!position) return null;
-    if (reduced) return null;
+    useParticleAnimation(containerRef, particles, (el, p) => {
+        el.animate(
+            [
+                { transform: `translate(0, 0) scale(1) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${p.x}px, ${p.y}px) scale(0) rotate(${p.rotate}deg)`, opacity: 0 },
+            ],
+            { duration: p.duration * 1000, delay: p.delay * 1000, easing: 'cubic-bezier(0.22,1,0.36,1)', fill: 'both' }
+        );
+    });
+
+    if (!position || reduced) return null;
 
     const glowColor = PLAYER_COLORS[color] || '#ffd700';
 
     return (
         <div
+            ref={containerRef}
             className="particle-container home-burst"
             style={{ left: position.x, top: position.y }}
         >
-            {/* Gold starburst ring */}
-            <motion.div
-                className="shockwave-ring"
-                initial={{ scale: 0, opacity: 1,    borderWidth: '3px' }}
-                animate={{ scale: 6, opacity: 0,    borderWidth: '0px' }}
-                transition={{ duration: 0.80, ease: 'easeOut' }}
-                style={{ borderColor: '#ffd700' }}
-            />
+            <div className="shockwave-ring shockwave-gold-1" style={{ borderColor: '#ffd700' }} />
+            <div className="explosion-flash flash-gold" style={{ backgroundColor: '#ffd700' }} />
+            <div className="explosion-flash flash-player" style={{ backgroundColor: glowColor }} />
 
-            {/* Inner flash */}
-            <motion.div
-                className="explosion-flash"
-                initial={{ scale: 0, opacity: 1 }}
-                animate={{ scale: 4, opacity: 0 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
-                style={{ backgroundColor: '#ffd700' }}
-            />
-
-            {/* Player-color secondary flash */}
-            <motion.div
-                className="explosion-flash"
-                initial={{ scale: 0, opacity: 0.85 }}
-                animate={{ scale: 2.5, opacity: 0 }}
-                transition={{ duration: 0.45, ease: 'easeOut', delay: 0.06 }}
-                style={{ backgroundColor: glowColor }}
-            />
-
-            {/* Multi-color particles */}
-            <AnimatePresence>
-                {particles.map(p => (
-                    <motion.div
-                        key={p.id}
-                        className="explosion-particle"
-                        initial={{ x: 0,   y: 0,   scale: 1, opacity: 1 }}
-                        animate={{ x: p.x, y: p.y, scale: 0, opacity: 0, rotate: p.rotate }}
-                        transition={{
-                            duration: p.duration,
-                            delay:    p.delay,
-                            ease:     [0.22, 1, 0.36, 1]
-                        }}
-                        style={{
-                            width:      p.size,
-                            height:     p.size,
-                            backgroundColor: p.color,
-                            boxShadow: `0 0 ${p.size * 2.5}px ${p.color}, 0 0 ${p.size * 5}px ${p.color}55`
-                        }}
-                    />
-                ))}
-            </AnimatePresence>
+            {particles.map(p => (
+                <div
+                    key={p.id}
+                    data-particle
+                    className="explosion-particle"
+                    style={{
+                        width: p.size, height: p.size,
+                        backgroundColor: p.color,
+                        boxShadow: `0 0 ${p.size * 2.5}px ${p.color}, 0 0 ${p.size * 5}px ${p.color}55`
+                    }}
+                />
+            ))}
         </div>
     );
 }
@@ -297,84 +234,47 @@ export function HomeArrivalBurst({ position, color, onComplete }) {
 
 export function VictoryConfetti({ active, winnerColor }) {
     const [particles, setParticles] = useState([]);
+    const containerRef = useRef(null);
     const reduced = prefersReducedMotion();
 
     const glowColor = PLAYER_COLORS[winnerColor] || '#00f3ff';
 
     useEffect(() => {
-        if (active && !reduced) {
-            setParticles(generateConfettiParticles(MAX_CONFETTI, glowColor));
-        } else {
-            setParticles([]);
-        }
+        if (active && !reduced) setParticles(generateConfettiParticles(MAX_CONFETTI, glowColor));
+        else setParticles([]);
     }, [active, reduced, glowColor]);
 
-    if (!active) return null;
-    if (reduced) return null;
+    useParticleAnimation(containerRef, particles, (el, p) => {
+        el.animate(
+            [
+                { transform: `translate(${p.x}px, ${p.y}px) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${p.x + p.destX}px, 520px) rotate(${p.rotation}deg)`, opacity: 0 },
+            ],
+            { duration: p.duration * 1000, delay: p.delay * 1000, easing: 'cubic-bezier(0.22,1,0.36,1)', fill: 'both' }
+        );
+    });
+
+    if (!active || reduced) return null;
 
     return (
-        <div className="confetti-container">
-            <AnimatePresence>
-                {particles.map(p => (
-                    <motion.div
-                        key={p.id}
-                        className="confetti-particle"
-                        initial={{ x: p.x, y: p.y, rotate: 0, opacity: 1 }}
-                        animate={{
-                            x:       p.x + p.destX,
-                            y:       520,
-                            rotate:  p.rotation,
-                            opacity: [1, 1, 0]
-                        }}
-                        transition={{
-                            duration: p.duration,
-                            delay:    p.delay,
-                            ease:     [0.22, 1, 0.36, 1]
-                        }}
-                        style={{
-                            width:        p.size,
-                            height:       p.size * 1.7,
-                            backgroundColor: p.color,
-                            borderRadius: '2px',
-                            boxShadow:    `0 0 ${p.size * 1.5}px ${p.color}cc, 0 0 ${p.size * 3}px ${p.color}55`
-                        }}
-                    />
-                ))}
-            </AnimatePresence>
+        <div ref={containerRef} className="confetti-container">
+            {particles.map(p => (
+                <div
+                    key={p.id}
+                    data-particle
+                    className="confetti-particle"
+                    style={{
+                        width: p.size, height: p.size * 1.7,
+                        backgroundColor: p.color,
+                        borderRadius: '2px',
+                        boxShadow: `0 0 ${p.size * 1.5}px ${p.color}cc, 0 0 ${p.size * 3}px ${p.color}55`
+                    }}
+                />
+            ))}
 
-            {/* Winner glow bloom */}
-            <motion.div
-                className="winner-glow"
-                initial={{ scale: 0.3, opacity: 0 }}
-                animate={{
-                    scale:   [0.3, 1.4, 0.95, 1.1, 1],
-                    opacity: [0,   0.55, 0.30, 0.38, 0.22]
-                }}
-                transition={{
-                    duration:    2.0,
-                    repeat:      Infinity,
-                    repeatType:  'loop',
-                    repeatDelay: 0.3
-                }}
-                style={{ backgroundColor: glowColor }}
-            />
-
-            {/* Secondary ring glow */}
-            <motion.div
-                className="winner-glow winner-glow-secondary"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{
-                    scale:   [0.5, 1.8, 1.2],
-                    opacity: [0,   0.22, 0]
-                }}
-                transition={{
-                    duration:    2.5,
-                    repeat:      Infinity,
-                    repeatType:  'loop',
-                    delay:       0.8
-                }}
-                style={{ backgroundColor: '#ffd700' }}
-            />
+            {/* Winner glow bloom — CSS keyframe */}
+            <div className="winner-glow winner-glow-pulse" style={{ backgroundColor: glowColor }} />
+            <div className="winner-glow winner-glow-secondary winner-glow-ring" style={{ backgroundColor: '#ffd700' }} />
         </div>
     );
 }
@@ -385,6 +285,7 @@ export function VictoryConfetti({ active, winnerColor }) {
 
 export function SpawnSparkle({ position, color, onComplete }) {
     const [sparkles, setSparkles] = useState([]);
+    const containerRef = useRef(null);
     const reduced = prefersReducedMotion();
 
     useEffect(() => {
@@ -394,47 +295,46 @@ export function SpawnSparkle({ position, color, onComplete }) {
             for (let i = 0; i < MAX_SPARKLE; i++) {
                 const angle = (Math.PI * 2 * i) / MAX_SPARKLE;
                 newSparkles.push({
-                    id:    i,
-                    x:     Math.cos(angle) * 36,
-                    y:     Math.sin(angle) * 36,
+                    id: i,
+                    x: Math.cos(angle) * 36, y: Math.sin(angle) * 36,
                     color: particleColor,
                     rotate: Math.random() * 180
                 });
             }
             setSparkles(newSparkles);
         }
-
-        const timer = setTimeout(() => {
-            onComplete?.();
-        }, reduced ? 0 : 540);
-
+        const timer = setTimeout(() => { onComplete?.(); }, reduced ? 0 : 540);
         return () => clearTimeout(timer);
     }, [color, onComplete, reduced]);
 
-    if (!position) return null;
-    if (reduced) return null;
+    useParticleAnimation(containerRef, sparkles, (el, s) => {
+        el.animate(
+            [
+                { transform: `translate(0, 0) scale(0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate(${s.x}px, ${s.y}px) scale(1.8) rotate(${s.rotate}deg)`, opacity: 1, offset: 0.5 },
+                { transform: `translate(${s.x}px, ${s.y}px) scale(0) rotate(${s.rotate}deg)`, opacity: 0 },
+            ],
+            { duration: 440, easing: 'ease-out', fill: 'both' }
+        );
+    });
+
+    if (!position || reduced) return null;
 
     return (
         <div
+            ref={containerRef}
             className="particle-container sparkle"
             style={{ left: position.x, top: position.y }}
         >
-            {/* Vertical light beam */}
-            <motion.div
-                className="light-beam"
-                initial={{ height: 0,   opacity: 0.95, y: 0   }}
-                animate={{ height: 120, opacity: 0,    y: -60  }}
-                transition={{ duration: 0.52, ease: 'easeOut' }}
+            <div
+                className="light-beam light-beam-animated"
                 style={{ backgroundColor: PLAYER_COLORS[color] || '#fff' }}
             />
-
             {sparkles.map(s => (
-                <motion.div
+                <div
                     key={s.id}
+                    data-particle
                     className="sparkle-particle"
-                    initial={{ x: 0,   y: 0,   scale: 0,         opacity: 1 }}
-                    animate={{ x: s.x, y: s.y, scale: [0, 1.8, 0], opacity: [1, 1, 0], rotate: s.rotate }}
-                    transition={{ duration: 0.44, ease: 'easeOut' }}
                     style={{ backgroundColor: s.color }}
                 />
             ))}

@@ -206,6 +206,78 @@
 }
 
 /* ============================================
+   CSS KEYFRAMES — replace framer-motion motion.div
+   All run on the GPU compositor thread
+   ============================================ */
+
+/* Shockwave rings */
+@keyframes shockwave-expand {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 0.95; border-width: 4px; }
+    to   { transform: translate(-50%, -50%) scale(5); opacity: 0;    border-width: 0px; }
+}
+@keyframes shockwave-expand-2 {
+    from { transform: translate(-50%, -50%) scale(0);   opacity: 0.55; border-width: 2px; }
+    to   { transform: translate(-50%, -50%) scale(3.8); opacity: 0;    border-width: 0px; }
+}
+@keyframes shockwave-expand-3 {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 0.30; border-width: 1px; }
+    to   { transform: translate(-50%, -50%) scale(7); opacity: 0;    border-width: 0px; }
+}
+@keyframes shockwave-gold {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 1;    border-width: 3px; }
+    to   { transform: translate(-50%, -50%) scale(6); opacity: 0;    border-width: 0px; }
+}
+
+.shockwave-1 { animation: shockwave-expand   0.62s ease-out both; }
+.shockwave-2 { animation: shockwave-expand-2 0.75s ease-out 0.10s both; }
+.shockwave-3 { animation: shockwave-expand-3 0.95s ease-out 0.18s both; }
+.shockwave-gold-1 { animation: shockwave-gold 0.80s ease-out both; }
+
+/* Flash pulse */
+@keyframes flash-expand {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+    to   { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+@keyframes flash-expand-gold {
+    from { transform: translate(-50%, -50%) scale(0);   opacity: 1; }
+    to   { transform: translate(-50%, -50%) scale(4);   opacity: 0; }
+}
+@keyframes flash-expand-player {
+    from { transform: translate(-50%, -50%) scale(0);   opacity: 0.85; }
+    to   { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+.flash-1      { animation: flash-expand        0.28s ease-out both; }
+.flash-gold   { animation: flash-expand-gold   0.35s ease-out both; }
+.flash-player { animation: flash-expand-player 0.45s ease-out 0.06s both; }
+
+/* Light beam */
+@keyframes beam-rise {
+    from { height: 0;   opacity: 0.95; transform: translateX(-50%) translateY(0); }
+    to   { height: 120px; opacity: 0;  transform: translateX(-50%) translateY(-60px); }
+}
+.light-beam-animated {
+    animation: beam-rise 0.52s ease-out both;
+}
+
+/* Winner glow — infinite pulse */
+@keyframes winner-pulse {
+    0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    15%  { transform: translate(-50%, -50%) scale(1.4); opacity: 0.55; }
+    50%  { transform: translate(-50%, -50%) scale(0.95); opacity: 0.30; }
+    75%  { transform: translate(-50%, -50%) scale(1.1); opacity: 0.38; }
+    100% { transform: translate(-50%, -50%) scale(1);   opacity: 0.22; }
+}
+@keyframes winner-ring {
+    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    40%  { transform: translate(-50%, -50%) scale(1.8); opacity: 0.22; }
+    100% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+}
+
+.winner-glow-pulse { animation: winner-pulse 2.0s ease-in-out 0.3s infinite; }
+.winner-glow-ring  { animation: winner-ring  2.5s ease-in-out 0.8s infinite; }
+
+/* ============================================
    REDUCED MOTION — hide all particle layers
    ============================================ */
 
@@ -223,3 +295,4 @@
         display: none !important;
     }
 }
+
