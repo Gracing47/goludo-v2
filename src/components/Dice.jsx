@@ -60,6 +60,14 @@ const Dice = ({ value, onRoll, disabled, isRolling, color = '#ff007a' }) => {
                 <div className="dice-face face-6" aria-hidden="true"><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span><span className="dot"></span></div>
             </div>
 
+            {/* Rolled value overlay — shows numeric result on the button face after roll (B1 fix) */}
+            {value > 0 && value <= 6 && !isRolling && (
+                <div className="dice-result-overlay" aria-hidden="true">
+                    <span className="dice-result-number">{value}</span>
+                    {value === 6 && <span className="dice-roll-again-cue">ROLL AGAIN</span>}
+                </div>
+            )}
+
             {/* Bonus value overlay */}
             {value > 6 && !isRolling && (
                 <div className="dice-bonus-overlay" aria-label={`Bonus move: ${value} steps`}>

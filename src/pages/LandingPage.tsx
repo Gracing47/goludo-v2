@@ -268,10 +268,12 @@ const LandingPage: React.FC = () => {
                                 strokeWidth="1"
                                 filter="url(#diceShadowSecondary)" />
                             <rect x="6" y="6" width="88" height="2" rx="2" fill="rgba(255,255,255,0.10)" />
-                            {/* Dots — 3 face */}
-                            <circle cx="30" cy="30" r="7" fill="var(--neon-pink)" opacity="0.85" />
+                            {/* Dots — 3 face; H2: pushed inward from 30/50/70 to 32/50/68
+                                so no pip edge crosses the die border (border at x=6, pip edge
+                                was at 30-7=23px; now 32-7=25px, comfortable clearance all round) */}
+                            <circle cx="32" cy="32" r="7" fill="var(--neon-pink)" opacity="0.85" />
                             <circle cx="50" cy="50" r="7" fill="var(--neon-gold)" opacity="0.9" />
-                            <circle cx="70" cy="70" r="7" fill="var(--neon-pink)" opacity="0.85" />
+                            <circle cx="68" cy="68" r="7" fill="var(--neon-pink)" opacity="0.85" />
                         </svg>
                     </div>
                     {/* Tertiary tiny accent die */}

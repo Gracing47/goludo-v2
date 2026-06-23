@@ -536,7 +536,44 @@ function App() {
 
     // ============================================
     // MOVE TELEGRAPHING — destination ghost coords
+    // B3 fix: compute ALL valid-move destinations so every prediction
+    // marker renders simultaneously (not just the hovered token's one).
     // ============================================
+
+    /** Resolve a toPosition value to board {r,c} coords for a given playerIdx. */
+    const resolveDestCoords = useCallback((playerIdx, toPos) => {
+        if (toPos === POSITION.FINISHED) return null; // going home — centre cell, skip ghost
+        if (typeof toPos === 'number' && toPos >= 100 && toPos < 106) {
+            return HOME_STRETCH_COORDS[playerIdx]?.[toPos - 100] ?? null;
+        }
+        if (typeof toPos === 'number' && toPos >= 0 && toPos < MASTER_LOOP.length) {
+            return MASTER_LOOP[toPos] ?? null;
+        }
+        return null;
+    }, []);
+
+    /**
+     * allDestGhostCoords — all valid-move targets shown permanently while in
+     * SELECT_TOKEN phase.  Uses a deduped r-c key so two moves to the same
+     * cell produce only one ghost ring.
+     */
+    const allDestGhostCoords = useMemo(() => {
+        if (!gameState?.validMoves?.length) return [];
+        const activePlayerIdx = gameState.activePlayer;
+        const seen = new Set();
+        const results = [];
+        for (const move of gameState.validMoves) {
+            const coords = resolveDestCoords(activePlayerIdx, move.toPosition);
+            if (!coords) continue;
+            const key = `${coords.r}-${coords.c}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            results.push(coords);
+        }
+        return results;
+    }, [gameState?.validMoves, gameState?.activePlayer, resolveDestCoords]);
+
+    /** Single hovered-token ghost (keeps the existing hover-specific logic intact) */
     const destGhostCoords = useMemo(() => {
         if (!hoveredTokenKey || !gameState?.validMoves) return null;
 
@@ -549,18 +586,26 @@ function App() {
         const move = gameState.validMoves.find(m => m.tokenIndex === tokenIdx);
         if (!move) return null;
 
-        const toPos = move.toPosition;
-        if (toPos === POSITION.FINISHED) return null; // going home — centre cell, skip ghost
+        return resolveDestCoords(playerIdx, move.toPosition);
+    }, [hoveredTokenKey, gameState?.validMoves, resolveDestCoords]);
 
-        // Map toPosition → board coords (mirrors useGameStateDerivation coord logic exactly)
-        if (typeof toPos === 'number' && toPos >= 100 && toPos < 106) {
-            return HOME_STRETCH_COORDS[playerIdx]?.[toPos - 100] ?? null;
+    // ============================================
+    // B4: MIXED-STACK OVERLAY — color-dot strip + count badge for cells
+    // where tokens of DIFFERENT players share the same board cell.
+    // Aggregated from tokensWithCoords (read-only, no position math change).
+    // ============================================
+    const mixedStackOverlays = useMemo(() => {
+        // Group by grid cell key; only care about cells with >1 distinct player
+        const cellGroups = new Map(); // key → [{ playerIdx, color, tokenCount }]
+        for (const vt of tokensWithCoords) {
+            if (vt.inYard) continue; // yard tokens never mix with other players
+            const key = `${vt.coords.r}-${vt.coords.c}`;
+            if (!cellGroups.has(key)) cellGroups.set(key, { r: vt.coords.r, c: vt.coords.c, players: [] });
+            cellGroups.get(key).players.push({ playerIdx: vt.playerIdx, color: PLAYER_COLORS[vt.playerIdx], tokenCount: vt.tokenCount });
         }
-        if (typeof toPos === 'number' && toPos >= 0 && toPos < MASTER_LOOP.length) {
-            return MASTER_LOOP[toPos] ?? null;
-        }
-        return null;
-    }, [hoveredTokenKey, gameState?.validMoves]);
+        // Return only cells with multiple distinct players
+        return Array.from(cellGroups.values()).filter(g => g.players.length > 1);
+    }, [tokensWithCoords]);
 
     // ============================================
     // RENDER LOGIC
@@ -694,17 +739,41 @@ function App() {
                                 );
                             })}
 
-                            {/* Move telegraphing: ghost destination ring */}
-                            {destGhostCoords && (
+                            {/* Move telegraphing: ghost destination rings for ALL valid moves (B3 fix) */}
+                            {allDestGhostCoords.map((coords, i) => (
                                 <div
-                                    className="token-dest-ghost"
+                                    key={`ghost-${coords.r}-${coords.c}`}
+                                    className={`token-dest-ghost${destGhostCoords && destGhostCoords.r === coords.r && destGhostCoords.c === coords.c ? ' ghost-hovered' : ''}`}
                                     style={{
-                                        gridRow: destGhostCoords.r + 1,
-                                        gridColumn: destGhostCoords.c + 1,
+                                        gridRow: coords.r + 1,
+                                        gridColumn: coords.c + 1,
                                     }}
                                     aria-hidden="true"
                                 />
-                            )}
+                            ))}
+
+                            {/* B4: Mixed-stack color-strip overlays — appear above tokens when
+                                multiple player colors share a cell so the composition is
+                                always readable regardless of token scale. */}
+                            {mixedStackOverlays.map(({ r, c, players }) => (
+                                <div
+                                    key={`stack-overlay-${r}-${c}`}
+                                    className="stack-color-strip"
+                                    style={{ gridRow: r + 1, gridColumn: c + 1 }}
+                                    aria-hidden="true"
+                                >
+                                    {players.map(({ playerIdx, color, tokenCount }) => (
+                                        <span
+                                            key={playerIdx}
+                                            className="stack-color-dot"
+                                            style={{ background: `var(--player-${color}, ${color})` }}
+                                            title={`${color}${tokenCount > 1 ? ` ×${tokenCount}` : ''}`}
+                                        >
+                                            {tokenCount > 1 && <span className="stack-dot-count">×{tokenCount}</span>}
+                                        </span>
+                                    ))}
+                                </div>
+                            ))}
 
                             {/* 💥 Capture Explosions */}
                             {captureEffects.map(effect => (

@@ -458,6 +458,14 @@
     50%       { opacity: 0.90; transform: scale(1.08); }
 }
 
+/* Ghost ring highlighted when hovered */
+.token-dest-ghost.ghost-hovered::before {
+    border-color: var(--neon-gold, #ffcc00);
+    box-shadow:
+        0 0 14px rgba(255, 204, 0, 0.75),
+        inset 0 0 10px rgba(255, 204, 0, 0.30);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .token-dest-ghost::before,
     .token-dest-ghost::after {
@@ -465,6 +473,71 @@
         opacity: 0.85;
         transform: scale(1);
     }
+}
+
+/* ============================================
+   B4: MIXED-STACK COLOR-STRIP OVERLAY
+   Sits above the token layer (z-index > tokens).
+   Shows a row of color dots + per-color count when
+   2+ different player colors share one board cell.
+   GPU-only (no filter/blur); mobile-first sizing.
+   ============================================ */
+
+.stack-color-strip {
+    /* aligns with the board grid like tokens */
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    padding-bottom: 3%;
+    pointer-events: none;
+    z-index: 200;
+}
+
+.stack-color-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+        0 0 5px rgba(0, 0, 0, 0.70),
+        0 0 8px currentColor;
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stack-dot-count {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: 0.38rem;
+    font-weight: var(--font-extrabold, 900);
+    color: #fff;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.90);
+    white-space: nowrap;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* Slightly larger dots on ≥480px screens */
+@media (min-width: 480px) {
+    .stack-color-dot {
+        width: 10px;
+        height: 10px;
+    }
+    .stack-dot-count { font-size: 0.44rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* strip is static — nothing to suppress */
 }
 
 /* ============================================

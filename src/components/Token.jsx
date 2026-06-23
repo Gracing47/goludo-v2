@@ -184,14 +184,14 @@ const Token = ({
                 <div className="token-shine" aria-hidden="true" />
                 <div className="token-center-dot" aria-hidden="true" />
 
-                {/* 🔢 Stack Count Badge (counter-rotated to stay readable) */}
+                {/* 🔢 Stack Count Badge — counter-rotated to stay upright (B2 fix) */}
                 {tokenCount > 1 && (
                     <div
                         className="token-stack-badge"
-                        style={{ transform: `translate(-50%, -50%) rotate(calc(-1 * var(--rotation, 0deg)))` }}
+                        style={{ transform: `translate(-50%, -50%) rotate(${rotation}deg)` }}
                         aria-label={`${tokenCount} tokens stacked`}
                     >
-                        {tokenCount}
+                        ×{tokenCount}
                     </div>
                 )}
 

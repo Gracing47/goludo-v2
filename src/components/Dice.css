@@ -312,6 +312,61 @@
 }
 
 /* ============================================
+   ROLLED VALUE OVERLAY — B1 fix
+   Small translucent badge below the 3D cube face
+   showing the numeric result once rolling stops.
+   ============================================ */
+
+.dice-result-overlay {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    pointer-events: none;
+    z-index: 4;
+    animation: pop-in var(--dur-fast) var(--ease-spring);
+}
+
+.dice-result-number {
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: 1.1rem;
+    font-weight: var(--font-extrabold, 900);
+    color: var(--neon-cyan, #00f3ff);
+    text-shadow:
+        0 0 8px rgba(0, 243, 255, 0.90),
+        0 0 20px rgba(0, 243, 255, 0.55);
+    line-height: 1;
+}
+
+.dice-roll-again-cue {
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: 0.48rem;
+    font-weight: var(--font-bold, 700);
+    letter-spacing: 0.12em;
+    color: var(--neon-gold, #ffcc00);
+    text-shadow: 0 0 6px rgba(255, 204, 0, 0.65);
+    white-space: nowrap;
+    line-height: 1;
+}
+
+/* Tighten vertical space on smallest phones */
+@media (max-width: 390px) {
+    .dice-result-overlay {
+        bottom: -24px;
+    }
+    .dice-result-number { font-size: 0.9rem; }
+    .dice-roll-again-cue { font-size: 0.40rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dice-result-overlay { animation: none !important; }
+}
+
+/* ============================================
    BONUS OVERLAY
    ============================================ */
 
