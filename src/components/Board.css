@@ -157,29 +157,29 @@
     overflow: hidden;
 }
 
-/* Shimmer sweep across safe zone */
+/* Shimmer sweep across safe zone — GPU-accelerated translate */
 .safe::before {
     content: '';
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: -150%;
+    width: 150%;
+    height: 100%;
     background: linear-gradient(
         105deg,
         transparent 30%,
         rgba(255, 215, 0, 0.18) 50%,
         transparent 70%
     );
-    background-size: 200% 100%;
-    animation: safe-shimmer 3.8s var(--ease-in-out) infinite;
+    animation: safe-shimmer-gpu 3.8s var(--ease-in-out) infinite;
     pointer-events: none;
     border-radius: inherit;
     z-index: 1;
 }
 
-@keyframes safe-shimmer {
-    0%        { background-position: 200% 0; opacity: 0; }
-    15%       { opacity: 1; }
-    85%       { opacity: 1; }
-    100%      { background-position: -200% 0; opacity: 0; }
+@keyframes safe-shimmer-gpu {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(166%); }
 }
 
 .safe::after {
@@ -296,67 +296,76 @@
     z-index: 10;
 }
 
-/* Per-color active pulse — GPU only (box-shadow + opacity) */
+/* Per-color active pulse — GPU only (opacity-based pseudo-element) */
+.active-turn {
+    position: relative;
+    z-index: 10;
+}
+.active-turn::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    animation: active-turn-pulse var(--dur-slower) var(--ease-in-out) infinite alternate;
+}
+
+@keyframes active-turn-pulse {
+    from { opacity: 0.45; }
+    to   { opacity: 1.0; }
+}
+
 .base-red.active-turn {
     background: linear-gradient(135deg,
         rgba(255, 42, 109, 0.68) 0%,
         rgba(255, 0, 50, 0.42) 100%) !important;
-    box-shadow:
-        0 0 28px rgba(255, 42, 109, 0.38),
-        0 0 60px rgba(255, 42, 109, 0.14);
     border: 1px solid rgba(255, 42, 109, 0.55) !important;
-    animation: active-cell-pulse-red var(--dur-slower) var(--ease-in-out) infinite alternate;
+}
+.base-red.active-turn::before {
+    border: 1px solid rgba(255, 42, 109, 0.7);
+    box-shadow:
+        0 0 20px rgba(255, 42, 109, 0.5),
+        0 0 45px rgba(255, 42, 109, 0.2);
 }
 
 .base-green.active-turn {
     background: linear-gradient(135deg,
         rgba(0, 255, 157, 0.68) 0%,
         rgba(0, 200, 100, 0.42) 100%) !important;
-    box-shadow:
-        0 0 28px rgba(0, 255, 157, 0.38),
-        0 0 60px rgba(0, 255, 157, 0.14);
     border: 1px solid rgba(0, 255, 157, 0.55) !important;
-    animation: active-cell-pulse-green var(--dur-slower) var(--ease-in-out) infinite alternate;
+}
+.base-green.active-turn::before {
+    border: 1px solid rgba(0, 255, 157, 0.7);
+    box-shadow:
+        0 0 20px rgba(0, 255, 157, 0.5),
+        0 0 45px rgba(0, 255, 157, 0.2);
 }
 
 .base-yellow.active-turn {
     background: linear-gradient(135deg,
         rgba(255, 204, 0, 0.68) 0%,
         rgba(200, 140, 0, 0.42) 100%) !important;
-    box-shadow:
-        0 0 28px rgba(255, 204, 0, 0.38),
-        0 0 60px rgba(255, 204, 0, 0.14);
     border: 1px solid rgba(255, 204, 0, 0.55) !important;
-    animation: active-cell-pulse-yellow var(--dur-slower) var(--ease-in-out) infinite alternate;
+}
+.base-yellow.active-turn::before {
+    border: 1px solid rgba(255, 204, 0, 0.7);
+    box-shadow:
+        0 0 20px rgba(255, 204, 0, 0.5),
+        0 0 45px rgba(255, 204, 0, 0.2);
 }
 
 .base-blue.active-turn {
     background: linear-gradient(135deg,
         rgba(5, 217, 232, 0.68) 0%,
         rgba(0, 140, 255, 0.42) 100%) !important;
-    box-shadow:
-        0 0 28px rgba(5, 217, 232, 0.38),
-        0 0 60px rgba(5, 217, 232, 0.14);
     border: 1px solid rgba(5, 217, 232, 0.55) !important;
-    animation: active-cell-pulse-blue var(--dur-slower) var(--ease-in-out) infinite alternate;
 }
-
-/* Active-cell pulse keyframes — only box-shadow varies (GPU-friendly) */
-@keyframes active-cell-pulse-red {
-    from { box-shadow: 0 0 18px rgba(255, 42, 109, 0.28), 0 0 40px rgba(255, 42, 109, 0.10); }
-    to   { box-shadow: 0 0 36px rgba(255, 42, 109, 0.49), 0 0 80px rgba(255, 42, 109, 0.21); }
-}
-@keyframes active-cell-pulse-green {
-    from { box-shadow: 0 0 18px rgba(0, 255, 157, 0.28), 0 0 40px rgba(0, 255, 157, 0.10); }
-    to   { box-shadow: 0 0 36px rgba(0, 255, 157, 0.49), 0 0 80px rgba(0, 255, 157, 0.21); }
-}
-@keyframes active-cell-pulse-yellow {
-    from { box-shadow: 0 0 18px rgba(255, 204, 0, 0.28), 0 0 40px rgba(255, 204, 0, 0.10); }
-    to   { box-shadow: 0 0 36px rgba(255, 204, 0, 0.49), 0 0 80px rgba(255, 204, 0, 0.21); }
-}
-@keyframes active-cell-pulse-blue {
-    from { box-shadow: 0 0 18px rgba(5, 217, 232, 0.28), 0 0 40px rgba(5, 217, 232, 0.10); }
-    to   { box-shadow: 0 0 36px rgba(5, 217, 232, 0.49), 0 0 80px rgba(5, 217, 232, 0.21); }
+.base-blue.active-turn::before {
+    border: 1px solid rgba(5, 217, 232, 0.7);
+    box-shadow:
+        0 0 20px rgba(5, 217, 232, 0.5),
+        0 0 45px rgba(5, 217, 232, 0.2);
 }
 
 /* ============================================
@@ -496,30 +505,29 @@
         0 0 16px rgba(255, 215, 0, 0.06);
 }
 
-.board-cell.center[data-row="7"][data-col="7"]::after {
-    content: '👑';
+/* Center goal crown container & icon animations */
+.crown-wrapper {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    font-size: clamp(14px, 3.2vw, 26px);
-    filter:
-        drop-shadow(0 0 8px rgba(255, 215, 0, 0.9))
-        drop-shadow(0 0 20px rgba(255, 215, 0, 0.5));
-    animation: crown-float var(--dur-crawl) ease-in-out infinite;
-    transform: translate(-50%, -50%) rotate(calc(-1 * var(--board-rotation, 0deg)));
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: rotate(calc(-1 * var(--board-rotation, 0deg)));
     transition: transform var(--dur-slow) var(--ease-bounce);
+    pointer-events: none;
     z-index: 3;
 }
 
-@keyframes crown-float {
-    0%, 100% {
-        margin-top: 0px;
-        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.7));
-    }
-    50% {
-        margin-top: -4px;
-        filter: drop-shadow(0 0 24px rgba(255, 215, 0, 1)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.5));
-    }
+.crown-icon {
+    display: inline-block;
+    font-size: clamp(14px, 3.2vw, 26px);
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.7));
+    animation: crown-float-gpu 3s ease-in-out infinite alternate;
+}
+
+@keyframes crown-float-gpu {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-4px); }
 }
 
 /* ============================================

@@ -26,6 +26,7 @@ const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver =
             for (let col = 0; col < GRID_SIZE; col++) {
                 const cellType = BOARD_LAYOUT[row][col];
                 const cellClasses = getCellClasses(cellType, row, col, activePlayer);
+                const isCenterCrown = row === 7 && col === 7;
 
                 result.push(
                     <div
@@ -37,7 +38,13 @@ const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver =
                             gridRow: row + 1,
                             gridColumn: col + 1
                         }}
-                    />
+                    >
+                        {isCenterCrown && (
+                            <div className="crown-wrapper">
+                                <span className="crown-icon">👑</span>
+                            </div>
+                        )}
+                    </div>
                 );
             }
         }
