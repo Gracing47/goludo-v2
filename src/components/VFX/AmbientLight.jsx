@@ -44,15 +44,14 @@ export const AmbientLight = ({ activePlayer }) => {
     // Spotlight CSS position for the motion.div
     const spotStyle = {
         position: 'absolute',
-        left: origin.x,
-        top:  origin.y,
+        left: 0,
+        top:  0,
         width: '70vw',
         height: '70vw',
         maxWidth: '600px',
         maxHeight: '600px',
         borderRadius: '50%',
         filter: 'blur(72px)',
-        transform: 'translate(-50%, -50%)',
         willChange: 'background, transform',
         pointerEvents: 'none',
     };
@@ -90,11 +89,12 @@ export const AmbientLight = ({ activePlayer }) => {
             <motion.div
                 initial={false}
                 animate={{
-                    left: origin.x,
-                    top:  origin.y,
+                    x: origin.x,
+                    y: origin.y,
                     background:
                         `radial-gradient(circle, ${color}30 0%, ${color}12 30%, transparent 65%)`,
                 }}
+                transformTemplate={({ x, y }) => `translate3d(calc(${x} - 50%), calc(${y} - 50%), 0)`}
                 transition={{
                     type: 'spring',
                     stiffness: 42,
@@ -106,12 +106,13 @@ export const AmbientLight = ({ activePlayer }) => {
             {/* ── Hard neon corona at the player's corner — tiny but vivid ── */}
             <motion.div
                 animate={{
-                    left: origin.x,
-                    top:  origin.y,
+                    x: origin.x,
+                    y: origin.y,
                     background:
                         `radial-gradient(circle, ${color}55 0%, ${color}20 20%, transparent 50%)`,
                     boxShadow: `0 0 80px 20px ${color}18`,
                 }}
+                transformTemplate={({ x, y }) => `translate3d(calc(${x} - 50%), calc(${y} - 50%), 0)`}
                 transition={{
                     type: 'spring',
                     stiffness: 50,
@@ -119,13 +120,14 @@ export const AmbientLight = ({ activePlayer }) => {
                 }}
                 style={{
                     position: 'absolute',
+                    left: 0,
+                    top: 0,
                     width: '28vw',
                     height: '28vw',
                     maxWidth: '220px',
                     maxHeight: '220px',
                     borderRadius: '50%',
                     filter: 'blur(28px)',
-                    transform: 'translate(-50%, -50%)',
                     willChange: 'background, transform',
                     pointerEvents: 'none',
                 }}

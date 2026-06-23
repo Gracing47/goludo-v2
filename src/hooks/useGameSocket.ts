@@ -19,7 +19,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         setSocket, updateState, setGameState, setConfig,
         setAppState, setBoardRotation, setServerMsg,
         setTurnTimer, setIsRolling, setIsMoving,
-        setGameCountdown, setShowCountdown
+        setGameCountdown, setShowCountdown, setActiveMovingToken
     } = useGameStore(useShallow((s) => ({
         setSocket: s.setSocket,
         updateState: s.updateState,
@@ -33,6 +33,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
         setIsMoving: s.setIsMoving,
         setGameCountdown: s.setGameCountdown,
         setShowCountdown: s.setShowCountdown,
+        setActiveMovingToken: s.setActiveMovingToken,
     })));
 
     const socketRef = useRef<Socket | null>(null);
@@ -156,6 +157,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                         const traversePath = path.slice(fromIdx + 1, toIdx + 1);
                         const hopDuration = 120; // Snappier sync speed (120ms instead of 150ms)
                         setIsMoving(true);
+                        setActiveMovingToken({ playerIdx: p, tokenIdx: t, isBonus: false });
 
                         // 1. Update everything EXCEPT the tokens first (or use prev tokens)
                         const partialUpdate = { ...update, tokens: currentState.tokens };
@@ -176,6 +178,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
 
                                 if (index === traversePath.length - 1) {
                                     setIsMoving(false);
+                                    setActiveMovingToken(null);
                                     soundManager.play('land');
                                     // Final sync to ensure everything is perfect
                                     updateState(update);
@@ -189,6 +192,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                             if (useGameStore.getState().isMoving) {
                                 console.warn("⚠️ Animation watchdog triggered - forcing state sync");
                                 setIsMoving(false);
+                                setActiveMovingToken(null);
                                 setIsRolling(false);
                                 updateState(update);
                             }
@@ -205,6 +209,7 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                 setIsRolling(false);
             }
             setIsMoving(false);
+            setActiveMovingToken(null);
         });
 
         // Create a local interval for the timer to avoid socket spam

@@ -86,7 +86,7 @@
     to   { transform: rotate(360deg) scale(1.0); }
 }
 
-/* ── Stars (motion.div elements rendered from JS) ───────── */
+/* ── Stars (GPU-accelerated CSS animations) ───────── */
 .star {
     position: absolute;
     top: 50%;
@@ -94,10 +94,29 @@
     border-radius: var(--radius-full);
     /* Base: white core with cyan tint; some will be pink via inline style */
     background: radial-gradient(circle, #ffffff 0%, var(--neon-cyan) 60%, transparent 100%);
-    box-shadow: 0 0 6px 2px rgba(0, 243, 255, 0.5);
+    box-shadow: 0 0 6px 2px rgba(0, 24, 255, 0.5);
     pointer-events: none;
     will-change: transform, opacity;
     z-index: 2;
+}
+
+.star-animated {
+    animation: star-travel var(--star-speed) ease-in infinite;
+    animation-delay: var(--star-delay);
+}
+
+@keyframes star-travel {
+    0% {
+        transform: translate3d(0, 0, 0) scale(0.3);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translate3d(var(--star-dest-x), var(--star-dest-y), 0) scale(6, 0.5);
+        opacity: 0;
+    }
 }
 
 /* Every 3rd star gets a pink tint via :nth-of-type — visual variety */

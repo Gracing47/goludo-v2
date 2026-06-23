@@ -1,4 +1,4 @@
-import * as contractVerifier from '../contractVerifier.js';
+import * as contractVerifier from '../services/contractVerifier.js';
 import { vi } from 'vitest';
 
 // Mock the potentially slow blockchain call to avoid timeouts during audit

@@ -1,5 +1,10 @@
 import { ethers } from 'ethers';
-import { signPayout } from '../signer.js';
+
+// Set dummy keys for testing before import
+process.env.SERVER_SIGNER_PRIVATE_KEY = process.env.SERVER_SIGNER_PRIVATE_KEY || "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+process.env.VITE_LUDOVAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS || "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+
+const { signPayout } = await import('../services/signer.js');
 
 describe('Signer Module', () => {
     const testRoomId = ethers.id("test_room_123");
@@ -7,11 +12,6 @@ describe('Signer Module', () => {
     const testAmount = ethers.parseEther("100").toString();
 
     test('should generate a valid EIP-712 signature', async () => {
-        // Provide a dummy key for testing purposes if none exist
-        if (!process.env.SERVER_SIGNER_PRIVATE_KEY) {
-            process.env.SERVER_SIGNER_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-        }
-
         const result = await signPayout(testRoomId, testWinner, testAmount);
 
         expect(result).toHaveProperty('signature');

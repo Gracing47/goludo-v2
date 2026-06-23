@@ -46,26 +46,17 @@ const WarpTransition = ({ mode = 'literal', children }: WarpTransitionProps) => 
             {/* Hyperspace star streaks */}
             <div className="star-field">
                 {stars.map(star => (
-                    <motion.div
+                    <div
                         key={star.id}
-                        className="star"
-                        animate={{
-                            scaleX: [0.3, 6, 0.1],
-                            scaleY: [1, 1, 0.5],
-                            x: [0, Math.cos(star.angle) * star.distance * 8],
-                            y: [0, Math.sin(star.angle) * star.distance * 8],
-                            opacity: [0, 0.9, 0],
-                        }}
-                        transition={{
-                            duration: star.speed,
-                            repeat: Infinity,
-                            ease: 'easeIn',
-                            delay: star.delay,
-                        }}
+                        className="star star-animated"
                         style={{
                             width: star.size,
                             height: star.size,
-                        }}
+                            '--star-speed': `${star.speed}s`,
+                            '--star-delay': `${star.delay}s`,
+                            '--star-dest-x': `${Math.cos(star.angle) * star.distance * 8}px`,
+                            '--star-dest-y': `${Math.sin(star.angle) * star.distance * 8}px`,
+                        } as React.CSSProperties}
                     />
                 ))}
             </div>

@@ -22,10 +22,6 @@ import { GameState, GameModeId, Move, TokenPosition } from '../types';
 // STATE INITIALIZATION
 // ============================================
 
-// ============================================
-// STATE INITIALIZATION
-// ============================================
-
 export function createInitialState(
     _playerCount: number = 4,
     activeColors: number[] = [0, 1, 2, 3],

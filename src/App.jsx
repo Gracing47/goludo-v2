@@ -391,7 +391,7 @@ function App() {
     }, [gameState, gameConfig, emitMove, playSound, triggerSpawn, triggerCapture, triggerShake]);
 
     // Human token click
-    const handleTokenClick = useCallback((playerIndex, tokenIndex) => {
+    const handleTokenClick = useCallback((playerIndex, tokenIndex, allTokenIndices) => {
         if (!gameState || (gameState.gamePhase !== 'SELECT_TOKEN' && gameState.gamePhase !== 'BONUS_MOVE')) return;
         if (playerIndex !== gameState.activePlayer) return;
 
@@ -399,12 +399,17 @@ function App() {
         const currentPlayer = gameConfig?.players?.[gameState.activePlayer];
         if (currentPlayer?.isAI) return;
 
-        const validMove = gameState.validMoves.find(m => m.tokenIndex === tokenIndex);
+        const indices = allTokenIndices || [tokenIndex];
+        const validMove = gameState.validMoves.find(m => indices.includes(m.tokenIndex));
         if (!validMove) return;
 
         playSound('click');
         executeMove(validMove);
-    }, [gameState, gameConfig, executeMove]);
+    }, [gameState, gameConfig, executeMove, playSound]);
+
+    const handleHoverChange = useCallback((playerIndex, tokenIndex, isHovered) => {
+        setHoveredTokenKey(isHovered ? `${playerIndex}-${tokenIndex}` : null);
+    }, []);
 
     // AI Hook
     const { aiActionInProgress } = useGameAI(handleRoll, executeMove);
@@ -640,31 +645,26 @@ function App() {
                                     !isAITurn &&
                                     isLocalPlayerTurn;
 
-                                const tokenKey = `${playerIdx}-${tokenIdx}`;
-
                                 return (
                                     <Token
-                                        key={tokenKey}
+                                        key={`${playerIdx}-${tokenIdx}`}
                                         playerIndex={playerIdx}
                                         tokenIndex={tokenIdx}
                                         tokenCount={tokenCount}
                                         color={PLAYER_COLORS[playerIdx]}
                                         row={coords.r}
                                         col={coords.c}
-                                        onClick={isHighlighted ? () => {
-                                            const move = gameState.validMoves.find(m => allTokenIndices.includes(m.tokenIndex));
-                                            if (move) handleTokenClick(playerIdx, move.tokenIndex);
-                                        } : null}
+                                        onClick={isHighlighted ? handleTokenClick : null}
                                         isHighlighted={isHighlighted}
-                                        isMoving={isMoving && isHighlighted}
+                                        isMoving={activeMovingToken?.playerIdx === playerIdx && activeMovingToken?.tokenIdx === tokenIdx}
+                                        isAnyTokenMoving={isMoving}
                                         inYard={inYard}
                                         stackIndex={stackIndex}
                                         stackSize={stackSize}
                                         rotation={-boardRotation}
                                         isBonusMove={activeMovingToken?.tokenIdx === tokenIdx && activeMovingToken?.playerIdx === playerIdx && activeMovingToken?.isBonus}
-                                        onHoverChange={isHighlighted ? (isHovered) => {
-                                            setHoveredTokenKey(isHovered ? tokenKey : null);
-                                        } : undefined}
+                                        onHoverChange={isHighlighted ? handleHoverChange : undefined}
+                                        allTokenIndices={allTokenIndices}
                                     />
                                 );
                             })}

@@ -17,7 +17,9 @@ const Token = ({
     stackSize = 1,
     rotation = 0,
     isBonusMove = false,
-    onHoverChange
+    onHoverChange,
+    isAnyTokenMoving = false,
+    allTokenIndices = [tokenIndex]
 }) => {
     // Grid-based positioning for stacked tokens (Different Players on same cell)
     // Offsets are % of the cell, tokens shrink to fit without overlap
@@ -112,15 +114,15 @@ const Token = ({
         // Enter or Space to select token
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onClick?.();
+            onClick?.(playerIndex, tokenIndex, allTokenIndices);
         }
     };
 
     // Telegraphing: notify parent when hover/focus state changes
-    const handleHoverStart = () => { onHoverChange?.(true); };
-    const handleHoverEnd   = () => { onHoverChange?.(false); };
-    const handleFocus      = () => { onHoverChange?.(true); };
-    const handleBlur       = () => { onHoverChange?.(false); };
+    const handleHoverStart = () => { onHoverChange?.(playerIndex, tokenIndex, true); };
+    const handleHoverEnd   = () => { onHoverChange?.(playerIndex, tokenIndex, false); };
+    const handleFocus      = () => { onHoverChange?.(playerIndex, tokenIndex, true); };
+    const handleBlur       = () => { onHoverChange?.(playerIndex, tokenIndex, false); };
 
     const classes = [
         'token',
@@ -141,8 +143,8 @@ const Token = ({
                 y: offset.y,
                 scale: offset.scale
             }}
-            layout
-            layoutId={`token-${playerIndex}-${tokenIndex}`}
+            layout={isAnyTokenMoving ? (isMoving ? "position" : false) : "position"}
+            layoutId={isAnyTokenMoving && !isMoving ? undefined : `token-${playerIndex}-${tokenIndex}`}
             style={{
                 gridRow: row + 1,
                 gridColumn: col + 1,
@@ -165,7 +167,7 @@ const Token = ({
                 zIndex: 200,
                 transition: { type: "spring", stiffness: 300 }
             } : {}}
-            onClick={onClick}
+            onClick={onClick ? () => onClick(playerIndex, tokenIndex, allTokenIndices) : undefined}
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}

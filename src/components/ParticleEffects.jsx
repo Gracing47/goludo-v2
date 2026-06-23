@@ -61,6 +61,7 @@ function generateExplosionParticles(count, color) {
             y: Math.sin(angle) * velocity,
             size,
             color,
+            rotate: Math.random() * 360,
             delay:    Math.random() * 0.07,
             duration: 0.36 + Math.random() * 0.30
         });
@@ -82,6 +83,7 @@ function generateHomeParticles(count, color) {
             y: Math.sin(angle) * velocity,
             size,
             color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+            rotate: Math.random() * 540,
             delay:    Math.random() * 0.12,
             duration: 0.50 + Math.random() * 0.40
         });
@@ -96,6 +98,7 @@ function generateConfettiParticles(count) {
         particles.push({
             id: i,
             x:        (Math.random() - 0.5) * 340,
+            destX:    (Math.random() - 0.5) * 140,
             y:        -200 - Math.random() * 200,
             rotation: Math.random() * 720,
             size:     6 + Math.random() * 9,
@@ -181,7 +184,7 @@ export function CaptureExplosion({ position, color, onComplete }) {
                         key={p.id}
                         className="explosion-particle"
                         initial={{ x: 0,    y: 0,    scale: 1, opacity: 1 }}
-                        animate={{ x: p.x,  y: p.y,  scale: 0, opacity: 0, rotate: Math.random() * 360 }}
+                        animate={{ x: p.x,  y: p.y,  scale: 0, opacity: 0, rotate: p.rotate }}
                         transition={{
                             duration: p.duration,
                             delay:    p.delay,
@@ -265,7 +268,7 @@ export function HomeArrivalBurst({ position, color, onComplete }) {
                         key={p.id}
                         className="explosion-particle"
                         initial={{ x: 0,   y: 0,   scale: 1, opacity: 1 }}
-                        animate={{ x: p.x, y: p.y, scale: 0, opacity: 0, rotate: Math.random() * 540 }}
+                        animate={{ x: p.x, y: p.y, scale: 0, opacity: 0, rotate: p.rotate }}
                         transition={{
                             duration: p.duration,
                             delay:    p.delay,
@@ -314,7 +317,7 @@ export function VictoryConfetti({ active, winnerColor }) {
                         className="confetti-particle"
                         initial={{ x: p.x, y: p.y, rotate: 0, opacity: 1 }}
                         animate={{
-                            x:       p.x + (Math.random() - 0.5) * 140,
+                            x:       p.x + p.destX,
                             y:       520,
                             rotate:  p.rotation,
                             opacity: [1, 1, 0]
@@ -390,7 +393,8 @@ export function SpawnSparkle({ position, color, onComplete }) {
                     id:    i,
                     x:     Math.cos(angle) * 36,
                     y:     Math.sin(angle) * 36,
-                    color: particleColor
+                    color: particleColor,
+                    rotate: Math.random() * 180
                 });
             }
             setSparkles(newSparkles);
@@ -425,7 +429,7 @@ export function SpawnSparkle({ position, color, onComplete }) {
                     key={s.id}
                     className="sparkle-particle"
                     initial={{ x: 0,   y: 0,   scale: 0,         opacity: 1 }}
-                    animate={{ x: s.x, y: s.y, scale: [0, 1.8, 0], opacity: [1, 1, 0], rotate: Math.random() * 180 }}
+                    animate={{ x: s.x, y: s.y, scale: [0, 1.8, 0], opacity: [1, 1, 0], rotate: s.rotate }}
                     transition={{ duration: 0.44, ease: 'easeOut' }}
                     style={{ backgroundColor: s.color }}
                 />
