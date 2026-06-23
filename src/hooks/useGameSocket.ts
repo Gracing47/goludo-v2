@@ -37,6 +37,9 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
     })));
 
     const socketRef = useRef<Socket | null>(null);
+    // Tracks the latest dice_rolled animation timeout so a rapid second event
+    // can clear the previous one before scheduling a new clearance.
+    const diceRollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // 🔗 Socket Initialization & Event Handlers
     const connect = useCallback(() => {
@@ -113,7 +116,12 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             updateState({ diceValue: value });
             setIsRolling(true);
             if (value !== 6) setServerMsg(null);
-            setTimeout(() => setIsRolling(false), 700);
+            // Guard: clear any previous pending clearance so only the latest fires.
+            if (diceRollingTimerRef.current) clearTimeout(diceRollingTimerRef.current);
+            diceRollingTimerRef.current = setTimeout(() => {
+                setIsRolling(false);
+                diceRollingTimerRef.current = null;
+            }, 700);
         });
 
         socket.on('state_update', (update) => {
@@ -351,6 +359,10 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             socket.disconnect();
             socketRef.current = null;
             setSocket(null);
+            if (diceRollingTimerRef.current) {
+                clearTimeout(diceRollingTimerRef.current);
+                diceRollingTimerRef.current = null;
+            }
         };
     }, [roomId, account?.address, setSocket, updateState, setIsRolling, setServerMsg, setIsMoving, setTurnTimer, setConfig, setGameState, setAppState, setBoardRotation]);
 

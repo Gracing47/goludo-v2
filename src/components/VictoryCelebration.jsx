@@ -4,7 +4,7 @@
  * Currency: NATIVE_CURRENCY_SYMBOL / formatStake from ../config/currency
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VictoryConfetti } from './ParticleEffects';
 import { useGameVFX } from '../hooks/useGameVFX';
@@ -70,12 +70,19 @@ export default function VictoryCelebration({
     const [showContent, setShowContent] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const { playSound } = useGameVFX();
+    // Guard: play sound exactly once per unique winner to avoid double-play on re-render
+    const hasPlayedRef = useRef(null);
 
     const winnerData = PLAYER_COLORS[winner] || PLAYER_COLORS[0];
 
     useEffect(() => {
         if (winner !== null && winner !== undefined) {
-            playSound(isWinner ? 'win' : 'lose');
+            // Only play if this winner identity hasn't been sounded yet
+            const soundKey = `${winner}-${isWinner}`;
+            if (hasPlayedRef.current !== soundKey) {
+                hasPlayedRef.current = soundKey;
+                playSound(isWinner ? 'win' : 'lose');
+            }
 
             // Staggered reveal — spring overshoot feels earned
             setTimeout(() => setShowContent(true), 200);
@@ -83,7 +90,8 @@ export default function VictoryCelebration({
                 setTimeout(() => setShowConfetti(true), 500);
             }
         }
-    }, [winner, isWinner]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [winner, isWinner, playSound]);
 
     if (winner === null || winner === undefined) return null;
 
@@ -214,10 +222,22 @@ export default function VictoryCelebration({
                                                     key={row.idx}
                                                     className={[
                                                         'standings-row',
-                                                        isTopRow ? 'standings-row--winner' : '',
+                                                        isTopRow ? 'standings-row--winner' : 'standings-row--receded',
                                                     ].filter(Boolean).join(' ')}
                                                 >
-                                                    <span className="standings-rank">{rank + 1}</span>
+                                                    <motion.span
+                                                        className="standings-rank"
+                                                        {...(isTopRow ? {
+                                                            initial:    { scale: 0.6, opacity: 0 },
+                                                            animate:    { scale: 1,   opacity: 1 },
+                                                            transition: {
+                                                                type:      'spring',
+                                                                stiffness: 400,
+                                                                damping:   14,
+                                                                delay:     0.82
+                                                            }
+                                                        } : {})}
+                                                    >{rank + 1}</motion.span>
                                                     <span
                                                         className="standings-swatch"
                                                         style={{ background: row.color }}

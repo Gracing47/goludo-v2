@@ -9,9 +9,10 @@
 | [INSIDE-TICKET-AAA-UI-ENHANCEMENT.md](./INSIDE-TICKET-AAA-UI-ENHANCEMENT.md) | „DEEP SPACE NEON" UI-Overhaul · `UI-*` IDs | ✅ Umgesetzt |
 | [INSIDE-TICKET-PRODUCTION-READINESS.md](./INSIDE-TICKET-PRODUCTION-READINESS.md) | Fund-Safety / Audio / Currency / Lazy-Load · `PROD-*` IDs | ✅ Umgesetzt (P0-Fund-Safety getestet) |
 | [INSIDE-TICKET-GAMEPLAY-SPRINT.md](./INSIDE-TICKET-GAMEPLAY-SPRINT.md) | Gameplay-UX (Grev) · `GP-*` IDs | ✅ Umgesetzt |
+| [INSIDE-TICKET-LAST-AUDIT.md](./INSIDE-TICKET-LAST-AUDIT.md) | G-002: Last Audit (Daniel) + Final UI-Enhancement (Iris) · `LASTAUDIT-*` IDs | ✅ Umgesetzt |
 
 ## Erledigt & verifiziert (Stand 2026-06-23)
-`tsc` 0 Errors · `vite build` grün · **19/19 Hardhat-Contract-Tests** · 0 Console-Errors (frischer Mount) · Board intakt (225 Cells) · 11 Commits auf `master`.
+`tsc` 0 Errors · `vite build` grün · **11/11 Vitest** · 0 Console-Errors (frischer Mount) · Board intakt (16 Tokens, a11y-Labels) · G-002 Last-Audit + Final-UI-Pass abgeschlossen (15 Dateien, +599/−149).
 
 ## Offen (kein Launch-Blocker — Roadmap)
 - 🔴 **AAA-C3 Scale** (in-memory State/Timer) — vor Mainnet-Real-Money.

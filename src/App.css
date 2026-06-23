@@ -383,9 +383,9 @@ body {
     position: absolute;
     inset: 0;
     z-index: 110;
-    background: rgba(6, 6, 15, 0.92);
-    backdrop-filter: blur(28px) saturate(1.4);
-    -webkit-backdrop-filter: blur(28px) saturate(1.4);
+    /* PERF: opaque-enough solid bg replaces backdrop-filter blur — the overlay
+       covers the entire board so nothing behind it is visible anyway. */
+    background: rgba(6, 6, 15, 0.96);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -429,10 +429,10 @@ body {
     height: 36px;
     min-width: auto;
     pointer-events: auto;
-    /* Inactive: recede into the cosmos */
-    background: rgba(8, 8, 20, 0.55);
-    backdrop-filter: blur(16px) saturate(1.2);
-    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    /* Inactive: recede into the cosmos.
+       PERF: solid bg instead of backdrop-filter — pods are always visible and
+       a per-pod blur caused a compositor layer per pod (up to 4) on every frame. */
+    background: rgba(6, 6, 18, 0.82);
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
     transition:
@@ -606,9 +606,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(6, 6, 15, 0.92);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    /* PERF: solid bg — timer animates every second, backdrop-filter caused
+       full compositor invalidation on each tick. */
+    background: rgba(6, 6, 15, 0.96);
     border-radius: 50%;
     border: 1.5px solid rgba(0, 243, 255, 0.2);
     box-shadow:
@@ -692,8 +692,8 @@ body {
     letter-spacing: var(--tracking-widest, 2px);
     text-transform: uppercase;
     z-index: var(--z-hud, 10);
-    backdrop-filter: blur(16px) saturate(1.6);
-    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    /* PERF: solid chip — always visible in-game, backdrop-filter recomposited
+       the board behind it every move frame. */
     transition: box-shadow var(--dur-fast, 180ms) ease;
     min-height: 28px;
     display: flex;
@@ -701,7 +701,7 @@ body {
 }
 
 .mode-badge.rapid-mode {
-    background: var(--tint-pink-8, rgba(255, 0, 122, 0.08));
+    background: rgba(30, 6, 18, 0.88);
     border: 1px solid var(--border-pink, rgba(255, 0, 122, 0.35));
     color: var(--neon-pink, #ff007a);
     box-shadow:
@@ -710,7 +710,7 @@ body {
 }
 
 .mode-badge.classic-mode {
-    background: var(--tint-cyan-8, rgba(0, 243, 255, 0.08));
+    background: rgba(6, 18, 30, 0.88);
     border: 1px solid var(--border-cyan, rgba(0, 243, 255, 0.3));
     color: var(--neon-cyan, #00f3ff);
     box-shadow:
@@ -730,9 +730,9 @@ body {
 }
 
 .menu-btn-floating {
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    /* PERF: solid bg — menu button is always visible, backdrop-filter
+       adds a compositor layer for every in-game frame. */
+    background: rgba(10, 10, 22, 0.80);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: rgba(255, 255, 255, 0.6);
     border-radius: 50%;

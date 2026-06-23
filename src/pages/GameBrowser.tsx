@@ -119,12 +119,18 @@ const GameBrowser: React.FC = () => {
                             className={`game-tile ${game.available ? 'available' : 'locked'}`}
                             style={{ '--tile-float-delay': FLOAT_DELAYS[i % FLOAT_DELAYS.length] } as React.CSSProperties}
                             onClick={() => handleGameClick(game)}
+                            /* a11y: locked tiles are non-interactive for AT */
+                            role={game.available ? 'button' : undefined}
+                            tabIndex={game.available ? 0 : -1}
+                            aria-disabled={!game.available ? true : undefined}
+                            aria-label={!game.available ? `${game.name} — Coming soon` : undefined}
+                            onKeyDown={game.available ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleGameClick(game); } } : undefined}
                         >
                             {/* Grain texture layer */}
                             <div className="tile-grain" aria-hidden="true" />
 
                             {!game.available && (
-                                <div className="tile-lock" aria-label="Coming soon">🔒</div>
+                                <div className="tile-lock" aria-hidden="true">🔒</div>
                             )}
 
                             <div className="tile-icon" aria-hidden="true">
@@ -144,7 +150,11 @@ const GameBrowser: React.FC = () => {
                             </div>
 
                             {game.available && (
-                                <button className="btn-play" onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}>
+                                <button
+                                    className="btn-play"
+                                    onClick={(e) => { e.stopPropagation(); handleGameClick(game); }}
+                                    aria-label={`Play ${game.name}`}
+                                >
                                     Play Now
                                 </button>
                             )}

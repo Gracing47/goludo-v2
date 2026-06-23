@@ -48,7 +48,7 @@
     perspective: 800px;
     isolation: isolate;
 
-    /* ambient float */
+    /* ambient float — suppressed for reduced-motion (see @media below) */
     animation: dice-float var(--dur-crawl) var(--ease-in-out) infinite;
     will-change: transform;
 }
@@ -467,4 +467,29 @@
     }
 
     .dice-bonus-overlay { font-size: 18px; }
+}
+
+/* ============================================
+   REDUCED MOTION
+   Gate infinite ambient animations — only the
+   disabled state already kills the float, but
+   prefers-reduced-motion should kill it globally.
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    /* Kill the ambient float entirely */
+    .dice-button {
+        animation: none !important;
+    }
+    /* Also suppress the ready beckon and the settle flash */
+    .dice-button.ready {
+        animation: none !important;
+    }
+    .dice:not(.rolling) {
+        animation: none !important;
+    }
+    .dice-hint {
+        animation: none !important;
+        opacity: 0.75;
+    }
 }

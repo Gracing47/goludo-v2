@@ -287,10 +287,14 @@
 .token-impact-wave {
     position: absolute;
     inset: -50%;
+    /* PERF: soft look via box-shadow instead of filter:blur — blur on a
+       Framer-Motion animated element forces rasterisation every frame. */
     border: 2px solid var(--token-glow, var(--neon-cyan));
     border-radius: 50%;
     pointer-events: none;
-    filter: blur(2px);
+    box-shadow:
+        0 0 6px var(--token-glow, var(--neon-cyan)),
+        inset 0 0 4px color-mix(in srgb, var(--token-glow, var(--neon-cyan)) 40%, transparent);
 }
 
 .token.impacted .token-inner {

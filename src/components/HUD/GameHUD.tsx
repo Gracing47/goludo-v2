@@ -114,6 +114,9 @@ const GameHUD: React.FC<GameHUDProps> = ({
     // ---- Toast queue state ----
     const [toasts, setToasts] = React.useState<Toast[]>([]);
 
+    // Separate assertive announcer text — SR users get capture events immediately.
+    const [assertiveAnnounce, setAssertiveAnnounce] = React.useState('');
+
     // Refs used for diffing — we never want stale closures in effects
     const prevTokensRef  = React.useRef<GameState['tokens'] | null>(null);
     const prevDiceRef    = React.useRef<number | null>(null);
@@ -121,6 +124,13 @@ const GameHUD: React.FC<GameHUDProps> = ({
     // Helper: push a new toast, schedule its exit + removal
     const pushToast = React.useCallback((kind: ToastKind, text: string) => {
         const id = ++_toastCounter;
+
+        // Capture events are time-critical — announce assertively for SR users.
+        if (kind === 'capture') {
+            setAssertiveAnnounce(text);
+            // Clear after a tick so repeated captures re-trigger the announcement.
+            setTimeout(() => setAssertiveAnnounce(''), 100);
+        }
 
         setToasts(prev => {
             // Cap queue at 3 visible at once — drop the oldest
@@ -258,6 +268,16 @@ const GameHUD: React.FC<GameHUDProps> = ({
                     <div className="disconnect-msg">Connection Lost — Reconnecting…</div>
                 </div>
             )}
+
+            {/* Hidden assertive live region — fires immediately for captures */}
+            <span
+                role="alert"
+                aria-live="assertive"
+                aria-atomic="true"
+                style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}
+            >
+                {assertiveAnnounce}
+            </span>
 
             {/* TOAST REGION */}
             {toasts.length > 0 && (

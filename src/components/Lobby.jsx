@@ -361,7 +361,8 @@ const Lobby = ({ onStartGame }) => {
 
                         <button
                             className={`menu-button web3${!account ? ' disabled' : ''}`}
-                            onClick={() => handleModeSelect('web3')}
+                            aria-disabled={!account}
+                            onClick={(e) => { if (!account) { e.preventDefault(); return; } handleModeSelect('web3'); }}
                         >
                             <span className="menu-icon">
                                 <GlobeIcon />
@@ -499,12 +500,14 @@ const Lobby = ({ onStartGame }) => {
                         {gameMode === 'web3' && (
                             <div className="setup-section">
                                 <label className="setup-label">Entry Stake ({balanceSymbol})</label>
-                                <div className={`stake-selector ${selectedRoom ? 'disabled' : ''}`}>
+                                <div className={`stake-selector ${selectedRoom ? 'disabled' : ''}`} aria-disabled={!!selectedRoom}>
                                     {["0.1", "1", "10", "25"].map(amount => (
                                         <button
                                             key={amount}
                                             className={`count-btn ${betAmount === amount ? 'active' : ''}`}
                                             onClick={() => setBetAmount(amount)}
+                                            disabled={!!selectedRoom}
+                                            tabIndex={selectedRoom ? -1 : 0}
                                         >
                                             {amount}
                                         </button>
@@ -547,12 +550,14 @@ const Lobby = ({ onStartGame }) => {
                         {/* Player Count */}
                         <div className="setup-section">
                             <label className="setup-label">Number of Players</label>
-                            <div className={`player-count-buttons ${selectedRoom ? 'disabled' : ''}`}>
+                            <div className={`player-count-buttons ${selectedRoom ? 'disabled' : ''}`} aria-disabled={!!selectedRoom}>
                                 {[2, 3, 4].map(count => (
                                     <button
                                         key={count}
                                         className={`count-btn ${playerCount === count ? 'active' : ''}`}
                                         onClick={() => handlePlayerCountChange(count)}
+                                        disabled={!!selectedRoom}
+                                        tabIndex={selectedRoom ? -1 : 0}
                                     >
                                         {count}
                                     </button>

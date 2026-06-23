@@ -9,12 +9,14 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    /* Deep space backdrop */
+    /* Deep space backdrop.
+       PERF: The countdown overlay covers the full viewport so nothing behind it
+       needs to show through — a near-opaque solid gradient is visually identical
+       and avoids the full-screen blur compositor pass. */
     background:
         radial-gradient(ellipse 70% 60% at 50% 50%, rgba(0, 243, 255, 0.05) 0%, transparent 70%),
-        rgba(6, 6, 15, 0.92);
-    backdrop-filter: blur(32px) saturate(1.6);
-    -webkit-backdrop-filter: blur(32px) saturate(1.6);
+        linear-gradient(180deg, #06060f 0%, #0b0b1e 100%);
+    /* No backdrop-filter — full-screen blur at 32px is extremely expensive. */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -63,10 +65,11 @@
     position: relative;
     width: min(380px, 92vw);
     padding: 44px 36px 40px;
-    /* Iris glass panel */
-    background: var(--glass-bg, rgba(255, 255, 255, 0.03));
-    backdrop-filter: var(--glass-blur, blur(24px)) var(--glass-saturation, saturate(1.6));
-    -webkit-backdrop-filter: var(--glass-blur, blur(24px)) var(--glass-saturation, saturate(1.6));
+    /* PERF: solid dark panel — backdrop-filter over an already-opaque overlay
+       adds compositor cost for zero visual benefit (nothing to blur behind it). */
+    background:
+        radial-gradient(ellipse at 40% 20%, rgba(0, 243, 255, 0.04) 0%, transparent 55%),
+        rgba(10, 11, 26, 0.96);
     border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.07));
     border-radius: 36px;
     text-align: center;

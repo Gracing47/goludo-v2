@@ -20,15 +20,15 @@ const PLAYER_COLORS = {
     blue:   '#05d9e8'
 };
 
-// Confetti palette — vivid neon mix, no purple
+// Confetti palette — vivid neon mix mapped to design tokens, no purple
 const CONFETTI_COLORS = [
-    '#ff2a6d', // neon red
-    '#00ff9d', // neon green
-    '#ffcc00', // neon gold
-    '#05d9e8', // neon cyan
-    '#3a86ff', // neon blue
-    '#ff007a', // neon pink
-    '#ffd700'  // gold
+    '#ff2a6d', // --player-red   / --color-error
+    '#00ff9d', // --player-green / --color-success
+    '#ffcc00', // --player-yellow / --color-warning
+    '#05d9e8', // --player-blue  / --color-info
+    '#3a86ff', // --neon-blue
+    '#ff007a', // --neon-pink
+    '#ffd700'  // --neon-gold
 ];
 
 // ---------------------------------------------------------------------------
@@ -91,10 +91,12 @@ function generateHomeParticles(count, color) {
     return particles;
 }
 
-function generateConfettiParticles(count) {
+function generateConfettiParticles(count, winnerHex) {
     const cap = Math.min(count, MAX_CONFETTI);
     const particles = [];
     for (let i = 0; i < cap; i++) {
+        // Every 3rd particle uses the winner's neon color for cohesion
+        const useWinnerColor = winnerHex && i % 3 === 0;
         particles.push({
             id: i,
             x:        (Math.random() - 0.5) * 340,
@@ -102,7 +104,9 @@ function generateConfettiParticles(count) {
             y:        -200 - Math.random() * 200,
             rotation: Math.random() * 720,
             size:     6 + Math.random() * 9,
-            color:    CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+            color:    useWinnerColor
+                ? winnerHex
+                : CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
             delay:    Math.random() * 0.60,
             duration: 2.2 + Math.random() * 1.3
         });
@@ -295,18 +299,18 @@ export function VictoryConfetti({ active, winnerColor }) {
     const [particles, setParticles] = useState([]);
     const reduced = prefersReducedMotion();
 
+    const glowColor = PLAYER_COLORS[winnerColor] || '#00f3ff';
+
     useEffect(() => {
         if (active && !reduced) {
-            setParticles(generateConfettiParticles(MAX_CONFETTI));
+            setParticles(generateConfettiParticles(MAX_CONFETTI, glowColor));
         } else {
             setParticles([]);
         }
-    }, [active, reduced]);
+    }, [active, reduced, glowColor]);
 
     if (!active) return null;
     if (reduced) return null;
-
-    const glowColor = PLAYER_COLORS[winnerColor] || '#00f3ff';
 
     return (
         <div className="confetti-container">
@@ -332,7 +336,7 @@ export function VictoryConfetti({ active, winnerColor }) {
                             height:       p.size * 1.7,
                             backgroundColor: p.color,
                             borderRadius: '2px',
-                            boxShadow:    `0 0 8px ${p.color}99`
+                            boxShadow:    `0 0 ${p.size * 1.5}px ${p.color}cc, 0 0 ${p.size * 3}px ${p.color}55`
                         }}
                     />
                 ))}

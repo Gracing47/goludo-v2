@@ -162,6 +162,28 @@ function App() {
 
     // Moving token path state is now in useGameStore: activeMovingToken, setActiveMovingToken
 
+    // Tracks pending animation setTimeout IDs for the current move so they can be
+    // cancelled if a new move for the same token starts or the component unmounts.
+    const moveTimeoutIdsRef = useRef([]);
+
+    // Cancel all pending move timeouts (called before starting a new move)
+    const clearMoveTimeouts = useCallback(() => {
+        for (const id of moveTimeoutIdsRef.current) clearTimeout(id);
+        moveTimeoutIdsRef.current = [];
+    }, []);
+
+    // Cleanup on unmount
+    useEffect(() => () => clearMoveTimeouts(), [clearMoveTimeouts]);
+
+    // PERF: Pre-compute the set of valid token indices so the per-token isHighlighted
+    // check is O(1) instead of O(validMoves.length) on every render.
+    const validMoveTokenSet = useMemo(() => {
+        if (!gameState?.validMoves) return new Set();
+        const s = new Set();
+        for (const m of gameState.validMoves) s.add(m.tokenIndex);
+        return s;
+    }, [gameState?.validMoves]);
+
     // Effect: Haptic feedback on rolling a 6
     useEffect(() => {
         if (gameState?.diceValue === 6 && !isRolling) {
@@ -329,12 +351,14 @@ function App() {
         }
 
         // 🎬 START ANIMATION TRACKING
+        // Cancel any still-running animation timers for a previous move
+        clearMoveTimeouts();
         setIsMoving(true);
         setActiveMovingToken({ playerIdx, tokenIdx, isBonus });
 
         // 🎬 STEP-BY-STEP ANIMATION LOOP
         path.forEach((pos, index) => {
-            setTimeout(() => {
+            const tid = setTimeout(() => {
                 setGameState(prev => {
                     const newTokens = prev.tokens.map(arr => [...arr]);
                     newTokens[playerIdx][tokenIdx] = pos;
@@ -342,10 +366,11 @@ function App() {
                     return { ...prev, tokens: newTokens };
                 });
             }, index * hopDuration);
+            moveTimeoutIdsRef.current.push(tid);
         });
 
         // 🏁 FINAL COMPLETION
-        setTimeout(() => {
+        const finalTid = setTimeout(() => {
             if (isWeb3) {
                 // Emit to server and let state_update handle the logic
                 emitMove(tokenIdx);
@@ -388,7 +413,8 @@ function App() {
                 }
             }
         }, path.length * hopDuration + 100);
-    }, [gameState, gameConfig, emitMove, playSound, triggerSpawn, triggerCapture, triggerShake]);
+        moveTimeoutIdsRef.current.push(finalTid);
+    }, [gameState, gameConfig, emitMove, playSound, triggerSpawn, triggerCapture, triggerShake, clearMoveTimeouts]);
 
     // Human token click
     const handleTokenClick = useCallback((playerIndex, tokenIndex, allTokenIndices) => {
@@ -636,9 +662,8 @@ function App() {
                             </>}
                         >
                             {tokensWithCoords.map(({ playerIdx, tokenIdx, tokenCount, coords, inYard, stackIndex, stackSize, allTokenIndices }) => {
-                                const isValid = allTokenIndices.some(idx =>
-                                    gameState.validMoves?.some(m => m.tokenIndex === idx)
-                                );
+                                // O(1) lookup via pre-computed Set (see validMoveTokenSet memo above)
+                                const isValid = allTokenIndices.some(idx => validMoveTokenSet.has(idx));
                                 const isHighlighted = isValid &&
                                     playerIdx === gameState.activePlayer &&
                                     (gameState.gamePhase === 'SELECT_TOKEN' || gameState.gamePhase === 'BONUS_MOVE') &&
