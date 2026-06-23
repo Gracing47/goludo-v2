@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePerfTier } from '../../hooks/usePerfTier';
 
 // ── IRIS palette — matches token vars but resolved for inline styles ──
 const PLAYER_COLORS = [
@@ -35,6 +36,11 @@ const ORIGINS = [
  * background & transform transitions via inline CSS vars + transition property.
  */
 export const AmbientLight = ({ activePlayer }) => {
+    const perfTier = usePerfTier();
+    // Large always-composited blur layers are the #1 cause of in-game jank on
+    // mobile / integrated GPUs — skip the whole ambient underlay on low tier.
+    if (perfTier === 'low') return null;
+
     const idx    = typeof activePlayer === 'number' ? activePlayer : 0;
     const color  = PLAYER_COLORS[idx]  ?? 'transparent';
     const bloom  = BLOOM_COLORS[idx]   ?? 'rgba(0,243,255,0.12)';
@@ -81,8 +87,8 @@ export const AmbientLight = ({ activePlayer }) => {
                     maxWidth: '600px',
                     maxHeight: '600px',
                     borderRadius: '50%',
-                    filter: 'blur(72px)',
-                    willChange: 'background, transform',
+                    filter: 'blur(44px)',
+                    willChange: 'transform',
                     pointerEvents: 'none',
                     background: `radial-gradient(circle, ${color}22 0%, ${color}0d 30%, transparent 65%)`,
                     transform: `translate3d(calc(${origin.x} - 50%), calc(${origin.y} - 50%), 0)`,
@@ -101,11 +107,10 @@ export const AmbientLight = ({ activePlayer }) => {
                     maxWidth: '220px',
                     maxHeight: '220px',
                     borderRadius: '50%',
-                    filter: 'blur(28px)',
-                    willChange: 'background, transform',
+                    filter: 'blur(18px)',
+                    willChange: 'transform',
                     pointerEvents: 'none',
                     background: `radial-gradient(circle, ${color}3c 0%, ${color}16 20%, transparent 50%)`,
-                    boxShadow: `0 0 80px 20px ${color}11`,
                     transform: `translate3d(calc(${origin.x} - 50%), calc(${origin.y} - 50%), 0)`,
                     transition: TRANSITION,
                 }}

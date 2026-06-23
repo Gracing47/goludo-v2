@@ -43,7 +43,7 @@
     height: 180px;
     border-radius: 50%;
     background: var(--blob-color, #00f3ff);
-    filter: blur(80px);
+    filter: blur(44px);
     opacity: 0.18;
     transform:
         rotate(var(--blob-angle, 0deg))
