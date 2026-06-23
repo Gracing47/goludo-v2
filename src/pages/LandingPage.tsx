@@ -182,7 +182,7 @@ const LandingPage: React.FC = () => {
 
             {/* ── Fixed Deep-Space Background ── */}
             <div className="stars-bg" aria-hidden="true">
-                {[...Array(60)].map((_, i) => (
+                {[...Array(24)].map((_, i) => (
                     <div
                         key={i}
                         className="star"

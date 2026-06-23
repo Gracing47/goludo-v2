@@ -84,8 +84,11 @@ export default defineConfig({
                         './src/engine/constants'
                     ],
 
-                    // Web3 & Socket - ~200KB
-                    'web3-vendor': ['ethers', 'thirdweb'],
+                    // Web3 is intentionally NOT force-chunked. thirdweb is heavily
+                    // dynamic-imported (ConnectButton, wallets, contract calls all lazy),
+                    // so letting Rollup split it naturally keeps the heavy SDK OUT of the
+                    // landing boot. Force-grouping it as 'web3-vendor' caused a hoisted
+                    // shared helper to drag the whole 522KB chunk into the entry preload.
                     'socket-vendor': ['socket.io-client'],
 
                     // Animations - ~80KB

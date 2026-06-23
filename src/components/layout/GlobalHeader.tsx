@@ -1,39 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../config/routes';
-import { ConnectButton } from 'thirdweb/react';
-import { client } from '../../config/web3';
 import './GlobalHeader.css';
 
-import { inAppWallet, createWallet, type Wallet } from 'thirdweb/wallets';
-import { coston2 } from '../../config/web3';
-
-const wallets = [
-    createWallet("io.metamask"),
-    inAppWallet({
-        auth: {
-            options: [
-                "google",
-                "apple",
-                "facebook",
-                "email"
-            ],
-        },
-    }),
-    createWallet("com.coinbase.wallet"),
-    createWallet("me.rainbow"),
-    createWallet("com.trustwallet.app"),
-];
+// PROD-3 perf: the thirdweb wallet UI is lazy-loaded and ONLY mounted on
+// in-app routes. The landing page shows a lightweight button instead, so the
+// homepage never pulls the heavy thirdweb SDK (wallets/contracts/ethers) into
+// its boot bundle — fixing the "slow internet" first-load feel.
+const WalletConnect = lazy(() => import('./WalletConnect'));
 
 const GlobalHeader: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-        };
-        window.addEventListener('scroll', handleScroll);
+        const handleScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -60,20 +43,27 @@ const GlobalHeader: React.FC = () => {
 
                 <div className="header-right">
                     <div className="wallet-section">
-                        {/* Thirdweb Connect Button with custom Styling via CSS variables */}
-                        <ConnectButton
-                            client={client}
-                            wallets={wallets as Wallet[]}
-                            accountAbstraction={{
-                                chain: coston2,
-                                sponsorGas: true
-                            }}
-                            theme={"dark"}
-                            connectButton={{
-                                label: "Connect",
-                                className: "aaa-connect-button"
-                            }}
-                        />
+                        {isLanding ? (
+                            // Landing: lightweight CTA — no thirdweb on the homepage.
+                            <button
+                                type="button"
+                                className="aaa-connect-button"
+                                onClick={() => navigate(ROUTES.LUDO_LOBBY)}
+                            >
+                                Launch App
+                            </button>
+                        ) : (
+                            // In-app: lazy-load the real wallet connect (thirdweb).
+                            <Suspense
+                                fallback={
+                                    <button type="button" className="aaa-connect-button" disabled>
+                                        Connect
+                                    </button>
+                                }
+                            >
+                                <WalletConnect />
+                            </Suspense>
+                        )}
                     </div>
                 </div>
             </div>

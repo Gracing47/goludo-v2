@@ -83,7 +83,6 @@
     width: 4px;
     height: 4px;
     background: rgba(255, 215, 0, 0.5);
-    filter: blur(0.5px);
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -115,7 +114,9 @@
 .bg-orb {
     position: absolute;
     border-radius: 50%;
-    filter: blur(90px);
+    /* PERF: the radial-gradient fill is already soft-edged; the previous
+       filter: blur(90px) on 4 continuously-animated orbs was the #1 homepage
+       jank source (90px gaussian re-rasterized every frame). Removed. */
     will-change: transform;
     animation: orb-float 12s var(--ease-in-out) infinite;
 }
@@ -475,8 +476,8 @@
     z-index: 1;
     padding: var(--space-16) 24px;
     background: rgba(0, 0, 0, 0.30);
-    backdrop-filter: blur(32px);
-    -webkit-backdrop-filter: blur(32px);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border-top:    1px solid var(--border-white-lo);
     border-bottom: 1px solid var(--border-white-lo);
 }

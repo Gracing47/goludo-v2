@@ -1,21 +1,25 @@
 /**
  * App Router
- * 
+ *
  * Central routing configuration for the GoLudo application.
  * Uses React Router v6 with lazy loading for optimal bundle splitting.
- * 
- * @see docs/URL_ROUTING_ANALYSIS.md
+ *
+ * PROD-3 perf: ThirdwebProvider wraps ONLY the in-app routes (browser/lobby/
+ * game). The landing page renders outside it, so the homepage boot never pulls
+ * the thirdweb SDK / web3-vendor chunk.
+ *
  * @see src/config/routes.ts
  */
 
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ROUTES } from './config/routes';
 
-// PROD-3: GlobalHeader contains a static import of thirdweb/react (ConnectButton).
-// Lazy-loading it ensures the thirdweb chunk is NOT pulled into the initial
-// critical bundle, so the landing page renders before the SDK is fetched.
+// Lazy-loaded so the thirdweb/react chunk is only fetched on in-app routes.
 const GlobalHeader = lazy(() => import('./components/layout/GlobalHeader'));
+const ThirdwebProviderLazy = lazy(() =>
+    import('thirdweb/react').then((m) => ({ default: m.ThirdwebProvider }))
+);
 
 // Lazy load pages for code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -52,42 +56,58 @@ const PageLoader: React.FC = () => (
     </div>
 );
 
+const AppShell: React.FC = () => (
+    <div className="app-shell">
+        {/* Header has its own Suspense so the (lazy) wallet chunk never blocks
+            page content from rendering. */}
+        <Suspense fallback={null}>
+            <GlobalHeader />
+        </Suspense>
+        <main className="main-content">
+            <Suspense fallback={<PageLoader />}>
+                <Routes>
+                    {/* Landing Page */}
+                    <Route path={ROUTES.LANDING} element={<LandingPage />} />
+
+                    {/* Game Browser */}
+                    <Route path={ROUTES.APP} element={<GameBrowser />} />
+
+                    {/* Ludo Lobby */}
+                    <Route path={ROUTES.LUDO_LOBBY} element={<LudoLobby />} />
+
+                    {/* Local Game Setup - redirect to lobby for now */}
+                    <Route path={ROUTES.LUDO_LOCAL} element={<Navigate to={ROUTES.LUDO_LOBBY} replace />} />
+
+                    {/* Active Game Room */}
+                    <Route path={ROUTES.GAME} element={<GameRoom />} />
+
+                    {/* Fallback - redirect to landing */}
+                    <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
+                </Routes>
+            </Suspense>
+        </main>
+    </div>
+);
+
 /**
- * Main application router
- * All routes are defined here with proper lazy loading
+ * Main application router.
+ * Landing renders thirdweb-free; in-app routes are wrapped in the lazy
+ * ThirdwebProvider so wallet/contract context is available where needed.
  */
 const AppRouter: React.FC = () => {
+    const location = useLocation();
+    const isLanding = location.pathname === ROUTES.LANDING;
+
+    if (isLanding) {
+        return <AppShell />;
+    }
+
     return (
-        <div className="app-shell">
-            {/* Header has its own Suspense so the ConnectButton chunk loading
-                never blocks the page content from rendering. */}
-            <Suspense fallback={null}>
-                <GlobalHeader />
-            </Suspense>
-            <main className="main-content">
-                <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                        {/* Landing Page */}
-                        <Route path={ROUTES.LANDING} element={<LandingPage />} />
-
-                        {/* Game Browser */}
-                        <Route path={ROUTES.APP} element={<GameBrowser />} />
-
-                        {/* Ludo Lobby */}
-                        <Route path={ROUTES.LUDO_LOBBY} element={<LudoLobby />} />
-
-                        {/* Local Game Setup - redirect to lobby for now */}
-                        <Route path={ROUTES.LUDO_LOCAL} element={<Navigate to={ROUTES.LUDO_LOBBY} replace />} />
-
-                        {/* Active Game Room */}
-                        <Route path={ROUTES.GAME} element={<GameRoom />} />
-
-                        {/* Fallback - redirect to landing */}
-                        <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />
-                    </Routes>
-                </Suspense>
-            </main>
-        </div>
+        <Suspense fallback={<div className="app-shell" style={{ minHeight: '100vh' }} />}>
+            <ThirdwebProviderLazy>
+                <AppShell />
+            </ThirdwebProviderLazy>
+        </Suspense>
     );
 };
 
