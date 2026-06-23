@@ -10,9 +10,11 @@
     z-index: 105;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     pointer-events: auto;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 2.5rem 1rem;
 }
 
 /* Backdrop — deep cosmos pull with radial vignette */
@@ -55,6 +57,7 @@
     width: 100%;
     overflow: hidden;
     isolation: isolate;
+    margin: auto; /* vertical centering on tall viewports, safe scrolling on short viewports */
 }
 
 /* Top-edge gold light — signals premium/reward */

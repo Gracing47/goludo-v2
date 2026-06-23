@@ -227,8 +227,9 @@
 .show-5 { transform: rotateX(-90deg);  }
 .show-6 { transform: rotateX(90deg);   }
 
-/* Face-reveal flash: briefly brighten when landing on a face */
-.dice:not(.rolling) {
+/* Face-reveal flash: briefly brighten when landing on a face.
+   Applied to .dice-face to avoid browser 3D-context flattening bug on preserve-3d parent. */
+.dice-button:not(.rolling-container) .dice-face {
     animation: dice-settle-flash 0.45s var(--ease-bounce) forwards;
 }
 
