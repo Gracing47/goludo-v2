@@ -15,8 +15,8 @@
 |------|------|------|--------|
 | **Frontend** | Vite-SPA (statisch, React 18 + TS) | **Vercel** | ⏳ wartet auf gültigen Access-Token |
 | **Backend** | Socket.IO + Express, `tsx server.ts`, **stateful** (in-memory Rooms/Timer), Healthcheck `/health` | **Railway** | ✅ Online |
-| **DB** | Postgres (Prisma, `ProfileManager`) | Railway | ⚠️ Offline → starten |
-| **Cache/State** | Redis (`GameStateManager`, Room-Recovery/Scale) | Railway | ⚠️ Offline → starten |
+| **DB** | Postgres (Prisma, `ProfileManager`) | Railway | ✅ Online (connected) |
+| **Cache/State** | Redis (`GameStateManager`, Room-Recovery/Scale) | Railway | ✅ Online (recovered 36 Rooms) |
 | **Chain** | Solidity `LudoVault` (Stakes), EIP-712 Server-Signer | Flare Coston2 | ✅ deployed |
 
 **Kernregel:** Das Backend ist ein **persistenter WebSocket-Server** und gehört NICHT auf Vercel-Serverless (kein langlebiger Prozess, kein geteilter State). Frontend (statisch) → Vercel, Realtime-Backend → Railway. Siehe Stack-Bible „Realtime-Multiplayer-Stack (GoLudo)".
@@ -28,7 +28,7 @@
   - Backend via `railway up --service goludo-v2 --ci` neu deployt → **● Online**, `/health` 200.
   - **Alle Backend-Env-Vars bereits gesetzt** (inkl. `SERVER_SIGNER_PRIVATE_KEY`, `DATABASE_URL`, `REDIS_URL`, `FLARE_RPC_URL`, `CHAIN_ID`, Contract-Adressen) — der Geld-Key musste nicht angefasst werden.
   - **CORS-Fix live:** `backend/server.ts` erlaubt jetzt `https://<sub>.vercel.app` (Commit `2eb3219`, lokal) → bestätigt via `access-control-allow-origin`-Header.
-  - **Offen:** Postgres + Redis sind Offline (Volumes intakt). Backend degradiert graceful (in-memory), aber für „sauber/production" hochfahren.
+  - **Postgres + Redis hochgefahren** (`railway redeploy --service <db> --from-source`) → beide ● Online, `/health` meldet `database.connected:true` + `redis.connected:true`, Redis recovered 36 Rooms aus dem Volume. **Backend-Stack voll operativ.**
 - **Vercel** (Team `blexxed47's projects`):
   - `vercel.json` erstellt (SPA-Rewrite + Security-/Cache-Header, framework vite, output `dist`).
   - **Blocker:** Der im Tresor hinterlegte `vck_…`-Token ist ein **AI-Gateway-API-Key**, KEIN Deploy-Token → von der CLI als „not valid" abgelehnt. Es braucht einen **Account Access Token** von `vercel.com/account/settings/tokens`.
