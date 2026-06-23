@@ -13,7 +13,7 @@
 
 | Teil | Tech | Host | Status |
 |------|------|------|--------|
-| **Frontend** | Vite-SPA (statisch, React 18 + TS) | **Vercel** | ⏳ wartet auf gültigen Access-Token |
+| **Frontend** | Vite-SPA (statisch, React 18 + TS) | **Vercel** | ✅ Live → https://goludo-v2.vercel.app |
 | **Backend** | Socket.IO + Express, `tsx server.ts`, **stateful** (in-memory Rooms/Timer), Healthcheck `/health` | **Railway** | ✅ Online |
 | **DB** | Postgres (Prisma, `ProfileManager`) | Railway | ✅ Online (connected) |
 | **Cache/State** | Redis (`GameStateManager`, Room-Recovery/Scale) | Railway | ✅ Online (recovered 36 Rooms) |
@@ -31,7 +31,9 @@
   - **Postgres + Redis hochgefahren** (`railway redeploy --service <db> --from-source`) → beide ● Online, `/health` meldet `database.connected:true` + `redis.connected:true`, Redis recovered 36 Rooms aus dem Volume. **Backend-Stack voll operativ.**
 - **Vercel** (Team `blexxed47's projects`):
   - `vercel.json` erstellt (SPA-Rewrite + Security-/Cache-Header, framework vite, output `dist`).
-  - **Blocker:** Der im Tresor hinterlegte `vck_…`-Token ist ein **AI-Gateway-API-Key**, KEIN Deploy-Token → von der CLI als „not valid" abgelehnt. Es braucht einen **Account Access Token** von `vercel.com/account/settings/tokens`.
+  - **Gelöst:** Der `vck_…`-Token war ein AI-Gateway-Key. Mit einem echten Access-Token (`vcp_…`) Projekt angelegt, 4 `VITE_`-Envs (Prod+Preview) gesetzt, `vercel deploy --prod` → **live unter https://goludo-v2.vercel.app** (Alias). HTTP 200, SPA lädt, CORS gegen die Domain verifiziert.
+  - Hinweis: GitHub-Git-Integration scheiterte (Vercel-Account braucht „Login Connection" zu GitHub) — irrelevant, da CLI-Upload-Deploy. Für Auto-Deploy bei Push später die GitHub-Connection im Vercel-Account herstellen.
+  - `experimentalServices`-Block (web+backend) aus `vercel.json` entfernt — er hätte den Frontend-Build überschrieben und den stateful Socket.IO-Server fälschlich auf Vercel-Serverless gelegt (läuft auf Railway).
 
 ## Runbook — restliche Schritte
 
