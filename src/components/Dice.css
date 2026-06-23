@@ -220,21 +220,20 @@
     width: 60px;
     height: 60px;
 
-    /* deep glass */
+    /* SOLID premium die material — no backdrop-filter (cleaner build + faster).
+       Top-lit radial highlight + diagonal body gradient = real physical depth. */
     background:
-        linear-gradient(145deg, rgba(30, 35, 58, 0.82) 0%, rgba(10, 12, 28, 0.94) 100%);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
+        radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.18) 0%, transparent 44%),
+        linear-gradient(150deg, #2c3252 0%, #161a2c 55%, #0a0d1a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 15px;
     display: grid;
     padding: 10px;
     box-sizing: border-box;
     box-shadow:
-        inset 0 1px 0  rgba(255, 255, 255, 0.20),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.35),
-        0 0 8px rgba(0, 0, 0, 0.65),
-        0 0 22px rgba(0, 243, 255, 0.06);
+        inset 0 2px 3px rgba(255, 255, 255, 0.22),
+        inset 0 -4px 7px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.45);
 }
 
 /* face dot layouts — unchanged */
@@ -263,19 +262,20 @@
    ============================================ */
 
 .dot {
-    width: 10px;
-    height: 10px;
-    background: var(--dice-color, var(--neon-pink));
+    width: 11px;
+    height: 11px;
+    /* crisp pip with a white specular highlight baked into the gradient */
+    background:
+        radial-gradient(circle at 35% 30%, #ffffff 0%, var(--dice-color, var(--neon-pink)) 52%, color-mix(in srgb, var(--dice-color, var(--neon-pink)) 55%, #000) 100%);
     border-radius: 50%;
     justify-self: center;
     align-self: center;
+    /* static glow — no per-dot infinite box-shadow animation (was ×36 dots) */
     box-shadow:
-        0 0 6px  var(--dice-color, var(--neon-pink)),
-        0 0 16px var(--dice-color, var(--neon-pink)),
-        inset 0 1px 2px rgba(255, 255, 255, 0.70);
-    /* Dots pulse in idle state for extra liveliness */
-    animation: dot-idle-pulse 3.5s var(--ease-in-out) infinite;
-    animation-delay: calc(var(--dot-i, 0) * 0.18s);
+        0 0 6px var(--dice-color, var(--neon-pink)),
+        0 0 13px color-mix(in srgb, var(--dice-color, var(--neon-pink)) 55%, transparent),
+        inset 0 1px 1px rgba(255, 255, 255, 0.85),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.40);
 }
 
 @keyframes dot-idle-pulse {
