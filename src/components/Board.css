@@ -292,7 +292,7 @@
    ============================================ */
 
 .active-turn {
-    filter: brightness(1.18);
+    filter: brightness(1.12);
     z-index: 10;
 }
 
@@ -302,8 +302,8 @@
         rgba(255, 42, 109, 0.68) 0%,
         rgba(255, 0, 50, 0.42) 100%) !important;
     box-shadow:
-        0 0 28px rgba(255, 42, 109, 0.55),
-        0 0 60px rgba(255, 42, 109, 0.20);
+        0 0 28px rgba(255, 42, 109, 0.38),
+        0 0 60px rgba(255, 42, 109, 0.14);
     border: 1px solid rgba(255, 42, 109, 0.55) !important;
     animation: active-cell-pulse-red var(--dur-slower) var(--ease-in-out) infinite alternate;
 }
@@ -313,8 +313,8 @@
         rgba(0, 255, 157, 0.68) 0%,
         rgba(0, 200, 100, 0.42) 100%) !important;
     box-shadow:
-        0 0 28px rgba(0, 255, 157, 0.55),
-        0 0 60px rgba(0, 255, 157, 0.20);
+        0 0 28px rgba(0, 255, 157, 0.38),
+        0 0 60px rgba(0, 255, 157, 0.14);
     border: 1px solid rgba(0, 255, 157, 0.55) !important;
     animation: active-cell-pulse-green var(--dur-slower) var(--ease-in-out) infinite alternate;
 }
@@ -324,8 +324,8 @@
         rgba(255, 204, 0, 0.68) 0%,
         rgba(200, 140, 0, 0.42) 100%) !important;
     box-shadow:
-        0 0 28px rgba(255, 204, 0, 0.55),
-        0 0 60px rgba(255, 204, 0, 0.20);
+        0 0 28px rgba(255, 204, 0, 0.38),
+        0 0 60px rgba(255, 204, 0, 0.14);
     border: 1px solid rgba(255, 204, 0, 0.55) !important;
     animation: active-cell-pulse-yellow var(--dur-slower) var(--ease-in-out) infinite alternate;
 }
@@ -335,28 +335,28 @@
         rgba(5, 217, 232, 0.68) 0%,
         rgba(0, 140, 255, 0.42) 100%) !important;
     box-shadow:
-        0 0 28px rgba(5, 217, 232, 0.55),
-        0 0 60px rgba(5, 217, 232, 0.20);
+        0 0 28px rgba(5, 217, 232, 0.38),
+        0 0 60px rgba(5, 217, 232, 0.14);
     border: 1px solid rgba(5, 217, 232, 0.55) !important;
     animation: active-cell-pulse-blue var(--dur-slower) var(--ease-in-out) infinite alternate;
 }
 
 /* Active-cell pulse keyframes — only box-shadow varies (GPU-friendly) */
 @keyframes active-cell-pulse-red {
-    from { box-shadow: 0 0 18px rgba(255, 42, 109, 0.40), 0 0 40px rgba(255, 42, 109, 0.14); }
-    to   { box-shadow: 0 0 36px rgba(255, 42, 109, 0.70), 0 0 80px rgba(255, 42, 109, 0.30); }
+    from { box-shadow: 0 0 18px rgba(255, 42, 109, 0.28), 0 0 40px rgba(255, 42, 109, 0.10); }
+    to   { box-shadow: 0 0 36px rgba(255, 42, 109, 0.49), 0 0 80px rgba(255, 42, 109, 0.21); }
 }
 @keyframes active-cell-pulse-green {
-    from { box-shadow: 0 0 18px rgba(0, 255, 157, 0.40), 0 0 40px rgba(0, 255, 157, 0.14); }
-    to   { box-shadow: 0 0 36px rgba(0, 255, 157, 0.70), 0 0 80px rgba(0, 255, 157, 0.30); }
+    from { box-shadow: 0 0 18px rgba(0, 255, 157, 0.28), 0 0 40px rgba(0, 255, 157, 0.10); }
+    to   { box-shadow: 0 0 36px rgba(0, 255, 157, 0.49), 0 0 80px rgba(0, 255, 157, 0.21); }
 }
 @keyframes active-cell-pulse-yellow {
-    from { box-shadow: 0 0 18px rgba(255, 204, 0, 0.40), 0 0 40px rgba(255, 204, 0, 0.14); }
-    to   { box-shadow: 0 0 36px rgba(255, 204, 0, 0.70), 0 0 80px rgba(255, 204, 0, 0.30); }
+    from { box-shadow: 0 0 18px rgba(255, 204, 0, 0.28), 0 0 40px rgba(255, 204, 0, 0.10); }
+    to   { box-shadow: 0 0 36px rgba(255, 204, 0, 0.49), 0 0 80px rgba(255, 204, 0, 0.21); }
 }
 @keyframes active-cell-pulse-blue {
-    from { box-shadow: 0 0 18px rgba(5, 217, 232, 0.40), 0 0 40px rgba(5, 217, 232, 0.14); }
-    to   { box-shadow: 0 0 36px rgba(5, 217, 232, 0.70), 0 0 80px rgba(5, 217, 232, 0.30); }
+    from { box-shadow: 0 0 18px rgba(5, 217, 232, 0.28), 0 0 40px rgba(5, 217, 232, 0.10); }
+    to   { box-shadow: 0 0 36px rgba(5, 217, 232, 0.49), 0 0 80px rgba(5, 217, 232, 0.21); }
 }
 
 /* ============================================

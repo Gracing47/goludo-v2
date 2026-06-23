@@ -10,20 +10,20 @@ const PLAYER_COLORS = [
     '#05d9e8',   // player 3 — neon-cyan / blue
 ];
 
-// Dominant neon for ambient bloom — same order
+// Dominant neon for ambient bloom — same order (intensity dialed ~30% down)
 const BLOOM_COLORS = [
-    'rgba(255, 0, 122,  0.18)',   // pink
-    'rgba(0,  255, 157, 0.14)',   // green
-    'rgba(255, 204,   0, 0.16)',  // gold
-    'rgba(  0, 243, 255, 0.18)', // cyan
+    'rgba(255, 0, 122,  0.13)',   // pink
+    'rgba(0,  255, 157, 0.10)',   // green
+    'rgba(255, 204,   0, 0.11)',  // gold
+    'rgba(  0, 243, 255, 0.13)', // cyan
 ];
 
-// Secondary accent for the cross-fade stripe
+// Secondary accent for the cross-fade stripe (~30% softer)
 const STRIPE_COLORS = [
-    'rgba(58, 134, 255, 0.08)',   // blue stripe with pink player
-    'rgba( 0, 243, 255, 0.07)',   // cyan stripe with green player
-    'rgba(255, 0, 122,  0.07)',   // pink stripe with gold player
-    'rgba(58, 134, 255, 0.08)',   // blue stripe with cyan player
+    'rgba(58, 134, 255, 0.06)',   // blue stripe with pink player
+    'rgba( 0, 243, 255, 0.05)',   // cyan stripe with green player
+    'rgba(255, 0, 122,  0.05)',   // pink stripe with gold player
+    'rgba(58, 134, 255, 0.06)',   // blue stripe with cyan player
 ];
 
 // Radial origin anchored to board corners
@@ -92,7 +92,7 @@ export const AmbientLight = ({ activePlayer }) => {
                     x: origin.x,
                     y: origin.y,
                     background:
-                        `radial-gradient(circle, ${color}30 0%, ${color}12 30%, transparent 65%)`,
+                        `radial-gradient(circle, ${color}22 0%, ${color}0d 30%, transparent 65%)`,
                 }}
                 transformTemplate={({ x, y }) => `translate3d(calc(${x} - 50%), calc(${y} - 50%), 0)`}
                 transition={{
@@ -109,8 +109,8 @@ export const AmbientLight = ({ activePlayer }) => {
                     x: origin.x,
                     y: origin.y,
                     background:
-                        `radial-gradient(circle, ${color}55 0%, ${color}20 20%, transparent 50%)`,
-                    boxShadow: `0 0 80px 20px ${color}18`,
+                        `radial-gradient(circle, ${color}3c 0%, ${color}16 20%, transparent 50%)`,
+                    boxShadow: `0 0 80px 20px ${color}11`,
                 }}
                 transformTemplate={({ x, y }) => `translate3d(calc(${x} - 50%), calc(${y} - 50%), 0)`}
                 transition={{
