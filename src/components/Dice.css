@@ -140,6 +140,34 @@
         0 0 90px rgba(0, 243, 255, 0.12);
 }
 
+/* ---- ready to roll — gentle beckon so the player knows to tap ---- */
+.dice-button.ready {
+    border-color: var(--border-cyan);
+    animation: dice-ready-pulse 1.7s var(--ease-in-out) infinite;
+}
+@keyframes dice-ready-pulse {
+    0%, 100% { transform: translateY(0)    scale(1);     box-shadow: var(--elev-3), var(--bloom-cyan); }
+    50%       { transform: translateY(-4px) scale(1.045); box-shadow: var(--elev-3), var(--bloom-cyan), 0 0 42px rgba(0, 243, 255, 0.35); }
+}
+
+.dice-hint {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: 0.58rem;
+    font-weight: var(--font-bold, 700);
+    letter-spacing: var(--tracking-widest, 0.14em);
+    color: var(--neon-cyan, #00f3ff);
+    white-space: nowrap;
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.55);
+    pointer-events: none;
+    z-index: 3;
+    animation: dice-hint-fade 1.7s var(--ease-in-out) infinite;
+}
+@keyframes dice-hint-fade { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
 /* Anticipation: builds weight before release — bigger shake than old */
 @keyframes dice-anticipation {
     0%   { transform: translate(0,    0)    rotate(0deg)    scale(1); }

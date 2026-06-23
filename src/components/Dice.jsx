@@ -34,9 +34,11 @@ const Dice = ({ value, onRoll, disabled, isRolling, color = '#ff007a' }) => {
         }
     };
 
+    const isReady = !disabled && !isRolling;
+
     return (
         <button
-            className={`dice-button ${disabled ? 'disabled' : ''} ${isRolling ? 'rolling-container' : ''}`}
+            className={`dice-button ${disabled ? 'disabled' : ''} ${isRolling ? 'rolling-container' : ''} ${isReady ? 'ready' : ''}`}
             onClick={onRoll}
             onKeyDown={handleKeyDown}
             disabled={disabled}
@@ -71,6 +73,9 @@ const Dice = ({ value, onRoll, disabled, isRolling, color = '#ff007a' }) => {
                     Rolled {value > 6 ? `${value} (bonus move)` : value}
                 </span>
             )}
+
+            {/* Tap-to-roll affordance — beckons the player when it's their roll */}
+            {isReady && <span className="dice-hint" aria-hidden="true">TAP TO ROLL</span>}
         </button>
     );
 };

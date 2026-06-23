@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { PLAYER_COLORS } from '../../engine/constants';
+import { PLAYER_COLORS, POSITION } from '../../engine/constants';
 import { GameConfig, GameState } from '../../types';
 
 interface PlayerPodsProps {
@@ -40,6 +40,11 @@ const PlayerPods: React.FC<PlayerPodsProps> = ({
                 const skipCount = metadata?.skipCount || 0;
                 const isForfeited = metadata?.forfeited || false;
 
+                // Home progress — how many of this player's tokens have finished
+                const positions = gameState.tokens?.[idx] || [];
+                const totalTokens = positions.length || 4;
+                const homeCount = positions.filter((t) => t === POSITION.FINISHED).length;
+
                 return (
                     <div key={idx} className={`pod-anchor pos-${visualPos}`}>
                         <div className={`player-pod ${color} ${isActive ? 'active' : ''} ${isForfeited ? 'forfeited' : ''}`}>
@@ -61,6 +66,12 @@ const PlayerPods: React.FC<PlayerPodsProps> = ({
                                     <div className={`skip-dot ${skipCount >= 1 ? 'active' : ''}`} title="1 Skip" />
                                     <div className={`skip-dot ${skipCount >= 2 ? 'active' : ''}`} title="2 Skips" />
                                     <div className={`skip-dot ${skipCount >= 3 ? 'active' : ''}`} title="FORFEIT" />
+                                </div>
+                                {/* Home progress — tokens that have reached home */}
+                                <div className="pod-progress" title={`${homeCount}/${totalTokens} home`} aria-label={`${homeCount} of ${totalTokens} tokens home`}>
+                                    {Array.from({ length: totalTokens }).map((_, i) => (
+                                        <span key={i} className={`home-pip ${i < homeCount ? 'filled' : ''}`} />
+                                    ))}
                                 </div>
                             </div>
                         </div>

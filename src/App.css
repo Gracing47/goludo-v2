@@ -266,6 +266,115 @@ body {
     z-index: var(--z-hud, 10);
 }
 
+/* ---- TURN / ACTION STATUS — top-center pill ---- */
+.turn-status {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 18px 7px 11px;
+    border-radius: 999px;
+    background: rgba(9, 11, 24, 0.90);
+    border: 1px solid var(--border-white-lo, rgba(255, 255, 255, 0.12));
+    box-shadow: var(--elev-2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    z-index: 40;
+    pointer-events: none;
+    max-width: calc(100% - 28px);
+    animation: turn-status-in var(--dur-normal, 360ms) var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275));
+}
+
+@keyframes turn-status-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.turn-status-dot {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ts-color, var(--neon-cyan));
+    box-shadow:
+        0 0 10px var(--ts-color, var(--neon-cyan)),
+        0 0 20px color-mix(in srgb, var(--ts-color, var(--neon-cyan)) 45%, transparent);
+}
+
+.turn-status-body {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.12;
+    min-width: 0;
+}
+
+.turn-status-label {
+    font-family: var(--font-display, 'Orbitron', sans-serif);
+    font-size: 0.74rem;
+    font-weight: var(--font-bold, 700);
+    letter-spacing: var(--tracking-wider, 0.06em);
+    text-transform: uppercase;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.turn-status-action {
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.60);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* per-color accent (matches the token sphere colours) */
+.turn-status.pod-red    { --ts-color: #ff2a6d; }
+.turn-status.pod-green  { --ts-color: #00ff9d; }
+.turn-status.pod-yellow { --ts-color: #ffcc00; }
+.turn-status.pod-blue   { --ts-color: #05d9e8; }
+
+/* tone: you-must-act → draws the eye (GPU: opacity + box-shadow only) */
+.turn-status.tone-act {
+    border-color: var(--ts-color, var(--neon-cyan));
+    animation:
+        turn-status-in var(--dur-normal, 360ms) var(--ease-spring),
+        turn-status-pulse 2s var(--ease-in-out, ease-in-out) 0.4s infinite;
+}
+.turn-status.tone-act .turn-status-action {
+    color: var(--ts-color, var(--neon-cyan));
+    font-weight: 600;
+}
+@keyframes turn-status-pulse {
+    0%, 100% { box-shadow: var(--elev-2), 0 0 16px color-mix(in srgb, var(--ts-color, var(--neon-cyan)) 28%, transparent); }
+    50%       { box-shadow: var(--elev-3), 0 0 32px color-mix(in srgb, var(--ts-color, var(--neon-cyan)) 55%, transparent); }
+}
+
+.turn-status.tone-ai { opacity: 0.88; }
+.turn-status.tone-ai .turn-status-dot { animation: ts-ai-blink 1.1s var(--ease-in-out, ease-in-out) infinite; }
+@keyframes ts-ai-blink { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ---- POD HOME PROGRESS (tokens reached home) ---- */
+.pod-progress {
+    display: flex;
+    gap: 3px;
+    margin-top: 3px;
+    justify-content: center;
+}
+.home-pip {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    transition: background var(--dur-fast, 180ms) var(--ease-out), box-shadow var(--dur-fast, 180ms) var(--ease-out);
+}
+.home-pip.filled {
+    background: var(--pod-glow-color, var(--neon-cyan));
+    box-shadow: 0 0 6px var(--pod-glow-color, var(--neon-cyan));
+}
+
 /* ============================================
    DISCONNECT OVERLAY
    ============================================ */
