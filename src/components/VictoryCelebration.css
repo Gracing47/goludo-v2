@@ -275,7 +275,7 @@
     justify-content: center;
     position: relative;
     overflow: hidden;
-    will-change: transform;
+    /* hover-only transition, not a looping animation — no persistent will-change */
 }
 
 /* Primary — Iris cyan-to-blue CTA */
@@ -498,8 +498,7 @@
     padding: 0.6rem 1.1rem;
     border-bottom: 1px solid var(--border-white-lo);
     transition: background var(--dur-fast) var(--ease-out);
-    /* GPU-only */
-    will-change: opacity;
+    /* entrance animation is one-shot — no persistent will-change */
 }
 
 .standings-row:last-child {

@@ -11,7 +11,6 @@
     z-index: 100;
     transform: translate(-50%, -50%);
     /* Ensure children render above board tokens */
-    will-change: contents;
 }
 
 /* ============================================
@@ -32,7 +31,7 @@
     transform: translate(-50%, -50%);
     /* Saturated blur for high-impact flash */
     filter: blur(12px) saturate(2.0);
-    will-change: transform, opacity;
+    /* one-shot animation — no will-change needed */
 }
 
 .explosion-particle {
@@ -41,7 +40,7 @@
     top: 0;
     left: 0;
     transform: translate(-50%, -50%);
-    will-change: transform, opacity;
+    /* one-shot Web Animations API — no persistent will-change */
 }
 
 .shockwave-ring {
@@ -55,7 +54,7 @@
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 101;
-    will-change: transform, opacity;
+    /* one-shot keyframe — no persistent will-change */
     /* ring color set via inline style */
 }
 
@@ -85,7 +84,7 @@
     top: 50%;
     left: 50%;
     border-radius: 2px;
-    will-change: transform, opacity;
+    /* one-shot Web Animations API — no persistent will-change */
     /* Iris brand colors are set via inline style in JS */
 }
 
@@ -131,7 +130,7 @@
     left: 0;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
-    will-change: transform, opacity;
+    /* one-shot Web Animations API — no persistent will-change */
 }
 
 .light-beam {
@@ -144,7 +143,7 @@
     filter: blur(2px) saturate(1.8);
     z-index: 102;
     transform-origin: bottom center;
-    will-change: height, opacity;
+    /* one-shot beam-rise keyframe — no persistent will-change */
 }
 
 /* ============================================

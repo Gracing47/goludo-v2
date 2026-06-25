@@ -45,8 +45,18 @@ const MAX_EXPLOSION  = 16;
 const MAX_CONFETTI   = 48;
 const MAX_SPARKLE    = 8;
 
+// Perf-low caps — applied when html.perf-low is present
+const MAX_EXPLOSION_LOW = 6;
+const MAX_CONFETTI_LOW  = 12;
+const MAX_SPARKLE_LOW   = 4;
+
+function isPerfLow() {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.classList.contains('perf-low');
+}
+
 function generateExplosionParticles(count, color) {
-    const cap = Math.min(count, MAX_EXPLOSION);
+    const cap = Math.min(count, isPerfLow() ? MAX_EXPLOSION_LOW : MAX_EXPLOSION);
     const particles = [];
     for (let i = 0; i < cap; i++) {
         const angle    = (Math.PI * 2 * i) / cap + (Math.random() - 0.5) * 0.45;
@@ -62,7 +72,7 @@ function generateExplosionParticles(count, color) {
 }
 
 function generateHomeParticles(count, color) {
-    const cap = Math.min(count, MAX_EXPLOSION);
+    const cap = Math.min(count, isPerfLow() ? MAX_EXPLOSION_LOW : MAX_EXPLOSION);
     const particles = [];
     for (let i = 0; i < cap; i++) {
         const angle    = (-Math.PI / 2) + (Math.random() - 0.5) * Math.PI * 1.4;
@@ -79,7 +89,7 @@ function generateHomeParticles(count, color) {
 }
 
 function generateConfettiParticles(count, winnerHex) {
-    const cap = Math.min(count, MAX_CONFETTI);
+    const cap = Math.min(count, isPerfLow() ? MAX_CONFETTI_LOW : MAX_CONFETTI);
     const particles = [];
     for (let i = 0; i < cap; i++) {
         const useWinnerColor = winnerHex && i % 3 === 0;
@@ -292,8 +302,9 @@ export function SpawnSparkle({ position, color, onComplete }) {
         const particleColor = PLAYER_COLORS[color] || '#ffffff';
         if (!reduced) {
             const newSparkles = [];
-            for (let i = 0; i < MAX_SPARKLE; i++) {
-                const angle = (Math.PI * 2 * i) / MAX_SPARKLE;
+            const sparkleCount = isPerfLow() ? MAX_SPARKLE_LOW : MAX_SPARKLE;
+            for (let i = 0; i < sparkleCount; i++) {
+                const angle = (Math.PI * 2 * i) / sparkleCount;
                 newSparkles.push({
                     id: i,
                     x: Math.cos(angle) * 36, y: Math.sin(angle) * 36,

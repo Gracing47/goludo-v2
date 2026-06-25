@@ -23,6 +23,7 @@ import VictoryCelebration from './components/VictoryCelebration';
 import AAACountdown from './components/AAACountdown';
 import soundManager from './services/SoundManager';
 import { usePerfTier } from './hooks/usePerfTier';
+import { useFpsWatchdog } from './hooks/useFpsWatchdog';
 
 import './App.css';
 import './styles/perf-low.css';
@@ -59,6 +60,8 @@ function App() {
     // PERFORMANCE TIER — wire global .perf-low class
     // ============================================
     const perfTier = usePerfTier();
+    // Runtime FPS watchdog — independently latches perf-low if framerate drops below 50 fps
+    useFpsWatchdog();
     useEffect(() => {
         if (typeof document === 'undefined') return;
         document.documentElement.classList.toggle('perf-low', perfTier === 'low');
