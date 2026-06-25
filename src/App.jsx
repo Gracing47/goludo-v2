@@ -22,9 +22,10 @@ import AmbientLight from './components/VFX/AmbientLight';
 import VictoryCelebration from './components/VictoryCelebration';
 import AAACountdown from './components/AAACountdown';
 import soundManager from './services/SoundManager';
-
+import { usePerfTier } from './hooks/usePerfTier';
 
 import './App.css';
+import './styles/perf-low.css';
 
 // Zustand Store
 import { useGameStore } from './store/useGameStore';
@@ -54,6 +55,19 @@ import Token from './components/Token';
 import { CaptureExplosion, SpawnSparkle } from './components/ParticleEffects';
 
 function App() {
+    // ============================================
+    // PERFORMANCE TIER — wire global .perf-low class
+    // ============================================
+    const perfTier = usePerfTier();
+    useEffect(() => {
+        if (typeof document === 'undefined') return;
+        document.documentElement.classList.toggle('perf-low', perfTier === 'low');
+        return () => {
+            // Clean up when App unmounts (e.g. navigating away)
+            document.documentElement.classList.remove('perf-low');
+        };
+    }, [perfTier]);
+
     // ============================================
     // ZUSTAND STORE - Single Source of Truth
     // ============================================

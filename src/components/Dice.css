@@ -234,10 +234,10 @@
 }
 
 @keyframes dice-settle-flash {
-    0%   { filter: brightness(1);    }
-    25%  { filter: brightness(1.55) drop-shadow(0 0 12px rgba(0, 243, 255, 0.80)); }
-    70%  { filter: brightness(1.12); }
-    100% { filter: brightness(1);    }
+    0%   { filter: brightness(1);    box-shadow: none; }
+    25%  { filter: brightness(1.55); box-shadow: 0 0 12px rgba(0, 243, 255, 0.80), 0 0 24px rgba(0, 243, 255, 0.40); }
+    70%  { filter: brightness(1.12); box-shadow: 0 0 6px rgba(0, 243, 255, 0.40); }
+    100% { filter: brightness(1);    box-shadow: none; }
 }
 
 /* ============================================

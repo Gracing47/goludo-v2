@@ -1,0 +1,223 @@
+/* ============================================================
+   PERF-LOW OVERRIDES
+   Scoped under html.perf-low — active when usePerfTier()
+   returns 'low' (iOS Safari, Android, coarse-pointer desktops,
+   or prefers-reduced-motion).  Zero effect on 'high' tier.
+
+   Strategy:
+   1. Kill backdrop-filter/blur() on frosted-glass elements
+      → replace with an opaque-enough solid background so
+        removing the blur doesn't leave elements transparent.
+   2. Kill large decorative filter:blur() on ambient glow layers
+      → display:none for purely decorative blobs.
+   3. Stop continuous infinite animations that aren't functional
+      → animation:none on safe-zone shimmer, crown float,
+        dice ambient float/ready-pulse.
+   4. Kill filter:brightness() on the token spawn animation.
+   5. Drop will-change to auto on elements whose animation is
+      now suppressed (reduces layer memory pressure).
+   ============================================================ */
+
+/* ── 1. FROSTED GLASS — kill backdrop-filter, add solid bg fallback ── */
+
+/* Dice button glass shell */
+.perf-low .dice-button {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Solid fallback so the button doesn't look invisible without blur */
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(0, 243, 255, 0.07) 0%, transparent 55%),
+        rgba(10, 12, 28, 0.90) !important;
+}
+
+/* Victory screen backdrop (full-screen frosted overlay) */
+.perf-low .victory-backdrop {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Already has rgba(4,4,12,0.93) — fully opaque, no fallback needed */
+}
+
+/* Victory content card */
+.perf-low .victory-content {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Already has rgba(7,7,18,0.97) — nearly opaque, fine without blur */
+}
+
+/* Countdown player chip */
+.perf-low .aaa-player-chip {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    /* Chip has a tinted bg via color-mix; add a solid dark underlay */
+    background: rgba(12, 13, 30, 0.88) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Victory secondary button (ghost style with blur) */
+.perf-low .victory-btn.secondary {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(12, 13, 30, 0.88) !important;
+}
+
+/* Any remaining glass-card utility class (LandingPage feature cards) */
+.perf-low .glass-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(10, 10, 25, 0.92) !important;
+}
+
+/* ── 2. LARGE DECORATIVE BLUR FILTERS — kill or hide ── */
+
+/* Winner glow blobs (56px / 72px blur — very costly) */
+.perf-low .winner-glow,
+.perf-low .winner-glow-secondary {
+    display: none !important;
+}
+
+/* Ambient bloom blobs on countdown screen (44px blur + infinite anim) */
+.perf-low .aaa-bloom-blob {
+    display: none !important;
+}
+
+/* Spotlight element (40px blur) */
+.perf-low .spotlight {
+    filter: none !important;
+    opacity: 0 !important;        /* hide: visually absent without costly blur */
+}
+
+/* Warp vortex (28px blur + infinite spin) */
+.perf-low .warp-vortex {
+    filter: none !important;
+    opacity: 0.06 !important;     /* keep vague depth cue without blur cost */
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* Capture explosion flash (12px blur) — brief 1-shot, but still triggers
+   a full rasterise on mobile.  Filter:none keeps the color flash visible. */
+.perf-low .explosion-flash {
+    filter: none !important;
+}
+
+/* ── 3. CONTINUOUS INFINITE ANIMATIONS (non-functional) ── */
+
+/* Safe-zone shimmer sweep — 3.8s infinite translate on every safe cell */
+.perf-low .safe::before {
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* Safe-zone star pulse */
+.perf-low .safe::after {
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* Crown float on goal center */
+.perf-low .crown-icon {
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* Dice ambient float (runs while idle, before rolling) */
+.perf-low .dice-button {
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* Dice ready-pulse beckon (runs when it's player's turn) */
+.perf-low .dice-button.ready {
+    animation: none !important;
+}
+
+/* Dice hint label pulse */
+.perf-low .dice-hint {
+    animation: none !important;
+    opacity: 0.75;
+}
+
+/* Trophy float on victory screen */
+.perf-low .victory-trophy {
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* Victory title gradient sweep */
+.perf-low .victory-title.winner-gradient {
+    animation: none !important;
+}
+
+/* Victory prize shimmer */
+.perf-low .victory-prize::before {
+    animation: none !important;
+}
+
+/* Victory button shine sweep */
+.perf-low .victory-btn.primary::before {
+    animation: none !important;
+}
+
+/* Home-path active pulse */
+.perf-low .home-path-active {
+    animation: none !important;
+}
+
+/* Active-turn quadrant pulse pseudo-element */
+.perf-low .active-turn::before {
+    animation: none !important;
+    opacity: 0.7 !important;
+    will-change: auto !important;
+}
+
+/* Warp content pulse (loading screen) */
+.perf-low .warp-content {
+    animation: none !important;
+    will-change: auto !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+/* Iridescent pulse (subtle warp mode) */
+.perf-low .iridescent-pulse {
+    animation: none !important;
+}
+
+/* ── 4. TOKEN SPAWN FILTER — kill filter:brightness() in keyframe ── */
+
+/* The token-spawn keyframe applies filter:brightness(2.5→1).
+   animation:none removes the whole spawn animation so the token
+   just pops in instantly — still visible, no per-frame rasterise. */
+.perf-low .token.spawning .token-inner {
+    animation: none !important;
+    filter: none !important;
+    will-change: auto !important;
+}
+
+/* Token highlighted shimmer (inner shine sweep) */
+.perf-low .token.highlighted .token-shine {
+    animation: none !important;
+}
+
+/* Token highlighted glow aura pulse */
+.perf-low .token.highlighted .token-glow-aura {
+    animation: none !important;
+}
+
+/* Token highlighted bounce — keep the bounce (functional feedback that
+   the token is selectable) but remove the shadow pulse pseudo */
+.perf-low .token.highlighted::after {
+    animation: none !important;
+    will-change: auto !important;
+}
+
+/* ── 5. WILL-CHANGE CLEANUP — reduce layer memory on suppressed elements ── */
+
+/* Already handled inline above with will-change: auto !important.
+   Catch-all for any stacked token drop-shadow (filter on .token.stacked
+   is cheap box-shadow replacement, but belt-and-suspenders): */
+.perf-low .token.stacked {
+    filter: none !important;
+    /* The stacked appearance is preserved via .token.stacked .token-inner
+       border/box-shadow rules which remain untouched */
+}
