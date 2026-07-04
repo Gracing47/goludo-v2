@@ -8,11 +8,12 @@
  * - Player names and type (Human/AI)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Lobby.css';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
 import { NATIVE_CURRENCY_SYMBOL } from '../config/currency';
+import { showToast } from '../services/toast';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -118,7 +119,7 @@ const Lobby = ({ onStartGame }) => {
 
     const handleModeSelect = (mode) => {
         if (mode === 'web3' && !account) {
-            alert("Please connect your wallet first to play Web3 Match!");
+            showToast("Connect your wallet (top right) to play a Web3 Match", "info");
             return;
         }
         setGameMode(mode);
@@ -197,7 +198,7 @@ const Lobby = ({ onStartGame }) => {
             const freshRoom = freshRooms.find(r => r.id === selectedRoom.id);
 
             if (!freshRoom) {
-                alert("This room no longer exists. Please select another.");
+                showToast("This room no longer exists — pick another match.", "error");
                 setSelectedRoom(null);
                 return;
             }
@@ -213,7 +214,7 @@ const Lobby = ({ onStartGame }) => {
                 // AAA: Color was JUST taken! Find available alternatives
                 const availableColors = COLORS.filter(c => !takenColors.includes(c));
                 if (availableColors.length === 0) {
-                    alert("This room just became full. Please select another.");
+                    showToast("This room just became full — pick another match.", "error");
                     setSelectedRoom(null);
                     setStep('web3-lobby');
                     return;
@@ -222,7 +223,7 @@ const Lobby = ({ onStartGame }) => {
                 // Auto-switch to first available and notify user
                 finalColor = availableColors[0];
                 setPlayers(prev => prev.map((p, i) => i === 0 ? { ...p, color: finalColor } : p));
-                console.log(`🎨 Auto-switching color to ${finalColor} due to conflict.`);
+                showToast(`Your color was just taken — switched to ${finalColor}.`, "info");
             }
 
             const result = await handleJoinGame(selectedRoom.id, selectedRoom.stake, player.name, finalColor);
@@ -246,9 +247,9 @@ const Lobby = ({ onStartGame }) => {
             console.error(err);
             // Show user-friendly error
             if (err.message && err.message.includes("Color already taken")) {
-                alert("The color you selected was just taken by another player. Please try again with a different color.");
+                showToast("That color was just taken by another player — try a different one.", "error");
             } else {
-                alert("Failed to join room: " + (err.message || "Unknown error"));
+                showToast("Failed to join room: " + (err.message || "Unknown error"), "error");
             }
         }
     };
@@ -314,6 +315,40 @@ const Lobby = ({ onStartGame }) => {
     };
 
     const canStart = players.slice(0, playerCount).every(p => p.name.trim());
+
+    // ---- Join-modal ergonomics: Escape closes, name field autofocuses ----
+    const modalNameInputRef = useRef(null);
+    useEffect(() => {
+        if (!selectedRoom) return;
+
+        // Autofocus + select the display name so mobile/desktop users can type immediately
+        const focusTimer = setTimeout(() => {
+            modalNameInputRef.current?.focus();
+            modalNameInputRef.current?.select();
+        }, 50);
+
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape' && !isProcessing) {
+                setSelectedRoom(null);
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => {
+            clearTimeout(focusTimer);
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, [selectedRoom?.id, isProcessing]);
+
+    // ---- Waiting room: copy room ID with feedback ----
+    const handleCopyRoomId = async () => {
+        if (!waitingRoomId) return;
+        try {
+            await navigator.clipboard.writeText(waitingRoomId);
+            showToast("Room ID copied — share it with a friend!", "success");
+        } catch {
+            showToast("Could not copy the room ID.", "error");
+        }
+    };
 
     return (
         <div className="lobby">
@@ -388,12 +423,17 @@ const Lobby = ({ onStartGame }) => {
                 )}
 
                 {/* Web3 Lobby */}
-                {step === 'web3-lobby' && (
+                {step === 'web3-lobby' && (() => {
+                    const waitingRooms = openRooms.filter(r => r.status === 'WAITING');
+                    return (
                     <div className="web3-lobby">
                         <header className="lobby-header">
                             <h2 className="setup-title">
                                 <span className="setup-title-icon"><DiceIcon size={22} /></span>
                                 Open Matches
+                                {waitingRooms.length > 0 && (
+                                    <span className="room-count-badge">{waitingRooms.length}</span>
+                                )}
                             </h2>
                             <button className="create-game-btn" onClick={() => setStep('setup')}>
                                 + Create Game
@@ -401,20 +441,44 @@ const Lobby = ({ onStartGame }) => {
                         </header>
 
                         <div className="room-list">
-                            {openRooms.filter(r => r.status === 'WAITING').length === 0 ? (
+                            {waitingRooms.length === 0 ? (
                                 <div className="no-rooms">
                                     <div className="no-rooms-icon">
                                         <DiceIcon size={48} />
                                     </div>
                                     <p>No open matches found.</p>
                                     <p><small>Be the first to create one!</small></p>
+                                    <button className="create-game-btn no-rooms-cta" onClick={() => setStep('setup')}>
+                                        + Create the First Match
+                                    </button>
                                 </div>
                             ) : (
-                                openRooms.filter(r => r.status === 'WAITING').map(room => (
+                                waitingRooms.map(room => {
+                                    const joined = room.players.filter(p => p);
+                                    const host = joined[0];
+                                    return (
                                     <div key={room.id} className="room-card">
                                         <div className="room-details">
-                                            <span className="room-stake">💰 {room.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</span>
-                                            <span className="room-players">👤 {room.players.filter(p => p).length}/{room.maxPlayers}</span>
+                                            <div className="room-details-top">
+                                                <span className="room-stake">💰 {room.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</span>
+                                                <span className={`room-variant-badge ${room.mode === 'rapid' ? 'rapid' : 'classic'}`}>
+                                                    {room.mode === 'rapid' ? '⚡ Rapid' : '🎲 Classic'}
+                                                </span>
+                                            </div>
+                                            <div className="room-details-bottom">
+                                                {host && <span className="room-host" title={`Hosted by ${host.name}`}>👑 {host.name}</span>}
+                                                <span className="room-players" aria-label={`${joined.length} of ${room.maxPlayers} players`}>
+                                                    <span className="room-slot-dots" aria-hidden="true">
+                                                        {Array.from({ length: room.maxPlayers }).map((_, i) => (
+                                                            <span
+                                                                key={i}
+                                                                className={`room-slot-dot ${joined[i] ? `filled ${joined[i].color}` : ''}`}
+                                                            />
+                                                        ))}
+                                                    </span>
+                                                    {joined.length}/{room.maxPlayers}
+                                                </span>
+                                            </div>
                                         </div>
                                         <button
                                             className="join-btn"
@@ -424,7 +488,8 @@ const Lobby = ({ onStartGame }) => {
                                             Join
                                         </button>
                                     </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
 
@@ -432,7 +497,8 @@ const Lobby = ({ onStartGame }) => {
                             ← Back
                         </button>
                     </div>
-                )}
+                    );
+                })()}
 
                 {/* Waiting Room */}
                 {step === 'waiting' && (() => {
@@ -448,7 +514,14 @@ const Lobby = ({ onStartGame }) => {
                                     <DiceIcon size={48} />
                                 </div>
                                 <h3>Waiting for Players...</h3>
-                                <p>Room: <small>{waitingRoomId.substring(0, 10)}...</small></p>
+                                <button
+                                    className="room-id-copy"
+                                    onClick={handleCopyRoomId}
+                                    title="Copy room ID to invite a friend"
+                                >
+                                    Room: <small>{waitingRoomId.substring(0, 10)}…</small>
+                                    <span className="copy-icon" aria-hidden="true">📋</span>
+                                </button>
 
                                 {/* Player Count Progress */}
                                 <div className="waiting-stats">
@@ -468,6 +541,13 @@ const Lobby = ({ onStartGame }) => {
                                                     <span className={`color-dot ${p.color}`}></span>
                                                     <span className="player-name">{p.name}</span>
                                                     {idx === 0 && <span className="host-badge">👑</span>}
+                                                </div>
+                                            ))}
+                                            {/* Empty seats — makes remaining capacity tangible */}
+                                            {Array.from({ length: Math.max(0, maxPlayers - playerCount) }).map((_, i) => (
+                                                <div key={`empty-${i}`} className="waiting-player empty-seat" aria-hidden="true">
+                                                    <span className="color-dot empty"></span>
+                                                    <span className="player-name">Open seat…</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -668,10 +748,19 @@ const Lobby = ({ onStartGame }) => {
 
             {/* --- JOIN MODAL (AAA UX) --- */}
             {selectedRoom && (
-                <div className="modal-overlay">
-                    <div className="modal-content join-modal">
+                <div
+                    className="modal-overlay"
+                    onClick={() => { if (!isProcessing) setSelectedRoom(null); }}
+                >
+                    <div
+                        className="modal-content join-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="join-modal-title"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <header className="modal-header">
-                            <h3>Join Match</h3>
+                            <h3 id="join-modal-title">Join Match</h3>
                             <div className="stake-badge">💰 {selectedRoom.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</div>
                         </header>
 
@@ -679,6 +768,7 @@ const Lobby = ({ onStartGame }) => {
                             <div className="setup-section">
                                 <label className="setup-label">Your Display Name</label>
                                 <input
+                                    ref={modalNameInputRef}
                                     type="text"
                                     className="player-name-input"
                                     value={players[0].name}
@@ -689,7 +779,7 @@ const Lobby = ({ onStartGame }) => {
                             </div>
 
                             <div className="setup-section">
-                                <label className="setup-label">Wähle deine Farbe</label>
+                                <label className="setup-label">Choose Your Color</label>
                                 <div className="color-picker modal-picker">
                                     {COLORS.map((c, cIdx) => {
                                         const isTaken = selectedRoom.players.some(p => p && p.color === c);

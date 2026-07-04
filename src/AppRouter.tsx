@@ -14,6 +14,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ROUTES } from './config/routes';
+import AppToast from './components/AppToast';
 
 // Lazy-loaded so the thirdweb/react chunk is only fetched on in-app routes.
 const GlobalHeader = lazy(() => import('./components/layout/GlobalHeader'));
@@ -63,6 +64,8 @@ const AppShell: React.FC = () => (
         <Suspense fallback={null}>
             <GlobalHeader />
         </Suspense>
+        {/* Global toast bus renderer — replaces native alert() app-wide */}
+        <AppToast />
         <main className="main-content">
             <Suspense fallback={<PageLoader />}>
                 <Routes>

@@ -1,0 +1,118 @@
+/* ============================================
+   APP TOAST — global notification stack
+   Deep Space Neon theme — top-centre, GPU only.
+   Distinct from the in-game HUD toast region
+   (bottom-centre) so the two never collide.
+   ============================================ */
+
+.app-toast-region {
+    position: fixed;
+    top: calc(var(--header-height, 60px) + var(--safe-top, 20px) - 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2, 8px);
+    z-index: calc(var(--z-toast, 300) + 10); /* above modals — errors must surface */
+    width: min(420px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.app-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3, 12px);
+    width: 100%;
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+    border-radius: var(--radius-lg, 16px);
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: var(--font-semibold, 600);
+    line-height: var(--leading-snug, 1.3);
+    color: var(--text-primary, #fff);
+    background: rgba(10, 10, 25, 0.92);
+    border: 1px solid var(--border-white-lo, rgba(255, 255, 255, 0.06));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0, 0, 0, .60),
+            0 16px 40px rgba(0, 0, 0, .50),
+            inset 0 1px 0 rgba(255, 255, 255, .07));
+    cursor: pointer;
+    pointer-events: auto; /* tap-to-dismiss */
+    will-change: transform, opacity;
+    animation: app-toast-in var(--dur-normal, 360ms) var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275)) forwards;
+}
+
+.app-toast-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+}
+
+.app-toast-text {
+    /* Multi-line friendly — error messages can be long */
+    overflow-wrap: anywhere;
+}
+
+/* ---- Kind accents ---- */
+.app-toast--success {
+    border-color: var(--border-cyan, rgba(0, 243, 255, .25));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0, 0, 0, .60),
+            0 16px 40px rgba(0, 0, 0, .50),
+            inset 0 1px 0 rgba(255, 255, 255, .07)),
+        0 0 16px rgba(0, 243, 255, .22);
+}
+
+.app-toast--error {
+    border-color: var(--border-pink, rgba(255, 0, 122, .30));
+    box-shadow:
+        var(--elev-3,
+            0 4px 8px rgba(0, 0, 0, .60),
+            0 16px 40px rgba(0, 0, 0, .50),
+            inset 0 1px 0 rgba(255, 255, 255, .07)),
+        0 0 16px rgba(255, 0, 122, .26);
+}
+
+.app-toast--exit {
+    animation: app-toast-out var(--dur-normal, 360ms) var(--ease-in, cubic-bezier(0.4, 0, 1, 1)) forwards;
+    pointer-events: none;
+}
+
+/* ---- Keyframes ---- */
+@keyframes app-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes app-toast-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+    .app-toast,
+    .app-toast--exit {
+        animation: none !important;
+        opacity: 1;
+        transform: none;
+    }
+    .app-toast--exit {
+        opacity: 0;
+    }
+}

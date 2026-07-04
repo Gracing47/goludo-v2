@@ -6,6 +6,7 @@ import { ludoVaultContract, coston2, client } from "../config/web3";
 import { NATIVE_CURRENCY_SYMBOL } from "../config/currency";
 import { API_URL } from "../config/api";
 import { PayoutProof } from "../types";
+import { showToast } from "../services/toast";
 
 /**
  * useLudoWeb3 Hook
@@ -58,7 +59,7 @@ export const useLudoWeb3 = () => {
 
     // 4. Create Room Flow
     const handleCreateRoom = async (stakeAmount: string | number, maxPlayers: number, creatorName: string, color: string, mode: string = 'classic') => {
-        if (!account) return alert("Please connect wallet first");
+        if (!account) return showToast("Please connect your wallet first", "error");
 
         setIsProcessing(true);
         try {
@@ -94,7 +95,7 @@ export const useLudoWeb3 = () => {
             return roomId;
         } catch (error) {
             console.error("Create Room Failed:", error);
-            alert("Failed to create room.");
+            showToast("Failed to create room — the transaction was not completed.", "error");
             throw error;
         } finally {
             setIsProcessing(false);
@@ -103,7 +104,7 @@ export const useLudoWeb3 = () => {
 
     // 5. Join Room Flow
     const handleJoinGame = async (roomId: string, stakeAmount: string | number, playerName: string, color: string) => {
-        if (!account) return alert("Please connect wallet first");
+        if (!account) return showToast("Please connect your wallet first", "error");
 
         setIsProcessing(true);
         try {
@@ -159,7 +160,7 @@ export const useLudoWeb3 = () => {
 
         } catch (error) {
             console.error("Join Room Failed:", error);
-            alert("Failed to join Web3 game.");
+            showToast("Failed to join the match — the transaction was not completed.", "error");
             throw error;
         } finally {
             setIsProcessing(false);
@@ -168,7 +169,7 @@ export const useLudoWeb3 = () => {
 
     // 6. Claim Winnings Flow
     const handleClaimPayout = async (payoutProof: PayoutProof) => {
-        if (!account) return alert("Please connect wallet first");
+        if (!account) return showToast("Please connect your wallet first", "error");
 
         setIsProcessing(true);
         try {
@@ -189,11 +190,12 @@ export const useLudoWeb3 = () => {
 
             const result = await sendTx(claimTx);
             console.log("Payout claimed successfully!", result);
-            alert("Congratulations! Your winnings have been transferred to your wallet.");
+            // Kein Success-Toast: VictoryCelebration zeigt bereits prominent
+            // "PAYOUT SENT!" — ein Toast wäre doppeltes Feedback.
             return result;
         } catch (error) {
             console.error("Payout Claim Error:", error);
-            alert("Failed to claim winnings. Check if you are the winner or if signature expired.");
+            showToast("Failed to claim winnings — check that you are the winner and the signature hasn't expired.", "error");
             throw error;
         } finally {
             setIsProcessing(false);
