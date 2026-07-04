@@ -1,0 +1,209 @@
+/* ============================================
+   2D DICE — "FLIP-STRIP" (G-009)
+   Compositor-only AAA roll for the perf-low tier.
+
+   Beats:
+   1. Anticipation — 120ms wind-up squash (dice is "grabbed")
+   2. Roll         — steps(6) strip flicker, 80ms per face
+                     (~11 face changes per 1s roll), plus a
+                     counter-phase rotate/squash tumble
+   3. Impact       — hard strip snap onto the result face,
+                     synchronous with impact squash + white
+                     opacity flash + expanding ring
+   4. Settle       — spring overshoot bounce (mass!)
+
+   Budget: transform + opacity ONLY. 0 paint, 0 layout,
+   0 filter, 0 blend-mode, 0 preserve-3d. The flicker keeps
+   running on the compositor thread even when the main
+   thread is busy with token-move re-renders.
+   ============================================ */
+
+.dice2d {
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.dice2d-window {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 15px;
+    /* own layer: the clip stays on the compositor */
+    transform: translateZ(0);
+}
+
+.dice2d-strip {
+    display: flex;
+    width: 600%;
+    height: 100%;
+    will-change: transform; /* single small strip layer (~6×dice-size) */
+}
+
+.dice2d-face {
+    width: 16.6667%;
+    height: 100%;
+    flex: none;
+    display: block;
+}
+
+/* ---- baked material — rasterised once, then only composited ---- */
+.dice2d-body  { fill: #161a2c; stroke: rgba(255, 255, 255, 0.12); stroke-width: 1.5; }
+.dice2d-sheen { fill: #ffffff; opacity: 0.07; }
+.dice2d-pip    { fill: var(--dice-color, var(--neon-pink, #ff007a)); }
+.dice2d-pip-hi { fill: #ffffff; opacity: 0.85; }
+
+/* ---- result detent ----
+   Strip order is [1, 4, 2, 6, 3, 5] (anti-count-up scramble).
+   Percentages are relative to the strip's own width → completely
+   size-independent, no per-breakpoint face rules needed.
+   No transition on the strip: the hard snap IS the impact moment. */
+.dice2d.show-1 .dice2d-strip { transform: translateX(0); }
+.dice2d.show-4 .dice2d-strip { transform: translateX(-16.6667%); }
+.dice2d.show-2 .dice2d-strip { transform: translateX(-33.3333%); }
+.dice2d.show-6 .dice2d-strip { transform: translateX(-50%); }
+.dice2d.show-3 .dice2d-strip { transform: translateX(-66.6667%); }
+.dice2d.show-5 .dice2d-strip { transform: translateX(-83.3333%); }
+
+/* ============================================
+   ROLL — wind-up, then tumble + flicker (infinite:
+   covers fixed 1000ms local rolls AND variable web3
+   socket latency; result snaps when .rolling drops)
+   ============================================ */
+
+.dice2d.rolling {
+    animation:
+        dice2d-windup 120ms cubic-bezier(0.36, 0, 0.66, -0.3) 1,
+        dice2d-tumble 320ms ease-in-out 120ms infinite alternate;
+}
+
+.dice2d.rolling .dice2d-strip {
+    /* 480ms ÷ 6 = 80ms per face — fast enough for slot-machine tension,
+       slow enough that every face is readable */
+    animation: dice2d-flicker 480ms steps(6, end) 120ms infinite;
+}
+
+@keyframes dice2d-windup {
+    0%   { transform: scale(1); }
+    60%  { transform: scale(0.82, 1.12) translateY(5%); } /* anticipation squash */
+    100% { transform: scale(1.05, 0.95); }
+}
+
+/* rotation and squash in counter-phase = tumbling body */
+@keyframes dice2d-tumble {
+    from { transform: rotate(-9deg) scale(1.06, 0.94); }
+    to   { transform: rotate(9deg)  scale(0.94, 1.06); }
+}
+
+@keyframes dice2d-flicker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+}
+
+/* ============================================
+   SETTLE + IMPACT
+   Trigger: `.rolling` drops → the animation property is
+   re-attached and plays exactly once (same retrigger
+   mechanic as the old 3D settle-flash — also replays
+   when the same number is rolled twice).
+   ============================================ */
+
+.dice2d.settled:not(.rolling) {
+    animation: dice2d-settle 480ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+}
+
+@keyframes dice2d-settle {
+    0%   { transform: scale(1.28, 0.72) translateY(6%); }  /* impact squash   */
+    35%  { transform: scale(0.88, 1.12) translateY(-8%); } /* rebound hop     */
+    60%  { transform: scale(1.06, 0.96) translateY(0); }
+    80%  { transform: scale(0.98, 1.02); }
+    100% { transform: scale(1); }
+}
+
+/* ---- impact flash — replaces the old filter:brightness settle-flash
+   with a pre-painted white overlay animating ONLY opacity ---- */
+.dice2d::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 15px;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dice2d.settled:not(.rolling)::after {
+    animation: dice2d-flash 360ms ease-out 1;
+}
+
+@keyframes dice2d-flash {
+    0%   { opacity: 0; }
+    15%  { opacity: 0.5; }
+    100% { opacity: 0; }
+}
+
+/* ---- impact ring — energy travels outward (scale + opacity) ---- */
+.dice2d-ring {
+    position: absolute;
+    inset: -6px;
+    border: 2px solid var(--neon-cyan, #00f3ff);
+    border-radius: 18px;
+    box-shadow: 0 0 12px rgba(0, 243, 255, 0.45); /* static, baked into the layer */
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dice2d.settled:not(.rolling) .dice2d-ring {
+    animation: dice2d-ring-out 380ms ease-out 1;
+}
+
+@keyframes dice2d-ring-out {
+    0%   { transform: scale(0.72); opacity: 0.75; }
+    100% { transform: scale(1.4);  opacity: 0; }
+}
+
+/* ============================================
+   RESPONSIVE — mirrors the 3D .dice sizes; strip
+   transforms are %-based so nothing else changes
+   ============================================ */
+
+@media (max-width: 480px) {
+    .dice2d { width: 44px; height: 44px; }
+    .dice2d-window,
+    .dice2d::after { border-radius: 10px; }
+    .dice2d-ring { border-radius: 13px; }
+}
+
+@media (max-width: 390px) {
+    .dice2d { width: 40px; height: 40px; }
+    .dice2d-window,
+    .dice2d::after { border-radius: 9px; }
+    .dice2d-ring { border-radius: 12px; }
+}
+
+@media (min-width: 768px) {
+    .dice2d { width: 56px; height: 56px; }
+    .dice2d-window,
+    .dice2d::after { border-radius: 12px; }
+    .dice2d-ring { border-radius: 15px; }
+}
+
+/* ============================================
+   REDUCED MOTION — discrete opacity blink instead of
+   continuous flicker; keep the opacity-only flash as
+   the single "result landed" signal
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .dice2d.rolling { animation: none; }
+    .dice2d.rolling .dice2d-strip {
+        animation: dice2d-rm-blink 600ms steps(2, end) infinite;
+    }
+    .dice2d.settled:not(.rolling) { animation: none; }
+    .dice2d.settled:not(.rolling) .dice2d-ring { animation: none; }
+}
+
+@keyframes dice2d-rm-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+}

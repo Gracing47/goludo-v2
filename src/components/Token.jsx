@@ -2,12 +2,23 @@ import React, { useRef, useEffect, useState } from 'react';
 import './Token.css';
 
 /**
- * TOKEN — framer-motion REMOVED (perf sprint)
- * All animations are now CSS-only (GPU compositor thread).
- * Stack offsets via inline CSS vars → CSS transform.
- * Impact wave → CSS keyframe animation class toggle.
- * Trail particles → CSS keyframe classes.
- * Spring hover → CSS :hover + transition.
+ * TOKEN — transform-only movement (G-009)
+ *
+ * The token no longer sits in a grid cell (gridRow/gridColumn): every cell
+ * change used to be a LAYOUT mutation that reflowed the whole 15×15 grid
+ * (225 cells + pseudos) per hop. Instead, each token now lives in a
+ * `.token-slot` wrapper that is absolutely positioned once and moved via
+ * `transform: translate(...)` driven by the --gr/--gc CSS vars — a pure
+ * compositor operation, zero reflow, on ALL tiers.
+ *
+ * The slot carries position + stack offset + stack scale; the inner .token
+ * keeps all its existing animations (bounce, hop, press, hover) which now
+ * compose cleanly relative to the slot.
+ *
+ * Hop squash & trail particles are driven by the `isMoving` prop (set once
+ * per move by App/executeMove or the socket sync) instead of a per-hop
+ * setState machine — this removes 4 extra React renders per hop. The
+ * landing impact fires once when the move completes (isMoving true→false).
  */
 
 const Token = ({
@@ -31,7 +42,7 @@ const Token = ({
 }) => {
     // Grid-based positioning for stacked tokens (Different Players on same cell)
     const getStackOffset = (index, total) => {
-        if (total <= 1) return { x: 0, y: 0, scale: 1, zIndex: 10 };
+        if (total <= 1) return { x: '0%', y: '0%', scale: 1, zIndex: 10 };
 
         if (total === 2) {
             const positions = [
@@ -61,33 +72,20 @@ const Token = ({
 
     const offset = getStackOffset(stackIndex, stackSize);
 
-    const prevPos = useRef({ row, col });
-    const [isAnimating, setIsAnimating] = useState(false);
+    // Landing impact — fires ONCE when the move completes (isMoving true→false),
+    // not per hop. 2 renders per MOVE instead of 4 per hop.
+    const wasMovingRef = useRef(false);
     const [showImpact, setShowImpact] = useState(false);
 
-    // Animate when position changes — use CSS class for hop
     useEffect(() => {
-        const hasPositionChanged = prevPos.current.row !== row || prevPos.current.col !== col;
-
-        if (hasPositionChanged && !inYard) {
-            setIsAnimating(true);
-
-            const hopDuration = isBonusMove ? 80 : 120;
-
-            const timer = setTimeout(() => {
-                setIsAnimating(false);
-                if (!isBonusMove) {
-                    setShowImpact(true);
-                    setTimeout(() => setShowImpact(false), 250);
-                }
-            }, hopDuration);
-
-            prevPos.current = { row, col };
+        if (wasMovingRef.current && !isMoving && !inYard) {
+            wasMovingRef.current = false;
+            setShowImpact(true);
+            const timer = setTimeout(() => setShowImpact(false), 300);
             return () => clearTimeout(timer);
         }
-
-        prevPos.current = { row, col };
-    }, [row, col, inYard, isBonusMove]);
+        wasMovingRef.current = isMoving;
+    }, [isMoving, inYard]);
 
     // Accessibility: Describe token state for screen readers
     const getAriaLabel = () => {
@@ -121,79 +119,105 @@ const Token = ({
         inYard && 'in-yard',
         onClick && 'clickable',
         stackSize > 1 && 'stacked',
-        isAnimating && 'animating',
+        isMoving && 'moving',
         showImpact && 'impacted'
     ].filter(Boolean).join(' ');
 
     return (
         <div
-            className={classes}
+            className={`token-slot${isBonusMove ? ' bonus-hop' : ''}`}
             style={{
-                gridRow: row + 1,
-                gridColumn: col + 1,
-                '--rotation': `${rotation}deg`,
+                // Position via CSS vars → transform in Token.css. Changing these
+                // only retargets a compositor transition — no grid reflow.
+                '--gr': row,
+                '--gc': col,
                 '--token-x': offset.x,
                 '--token-y': offset.y,
                 '--token-scale': offset.scale,
-                zIndex: isHighlighted ? 100 : isAnimating || showImpact ? 50 : offset.zIndex,
-                transform: `translate(var(--token-x, 0), var(--token-y, 0)) scale(var(--token-scale, 1))`,
-                transition: 'transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                zIndex: isHighlighted ? 100 : isMoving || showImpact ? 50 : offset.zIndex,
             }}
-            onClick={onClick ? () => onClick(playerIndex, tokenIndex, allTokenIndices) : undefined}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            role={onClick ? "button" : undefined}
-            tabIndex={onClick ? 0 : -1}
-            aria-label={getAriaLabel()}
-            aria-pressed={isHighlighted}
-            aria-disabled={!onClick}
         >
-            <div className={`token-inner ${color}`}>
-                <div className="token-shine" aria-hidden="true" />
-                <div className="token-center-dot" aria-hidden="true" />
+            <div
+                className={classes}
+                style={{ '--rotation': `${rotation}deg` }}
+                onClick={onClick ? () => onClick(playerIndex, tokenIndex, allTokenIndices) : undefined}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                role={onClick ? "button" : undefined}
+                tabIndex={onClick ? 0 : -1}
+                aria-label={getAriaLabel()}
+                aria-pressed={isHighlighted}
+                aria-disabled={!onClick}
+            >
+                <div className={`token-inner ${color}`}>
+                    <div className="token-shine" aria-hidden="true" />
+                    <div className="token-center-dot" aria-hidden="true" />
 
-                {/* 🔢 Stack Count Badge — counter-rotated to stay upright (B2 fix) */}
-                {tokenCount > 1 && (
-                    <div
-                        className="token-stack-badge"
-                        style={{ transform: `translate(-50%, -50%) rotate(${rotation}deg)` }}
-                        aria-label={`${tokenCount} tokens stacked`}
-                    >
-                        ×{tokenCount}
+                    {/* 🔢 Stack Count Badge — counter-rotated to stay upright (B2 fix) */}
+                    {tokenCount > 1 && (
+                        <div
+                            className="token-stack-badge"
+                            style={{ transform: `translate(-50%, -50%) rotate(${rotation}deg)` }}
+                            aria-label={`${tokenCount} tokens stacked`}
+                        >
+                            ×{tokenCount}
+                        </div>
+                    )}
+
+                    {/* Landing Shockwave — CSS keyframe, fires once per move */}
+                    {showImpact && (
+                        <div className="token-impact-wave" aria-hidden="true" />
+                    )}
+                </div>
+
+                {/* glow aura — animated via CSS (GPU), not JS-thread */}
+                {isHighlighted && (
+                    <div className="token-glow-aura" aria-hidden="true" />
+                )}
+
+                {/* Movement Particles — mounted once per move (not per hop);
+                    hidden entirely on perf-low (see perf-low.css) */}
+                {isMoving && !inYard && (
+                    <div className="token-trail-particles" aria-hidden="true">
+                        <div className="particle particle-1" />
+                        <div className="particle particle-2" />
+                        <div className="particle particle-3" />
                     </div>
                 )}
 
-                {/* Landing Shockwave — CSS keyframe, no framer-motion */}
-                {showImpact && (
-                    <div className="token-impact-wave" aria-hidden="true" />
+                {/* Screen reader announcement for movement */}
+                {isMoving && !isBonusMove && (
+                    <span className="sr-only" aria-live="polite">
+                        Token moving
+                    </span>
                 )}
             </div>
-
-            {/* glow aura — animated via CSS (GPU), not JS-thread */}
-            {isHighlighted && (
-                <div className="token-glow-aura" aria-hidden="true" />
-            )}
-
-            {/* Movement Particles — CSS keyframe classes */}
-            {isAnimating && (
-                <div className="token-trail-particles" aria-hidden="true">
-                    <div className="particle particle-1" />
-                    <div className="particle particle-2" />
-                    <div className="particle particle-3" />
-                </div>
-            )}
-
-            {/* Screen reader announcement for movement */}
-            {isAnimating && !isBonusMove && (
-                <span className="sr-only" aria-live="polite">
-                    Token moving
-                </span>
-            )}
         </div>
     );
 };
 
-export default React.memo(Token);
+/**
+ * Custom memo comparator (G-009): `allTokenIndices` is rebuilt as a fresh
+ * array on every gameState change, which used to defeat React.memo and
+ * re-render all 16 tokens on every 150ms hop. Compare it by value; every
+ * other prop is a primitive or a stable callback.
+ */
+function tokenPropsEqual(prevProps, nextProps) {
+    for (const key in nextProps) {
+        if (key === 'allTokenIndices') continue;
+        if (prevProps[key] !== nextProps[key]) return false;
+    }
+    const a = prevProps.allTokenIndices;
+    const b = nextProps.allTokenIndices;
+    if (a === b) return true;
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+}
+
+export default React.memo(Token, tokenPropsEqual);

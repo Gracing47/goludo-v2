@@ -80,8 +80,10 @@
     border-radius: inherit;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 140px 140px;
+    /* PERF (G-009): dropped mix-blend-mode:overlay — it forced the whole
+       button into a blend layer that recomposited on every dice/token
+       animation (the same fix was already applied to the board grain). */
     opacity: 0.030;
-    mix-blend-mode: overlay;
     pointer-events: none;
     z-index: 1;
 }
@@ -219,13 +221,15 @@
     100% { transform: rotateX(720deg) rotateY(540deg) rotateZ(360deg); }
 }
 
-/* show-N face classes — unchanged math */
-.show-1 { transform: rotateY(0deg);    }
-.show-2 { transform: rotateY(-90deg);  }
-.show-3 { transform: rotateY(-180deg); }
-.show-4 { transform: rotateY(90deg);   }
-.show-5 { transform: rotateX(-90deg);  }
-.show-6 { transform: rotateX(90deg);   }
+/* show-N face classes — unchanged math.
+   Scoped to .dice so they never leak onto the 2D dice (.dice2d
+   carries the same show-N class for its strip detent). */
+.dice.show-1 { transform: rotateY(0deg);    }
+.dice.show-2 { transform: rotateY(-90deg);  }
+.dice.show-3 { transform: rotateY(-180deg); }
+.dice.show-4 { transform: rotateY(90deg);   }
+.dice.show-5 { transform: rotateX(-90deg);  }
+.dice.show-6 { transform: rotateX(90deg);   }
 
 /* Face-reveal flash: briefly brighten when landing on a face.
    Applied to .dice-face to avoid browser 3D-context flattening bug on preserve-3d parent. */

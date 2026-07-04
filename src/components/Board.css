@@ -98,7 +98,9 @@
     z-index: 2;
 }
 
-/* ---- token layer ---- */
+/* ---- token layer ----
+   --cell-gap feeds the transform-only token positioning (.token-slot in
+   Token.css) and MUST stay in sync with the grid gap per breakpoint. */
 .token-layer {
     position: absolute;
     inset: 8px;
@@ -107,7 +109,8 @@
     grid-template-rows: repeat(15, 1fr);
     z-index: 10;
     pointer-events: none;
-    gap: 2px;
+    --cell-gap: 2px;
+    gap: var(--cell-gap);
 }
 
 .token-layer > * {
@@ -122,8 +125,8 @@
     position: relative;
     background: rgba(255, 255, 255, 0.025);
     border-radius: 3px;
-    transition: background var(--dur-fast) var(--ease-out),
-                box-shadow  var(--dur-fast) var(--ease-out);
+    /* PERF (G-009 / G-008 R4): dropped the background/box-shadow transition —
+       it armed paint-interpolation on all 225 cells for every turn change. */
 }
 
 .empty {
@@ -289,19 +292,26 @@
 
 /* ============================================
    ACTIVE-TURN — base lights up + pulse for current player
+   G-008 Runde 4 / G-009: driven by an .ap-<color> class on
+   .ludo-board instead of a per-cell .active-turn class, so the
+   225-cell markup stays STATIC across turn changes (no useMemo
+   rebuild). The old `filter: brightness(1.12)` (36 extra raster
+   layers every turn) is gone — the boosted gradients below carry
+   the highlight on their own.
    ============================================ */
 
-.active-turn {
-    filter: brightness(1.12);
+.ap-red    .base-red,
+.ap-green  .base-green,
+.ap-yellow .base-yellow,
+.ap-blue   .base-blue {
     z-index: 10;
 }
 
 /* Per-color active pulse — GPU only (opacity-based pseudo-element) */
-.active-turn {
-    position: relative;
-    z-index: 10;
-}
-.active-turn::before {
+.ap-red    .base-red::before,
+.ap-green  .base-green::before,
+.ap-yellow .base-yellow::before,
+.ap-blue   .base-blue::before {
     content: '';
     position: absolute;
     inset: -1px;
@@ -316,52 +326,52 @@
     to   { opacity: 1.0; }
 }
 
-.base-red.active-turn {
+.ap-red .base-red {
     background: linear-gradient(135deg,
         rgba(255, 42, 109, 0.68) 0%,
         rgba(255, 0, 50, 0.42) 100%) !important;
     border: 1px solid rgba(255, 42, 109, 0.55) !important;
 }
-.base-red.active-turn::before {
+.ap-red .base-red::before {
     border: 1px solid rgba(255, 42, 109, 0.7);
     box-shadow:
         0 0 20px rgba(255, 42, 109, 0.5),
         0 0 45px rgba(255, 42, 109, 0.2);
 }
 
-.base-green.active-turn {
+.ap-green .base-green {
     background: linear-gradient(135deg,
         rgba(0, 255, 157, 0.68) 0%,
         rgba(0, 200, 100, 0.42) 100%) !important;
     border: 1px solid rgba(0, 255, 157, 0.55) !important;
 }
-.base-green.active-turn::before {
+.ap-green .base-green::before {
     border: 1px solid rgba(0, 255, 157, 0.7);
     box-shadow:
         0 0 20px rgba(0, 255, 157, 0.5),
         0 0 45px rgba(0, 255, 157, 0.2);
 }
 
-.base-yellow.active-turn {
+.ap-yellow .base-yellow {
     background: linear-gradient(135deg,
         rgba(255, 204, 0, 0.68) 0%,
         rgba(200, 140, 0, 0.42) 100%) !important;
     border: 1px solid rgba(255, 204, 0, 0.55) !important;
 }
-.base-yellow.active-turn::before {
+.ap-yellow .base-yellow::before {
     border: 1px solid rgba(255, 204, 0, 0.7);
     box-shadow:
         0 0 20px rgba(255, 204, 0, 0.5),
         0 0 45px rgba(255, 204, 0, 0.2);
 }
 
-.base-blue.active-turn {
+.ap-blue .base-blue {
     background: linear-gradient(135deg,
         rgba(5, 217, 232, 0.68) 0%,
         rgba(0, 140, 255, 0.42) 100%) !important;
     border: 1px solid rgba(5, 217, 232, 0.55) !important;
 }
-.base-blue.active-turn::before {
+.ap-blue .base-blue::before {
     border: 1px solid rgba(5, 217, 232, 0.7);
     box-shadow:
         0 0 20px rgba(5, 217, 232, 0.5),
@@ -404,7 +414,18 @@
     border-right: 1px solid rgba(5, 217, 232, 0.30);
 }
 
-.home-path-active {
+/* Active home lane — driven by .ap-<color> on the board root
+   (replaces the per-cell .home-path-active class, see ACTIVE-TURN).
+   The [data-row][data-col] selectors cover the goal cell (position 105),
+   which is a .center cell at the lane's end. */
+.ap-red    .home-red,
+.ap-green  .home-green,
+.ap-yellow .home-yellow,
+.ap-blue   .home-blue,
+.ap-red    .center[data-row="7"][data-col="6"],
+.ap-green  .center[data-row="6"][data-col="7"],
+.ap-yellow .center[data-row="7"][data-col="8"],
+.ap-blue   .center[data-row="8"][data-col="7"] {
     box-shadow: inset 0 0 24px currentColor;
     z-index: 2;
     animation: home-pulse var(--dur-slower) infinite alternate var(--ease-in-out);
@@ -583,7 +604,7 @@
 
     .token-layer {
         inset: 6px;
-        gap: 1.5px;
+        --cell-gap: 1.5px;
     }
 }
 
@@ -598,7 +619,7 @@
 
     .token-layer {
         inset: 10px;
-        gap: 3px;
+        --cell-gap: 3px;
     }
 }
 
@@ -617,7 +638,7 @@
 
     .token-layer {
         inset: 12px;
-        gap: 3px;
+        --cell-gap: 3px;
     }
 }
 

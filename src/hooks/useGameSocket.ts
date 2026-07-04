@@ -174,13 +174,13 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
                         // 2. Animate the steps
                         traversePath.forEach((pos: TokenPosition, index: number) => {
                             setTimeout(() => {
+                                // G-009: sound OUTSIDE the state updater — updaters must
+                                // stay pure (StrictMode runs them twice → double audio).
+                                soundManager.play('move');
                                 setGameState((prev) => {
                                     if (!prev) return prev;
                                     const newTokens = prev.tokens.map((arr) => [...arr]);
                                     newTokens[p]![t] = pos;
-
-                                    // Trigger move sound
-                                    soundManager.play('move');
                                     return { ...prev, tokens: newTokens };
                                 });
 

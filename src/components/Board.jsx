@@ -12,20 +12,20 @@ import React from 'react';
 import './Board.css';
 import {
     GRID_SIZE,
-    BOARD_LAYOUT,
-    CELL_TYPE,
-    MASTER_LOOP,
-    HOME_STRETCH_COORDS,
-    PLAYERS
+    BOARD_LAYOUT
 } from '../engine/constants';
 
 const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver = false }) => {
+    // PERF (G-008 R4 / G-009): the 225 cell elements are fully STATIC now.
+    // Active-player highlighting is driven purely via the .ap-<color> class
+    // on .ludo-board (see Board.css) — the old useMemo rebuilt all 225 cells
+    // (incl. crown + pseudo layers) on every turn change.
     const cells = React.useMemo(() => {
         const result = [];
         for (let row = 0; row < GRID_SIZE; row++) {
             for (let col = 0; col < GRID_SIZE; col++) {
                 const cellType = BOARD_LAYOUT[row][col];
-                const cellClasses = getCellClasses(cellType, row, col, activePlayer);
+                const cellClasses = getCellClasses(cellType, row, col);
                 const isCenterCrown = row === 7 && col === 7;
 
                 result.push(
@@ -49,13 +49,15 @@ const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver =
             }
         }
         return result;
-    }, [activePlayer, rotation]);
+    }, []);
+
+    const activePlayerClass = ['ap-red', 'ap-green', 'ap-yellow', 'ap-blue'][activePlayer] || '';
 
     return (
         <div className="board-wrapper">
             <div className="board-focus-wrapper">
                 <div className="board-anchor">
-                    <div className="ludo-board" style={{
+                    <div className={`ludo-board ${activePlayerClass}`} style={{
                         transform: `rotate(${rotation}deg)`,
                         transition: 'transform 0.5s ease',
                         '--board-rotation': `${rotation}deg`,
@@ -75,9 +77,11 @@ const Board = ({ children, overlay, rotation = 0, activePlayer = 0, isGameOver =
 };
 
 /**
- * Generate CSS class names for a cell based on its type and position
+ * Generate CSS class names for a cell based on its type and position.
+ * NOTE: active-player highlighting (former .active-turn / .home-path-active
+ * classes) moved to the .ap-<color> class on .ludo-board so cells stay static.
  */
-function getCellClasses(cellType, row, col, activePlayer) {
+function getCellClasses(cellType, row, col) {
     const classes = [cellType];
 
     // 1. Check for spawn points in bases
@@ -101,19 +105,6 @@ function getCellClasses(cellType, row, col, activePlayer) {
         const c0 = col < 6 ? 0 : 9;
         const isEdge = row === r0 || row === r0 + 5 || col === c0 || col === c0 + 5;
         classes.push(isEdge ? 'base-edge' : 'base-inner');
-    }
-
-    // 3. Active Player Highlight
-    const activeColor = ['base-red', 'base-green', 'base-yellow', 'base-blue'][activePlayer];
-    if (cellType === activeColor) {
-        classes.push('active-turn');
-    }
-
-    // 4. Home Stretch Highlight
-    const homeStretch = HOME_STRETCH_COORDS[activePlayer];
-    if (homeStretch) {
-        const isHomePath = homeStretch.some(p => p.r === row && p.c === col);
-        if (isHomePath) classes.push('home-path-active');
     }
 
     return classes.join(' ');

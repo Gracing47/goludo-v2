@@ -158,13 +158,24 @@
     animation: none !important;
 }
 
-/* Home-path active pulse */
-.perf-low .home-path-active {
+/* Home-path active pulse (G-009: selectors follow the .ap-<color>
+   board-root refactor — cells no longer carry .home-path-active) */
+.perf-low .ap-red    .home-red,
+.perf-low .ap-green  .home-green,
+.perf-low .ap-yellow .home-yellow,
+.perf-low .ap-blue   .home-blue,
+.perf-low .ap-red    .center[data-row="7"][data-col="6"],
+.perf-low .ap-green  .center[data-row="6"][data-col="7"],
+.perf-low .ap-yellow .center[data-row="7"][data-col="8"],
+.perf-low .ap-blue   .center[data-row="8"][data-col="7"] {
     animation: none !important;
 }
 
-/* Active-turn quadrant pulse pseudo-element */
-.perf-low .active-turn::before {
+/* Active-turn quadrant pulse pseudo-element (G-009: .ap-<color> refactor) */
+.perf-low .ap-red    .base-red::before,
+.perf-low .ap-green  .base-green::before,
+.perf-low .ap-yellow .base-yellow::before,
+.perf-low .ap-blue   .base-blue::before {
     animation: none !important;
     opacity: 0.7 !important;
     will-change: auto !important;
@@ -220,4 +231,99 @@
     filter: none !important;
     /* The stacked appearance is preserved via .token.stacked .token-inner
        border/box-shadow rules which remain untouched */
+}
+
+/* ============================================================
+   ── 6. G-009 — MOVE-PATH, HUD-INFINITE & DICE GATES ──
+   Closes the coverage gaps found by the G-009 audit: the two
+   real hot paths (dice roll, token movement) plus the infinite
+   animations that kept running during roll/select phases.
+   ============================================================ */
+
+/* --- 6a. TOKEN MOVE PATH — cap effect layers per hop --- */
+
+/* Trail particles: 3 extra animated layers riding along every move */
+.perf-low .token-trail-particles {
+    display: none !important;
+}
+
+/* Landing flicker animates filter:brightness/contrast/saturate →
+   per-frame re-rasterisation of the sphere. The impact wave (transform/
+   opacity ring) stays as the landing signal. */
+.perf-low .token.impacted .token-inner {
+    animation: none !important;
+}
+
+/* Token slots move via retargeted transform transitions — the transition
+   auto-promotes a layer for its duration; no standing hint needed on
+   memory-constrained devices (up to 16 slots). */
+.perf-low .token-slot {
+    will-change: auto !important;
+}
+
+/* Destination-ghost rings: keep the one-shot enter pop, kill the two
+   infinite pulse animations (×2 pseudos per valid move, every turn) */
+.perf-low .token-dest-ghost::before,
+.perf-low .token-dest-ghost::after {
+    animation: dest-ghost-enter var(--dur-fast, 180ms) var(--ease-spring, ease-out) forwards !important;
+}
+
+/* --- 6b. HUD INFINITE ANIMATIONS (style-only overrides; HUD components
+       themselves are untouched) --- */
+
+/* turn-status pill: box-shadow pulse = paint per frame, and it runs
+   exactly during the roll/select phases. Keep the enter animation,
+   pin the resting glow. */
+.perf-low .turn-status.tone-act {
+    animation: turn-status-in var(--dur-normal, 360ms) var(--ease-spring, ease-out) !important;
+    box-shadow: var(--elev-2, 0 8px 28px rgba(0, 0, 0, 0.5)),
+                0 0 16px color-mix(in srgb, var(--ts-color, var(--neon-cyan)) 35%, transparent) !important;
+}
+
+/* Pod orbit rings: two infinite scale/opacity sweeps per active pod →
+   one static ring keeps the "whose turn" signal */
+.perf-low .pod-turn-indicator {
+    animation: none !important;
+    opacity: 0.85 !important;
+    transform: scale(1.06) !important;
+}
+.perf-low .pod-turn-indicator-2 {
+    display: none !important;
+}
+
+/* Urgent turn-timer: throb + filter:drop-shadow on an SVG stroke whose
+   dasharray transitions every second (double per-frame rasterisation) */
+.perf-low .turn-timer.urgent {
+    animation: none !important;
+}
+.perf-low .turn-timer-progress,
+.perf-low .turn-timer.urgent .turn-timer-progress {
+    filter: none !important;
+}
+
+/* --- 6c. DICE — the 2D flip-strip component replaces the 3D cube on
+       perf-low (component switch in Dice.jsx). These rules are belt-and-
+       suspenders for the frames between a runtime watchdog latch and the
+       React re-render that swaps the component. --- */
+
+/* No 3D context needed by the 2D dice */
+.perf-low .dice-button {
+    perspective: none !important;
+}
+
+/* 3D tumble (preserve-3d rotateX/Y/Z, 0.38s infinite) */
+.perf-low .dice.rolling {
+    animation: none !important;
+}
+
+/* Settle flash animated filter:brightness + box-shadow on all 6 faces */
+.perf-low .dice-button:not(.rolling-container) .dice-face {
+    animation: none !important;
+}
+
+/* Rolling glow: 4 box-shadow layers → 2 (still reads as "hot") */
+.perf-low .dice-button.rolling-container {
+    box-shadow:
+        var(--elev-2, 0 8px 28px rgba(0, 0, 0, 0.5)),
+        0 0 28px rgba(0, 243, 255, 0.28) !important;
 }
