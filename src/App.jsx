@@ -22,6 +22,7 @@ import AmbientLight from './components/VFX/AmbientLight';
 import VictoryCelebration from './components/VictoryCelebration';
 import AAACountdown from './components/AAACountdown';
 import soundManager from './services/SoundManager';
+import { showToast } from './services/toast';
 import { usePerfTier } from './hooks/usePerfTier';
 import { useFpsWatchdog } from './hooks/useFpsWatchdog';
 
@@ -60,8 +61,6 @@ function App() {
     // PERFORMANCE TIER — wire global .perf-low class
     // ============================================
     const perfTier = usePerfTier();
-    // Runtime FPS watchdog — independently latches perf-low if framerate drops below 50 fps
-    useFpsWatchdog();
     useEffect(() => {
         if (typeof document === 'undefined') return;
         document.documentElement.classList.toggle('perf-low', perfTier === 'low');
@@ -70,6 +69,11 @@ function App() {
             document.documentElement.classList.remove('perf-low');
         };
     }, [perfTier]);
+    // Runtime FPS watchdog — latches perf-low if the framerate drops during play.
+    // G-009 fix: registered AFTER the tier effect above (effects run in
+    // declaration order), so its perf-low guard actually sees the statically
+    // set class; on statically-low devices it is skipped entirely.
+    useFpsWatchdog(perfTier !== 'low');
 
     // ============================================
     // ZUSTAND STORE - Single Source of Truth
@@ -375,10 +379,12 @@ function App() {
         // 🎬 STEP-BY-STEP ANIMATION LOOP
         path.forEach((pos, index) => {
             const tid = setTimeout(() => {
+                // G-009: playSound OUTSIDE the state updater — updaters must
+                // stay pure (StrictMode runs them twice → double audio).
+                playSound('move');
                 setGameState(prev => {
                     const newTokens = prev.tokens.map(arr => [...arr]);
                     newTokens[playerIdx][tokenIdx] = pos;
-                    playSound('move');
                     return { ...prev, tokens: newTokens };
                 });
             }, index * hopDuration);
@@ -541,7 +547,7 @@ function App() {
             playSound('success');
         } catch (err) {
             console.error(err);
-            alert("Claim failed: " + (err.message || "Unknown error"));
+            showToast("Claim failed: " + (err.message || "Unknown error"), "error");
         } finally {
             setIsClaiming(false);
         }
