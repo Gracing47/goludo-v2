@@ -11,6 +11,9 @@
  * - `enabled` param: statically-low devices (usePerfTier → 'low') skip the
  *   rAF loop entirely (the old mount-time class guard raced the effect that
  *   sets the class and therefore never fired)
+ * - Discontinuity guard: a frame delta ≥750ms means the tab/app was hidden
+ *   (rAF pauses) — the window is restarted instead of judged, otherwise one
+ *   tab switch would false-latch perf-low on healthy high-end devices
  *
  * Design constraints (unchanged):
  * - SSR-safe (typeof window guard at top)
@@ -34,6 +37,7 @@ export function useFpsWatchdog(enabled: boolean = true): void {
         const avgThreshold   = 48;   // fps — average escalation
         const longFrameMs    = 34;   // ≥34ms frame ≈ below 30fps
         const longFrameLimit = 6;    // 6 long frames per window = burst jank → latch
+        const gapResetMs     = 750;  // ≥750ms delta = tab switch / app background, NOT jank
 
         let rafId: number;
         let warmupStart: number;
@@ -52,6 +56,22 @@ export function useFpsWatchdog(enabled: boolean = true): void {
                     frameCount  = 0;
                     longFrames  = 0;
                 }
+                rafId = requestAnimationFrame(tick);
+                return;
+            }
+
+            // Discontinuity guard (adversarial-review fix): rAF pauses while the
+            // tab/app is hidden, so the frame after returning carries a huge
+            // delta AND a huge window `elapsed` — without this guard a single
+            // tab switch would false-latch perf-low on a healthy high-end
+            // device (avgFps = old frameCount / seconds away). Real jank never
+            // produces one isolated ≥750ms frame; real freezes latch via the
+            // 34ms-burst path around them. → restart the window, don't judge it.
+            if (timestamp - lastTs >= gapResetMs) {
+                windowStart = timestamp;
+                lastTs      = timestamp;
+                frameCount  = 0;
+                longFrames  = 0;
                 rafId = requestAnimationFrame(tick);
                 return;
             }
