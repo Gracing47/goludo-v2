@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../config/routes';
+import GraphicsSettings from '../settings/GraphicsSettings';
 import './GlobalHeader.css';
 
 // PROD-3 perf: the thirdweb wallet UI is lazy-loaded and ONLY mounted on
@@ -42,6 +43,7 @@ const GlobalHeader: React.FC = () => {
                 </div>
 
                 <div className="header-right">
+                    <GraphicsSettings />
                     <div className="wallet-section">
                         {isLanding ? (
                             // Landing: lightweight CTA — no thirdweb on the homepage.

@@ -25,6 +25,7 @@ import soundManager from './services/SoundManager';
 import { showToast } from './services/toast';
 import { usePerfTier } from './hooks/usePerfTier';
 import { useFpsWatchdog } from './hooks/useFpsWatchdog';
+import { useSettingsStore } from './store/useSettingsStore';
 
 import './App.css';
 import './styles/perf-low.css';
@@ -60,7 +61,15 @@ function App() {
     // ============================================
     // PERFORMANCE TIER — wire global .perf-low class
     // ============================================
-    const perfTier = usePerfTier();
+    // Effective tier = automatic device detection, overridden by the player's
+    // explicit graphics choice (GraphicsSettings gear in the header):
+    //   'smooth' → force low (minimal animation, smoothest flow)
+    //   'high'   → force full effects + disable the auto-downgrade watchdog
+    //   'auto'   → detected tier + runtime FPS watchdog (default)
+    const detectedTier = usePerfTier();
+    const graphicsPref = useSettingsStore((s) => s.graphics);
+    const perfTier =
+        graphicsPref === 'smooth' ? 'low' : graphicsPref === 'high' ? 'high' : detectedTier;
     useEffect(() => {
         if (typeof document === 'undefined') return;
         document.documentElement.classList.toggle('perf-low', perfTier === 'low');
@@ -73,7 +82,9 @@ function App() {
     // G-009 fix: registered AFTER the tier effect above (effects run in
     // declaration order), so its perf-low guard actually sees the statically
     // set class; on statically-low devices it is skipped entirely.
-    useFpsWatchdog(perfTier !== 'low');
+    // Only active in 'auto': if the player forced 'high' they opted out of the
+    // auto-downgrade, and 'smooth' is already low so the loop is skipped anyway.
+    useFpsWatchdog(graphicsPref === 'auto' && detectedTier !== 'low');
 
     // ============================================
     // ZUSTAND STORE - Single Source of Truth

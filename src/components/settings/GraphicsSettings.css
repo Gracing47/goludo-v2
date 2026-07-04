@@ -1,0 +1,212 @@
+/* ============================================================
+   GraphicsSettings — gear button + native <dialog> mode picker.
+   Reuses the header glass-pill language so it sits naturally next
+   to the wallet button. The dialog itself is a small centered
+   panel (senior-friendly: big tap targets, plain German, no jargon).
+   ============================================================ */
+
+.settings-gear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md, 12px);
+    background: var(--tint-cyan-4, rgba(0, 243, 255, 0.04));
+    border: 1px solid var(--border-white-hi, rgba(255, 255, 255, 0.14));
+    color: var(--text-primary, #fff);
+    cursor: pointer;
+    transition:
+        background var(--dur-fast, 160ms) var(--ease-premium, ease),
+        border-color var(--dur-fast, 160ms) var(--ease-premium, ease),
+        box-shadow var(--dur-fast, 160ms) var(--ease-premium, ease),
+        transform var(--dur-fast, 160ms) var(--ease-premium, ease);
+}
+
+.settings-gear:hover {
+    background: var(--tint-cyan-8, rgba(0, 243, 255, 0.08));
+    border-color: var(--border-cyan, rgba(0, 243, 255, 0.35));
+    box-shadow: var(--elev-2, 0 8px 28px rgba(0, 0, 0, 0.5)), var(--bloom-cyan, 0 0 20px rgba(0, 243, 255, 0.25));
+}
+
+.settings-gear:focus-visible {
+    outline: 2px solid var(--neon-cyan, #00f3ff);
+    outline-offset: 2px;
+}
+
+.settings-gear svg {
+    transition: transform var(--dur-slow, 400ms) var(--ease-spring, ease-out);
+}
+
+.settings-gear:hover svg {
+    transform: rotate(60deg);
+}
+
+/* ── Dialog ─────────────────────────────────────────────── */
+
+.settings-dialog {
+    margin: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    max-width: min(92vw, 26rem);
+    width: 100%;
+    color: var(--text-primary, #fff);
+}
+
+.settings-dialog::backdrop {
+    background: rgba(4, 4, 12, 0.62);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.settings-panel {
+    background: var(--bg-card, rgba(12, 13, 30, 0.98));
+    border: 1px solid var(--border-white-hi, rgba(255, 255, 255, 0.14));
+    border-radius: var(--radius-xl, 20px);
+    box-shadow: var(--elev-4, 0 24px 64px rgba(0, 0, 0, 0.6));
+    padding: var(--space-5, 20px);
+}
+
+.settings-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3, 12px);
+}
+
+.settings-head h2 {
+    margin: 0;
+    font-family: var(--font-display, 'Exo 2', sans-serif);
+    font-weight: var(--font-bold, 700);
+    font-size: var(--text-lg, 1.125rem);
+    letter-spacing: var(--tracking-wide, 0.02em);
+    color: var(--text-primary, #fff);
+}
+
+.settings-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: var(--radius-full, 999px);
+    background: transparent;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.65));
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--dur-fast, 160ms) var(--ease-premium, ease), color var(--dur-fast, 160ms) var(--ease-premium, ease);
+}
+
+.settings-close:hover {
+    background: var(--tint-cyan-8, rgba(0, 243, 255, 0.08));
+    color: var(--text-primary, #fff);
+}
+
+.settings-close:focus-visible {
+    outline: 2px solid var(--neon-cyan, #00f3ff);
+    outline-offset: 2px;
+}
+
+.settings-sub {
+    margin: var(--space-2, 8px) 0 var(--space-4, 16px);
+    font-family: var(--font-body, system-ui, sans-serif);
+    font-size: var(--text-sm, 0.875rem);
+    color: var(--text-secondary, rgba(255, 255, 255, 0.65));
+    line-height: 1.5;
+}
+
+.settings-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 8px);
+}
+
+.settings-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3, 12px);
+    width: 100%;
+    text-align: left;
+    padding: var(--space-3, 12px) var(--space-4, 16px);
+    min-height: 56px;
+    border-radius: var(--radius-lg, 16px);
+    background: var(--bg-surface, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border-white-lo, rgba(255, 255, 255, 0.08));
+    color: var(--text-primary, #fff);
+    cursor: pointer;
+    transition:
+        background var(--dur-fast, 160ms) var(--ease-premium, ease),
+        border-color var(--dur-fast, 160ms) var(--ease-premium, ease),
+        box-shadow var(--dur-fast, 160ms) var(--ease-premium, ease);
+}
+
+.settings-option:hover {
+    background: var(--bg-card-hover, rgba(255, 255, 255, 0.06));
+    border-color: var(--border-white-hi, rgba(255, 255, 255, 0.14));
+}
+
+.settings-option:focus-visible {
+    outline: 2px solid var(--neon-cyan, #00f3ff);
+    outline-offset: 2px;
+}
+
+.settings-option.active {
+    background: var(--tint-cyan-8, rgba(0, 243, 255, 0.08));
+    border-color: var(--border-cyan, rgba(0, 243, 255, 0.35));
+    box-shadow: var(--bloom-cyan, 0 0 20px rgba(0, 243, 255, 0.18));
+}
+
+.settings-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.settings-option-label {
+    font-family: var(--font-display, 'Exo 2', sans-serif);
+    font-weight: var(--font-semibold, 600);
+    font-size: var(--text-base, 1rem);
+    color: var(--text-primary, #fff);
+}
+
+.settings-option-desc {
+    font-family: var(--font-body, system-ui, sans-serif);
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--text-secondary, rgba(255, 255, 255, 0.65));
+    line-height: 1.45;
+}
+
+.settings-option-check {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    font-weight: var(--font-bold, 700);
+    color: var(--neon-cyan, #00f3ff);
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity var(--dur-fast, 160ms) var(--ease-premium, ease), transform var(--dur-fast, 160ms) var(--ease-spring, ease-out);
+}
+
+.settings-option.active .settings-option-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Reduced-motion / perf-low: the gear must never itself add jank. */
+.perf-low .settings-gear svg,
+.perf-low .settings-option-check {
+    transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settings-gear svg,
+    .settings-option-check {
+        transition: none !important;
+    }
+    .settings-gear:hover svg {
+        transform: none;
+    }
+}
