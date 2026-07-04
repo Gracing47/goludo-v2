@@ -375,6 +375,14 @@
     z-index: 3;
 }
 
+/* G-010 mobile overlap fix: the absolute badge floats over the card title on
+   narrow screens ("2-4 PLAYERS" covering "Local Game"). Reserve its footprint. */
+@media (max-width: 560px) {
+    .menu-text {
+        padding-right: 86px;
+    }
+}
+
 .menu-button.primary   .mode-badge { background: var(--tint-cyan-12); color: var(--neon-cyan);  border: 1px solid var(--border-cyan); }
 .menu-button.secondary .mode-badge { background: var(--tint-blue-12); color: var(--neon-blue);  border: 1px solid var(--border-blue); }
 .menu-button.web3      .mode-badge { background: var(--tint-pink-12); color: var(--neon-pink);  border: 1px solid var(--border-pink); }

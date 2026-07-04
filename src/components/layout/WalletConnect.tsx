@@ -21,7 +21,12 @@ const WalletConnect: React.FC = () => (
     <ConnectButton
         client={client}
         wallets={wallets as Wallet[]}
-        accountAbstraction={{ chain: coston2, sponsorGas: true }}
+        // G-010: NO accountAbstraction here. It wrapped every wallet (incl.
+        // MetaMask) in a zero-balance smart account — sponsorGas only covers
+        // gas, never the stake VALUE, so createRoom/joinRoom always died with
+        // "Insufficient funds" on a wallet the user never funded (and the
+        // paymaster 400s on Coston2 anyway). The user's real EOA pays directly.
+        chain={coston2}
         theme={'dark'}
         connectButton={{ label: 'Connect', className: 'aaa-connect-button' }}
     />
