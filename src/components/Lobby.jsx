@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import './Lobby.css';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
@@ -116,6 +117,46 @@ const Lobby = ({ onStartGame }) => {
         const interval = setInterval(fetchRooms, step === 'waiting' ? 1500 : 3000);
         return () => clearInterval(interval);
     }, [step, waitingRoomId, selectedRoom?.id]);
+
+    // G-011 invite links (Daniel-reviewed): /app/ludo?join=<roomId> jumps
+    // straight into the web3 lobby and opens the join modal for that room.
+    // Deliberately a ONE-SHOT fetch decoupled from the 3s polling: the poll
+    // writes an empty array on transient errors (indistinguishable from
+    // "room gone") and would re-open the modal on every tick. The param is
+    // consumed exactly once (ref + URL cleanup).
+    const [searchParams, setSearchParams] = useSearchParams();
+    const joinConsumedRef = useRef(false);
+    useEffect(() => {
+        const joinId = searchParams.get('join');
+        if (!joinId || joinConsumedRef.current) return;
+        joinConsumedRef.current = true;
+        // Past handleModeSelect on purpose: it blocks without a wallet, but the
+        // room list is viewable wallet-less; gameMode must still be set so the
+        // back button leads to the menu.
+        setGameMode('web3');
+        setStep('web3-lobby');
+        (async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/rooms`);
+                const rooms = await res.json();
+                const room = Array.isArray(rooms)
+                    ? rooms.find(r => r.id?.toLowerCase() === joinId.toLowerCase())
+                    : null;
+                if (room && room.status === 'WAITING') {
+                    handleJoinRoomUI(room);
+                } else if (room) {
+                    showToast('This match has already started — pick another one below.', 'info');
+                } else {
+                    showToast('This match no longer exists — pick another one below.', 'info');
+                }
+            } catch {
+                showToast('Could not load the invited match — check your connection.', 'error');
+            } finally {
+                setSearchParams({}, { replace: true });
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
     const handleModeSelect = (mode) => {
         if (mode === 'web3' && !account) {
@@ -339,14 +380,17 @@ const Lobby = ({ onStartGame }) => {
         };
     }, [selectedRoom?.id, isProcessing]);
 
-    // ---- Waiting room: copy room ID with feedback ----
+    // ---- Waiting room: copy a full invite LINK (G-011) ----
+    // A bare room id was useless to the recipient (there is no join-by-id
+    // field); the link opens the join modal directly.
     const handleCopyRoomId = async () => {
         if (!waitingRoomId) return;
+        const inviteUrl = `${window.location.origin}/app/ludo?join=${waitingRoomId}`;
         try {
-            await navigator.clipboard.writeText(waitingRoomId);
-            showToast("Room ID copied — share it with a friend!", "success");
+            await navigator.clipboard.writeText(inviteUrl);
+            showToast("Invite link copied — send it to a friend!", "success");
         } catch {
-            showToast("Could not copy the room ID.", "error");
+            showToast("Could not copy the invite link.", "error");
         }
     };
 
@@ -517,9 +561,9 @@ const Lobby = ({ onStartGame }) => {
                                 <button
                                     className="room-id-copy"
                                     onClick={handleCopyRoomId}
-                                    title="Copy room ID to invite a friend"
+                                    title="Copy an invite link to bring a friend into this match"
                                 >
-                                    Room: <small>{waitingRoomId.substring(0, 10)}…</small>
+                                    🔗 Copy Invite Link <small>({waitingRoomId.substring(0, 8)}…)</small>
                                     <span className="copy-icon" aria-hidden="true">📋</span>
                                 </button>
 

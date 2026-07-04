@@ -260,30 +260,39 @@ function App() {
 
 
     // 1. Web3 Connection Hook
+    // G-011 reconnect fix (Daniel-reviewed): the old guard required
+    // gameConfig.mode === 'web3' BEFORE connecting, but after a page reload on
+    // /game/:roomId GameRoom only sets appState='game' — gameConfig is null, so
+    // the "initialize config if missing" branch was unreachable dead code and
+    // the socket never reconnected. Web3 room ids are 66-char bytes32 hashes
+    // (local ids are ~9 chars), the same heuristic GameRoom already uses.
+    // useGameSocket rebuilds the full config from game_started /
+    // pre_game_countdown, and the account race resolves via the dep array
+    // (thirdweb autoconnect → account arrives → effect re-runs). matchSocket is
+    // deliberately NOT a dep: connect() is idempotent, and as a dep it would
+    // risk reconnect loops.
     useEffect(() => {
         const roomId = gameId;
-        if (!roomId || appState !== 'game' || gameConfig?.mode !== 'web3') return;
+        if (!roomId || appState !== 'game') return;
+        const isWeb3 = gameConfig?.mode === 'web3' || roomId.length > 20;
+        if (!isWeb3 || !account?.address) return;
 
-        // Ensure we have a socket connection
-        if (roomId.length > 20 || gameConfig?.mode === 'web3') {
-            const targetAddr = account?.address || 'anonymous';
-            const currentSocket = matchSocket;
+        const targetAddr = account.address;
+        const currentSocket = matchSocket;
+        const isMatchingSocket = currentSocket &&
+            currentSocket._targetRoom === roomId &&
+            currentSocket._targetAddr === targetAddr;
+        if (isMatchingSocket) return;
 
-            const isMatchingSocket = currentSocket &&
-                currentSocket._targetRoom === roomId &&
-                currentSocket._targetAddr === targetAddr;
+        console.log('🌐 Web3 Session: Initializing connection...', { roomId, account: targetAddr });
 
-            if (!isMatchingSocket && account?.address) {
-                console.log('🌐 Web3 Session: Initializing connection...', { roomId, account: targetAddr });
-
-                // Initialize config if missing (e.g. on direct reload)
-                if (!gameConfig) {
-                    setGameConfig({ mode: 'web3', roomId: roomId });
-                }
-
-                socketConnect();
-            }
+        // Initialize config if missing (e.g. on direct reload) — the socket
+        // events replace this stub with the full roster.
+        if (!gameConfig) {
+            setGameConfig({ mode: 'web3', roomId: roomId });
         }
+
+        socketConnect();
     }, [gameId, appState, gameConfig, socketConnect, account?.address, setGameConfig]);
 
     // Note: Connection watchdog removed. Socket.IO built-in reconnection is sufficient.

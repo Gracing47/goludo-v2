@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb/react";
-import { prepareContractCall, toWei, waitForReceipt } from "thirdweb";
+import { prepareContractCall, readContract, toWei, waitForReceipt } from "thirdweb";
 import { ethers } from "ethers";
 import { ludoVaultContract, coston2, client } from "../config/web3";
 import { NATIVE_CURRENCY_SYMBOL } from "../config/currency";
@@ -132,17 +132,25 @@ export const useLudoWeb3 = () => {
             const amountInWei = toWei(stakeAmount.toString());
 
             // Step B1: Verify Room Status on Blockchain (Prevent InvalidRoomStatus revert)
+            // G-010/G-011: the old `ludoVaultContract.read.*` calls threw on every
+            // run (thirdweb v5 contracts have no `.read`), so this check silently
+            // never worked. Real readContract now — a friendly error BEFORE the
+            // wallet opens beats an on-chain revert after.
             console.log("Checking room status on-chain...");
             try {
-                // @ts-ignore
-                const roomInfo = await ludoVaultContract.read.rooms([roomId as `0x${string}`]);
-                // roomInfo is [creator, maxPlayers, entryAmount, pot, createdAt, status]
+                const roomInfo = await readContract({
+                    contract: ludoVaultContract,
+                    method: "function rooms(bytes32) view returns (address, uint256, uint256, uint256, uint256, uint8)",
+                    params: [roomId as `0x${string}`],
+                });
                 const maxPlayers = Number(roomInfo[1]);
                 const status = Number(roomInfo[5]);
 
-                // Fetch current participants count
-                // @ts-ignore
-                const participants = await ludoVaultContract.read.getParticipants([roomId as `0x${string}`]);
+                const participants = await readContract({
+                    contract: ludoVaultContract,
+                    method: "function getParticipants(bytes32) view returns (address[])",
+                    params: [roomId as `0x${string}`],
+                });
 
                 if (status === 0) throw new Error("Room does not exist on the smart contract.");
                 if (status !== 1) throw new Error(`Cannot join: Room status is ${status === 2 ? 'ACTIVE' : 'INACTIVE'}.`);
@@ -212,13 +220,17 @@ export const useLudoWeb3 = () => {
             });
 
             const result = await sendTx(claimTx);
+            // G-011 (Daniel-Review): mine the claim before declaring success —
+            // sendTx resolves on wallet submit, so an on-chain revert (expired
+            // deadline, replayed nonce) would otherwise still show "PAYOUT SENT!".
+            await confirmTx(result.transactionHash);
             console.log("Payout claimed successfully!", result);
             // Kein Success-Toast: VictoryCelebration zeigt bereits prominent
             // "PAYOUT SENT!" — ein Toast wäre doppeltes Feedback.
             return result;
         } catch (error) {
             console.error("Payout Claim Error:", error);
-            showToast("Failed to claim winnings — check that you are the winner and the signature hasn't expired.", "error");
+            showToast(`Failed to claim winnings${errorDetail(error)}`, "error");
             throw error;
         } finally {
             setIsProcessing(false);
