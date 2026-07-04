@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb/react";
-import { prepareContractCall, toWei } from "thirdweb";
+import { prepareContractCall, toWei, waitForReceipt } from "thirdweb";
 import { ethers } from "ethers";
 import { ludoVaultContract, coston2, client } from "../config/web3";
 import { NATIVE_CURRENCY_SYMBOL } from "../config/currency";
@@ -25,6 +25,25 @@ export const useLudoWeb3 = () => {
         address: account?.address,
         client: client,
     });
+
+    // G-010: mine the TX before syncing with the backend. sendTx resolves on
+    // wallet SUBMIT (hash only) — the backend verifier fetches the receipt, so
+    // racing it against block inclusion caused "Transaction not found" flakes.
+    const confirmTx = async (transactionHash: `0x${string}`) => {
+        const receipt = await waitForReceipt({ client, chain: coston2, transactionHash });
+        if (receipt.status !== "success") {
+            throw new Error("Transaction reverted on-chain.");
+        }
+        return receipt;
+    };
+
+    // G-010: surface the REAL cause in the toast (first line, trimmed) — the
+    // generic message hid a dead contract address for days.
+    const errorDetail = (error: unknown): string => {
+        const msg = error instanceof Error ? error.message : String(error ?? "");
+        const firstLine = (msg.split("\n")[0] ?? "").trim();
+        return firstLine ? ` (${firstLine.slice(0, 140)})` : "";
+    };
 
     const balance = walletBalance?.displayValue || "0";
     // PROD-4: fall back to the single currency source-of-truth rather than a
@@ -77,6 +96,8 @@ export const useLudoWeb3 = () => {
 
             const txResult = await sendTx(createTx);
             const txHash = txResult.transactionHash;
+            console.log("Transaction submitted:", txHash);
+            await confirmTx(txHash);
             console.log("Transaction confirmed:", txHash);
 
             // Step C: Register Room in Backend Lobby
@@ -95,7 +116,7 @@ export const useLudoWeb3 = () => {
             return roomId;
         } catch (error) {
             console.error("Create Room Failed:", error);
-            showToast("Failed to create room — the transaction was not completed.", "error");
+            showToast(`Failed to create room${errorDetail(error)}`, "error");
             throw error;
         } finally {
             setIsProcessing(false);
@@ -144,6 +165,8 @@ export const useLudoWeb3 = () => {
             });
             const txResult = await sendTx(joinTx);
             const txHash = txResult.transactionHash;
+            console.log("Join transaction submitted:", txHash);
+            await confirmTx(txHash);
             console.log("Join transaction confirmed:", txHash);
 
             // Step C: Update Backend
@@ -160,7 +183,7 @@ export const useLudoWeb3 = () => {
 
         } catch (error) {
             console.error("Join Room Failed:", error);
-            showToast("Failed to join the match — the transaction was not completed.", "error");
+            showToast(`Failed to join the match${errorDetail(error)}`, "error");
             throw error;
         } finally {
             setIsProcessing(false);

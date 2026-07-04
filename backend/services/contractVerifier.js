@@ -137,15 +137,15 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
 
         // Fetch transaction receipt with retries (RPC lag)
         let receipt = null;
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             receipt = await provider.getTransactionReceipt(txHash);
             if (receipt) break;
-            console.log(`   ⏳ Transaction not found yet, retrying in 2s... (${i + 1}/5)`);
-            await new Promise(r => setTimeout(r, 2000));
+            console.log(`   ⏳ Transaction not found yet, retrying in 3s... (${i + 1}/8)`);
+            await new Promise(r => setTimeout(r, 3000));
         }
 
         if (!receipt) {
-            throw new Error("Transaction not found on blockchain after 10s");
+            throw new Error("Transaction not found on blockchain after 24s");
         }
 
         if (receipt.status !== 1) {
@@ -226,15 +226,15 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
 
         // Fetch transaction receipt with retries (RPC lag)
         let receipt = null;
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             receipt = await provider.getTransactionReceipt(txHash);
             if (receipt) break;
-            console.log(`   ⏳ Transaction not found yet, retrying in 2s... (${i + 1}/5)`);
-            await new Promise(r => setTimeout(r, 2000));
+            console.log(`   ⏳ Transaction not found yet, retrying in 3s... (${i + 1}/8)`);
+            await new Promise(r => setTimeout(r, 3000));
         }
 
         if (!receipt) {
-            throw new Error("Transaction not found on blockchain after 10s");
+            throw new Error("Transaction not found on blockchain after 24s");
         }
 
         if (receipt.status !== 1) {

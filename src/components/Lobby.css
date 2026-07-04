@@ -13,7 +13,10 @@
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* G-010 scroll fix: justify-content:center clips overflowing content at the
+       top and blocks scrolling on desktop game creation. flex-start + margin:auto
+       on the panel keeps it centered when it fits AND scrollable when it doesn't. */
+    justify-content: flex-start;
     align-items: center;
     padding: 80px 16px 32px;
     box-sizing: border-box;
@@ -42,6 +45,10 @@
     box-shadow: var(--elev-3);
     width: 100%;
     max-width: 480px;
+    /* G-010: vertical auto-margins center the panel when it fits the viewport
+       and let the page scroll naturally when it grows (game creation form). */
+    margin-top: auto;
+    margin-bottom: auto;
     display: flex;
     flex-direction: column;
     gap: 16px;

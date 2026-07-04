@@ -369,6 +369,17 @@
         padding: 2px;
     }
 
+    /* G-010: keep gear + wallet from crowding/overlapping on small screens */
+    .header-right {
+        gap: var(--space-2);
+    }
+
+    .settings-gear {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+    }
+
     /* Game mode on mobile */
     .global-header.game-mode {
         padding: var(--space-2) var(--space-3);
