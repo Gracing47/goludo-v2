@@ -917,7 +917,7 @@ function App() {
             {serverMsg && <div className="server-toast">🔔 {serverMsg}</div>}
 
             {/* C. WIN SCREEN */}
-            {gameState.gamePhase === 'WIN' && (() => {
+            {gameState?.gamePhase === 'WIN' && gameConfig && (() => {
                 // Determine if current player is the winner
                 const winnerPlayer = gameConfig.players[gameState.winner] || { name: `Player ${gameState.winner + 1}`, isAI: false, address: '' };
                 const amIWinner = gameConfig.mode === 'web3'

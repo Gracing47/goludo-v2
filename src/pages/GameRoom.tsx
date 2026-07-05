@@ -205,9 +205,13 @@ const GameRoom: React.FC = () => {
             }
         }
 
-        // Check if it's a Web3 room ID (bytes32 hash = 66 chars with 0x prefix or 64 without)
-        if (roomId.length > 20) {
-            // Looks like a Web3 room, let App.jsx handle socket connection
+        // Web3 room IDs are bytes32 — validate strictly (0x + 64 hex, or 64 hex without prefix)
+        // so a malformed, truncated or tampered invite link falls back to the lobby instead of
+        // dropping the visitor into a dead game view. App.jsx then handles the socket connect /
+        // reconnect and hydrates the game state from the server; until it arrives the branded
+        // loading screen shows (never a null-state crash).
+        const isWeb3RoomId = /^0x[0-9a-fA-F]{64}$/.test(roomId) || /^[0-9a-fA-F]{64}$/.test(roomId);
+        if (isWeb3RoomId) {
             setAppState('game');
             setIsValidRoom(true);
             return;
