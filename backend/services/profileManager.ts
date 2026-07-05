@@ -64,7 +64,18 @@ export interface GameHistoryData {
     endedAt: Date;
 }
 
-type LeaderboardMetric = 'totalWins' | 'classicWins' | 'rapidWins' | 'totalWon';
+type LeaderboardMetric = 'totalWins' | 'classicWins' | 'rapidWins' | 'totalWon' | 'totalXp';
+
+/**
+ * Season 1 XP table (non-monetary progression; never redeemable for money).
+ * Canonical values — resolves the discrepancy between the two source docs in favour
+ * of the differentiated Season-1-Plan: a classic win rewards deeper strategic play,
+ * and a loser never walks away with zero (loss-aversion mitigation).
+ */
+const XP_AWARD = {
+    classic: { win: 250, loss: 40 },
+    rapid: { win: 100, loss: 15 },
+} as const;
 
 // ============================================
 // PROFILE MANAGER
@@ -107,6 +118,7 @@ export class ProfileManager {
         const profile = await this.getOrCreateProfile(normalized);
         const isWin = gameResult.result === 'win';
         const prefix = gameResult.mode; // 'classic' | 'rapid'
+        const xpGain = XP_AWARD[gameResult.mode][gameResult.result];
 
         // Build mode-specific field names
         const modeGames = `${prefix}GamesPlayed` as const;
@@ -132,11 +144,13 @@ export class ProfileManager {
             currentStreak: newStreak,
             bestStreak: newBestStreak,
             lastSeen: new Date(),
+            totalXp: { increment: xpGain },
 
             // Mode-specific
             [modeGames]: { increment: 1 },
             [modeWagered]: (currentModeWagered + gameResult.wagered).toString(),
             [modeWon]: (currentModeWon + gameResult.won).toString(),
+            [`${prefix}Xp`]: { increment: xpGain },
         };
 
         if (isWin) {
@@ -193,6 +207,7 @@ export class ProfileManager {
                 classicWins: true,
                 rapidWins: true,
                 totalWon: true,
+                totalXp: true,
                 bestStreak: true,
                 classicBestTime: true,
                 rapidBestTime: true,

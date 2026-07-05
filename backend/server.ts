@@ -20,6 +20,7 @@ import { GameState, GamePhase, Move } from '../src/types/index.js';
 // V2: Redis State + Profile System
 import { GameStateManager } from './services/stateManager.js';
 import { ProfileManager } from './services/profileManager.js';
+import { getBurnMetrics } from './services/burnMetrics.js';
 import profileRoutes from './routes/profile.js';
 import healthRoutes from './routes/health.js';
 
@@ -873,6 +874,13 @@ app.get('/metrics', (_req: express.Request, res: express.Response) => {
         },
         timestamp: new Date().toISOString()
     });
+});
+
+// Live $GO burn / deflation metrics for the frontend ticker (G-018).
+// Always 200s: getBurnMetrics degrades to { available: false } if chain/env is unset.
+app.get('/api/burn', async (_req: express.Request, res: express.Response) => {
+    const metrics = await getBurnMetrics();
+    res.json(metrics);
 });
 
 app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), async (req, res) => {
