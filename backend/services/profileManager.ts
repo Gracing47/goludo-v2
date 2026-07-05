@@ -75,7 +75,18 @@ type LeaderboardMetric = 'totalWins' | 'classicWins' | 'rapidWins' | 'totalWon' 
 const XP_AWARD = {
     classic: { win: 250, loss: 40 },
     rapid: { win: 100, loss: 15 },
+    // AI/Computer "Practice Mode": de-escalated so PvP (100–250) stays materially
+    // more rewarding and there is no incentive to farm or to deliberately lose to bots.
+    computer: { win: 20, loss: 5 },
 } as const;
+
+/** Max AI/Computer matches per UTC day that still award XP (anti-bot leaderboard guard). */
+const DAILY_AI_XP_CAP = 3;
+
+/** Current UTC day as YYYY-MM-DD — the reset key for the daily AI counter. */
+function utcDay(): string {
+    return new Date().toISOString().slice(0, 10);
+}
 
 // ============================================
 // PROFILE MANAGER
@@ -170,6 +181,44 @@ export class ProfileManager {
             where: { walletAddress: normalized },
             data: update,
         });
+    }
+
+    /**
+     * Record a Player-vs-Computer (practice) match. Never touches LudoVault / $GO and
+     * never mutates wagering or PvP win/loss stats — it only records de-escalated XP,
+     * capped at DAILY_AI_XP_CAP matches per UTC day to stop bots farming the leaderboard.
+     * Beyond the cap the match still "counts" (aiGamesPlayed) but awards 0 XP.
+     */
+    async recordAiMatch(
+        walletAddress: string,
+        result: 'win' | 'loss'
+    ): Promise<{ xpAwarded: number; dailyCount: number; capped: boolean }> {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) return { xpAwarded: 0, dailyCount: 0, capped: false };
+
+        const normalized = walletAddress.toLowerCase();
+        const profile = await this.getOrCreateProfile(normalized);
+
+        const today = utcDay();
+        // Reset the daily counter when the UTC day has rolled over.
+        const countSoFar = profile.dailyAiResetDate === today ? profile.dailyAiGamesCount : 0;
+
+        const capped = countSoFar >= DAILY_AI_XP_CAP;
+        const xpGain = capped ? 0 : XP_AWARD.computer[result];
+
+        await prisma.userProfile.update({
+            where: { walletAddress: normalized },
+            data: {
+                aiGamesPlayed: { increment: 1 },
+                dailyAiGamesCount: countSoFar + 1,
+                dailyAiResetDate: today,
+                totalXp: { increment: xpGain },
+                computerXp: { increment: xpGain },
+                lastSeen: new Date(),
+            },
+        });
+
+        return { xpAwarded: xpGain, dailyCount: countSoFar + 1, capped };
     }
 
     async saveGameHistory(data: GameHistoryData) {

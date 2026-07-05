@@ -160,6 +160,14 @@ const joinRoomLimiter = rateLimit({
     legacyHeaders: false
 });
 
+const aiMatchLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10, // burst guard; the real anti-bot limit is the DB daily cap (3/UTC day)
+    message: { error: 'Too many practice-match submissions. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 // NOTE: Primary /health endpoint is defined below with full monitoring data (uptime, memory, etc.)
 
 // Basic request logger for production monitoring
@@ -881,6 +889,29 @@ app.get('/metrics', (_req: express.Request, res: express.Response) => {
 app.get('/api/burn', async (_req: express.Request, res: express.Response) => {
     const metrics = await getBurnMetrics();
     res.json(metrics);
+});
+
+// AI/Computer "Practice Mode" XP submission (G-020). AI matches run client-side and never
+// touch LudoVault/$GO, so this is a client-driven XP record: de-escalated values with a hard
+// daily cap enforced server-side in the DB. No wagering, no PvP stats, no on-chain mutation.
+app.post('/api/ai-match', aiMatchLimiter, async (req: express.Request, res: express.Response) => {
+    const { address, result } = req.body || {};
+    if (typeof address !== 'string' || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
+        return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+    if (result !== 'win' && result !== 'loss') {
+        return res.status(400).json({ error: "result must be 'win' or 'loss'" });
+    }
+    if (!profileManager) {
+        return res.json({ xpAwarded: 0, dailyCount: 0, capped: false, available: false });
+    }
+    try {
+        const outcome = await profileManager.recordAiMatch(address, result);
+        res.json({ ...outcome, available: true });
+    } catch (e: any) {
+        console.warn('[ai-match] failed:', e?.message);
+        res.json({ xpAwarded: 0, dailyCount: 0, capped: false, available: false });
+    }
 });
 
 app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), async (req, res) => {

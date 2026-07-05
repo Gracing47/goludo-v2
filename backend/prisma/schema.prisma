@@ -33,6 +33,13 @@ model UserProfile {
   classicXp        Int    @default(0)
   rapidXp          Int    @default(0)
 
+  // AI / Computer "Practice Mode" — de-escalated XP + anti-bot daily cap.
+  // Practice matches never touch LudoVault / $GO; only XP is recorded here.
+  computerXp        Int     @default(0)
+  aiGamesPlayed     Int     @default(0)
+  dailyAiGamesCount Int     @default(0)
+  dailyAiResetDate  String? // UTC day "YYYY-MM-DD"; the count resets when the day rolls over
+
   // Classic Mode Stats
   classicGamesPlayed Int    @default(0)
   classicWins        Int    @default(0)
