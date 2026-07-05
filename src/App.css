@@ -18,11 +18,9 @@ body {
     font-family: var(--font-body, 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    /* Allow vertical scroll for flow views (lobby, waiting room, win screen) that can
-       exceed the viewport on small devices; block only horizontal drift. The in-game
-       board stays locked because .app.aaa-layout is position:fixed (independent of body). */
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    /* No overflow lock — body scrolls normally so flow views (lobby, waiting room,
+       win screen) scroll when taller than the viewport. The in-game board stays
+       locked via .app.aaa-layout (position:fixed), independent of the body. */
 }
 
 /* ============================================

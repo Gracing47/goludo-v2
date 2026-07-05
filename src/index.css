@@ -33,11 +33,9 @@ body {
     min-height: 100%;
     margin: 0;
     padding: 0;
-    /* Every page must scroll when its content exceeds the viewport (mobile viewport
-       scroll container). Only the in-game board stays locked via .app.aaa-layout
-       (position:fixed), which sits outside this document flow. */
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    /* No overflow lock here — html/body scroll normally (standard viewport scroll),
+       so every page scrolls when its content exceeds the viewport. The in-game board
+       locks itself via .app.aaa-layout (position:fixed), outside the document flow. */
     padding-top:    env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left:   env(safe-area-inset-left);
