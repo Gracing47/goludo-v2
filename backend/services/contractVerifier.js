@@ -32,14 +32,14 @@ const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114");
 // ============================================
 
 const LUDOVAULT_MINIMAL_ABI = [
-    // Events for transaction verification
-    "event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount, uint256 maxPlayers)",
+    // Events for transaction verification ($GO edition: RoomCreated carries affiliate)
+    "event RoomCreated(bytes32 indexed roomId, address indexed creator, uint256 entryAmount, uint256 maxPlayers, address affiliate)",
     "event RoomJoined(bytes32 indexed roomId, address indexed player, uint256 currentPot, uint256 playersJoined)",
     "event RoomCancelled(bytes32 indexed roomId, address indexed creator, uint256 refundAmount)",
     "event GameFinished(bytes32 indexed roomId, address indexed winner, uint256 payout, uint256 fee)",
 
-    // View functions
-    "function rooms(bytes32 roomId) view returns (address creator, uint256 maxPlayers, uint256 entryAmount, uint256 pot, uint256 createdAt, uint8 status)",
+    // View functions (rooms struct now includes the affiliate field before status)
+    "function rooms(bytes32 roomId) view returns (address creator, uint256 maxPlayers, uint256 entryAmount, uint256 pot, uint256 createdAt, address affiliate, uint8 status)",
     "function getParticipants(bytes32 roomId) view returns (address[])"
 ];
 
@@ -298,7 +298,7 @@ export async function getRoomStateFromContract(roomId) {
     }
 
     try {
-        // New struct: (creator, maxPlayers, entryAmount, pot, createdAt, status)
+        // $GO struct: (creator, maxPlayers, entryAmount, pot, createdAt, affiliate, status)
         const room = await ludoVaultContract.rooms(roomId);
         const participants = await ludoVaultContract.getParticipants(roomId);
 
@@ -308,7 +308,8 @@ export async function getRoomStateFromContract(roomId) {
             entryAmount: room[2].toString(),
             pot: room[3].toString(),
             createdAt: Number(room[4]),
-            status: Number(room[5]), // 0=EMPTY, 1=WAITING, 2=ACTIVE, 3=FINISHED, 4=CANCELLED
+            affiliate: room[5],
+            status: Number(room[6]), // 0=EMPTY, 1=WAITING, 2=ACTIVE, 3=FINISHED, 4=CANCELLED
             participants: participants
         };
     } catch (error) {
