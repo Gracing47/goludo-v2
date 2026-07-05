@@ -386,11 +386,28 @@ const Lobby = ({ onStartGame }) => {
     const handleCopyRoomId = async () => {
         if (!waitingRoomId) return;
         const inviteUrl = `${window.location.origin}/app/ludo?join=${waitingRoomId}`;
+
+        // 1. Native share sheet — the reliable path on mobile (WhatsApp, Telegram, …).
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: 'GoLudo', text: 'Join my GoLudo match!', url: inviteUrl });
+                return;
+            } catch (err) {
+                // User dismissed the sheet — not an error, don't fall through.
+                if (err && err.name === 'AbortError') return;
+                // Any other share failure falls through to clipboard.
+            }
+        }
+
+        // 2. Clipboard fallback (desktop, or share unavailable).
         try {
             await navigator.clipboard.writeText(inviteUrl);
             showToast("Invite link copied — send it to a friend!", "success");
+            return;
         } catch {
-            showToast("Could not copy the invite link.", "error");
+            // 3. Last resort: surface the link so it can be copied by hand.
+            try { window.prompt("Copy this invite link:", inviteUrl); }
+            catch { showToast("Could not share the invite link.", "error"); }
         }
     };
 

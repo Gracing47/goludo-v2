@@ -48,8 +48,10 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: var(--text-primary);
-    /* Prevent content flash on overscroll */
-    overscroll-behavior: none;
+    /* Block horizontal content-flash, but keep vertical pull-to-refresh as an escape hatch
+       (a full-screen error/loading state must always be recoverable). The in-game board is
+       position:fixed via .app.aaa-layout, so gameplay stays visually locked regardless. */
+    overscroll-behavior-x: none;
 }
 
 #root {
