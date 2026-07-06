@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb/react";
 import { prepareContractCall, readContract, toWei, waitForReceipt } from "thirdweb";
 import { ethers } from "ethers";
-import { ludoVaultContract, coston2, client } from "../config/web3";
-import { NATIVE_CURRENCY_SYMBOL } from "../config/currency";
+import { ludoVaultContract, goTokenContract, coston2, client, LUDO_VAULT_ADDRESS } from "../config/web3";
+import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from "../config/currency";
 import { API_URL } from "../config/api";
 import { PayoutProof } from "../types";
 import { showToast } from "../services/toast";
@@ -51,9 +51,68 @@ export const useLudoWeb3 = () => {
     // one change in src/config/currency.ts.
     const balanceSymbol = walletBalance?.symbol || NATIVE_CURRENCY_SYMBOL;
 
+    // G-025: stakes are $GO (ERC-20) now — the native balance above is gas-only.
+    const [goBalanceWei, setGoBalanceWei] = useState<bigint>(0n);
+    const refreshGoBalance = useCallback(async () => {
+        if (!account?.address) { setGoBalanceWei(0n); return; }
+        try {
+            const bal = await readContract({
+                contract: goTokenContract,
+                method: "function balanceOf(address) view returns (uint256)",
+                params: [account.address],
+            });
+            setGoBalanceWei(bal as bigint);
+        } catch { /* RPC hiccup — keep last value */ }
+    }, [account?.address]);
+
+    useEffect(() => {
+        refreshGoBalance();
+        const t = setInterval(refreshGoBalance, 15000);
+        return () => clearInterval(t);
+    }, [refreshGoBalance]);
+
+    // Display value, trimmed to 4 decimals ("12.5" not "12.500000000000000001")
+    const goBalance = (() => {
+        try { return parseFloat(parseFloat(ethers.formatEther(goBalanceWei)).toFixed(4)).toString(); }
+        catch { return "0"; }
+    })();
+
+    // G-025: the $GO vault pulls stakes via transferFrom — one MaxUint256
+    // approval per wallet, then every create/join works without extra popups.
+    const ensureAllowance = async (amountInWei: bigint) => {
+        const allowance = await readContract({
+            contract: goTokenContract,
+            method: "function allowance(address,address) view returns (uint256)",
+            params: [account!.address, LUDO_VAULT_ADDRESS],
+        }) as bigint;
+        if (allowance >= amountInWei) return;
+        showToast(`One-time approval: allow the vault to escrow your $${STAKE_CURRENCY_SYMBOL} stakes…`, "info");
+        const approveTx = prepareContractCall({
+            contract: goTokenContract,
+            method: "function approve(address,uint256) returns (bool)",
+            params: [LUDO_VAULT_ADDRESS, ethers.MaxUint256],
+        });
+        const txResult = await sendTx(approveTx);
+        await confirmTx(txResult.transactionHash);
+    };
+
+    // G-025: friendly pre-check — an empty $GO wallet should hit the faucet,
+    // not an opaque on-chain revert.
+    const ensureGoBalance = async (amountInWei: bigint) => {
+        const bal = await readContract({
+            contract: goTokenContract,
+            method: "function balanceOf(address) view returns (uint256)",
+            params: [account!.address],
+        }) as bigint;
+        if (bal < amountInWei) {
+            throw new Error(`Not enough $${STAKE_CURRENCY_SYMBOL} for this stake — grab free testnet $${STAKE_CURRENCY_SYMBOL} from the faucet in the lobby.`);
+        }
+    };
+
     const refetchBalance = useCallback(() => {
-        // Handled by hook polling automatically if data is accessed
-    }, []);
+        // Native balance: handled by hook polling automatically if data is accessed
+        refreshGoBalance();
+    }, [refreshGoBalance]);
 
     // 3. Sync with Backend
     const syncWithBackend = async (endpoint: string, body: any) => {
@@ -85,13 +144,17 @@ export const useLudoWeb3 = () => {
             const amountInWei = toWei(stakeAmount.toString());
             const roomId = ethers.id("Room_" + Date.now() + Math.random());
 
-            // Step B: Create Room on Blockchain (PAYABLE)
-            console.log("Creating room on blockchain with native currency...");
+            // Step A (G-025): $GO balance + allowance — the new vault escrows the
+            // stake via transferFrom, the old payable/native flow reverts on it.
+            await ensureGoBalance(amountInWei);
+            await ensureAllowance(amountInWei);
+
+            // Step B: Create Room on Blockchain ($GO stake, affiliate = none)
+            console.log("Creating room on blockchain with $GO stake...");
             const createTx = prepareContractCall({
                 contract: ludoVaultContract,
-                method: "function createRoom(bytes32,uint256,uint256)",
-                params: [roomId as `0x${string}`, amountInWei, BigInt(maxPlayers)],
-                value: amountInWei, // Send native C2FLR
+                method: "function createRoom(bytes32,uint256,uint256,address)",
+                params: [roomId as `0x${string}`, amountInWei, BigInt(maxPlayers), ethers.ZeroAddress as `0x${string}`],
             });
 
             const txResult = await sendTx(createTx);
@@ -138,13 +201,15 @@ export const useLudoWeb3 = () => {
             // wallet opens beats an on-chain revert after.
             console.log("Checking room status on-chain...");
             try {
+                // G-025: new $GO-vault Room struct — (creator, maxPlayers, entryAmount,
+                // pot, createdAt, affiliate, status). The old 6-tuple decoded garbage.
                 const roomInfo = await readContract({
                     contract: ludoVaultContract,
-                    method: "function rooms(bytes32) view returns (address, uint256, uint256, uint256, uint256, uint8)",
+                    method: "function rooms(bytes32) view returns (address, uint256, uint256, uint256, uint256, address, uint8)",
                     params: [roomId as `0x${string}`],
                 });
                 const maxPlayers = Number(roomInfo[1]);
-                const status = Number(roomInfo[5]);
+                const status = Number(roomInfo[6]); // 0=EMPTY 1=WAITING 2=ACTIVE 3=FINISHED 4=CANCELLED
 
                 const participants = await readContract({
                     contract: ludoVaultContract,
@@ -153,7 +218,7 @@ export const useLudoWeb3 = () => {
                 });
 
                 if (status === 0) throw new Error("Room does not exist on the smart contract.");
-                if (status !== 1) throw new Error(`Cannot join: Room status is ${status === 2 ? 'ACTIVE' : 'INACTIVE'}.`);
+                if (status !== 1) throw new Error(`Cannot join: Room status is ${status === 2 ? 'ACTIVE' : status === 4 ? 'CANCELLED' : 'INACTIVE'}.`);
                 if (participants.length >= maxPlayers) throw new Error("Room is already full.");
             } catch (err: any) {
                 console.warn("Pre-join status check failed:", err.message);
@@ -163,13 +228,16 @@ export const useLudoWeb3 = () => {
                 // Continue if it's just a RPC error, let the transaction try
             }
 
-            // Step B2: Join Room on Blockchain (PAYABLE)
-            console.log("Joining room on blockchain with native currency...");
+            // Step B1.5 (G-025): $GO balance + allowance before the join tx
+            await ensureGoBalance(amountInWei);
+            await ensureAllowance(amountInWei);
+
+            // Step B2: Join Room on Blockchain ($GO stake via transferFrom)
+            console.log("Joining room on blockchain with $GO stake...");
             const joinTx = prepareContractCall({
                 contract: ludoVaultContract,
                 method: "function joinRoom(bytes32)",
                 params: [roomId as `0x${string}`],
-                value: amountInWei, // Send native C2FLR
             });
             const txResult = await sendTx(joinTx);
             const txHash = txResult.transactionHash;
@@ -237,14 +305,91 @@ export const useLudoWeb3 = () => {
         }
     };
 
+    // 7. Cancel Room Flow (G-012: refund UI — creator cancels a WAITING room,
+    //    the contract refunds every participant in $GO)
+    const handleCancelRoom = async (roomId: string) => {
+        if (!account) return showToast("Please connect your wallet first", "error");
+
+        setIsProcessing(true);
+        try {
+            console.log("Cancelling room on-chain...", roomId);
+            const cancelTx = prepareContractCall({
+                contract: ludoVaultContract,
+                method: "function cancelRoom(bytes32)",
+                params: [roomId as `0x${string}`],
+            });
+            const txResult = await sendTx(cancelTx);
+            await confirmTx(txResult.transactionHash);
+
+            // Backend cleanup is best-effort — the room dies on-chain either way.
+            try {
+                await syncWithBackend('rooms/cancel', { roomId, txHash: txResult.transactionHash });
+            } catch (err) {
+                console.warn("Backend cancel sync failed (lobby entry will expire on its own):", err);
+            }
+
+            refreshGoBalance();
+            showToast(`Room cancelled — stakes refunded in $${STAKE_CURRENCY_SYMBOL}.`, "success");
+            return true;
+        } catch (error) {
+            console.error("Cancel Room Failed:", error);
+            showToast(`Failed to cancel room${errorDetail(error)}`, "error");
+            throw error;
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // 8. Faucet Flow (G-021: free testnet $GO from the pre-funded on-chain
+    //    reservoir — transfers, never mints; contract enforces a cooldown)
+    const handleFaucetClaim = async () => {
+        if (!account) { showToast("Please connect your wallet first", "error"); return false; }
+
+        setIsProcessing(true);
+        try {
+            const cooldown = await readContract({
+                contract: goTokenContract,
+                method: "function faucetCooldownRemaining(address) view returns (uint256)",
+                params: [account.address],
+            }) as bigint;
+            if (cooldown > 0n) {
+                const mins = Math.ceil(Number(cooldown) / 60);
+                showToast(`Faucet cooldown active — try again in ~${mins} min.`, "info");
+                return false;
+            }
+
+            const faucetTx = prepareContractCall({
+                contract: goTokenContract,
+                method: "function faucet()",
+                params: [],
+            });
+            const txResult = await sendTx(faucetTx);
+            await confirmTx(txResult.transactionHash);
+
+            await refreshGoBalance();
+            showToast(`💧 Testnet $${STAKE_CURRENCY_SYMBOL} received — you're ready to stake!`, "success");
+            return true;
+        } catch (error) {
+            console.error("Faucet Claim Failed:", error);
+            showToast(`Faucet claim failed${errorDetail(error)}`, "error");
+            return false;
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return {
         account,
         balance,
         balanceSymbol,
+        goBalance,
+        goBalanceWei,
         isProcessing,
         handleCreateRoom,
         handleJoinGame,
         handleClaimPayout,
+        handleCancelRoom,
+        handleFaucetClaim,
         refetchBalance
     };
 };

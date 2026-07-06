@@ -1,0 +1,39 @@
+/* BurnTicker (G-022) — compact deflation pill for the web3 lobby */
+.burn-ticker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(255, 94, 0, 0.12), rgba(255, 166, 0, 0.08));
+    border: 1px solid rgba(255, 130, 40, 0.35);
+    font-size: 0.8rem;
+    line-height: 1;
+    color: #ffb277;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.burn-ticker .burn-flame {
+    animation: burn-flicker 1.6s infinite ease-in-out;
+}
+
+.burn-ticker .burn-value {
+    font-weight: 700;
+    color: #ffcf99;
+}
+
+.burn-ticker .burn-supply {
+    opacity: 0.75;
+}
+
+@keyframes burn-flicker {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+@media (max-width: 480px) {
+    .burn-ticker .burn-supply { display: none; }
+}

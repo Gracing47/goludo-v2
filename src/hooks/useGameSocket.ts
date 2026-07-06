@@ -102,6 +102,15 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             }, 3000);
         });
 
+        socket.on('room_cancelled', ({ message }: { roomId?: string; message?: string }) => {
+            // G-012: host cancelled on-chain while we were connected — exit gracefully
+            setServerMsg(`↩️ ${message || 'Room cancelled — stakes refunded.'}`);
+            setTimeout(() => {
+                setServerMsg(null);
+                setAppState('lobby');
+            }, 3000);
+        });
+
         socket.on('disconnect', (reason) => {
             console.warn('🔌 Socket disconnected:', reason);
             if (reason === "io server disconnect" || reason === "transport close" || reason === "ping timeout") {

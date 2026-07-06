@@ -13,8 +13,10 @@ import { useSearchParams } from 'react-router-dom';
 import './Lobby.css';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
-import { NATIVE_CURRENCY_SYMBOL } from '../config/currency';
+import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from '../config/currency';
 import { showToast } from '../services/toast';
+import BurnTicker from './BurnTicker';
+import Leaderboard from './Leaderboard';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -65,13 +67,14 @@ const DiceIcon = ({ size = 28 }) => (
 );
 
 const Lobby = ({ onStartGame }) => {
-    const { account, balance, balanceSymbol, isProcessing, handleCreateRoom, handleJoinGame } = useLudoWeb3();
+    const { account, balance, balanceSymbol, goBalance, isProcessing, handleCreateRoom, handleJoinGame, handleCancelRoom, handleFaucetClaim } = useLudoWeb3();
     const [step, setStep] = useState('menu'); // menu, setup, web3-lobby, waiting
     const [gameMode, setGameMode] = useState(null); // local, ai, web3
     const [playerCount, setPlayerCount] = useState(2);
     const [betAmount, setBetAmount] = useState("0.1");
     const [openRooms, setOpenRooms] = useState([]);
     const [waitingRoomId, setWaitingRoomId] = useState(null);
+    const [showLeaderboard, setShowLeaderboard] = useState(false); // G-023
     const [selectedRoom, setSelectedRoom] = useState(null); // Track room being joined
     const [gameVariant, setGameVariant] = useState('classic'); // classic, rapid
     const [players, setPlayers] = useState([
@@ -97,6 +100,11 @@ const Lobby = ({ onStartGame }) => {
                     if (room && (room.status === "STARTING" || room.status === "ACTIVE")) {
                         console.log(`🚀 Room status is ${room.status} - Connecting immediately!`);
                         handleStart(room);
+                    } else if (!room) {
+                        // G-012: room vanished (host cancelled or expired) — don't wait forever
+                        showToast("This room was cancelled or expired. Stakes are refunded on cancel.", "info");
+                        setWaitingRoomId(null);
+                        setStep('web3-lobby');
                     }
                 }
 
@@ -413,6 +421,9 @@ const Lobby = ({ onStartGame }) => {
 
     return (
         <div className="lobby">
+            {showLeaderboard && (
+                <Leaderboard onClose={() => setShowLeaderboard(false)} ownAddress={account?.address} />
+            )}
             <div className="lobby-header">
                 <p className="lobby-subtitle">Classic Board Game</p>
             </div>
@@ -472,11 +483,22 @@ const Lobby = ({ onStartGame }) => {
 
                         {account && (
                             <div className="wallet-section">
+                                {/* G-021/G-025: stakes are $GO — show both balances and feed the wallet in-app */}
+                                <p className="wallet-balances">
+                                    💰 <strong>{goBalance} ${STAKE_CURRENCY_SYMBOL}</strong> (stakes) · ⛽ {balance} {balanceSymbol} (gas)
+                                </p>
+                                <button
+                                    className="faucet-btn"
+                                    disabled={isProcessing}
+                                    onClick={() => handleFaucetClaim()}
+                                >
+                                    {isProcessing ? 'Working…' : `💧 Get free $${STAKE_CURRENCY_SYMBOL} (in-app faucet)`}
+                                </button>
                                 <button
                                     className="faucet-btn"
                                     onClick={() => window.open('https://faucet.flare.network/coston2', '_blank')}
                                 >
-                                    Get Test tokens (C2FLR) ↗
+                                    Get gas ({NATIVE_CURRENCY_SYMBOL}) ↗
                                 </button>
                             </div>
                         )}
@@ -496,6 +518,12 @@ const Lobby = ({ onStartGame }) => {
                                     <span className="room-count-badge">{waitingRooms.length}</span>
                                 )}
                             </h2>
+                            {/* G-022: live deflation ticker — every match burns $GO */}
+                            <BurnTicker />
+                            {/* G-023: Season-1 leaderboard (XP / wins / $GO won) */}
+                            <button className="create-game-btn secondary" onClick={() => setShowLeaderboard(true)}>
+                                🏆 Leaderboard
+                            </button>
                             <button className="create-game-btn" onClick={() => setStep('setup')}>
                                 + Create Game
                             </button>
@@ -521,7 +549,7 @@ const Lobby = ({ onStartGame }) => {
                                     <div key={room.id} className="room-card">
                                         <div className="room-details">
                                             <div className="room-details-top">
-                                                <span className="room-stake">💰 {room.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</span>
+                                                <span className="room-stake">💰 {room.stake} ${STAKE_CURRENCY_SYMBOL}</span>
                                                 <span className={`room-variant-badge ${room.mode === 'rapid' ? 'rapid' : 'classic'}`}>
                                                     {room.mode === 'rapid' ? '⚡ Rapid' : '🎲 Classic'}
                                                 </span>
@@ -567,6 +595,8 @@ const Lobby = ({ onStartGame }) => {
                     const currentRoom = openRooms.find(r => r.id === waitingRoomId);
                     const playerCount = currentRoom?.players?.filter(p => p).length || 1;
                     const maxPlayers = currentRoom?.maxPlayers || 2;
+                    // G-012: only the on-chain creator can cancel & refund (contract rule)
+                    const isCreator = currentRoom?.players?.[0]?.address?.toLowerCase() === account?.address?.toLowerCase();
 
                     return (
                         <div className="waiting-room">
@@ -589,7 +619,7 @@ const Lobby = ({ onStartGame }) => {
                                     <span className="player-progress">
                                         👥 <strong>{playerCount}/{maxPlayers}</strong> Players
                                     </span>
-                                    <span>💰 <strong>{betAmount} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</strong></span>
+                                    <span>💰 <strong>{betAmount} ${STAKE_CURRENCY_SYMBOL}</strong></span>
                                 </div>
 
                                 {/* Joined Players List */}
@@ -620,9 +650,27 @@ const Lobby = ({ onStartGame }) => {
                                     </div>
                                 )}
                             </div>
-                            <button className="action-btn back" onClick={() => setStep('menu')}>
-                                Cancel & Leave
-                            </button>
+                            {/* G-012: dignified exit — the host cancels on-chain (everyone refunded),
+                                guests just leave the view (their stake comes back via host-cancel). */}
+                            {isCreator ? (
+                                <button
+                                    className="action-btn danger"
+                                    disabled={isProcessing}
+                                    onClick={async () => {
+                                        try {
+                                            await handleCancelRoom(waitingRoomId);
+                                            setWaitingRoomId(null);
+                                            setStep('menu');
+                                        } catch { /* toast already shown by the hook */ }
+                                    }}
+                                >
+                                    {isProcessing ? 'Cancelling…' : `↩️ Cancel & Refund Stakes ($${STAKE_CURRENCY_SYMBOL})`}
+                                </button>
+                            ) : (
+                                <button className="action-btn back" onClick={() => { setWaitingRoomId(null); setStep('web3-lobby'); }}>
+                                    Leave (host can cancel & refund)
+                                </button>
+                            )}
                         </div>
                     );
                 })()}
@@ -640,7 +688,7 @@ const Lobby = ({ onStartGame }) => {
 
                         {gameMode === 'web3' && (
                             <div className="setup-section">
-                                <label className="setup-label">Entry Stake ({balanceSymbol})</label>
+                                <label className="setup-label">Entry Stake (${STAKE_CURRENCY_SYMBOL})</label>
                                 <div className={`stake-selector ${selectedRoom ? 'disabled' : ''}`} aria-disabled={!!selectedRoom}>
                                     {["0.1", "1", "10", "25"].map(amount => (
                                         <button
@@ -822,7 +870,7 @@ const Lobby = ({ onStartGame }) => {
                     >
                         <header className="modal-header">
                             <h3 id="join-modal-title">Join Match</h3>
-                            <div className="stake-badge">💰 {selectedRoom.stake} {balanceSymbol || NATIVE_CURRENCY_SYMBOL}</div>
+                            <div className="stake-badge">💰 {selectedRoom.stake} ${STAKE_CURRENCY_SYMBOL}</div>
                         </header>
 
                         <div className="modal-body">

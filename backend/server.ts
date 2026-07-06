@@ -976,6 +976,36 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
     }
 });
 
+// G-012: refund UI backend — the creator cancelled on-chain, so drop the lobby
+// room and tell everyone in it. On-chain state is the source of truth: we only
+// remove the room after verifying the contract says CANCELLED (4).
+app.post('/api/rooms/cancel', async (req, res) => {
+    const { roomId } = req.body || {};
+    if (typeof roomId !== 'string' || !/^0x[0-9a-fA-F]{64}$/.test(roomId)) {
+        return res.status(400).json({ error: 'Invalid roomId' });
+    }
+    const room = activeRooms.find(r => r.id?.toLowerCase() === roomId.toLowerCase());
+    if (!room) return res.json({ ok: true, note: 'Room not in lobby' });
+    if (room.status === 'ACTIVE' || room.status === 'STARTING') {
+        return res.status(409).json({ error: 'Room already started — cancel is only possible while WAITING' });
+    }
+    try {
+        const state = await getRoomStateFromContract(room.id);
+        if (state.status !== 4) {
+            return res.status(409).json({ error: `On-chain status is ${state.status}, not CANCELLED` });
+        }
+    } catch (err: any) {
+        console.error(`❌ Cancel verification failed for ${room.id}: ${err.message}`);
+        return res.status(502).json({ error: 'Could not verify cancellation on-chain' });
+    }
+    io.to(room.id).emit('room_cancelled', { roomId: room.id, message: 'Host cancelled the room — stakes refunded.' });
+    clearRoomTimers(room.id);
+    clearAllRoomTimers(room.id);
+    cleanupRoom(room.id, activeRooms);
+    console.log(`↩️ Room ${room.id} cancelled (verified on-chain) and removed from lobby`);
+    return res.json({ ok: true });
+});
+
 // G-012: data minimization — public payload without socketIds / internal fields
 app.get('/api/rooms', (req, res) => res.json(activeRooms.map(room => ({
     id: room.id,

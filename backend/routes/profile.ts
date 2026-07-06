@@ -8,7 +8,9 @@ import { ProfileManager } from '../services/profileManager.js';
 const router = express.Router();
 const profileManager = ProfileManager.getInstance();
 
-const VALID_METRICS = ['totalWins', 'classicWins', 'rapidWins', 'totalWon'] as const;
+// G-023: totalXp exposed — the ProfileManager supported it all along, only this
+// route-side allowlist was missing it (leaderboard UI sorts by Season-1 XP).
+const VALID_METRICS = ['totalWins', 'classicWins', 'rapidWins', 'totalWon', 'totalXp'] as const;
 type LeaderboardMetric = typeof VALID_METRICS[number];
 
 // GET /api/profile/:address
