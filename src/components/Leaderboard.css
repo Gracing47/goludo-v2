@@ -103,3 +103,17 @@
     opacity: 0.55;
     text-align: center;
 }
+
+/* UI-2026: skeleton rows instead of a bare "Loading…" */
+.leaderboard-skeleton { display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.lb-sk-row {
+    height: 34px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%;
+    animation: lb-shimmer 1.3s infinite;
+}
+@keyframes lb-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

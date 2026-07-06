@@ -1,0 +1,124 @@
+/* ProfileModal (G-023 · UI/UX 2026) — dark neon overlay, progression-first */
+.profile-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 25, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.profile-panel {
+    width: 100%;
+    max-width: 440px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #141423;
+    border: 1px solid rgba(120, 120, 200, 0.35);
+    border-radius: 16px;
+    padding: 16px;
+    color: #e8e8f5;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.profile-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.profile-head h3 { margin: 0; font-size: 1.1rem; }
+.profile-close { background: none; border: none; color: inherit; cursor: pointer; opacity: 0.7; min-width: 44px; min-height: 44px; }
+.profile-close:hover { opacity: 1; }
+
+/* Identity + level ring (conic progress) */
+.profile-identity { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background:
+        radial-gradient(circle at center, #141423 58%, transparent 59%),
+        conic-gradient(#7c6cff var(--ring, 0deg), rgba(124, 108, 255, 0.15) var(--ring, 0deg));
+    flex-shrink: 0;
+}
+.profile-level { font-weight: 800; font-size: 0.85rem; color: #b9aeff; }
+.profile-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.profile-who strong { font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; }
+.profile-addr { font-size: 0.75rem; opacity: 0.6; font-family: ui-monospace, monospace; }
+
+/* XP bar */
+.xp-bar {
+    position: relative; height: 22px; border-radius: 999px;
+    background: rgba(124, 108, 255, 0.12);
+    border: 1px solid rgba(124, 108, 255, 0.3);
+    overflow: hidden; margin-bottom: 14px;
+}
+.xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6c5cff, #9c8cff);
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.xp-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #efeaff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Stats grid */
+.profile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+.stat-card {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 10px 4px; border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.stat-value { font-weight: 800; font-size: 0.95rem; }
+.stat-label { font-size: 0.65rem; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.mode-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.mode-chip {
+    font-size: 0.75rem; padding: 6px 10px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+/* History */
+.history-title { margin: 0 0 6px; font-size: 0.8rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+.profile-history ul { list-style: none; margin: 0; padding: 0; }
+.profile-history li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 8px; font-size: 0.85rem;
+}
+.profile-history li:nth-child(odd) { background: rgba(255, 255, 255, 0.03); }
+.hist-result { font-weight: 800; width: 1.4em; text-align: center; }
+li.won .hist-result { color: #5fdc9f; }
+li.lost .hist-result { color: #ff8a8a; }
+.hist-stake { flex: 1; }
+.hist-time { opacity: 0.6; font-size: 0.75rem; }
+
+/* Empty state */
+.profile-empty { text-align: center; padding: 18px 8px; }
+.profile-empty p { margin: 0 0 6px; }
+.profile-empty-hint { font-size: 0.8rem; opacity: 0.7; }
+
+.profile-note { text-align: center; opacity: 0.75; padding: 24px 8px; }
+.profile-footer { margin: 12px 0 0; font-size: 0.7rem; opacity: 0.55; text-align: center; }
+
+/* Skeleton shimmer (shared look with leaderboard) */
+.profile-skeleton { display: flex; flex-direction: column; gap: 10px; align-items: center; padding: 8px 0; }
+.sk {
+    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%;
+    animation: sk-shimmer 1.3s infinite;
+    border-radius: 8px;
+}
+.sk-avatar { width: 64px; height: 64px; border-radius: 50%; }
+.sk-line { height: 14px; }
+.sk-line.w60 { width: 60%; }
+.sk-line.w40 { width: 40%; }
+.sk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
+.sk-card { height: 56px; }
+
+@keyframes sk-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}

@@ -17,6 +17,7 @@ import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from '../config/currenc
 import { showToast } from '../services/toast';
 import BurnTicker from './BurnTicker';
 import Leaderboard from './Leaderboard';
+import ProfileModal from './ProfileModal';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -75,6 +76,15 @@ const Lobby = ({ onStartGame }) => {
     const [openRooms, setOpenRooms] = useState([]);
     const [waitingRoomId, setWaitingRoomId] = useState(null);
     const [showLeaderboard, setShowLeaderboard] = useState(false); // G-023
+    const [showProfile, setShowProfile] = useState(false); // G-023 UI-2026
+    // 2026 UX: progressive onboarding — one dismissible explainer, then never again
+    const [onboardDismissed, setOnboardDismissed] = useState(() => {
+        try { return localStorage.getItem('goludo_onboard_dismissed') === '1'; } catch { return false; }
+    });
+    const dismissOnboard = () => {
+        setOnboardDismissed(true);
+        try { localStorage.setItem('goludo_onboard_dismissed', '1'); } catch { /* best-effort */ }
+    };
     const [selectedRoom, setSelectedRoom] = useState(null); // Track room being joined
     const [gameVariant, setGameVariant] = useState('classic'); // classic, rapid
     const [players, setPlayers] = useState([
@@ -425,6 +435,9 @@ const Lobby = ({ onStartGame }) => {
             {showLeaderboard && (
                 <Leaderboard onClose={() => setShowLeaderboard(false)} ownAddress={account?.address} />
             )}
+            {showProfile && account?.address && (
+                <ProfileModal onClose={() => setShowProfile(false)} address={account.address} />
+            )}
             <div className="lobby-header">
                 <p className="lobby-subtitle">Classic Board Game</p>
             </div>
@@ -521,14 +534,27 @@ const Lobby = ({ onStartGame }) => {
                             </h2>
                             {/* G-022: live deflation ticker — every match burns $GO */}
                             <BurnTicker />
-                            {/* G-023: Season-1 leaderboard (XP / wins / $GO won) */}
+                            {/* G-023: Season-1 leaderboard (XP / wins / $GO won) + profile */}
                             <button className="create-game-btn secondary" onClick={() => setShowLeaderboard(true)}>
                                 🏆 Leaderboard
                             </button>
+                            {account && (
+                                <button className="create-game-btn secondary" onClick={() => setShowProfile(true)}>
+                                    👤 Profile
+                                </button>
+                            )}
                             <button className="create-game-btn" onClick={() => setStep('setup')}>
                                 + Create Game
                             </button>
                         </header>
+
+                        {/* 2026 UX: progressive onboarding — how staking works, once */}
+                        {!onboardDismissed && (
+                            <div className="onboard-strip" role="note">
+                                <span>1️⃣ Get free ${STAKE_CURRENCY_SYMBOL} 💧 → 2️⃣ Stake &amp; play → 3️⃣ Winner claims 95% of the pot. Testnet only — no real money.</span>
+                                <button onClick={dismissOnboard} aria-label="Dismiss">Got it</button>
+                            </div>
+                        )}
 
                         <div className="room-list">
                             {waitingRooms.length === 0 ? (

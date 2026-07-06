@@ -1891,3 +1891,31 @@
         font-size: 11px;
     }
 }
+
+/* UI-2026: progressive onboarding strip (web3 lobby, dismissible once) */
+.onboard-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 10px 0 14px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(108, 92, 255, 0.1);
+    border: 1px solid rgba(124, 108, 255, 0.35);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.onboard-strip button {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    min-height: 40px;
+    border-radius: 8px;
+    border: 1px solid rgba(124, 108, 255, 0.5);
+    background: rgba(124, 108, 255, 0.2);
+    color: #cfc6ff;
+    font-weight: 700;
+    cursor: pointer;
+}
+.onboard-strip button:hover { background: rgba(124, 108, 255, 0.32); }

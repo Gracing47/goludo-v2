@@ -73,7 +73,11 @@ const Leaderboard = ({ onClose, ownAddress }) => {
                 </div>
 
                 <div className="leaderboard-body">
-                    {rows === null && <p className="leaderboard-note">Loading…</p>}
+                    {rows === null && (
+                        <div className="leaderboard-skeleton" aria-hidden="true">
+                            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="lb-sk-row" />)}
+                        </div>
+                    )}
                     {rows !== null && error && <p className="leaderboard-note">Leaderboard is warming up — try again in a moment.</p>}
                     {rows !== null && !error && rows.length === 0 && (
                         <p className="leaderboard-note">No ranked players yet — win a match to claim the top spot!</p>
