@@ -1,0 +1,15 @@
+# Audit C1 / G-024-Empfehlung: eine Zeilenende-Wahrheit, kein CRLF-Churn mehr.
+* text=auto eol=lf
+
+# Binaries — nie anfassen
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.wav binary
+*.glb binary

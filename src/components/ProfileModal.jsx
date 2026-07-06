@@ -12,14 +12,8 @@
 import React, { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { STAKE_CURRENCY_SYMBOL } from '../config/currency';
+import { weiToGo, shortAddr } from '../utils/format';
 import './ProfileModal.css';
-
-const shortAddr = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '—');
-
-const weiToGo = (wei) => {
-    try { return (Number(BigInt(wei ?? 0) / 10n ** 12n) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
-    catch { return '0'; }
-};
 
 // Season-1 DISPLAY curve (client-only, non-monetary): 500 XP per level.
 // Early levels come fast on purpose — "a new user can climb quickly".

@@ -83,7 +83,9 @@ const ALLOWED_ORIGINS = (origin: string | undefined, callback: (err: Error | nul
     const validDomains = [
         /https:\/\/goludo(-v2)?\.netlify\.app$/,
         /https:\/\/goludo(-v2)?-production\.up\.railway\.app$/,
-        /https:\/\/[a-z0-9-]+\.vercel\.app$/, // Vercel frontend (preview + production)
+        // Audit W5: pinned to OUR project prefix — a bare *.vercel.app matched
+        // every stranger's deployment (with credentials:true on top).
+        /https:\/\/goludo[a-z0-9-]*\.vercel\.app$/, // Vercel frontend (preview + production)
         /http:\/\/localhost:(3000|5173)$/
     ];
 
@@ -124,7 +126,9 @@ try {
 
 app.use(cors({
     origin: ALLOWED_ORIGINS,
-    credentials: true
+    credentials: true,
+    // Audit: don't rely on header-reflection defaults for the admin panel
+    allowedHeaders: ['Content-Type', 'X-Admin-Key']
 }));
 app.use(bodyParser.json({ limit: '10kb' })); // Phase 7: Prevent DoS via large payloads
 
@@ -169,6 +173,16 @@ const aiMatchLimiter = rateLimit({
     legacyHeaders: false
 });
 
+// G-027 (Audit B1): the admin key gates owner txs (vault pause!) — without a
+// limiter a short code is online-brute-forceable. 20/min is plenty for humans.
+const adminLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 20,
+    message: { error: 'Too many admin requests. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 // G-012 (Daniel W3): cancel verification costs two RPC calls — don't let
 // strangers burn the RPC quota by spamming known roomIds.
 const cancelRoomLimiter = rateLimit({
@@ -192,7 +206,7 @@ const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
 
 // V2: Register API routes
 app.use('/api', profileRoutes);
-app.use('/api/admin', adminRoutes); // G-027: fail-closed until ADMIN_KEY is set
+app.use('/api/admin', adminLimiter, adminRoutes); // G-027: fail-closed until ADMIN_KEY is set; rate-limited (Audit B1)
 app.use('/', healthRoutes);
 
 const broadcastState = (room: BackendRoom, message: string | null = null) => {

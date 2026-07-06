@@ -246,6 +246,30 @@ export class ProfileManager {
         if (prismaInitPromise) await prismaInitPromise;
         if (!prisma) return [];
 
+        // Audit W1: totalWon is a wei STRING column — DB orderBy sorts it
+        // lexicographically ("9…" > "10…"). Fetch a window and BigInt-sort in JS.
+        if (metric === 'totalWon') {
+            const rows = await prisma.userProfile.findMany({
+                take: 500,
+                select: {
+                    walletAddress: true,
+                    username: true,
+                    totalWins: true,
+                    classicWins: true,
+                    rapidWins: true,
+                    totalWon: true,
+                    totalXp: true,
+                    bestStreak: true,
+                    classicBestTime: true,
+                    rapidBestTime: true,
+                },
+            });
+            const toBig = (v: string | null) => { try { return BigInt(v ?? '0'); } catch { return 0n; } };
+            return rows
+                .sort((a, b) => (toBig(b.totalWon) > toBig(a.totalWon) ? 1 : toBig(b.totalWon) < toBig(a.totalWon) ? -1 : 0))
+                .slice(0, Math.min(limit, 100));
+        }
+
         return prisma.userProfile.findMany({
             orderBy: { [metric]: 'desc' },
             take: Math.min(limit, 100),
@@ -273,7 +297,10 @@ export class ProfileManager {
 
         const recentGames = await prisma.gameHistory.findMany({
             where: {
-                players: { has: normalized },
+                // Audit B2: `players` is a Json column — the JsonFilter has no
+                // `has` operator; that threw a ValidationError and 500'd every
+                // /api/profile call. `array_contains` is the correct one.
+                players: { array_contains: normalized },
             },
             orderBy: { createdAt: 'desc' },
             take: 10,

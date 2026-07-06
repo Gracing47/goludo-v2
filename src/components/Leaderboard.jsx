@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { STAKE_CURRENCY_SYMBOL } from '../config/currency';
+import { weiToGo, shortAddr } from '../utils/format';
 import './Leaderboard.css';
 
 const TABS = [
@@ -16,15 +17,10 @@ const TABS = [
     { key: 'totalWon', label: `💰 $${STAKE_CURRENCY_SYMBOL} Won` },
 ];
 
-const shortAddr = (a) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '—');
-
 // totalWon is stored in wei — humanize; XP/wins are plain numbers
 const fmtValue = (metric, row) => {
     const v = row?.[metric];
-    if (metric === 'totalWon') {
-        try { return `${(Number(BigInt(v ?? 0) / 10n ** 12n) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 })}`; }
-        catch { return '0'; }
-    }
+    if (metric === 'totalWon') return weiToGo(v);
     return Number(v ?? 0).toLocaleString();
 };
 

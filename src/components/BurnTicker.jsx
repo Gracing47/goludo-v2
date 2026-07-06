@@ -8,17 +8,10 @@
 import React, { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { STAKE_CURRENCY_SYMBOL } from '../config/currency';
+import { weiToGo } from '../utils/format';
 import './BurnTicker.css';
 
-// wei → human string with up to 4 decimals, safe for huge supplies
-const fmtWei = (wei) => {
-    try {
-        const n = Number(BigInt(wei) / 10n ** 12n) / 1e6;
-        return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
-    } catch {
-        return '0';
-    }
-};
+const fmtWei = (wei) => weiToGo(wei, 4);
 
 const BurnTicker = () => {
     const [burn, setBurn] = useState(null);

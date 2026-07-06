@@ -58,6 +58,10 @@ router.use((req, res, next) => {
     if (!configured) {
         return res.status(503).json({ error: 'Admin panel disabled — set ADMIN_KEY in the server environment.' });
     }
+    // Audit B1: a brute-forceable short code must never gate owner txs.
+    if (configured.length < 24) {
+        return res.status(503).json({ error: 'ADMIN_KEY too short — use at least 24 random characters.' });
+    }
     const given = String(req.header('x-admin-key') || '');
     const a = crypto.createHash('sha256').update(given).digest();
     const b = crypto.createHash('sha256').update(configured).digest();
@@ -136,7 +140,13 @@ router.post('/rooms/remove', (req, res) => {
 });
 
 // ---- WRITE: owner contract actions (server-signed, audit-logged) ----
+// Audit W4: one owner wallet, one nonce lane — serialize admin txs.
+let ownerTxInFlight = false;
 async function ownerTx(res: express.Response, label: string, fn: (w: ethers.Wallet) => Promise<any>) {
+    if (ownerTxInFlight) {
+        return res.status(409).json({ error: 'Another admin transaction is still running — wait a few seconds.' });
+    }
+    ownerTxInFlight = true;
     try {
         const wallet = getOwnerWallet();
         const tx = await fn(wallet);
@@ -147,6 +157,8 @@ async function ownerTx(res: express.Response, label: string, fn: (w: ethers.Wall
         const msg = (err.reason || err.shortMessage || err.message || 'unknown').slice(0, 160);
         console.error(`🛡️ [ADMIN] ${label} FAILED: ${msg}`);
         return res.status(502).json({ error: `${label} failed: ${msg}` });
+    } finally {
+        ownerTxInFlight = false;
     }
 }
 
@@ -161,6 +173,10 @@ router.post('/faucet/refill', (req, res) => {
     const amount = String(req.body?.amount || '');
     if (!/^\d+(\.\d+)?$/.test(amount) || parseFloat(amount) <= 0) {
         return res.status(400).json({ error: 'Amount must be a positive number of $GO' });
+    }
+    // Audit N3: plausibility cap — protects against fat-finger refills.
+    if (parseFloat(amount) > 1_000_000) {
+        return res.status(400).json({ error: 'Refill capped at 1,000,000 $GO per action' });
     }
     return ownerTx(res, `faucet refill ${amount} GO`, (w) =>
         new ethers.Contract(GOTOKEN_ADDRESS, GOTOKEN_ABI, w).refillFaucet(ethers.parseEther(amount)));

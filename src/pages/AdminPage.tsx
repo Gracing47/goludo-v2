@@ -7,16 +7,13 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
+import { weiToGo, shortAddr } from '../utils/format';
 import './AdminPage.css';
 
 const KEY_STORAGE = 'goludo_admin_key';
 
-const fmtGo = (wei: unknown): string => {
-    try { return (Number(BigInt(String(wei ?? 0)) / 10n ** 12n) / 1e6).toLocaleString('de-DE', { maximumFractionDigits: 2 }); }
-    catch { return '0'; }
-};
+const fmtGo = (wei: unknown): string => weiToGo(wei);
 const shortId = (id: string) => (id ? `${id.slice(0, 10)}…` : '—');
-const shortAddr = (a?: string | null) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '—');
 
 type Overview = {
     ok: boolean;
@@ -57,13 +54,14 @@ const AdminPage: React.FC = () => {
             setPlayers(Array.isArray(pl) ? pl : []);
             setAuthError(null);
         } catch (err: any) {
-            if (!authError) setNotice(err.message);
+            // Audit N2: 401 is handled inside api() — everything else surfaces here
+            if (!String(err.message).includes('access code')) setNotice(err.message);
         }
-    }, [key, api, authError]);
+    }, [key, api]);
 
     useEffect(() => {
         refresh();
-        const t = setInterval(refresh, 15000);
+        const t = setInterval(refresh, 30000); // Audit N4: 30s is plenty, saves RPC quota
         return () => clearInterval(t);
     }, [refresh]);
 
