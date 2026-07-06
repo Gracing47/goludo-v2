@@ -14,7 +14,10 @@ import { ethers } from 'ethers';
 
 const RPC_URL = process.env.FLARE_RPC_URL;
 const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS || process.env.LUDOVAULT_ADDRESS;
-const GO_TOKEN_ADDRESS = process.env.VITE_GO_TOKEN_ADDRESS || process.env.GO_TOKEN_ADDRESS;
+// Canonical env name is GOTOKEN_ADDRESS (no underscore), matching the frontend
+// VITE_GOTOKEN_ADDRESS and deploy scripts. Keep the underscored names as a fallback.
+const GO_TOKEN_ADDRESS = process.env.VITE_GOTOKEN_ADDRESS || process.env.GOTOKEN_ADDRESS
+    || process.env.VITE_GO_TOKEN_ADDRESS || process.env.GO_TOKEN_ADDRESS;
 
 const VAULT_ABI = ['function totalBurned() view returns (uint256)'];
 const TOKEN_ABI = [
