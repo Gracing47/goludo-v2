@@ -27,6 +27,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 const GameBrowser = lazy(() => import('./pages/GameBrowser'));
 const LudoLobby = lazy(() => import('./pages/LudoLobby'));
 const GameRoom = lazy(() => import('./pages/GameRoom'));
+const AdminPage = lazy(() => import('./pages/AdminPage')); // G-027
 
 // Loading fallback component
 const PageLoader: React.FC = () => (
@@ -83,6 +84,9 @@ const AppShell: React.FC = () => (
 
                     {/* Active Game Room */}
                     <Route path={ROUTES.GAME} element={<GameRoom />} />
+
+                    {/* Admin panel (G-027) — access-code gated in the page itself */}
+                    <Route path={ROUTES.ADMIN} element={<AdminPage />} />
 
                     {/* Fallback - redirect to landing */}
                     <Route path="*" element={<Navigate to={ROUTES.LANDING} replace />} />

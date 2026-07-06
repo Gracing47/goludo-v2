@@ -26,6 +26,9 @@ export const ROUTES = {
 
     /** Active game room */
     GAME: '/game/:roomId',
+
+    /** Admin panel (G-027) — access-code protected, not indexed */
+    ADMIN: '/admin',
 } as const;
 
 // ============================================
@@ -80,5 +83,10 @@ export const ROUTE_META = {
         title: 'Game Room - $GOLudo',
         description: 'Active game session.',
         index: false, // Game rooms should not be indexed
+    },
+    [ROUTES.ADMIN]: {
+        title: 'Admin - $GOLudo',
+        description: 'Operations panel.',
+        index: false, // Never index the admin panel
     },
 } as const;

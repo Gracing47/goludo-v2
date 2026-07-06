@@ -22,6 +22,7 @@ import { GameStateManager } from './services/stateManager.js';
 import { ProfileManager } from './services/profileManager.js';
 import { getBurnMetrics } from './services/burnMetrics.js';
 import profileRoutes from './routes/profile.js';
+import adminRoutes from './routes/admin.js';
 import healthRoutes from './routes/health.js';
 
 interface BackendPlayer {
@@ -191,6 +192,7 @@ const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
 
 // V2: Register API routes
 app.use('/api', profileRoutes);
+app.use('/api/admin', adminRoutes); // G-027: fail-closed until ADMIN_KEY is set
 app.use('/', healthRoutes);
 
 const broadcastState = (room: BackendRoom, message: string | null = null) => {
@@ -985,6 +987,21 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
         res.status(500).json({ error: e.message });
     }
 });
+
+// G-027: expose lobby state + safe ops to the admin router (see routes/admin.ts)
+app.locals.activeRooms = activeRooms;
+app.locals.adminOps = {
+    /** Remove a stuck room from the LOBBY only — on-chain stakes are untouched. */
+    removeRoom(roomId: string): boolean {
+        const room = activeRooms.find(r => r.id?.toLowerCase() === roomId.toLowerCase());
+        if (!room) return false;
+        io.to(room.id).emit('room_cancelled', { roomId: room.id, message: 'Room was closed by an admin.' });
+        clearRoomTimers(room.id);
+        clearAllRoomTimers(room.id);
+        cleanupRoom(room.id, activeRooms);
+        return true;
+    },
+};
 
 // G-012: refund UI backend — the creator cancelled on-chain, so drop the lobby
 // room and tell everyone in it. On-chain state is the source of truth: we only
