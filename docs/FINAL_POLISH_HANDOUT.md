@@ -44,7 +44,7 @@ This document summarizes the final polish phase, focusing on **AAA Victory Exper
 
 ## 🛠️ Maintenance & Deployment Notes
 
-- **Environment Variable:** Ensure `VITE_LUDOVAULT_ADDRESS` is correctly set in **Railway** to `0xa8d47bE166B677125BD28a1d94FF087d4B45923a`.
+- **Environment Variable:** Ensure `VITE_LUDOVAULT_ADDRESS` is set to the canonical $GO vault (G-024) in **both** Railway (backend) and Vercel (frontend): `0x24b32B913a99e7B5bC74FCb0C12e57ad123a3940`. Both sides must match, or stakes bind to the wrong vault.
 - **Backend Recovery:** The server has a built-in recovery mechanism to fetch active rooms from the blockchain if a restart occurs, ensuring game state persistence.
 - **Clean Code:** Use `useGameStore` atomic selectors for minimal re-renders in new components.
 

@@ -71,9 +71,27 @@ export const flareTestnet = defineChain({
 // Alias for coston2 for compatibility
 export const coston2 = flareTestnet;
 
-// Contract Addresses
-export const GO_TOKEN_ADDRESS: `0x${string}` = ((import.meta as any).env.VITE_GOTOKEN_ADDRESS || "0x50787A6A4cEA4f3eFeA653D82eA8629DBF634C13") as `0x${string}`;
-export const LUDO_VAULT_ADDRESS: `0x${string}` = ((import.meta as any).env.VITE_LUDOVAULT_ADDRESS || "0xa8d47bE166B677125BD28a1d94FF087d4B45923a") as `0x${string}`;
+// Contract Addresses — fail-fast, no silent fallback to a wrong vault (G-024, AAA-M32).
+// A hardcoded literal here previously let staked play bind to a stale vault. Refuse that.
+function requireContractAddress(name: string, value: unknown): `0x${string}` {
+    if (typeof value !== "string" || !/^0x[a-fA-F0-9]{40}$/.test(value)) {
+        throw new Error(
+            `[web3] ${name} is missing or not a valid 0x-address. ` +
+            `Set it in the environment (Vercel / Railway / .env). ` +
+            `Refusing to fall back to a hardcoded contract for staked play.`
+        );
+    }
+    return value as `0x${string}`;
+}
+
+export const GO_TOKEN_ADDRESS: `0x${string}` = requireContractAddress(
+    "VITE_GOTOKEN_ADDRESS",
+    (import.meta as any).env.VITE_GOTOKEN_ADDRESS,
+);
+export const LUDO_VAULT_ADDRESS: `0x${string}` = requireContractAddress(
+    "VITE_LUDOVAULT_ADDRESS",
+    (import.meta as any).env.VITE_LUDOVAULT_ADDRESS,
+);
 
 // Contract Instances (v5 style with ABIs for proper error decoding)
 export const goTokenContract = getContract({
