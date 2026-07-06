@@ -23,7 +23,7 @@ module.exports = {
             url: "https://coston2-api.flare.network/ext/C/rpc",
             chainId: 114,
             accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
-            gasPrice: 25000000000,
+            gasPrice: 550000000000, // Coston2 pool minimum is ~500 gwei; 25 gwei is rejected as underpriced
         },
         flare: {
             url: "https://flare-api.flare.network/ext/C/rpc",

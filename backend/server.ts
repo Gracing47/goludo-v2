@@ -20,6 +20,7 @@ import { GameState, GamePhase, Move } from '../src/types/index.js';
 // V2: Redis State + Profile System
 import { GameStateManager } from './services/stateManager.js';
 import { ProfileManager } from './services/profileManager.js';
+import { getBurnMetrics } from './services/burnMetrics.js';
 import profileRoutes from './routes/profile.js';
 import healthRoutes from './routes/health.js';
 
@@ -155,6 +156,14 @@ const joinRoomLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 10, // 10 join attempts per minute per IP
     message: { error: 'Too many join requests. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+const aiMatchLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10, // burst guard; the real anti-bot limit is the DB daily cap (3/UTC day)
+    message: { error: 'Too many practice-match submissions. Please wait.' },
     standardHeaders: true,
     legacyHeaders: false
 });
@@ -873,6 +882,36 @@ app.get('/metrics', (_req: express.Request, res: express.Response) => {
         },
         timestamp: new Date().toISOString()
     });
+});
+
+// Live $GO burn / deflation metrics for the frontend ticker (G-018).
+// Always 200s: getBurnMetrics degrades to { available: false } if chain/env is unset.
+app.get('/api/burn', async (_req: express.Request, res: express.Response) => {
+    const metrics = await getBurnMetrics();
+    res.json(metrics);
+});
+
+// AI/Computer "Practice Mode" XP submission (G-020). AI matches run client-side and never
+// touch LudoVault/$GO, so this is a client-driven XP record: de-escalated values with a hard
+// daily cap enforced server-side in the DB. No wagering, no PvP stats, no on-chain mutation.
+app.post('/api/ai-match', aiMatchLimiter, async (req: express.Request, res: express.Response) => {
+    const { address, result } = req.body || {};
+    if (typeof address !== 'string' || !/^0x[0-9a-fA-F]{40}$/.test(address)) {
+        return res.status(400).json({ error: 'Invalid wallet address' });
+    }
+    if (result !== 'win' && result !== 'loss') {
+        return res.status(400).json({ error: "result must be 'win' or 'loss'" });
+    }
+    if (!profileManager) {
+        return res.json({ xpAwarded: 0, dailyCount: 0, capped: false, available: false });
+    }
+    try {
+        const outcome = await profileManager.recordAiMatch(address, result);
+        res.json({ ...outcome, available: true });
+    } catch (e: any) {
+        console.warn('[ai-match] failed:', e?.message);
+        res.json({ xpAwarded: 0, dailyCount: 0, capped: false, available: false });
+    }
 });
 
 app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), async (req, res) => {
