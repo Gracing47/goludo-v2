@@ -529,6 +529,9 @@ function App() {
             if (gameConfig?.mode === 'web3' && !payoutProof) {
                 const winner = gameConfig.players[gameState.winner];
                 if (!winner?.address) return;
+                // G-012 (Daniel W2): this effect fires on EVERY client in the room —
+                // only the actual winner requests, caches and restores a proof.
+                if (!account?.address || winner.address.toLowerCase() !== account.address.toLowerCase()) return;
 
                 const requestPayoutSignature = async () => {
                     try {
@@ -569,7 +572,7 @@ function App() {
                 requestPayoutSignature();
             }
         }
-    }, [gameState, gameConfig, appState, payoutProof]);
+    }, [gameState, gameConfig, appState, payoutProof, account?.address]);
 
     const onClaimClick = useCallback(async () => {
         if (!payoutProof || isClaiming) return;
@@ -589,26 +592,49 @@ function App() {
         }
     }, [payoutProof, isClaiming, handleClaimPayout, gameConfig?.roomId]);
 
-    // G-012: on app start, surface unclaimed & unexpired payout proofs; purge expired ones
+    // G-012 (Daniel W1/W2/N1): unclaimed-proof recovery. Rooms die after 60 min
+    // but proofs live 24 h — the claim is a pure on-chain tx and needs no room.
+    // When a wallet connects: purge expired/unreadable proofs, keep the first
+    // valid one OWNED BY THIS ACCOUNT and offer a direct claim button.
+    const [recoveredProof, setRecoveredProof] = useState(null);
     useEffect(() => {
+        if (!account?.address) { setRecoveredProof(null); return; }
         try {
             const keys = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
                 if (k?.startsWith('goludo_payout_')) keys.push(k);
             }
+            let found = null;
             for (const k of keys) {
                 let proof = null;
                 try { proof = JSON.parse(localStorage.getItem(k) || 'null'); } catch { /* ignore */ }
-                if (proof?.deadline && Number(proof.deadline) * 1000 > Date.now()) {
-                    const roomId = k.slice('goludo_payout_'.length);
-                    showToast(`💰 Unclaimed payout found! Rejoin room ${roomId} to claim before the deadline.`, 'info');
-                    break;
+                const valid = proof?.deadline && Number(proof.deadline) * 1000 > Date.now();
+                if (!valid) { localStorage.removeItem(k); continue; } // purge ALL expired (N1)
+                if (!found && proof.winner?.toLowerCase() === account.address.toLowerCase()) {
+                    found = { ...proof, _storageKey: k };
                 }
-                localStorage.removeItem(k); // expired or unreadable → purge
             }
+            setRecoveredProof(found);
         } catch { /* best-effort */ }
-    }, []);
+    }, [account?.address]);
+
+    const onRecoveredClaim = useCallback(async () => {
+        if (!recoveredProof || isClaiming) return;
+        setIsClaiming(true);
+        try {
+            await handleClaimPayout(recoveredProof);
+            try { localStorage.removeItem(recoveredProof._storageKey); } catch { /* best-effort */ }
+            setRecoveredProof(null);
+            playSound('success');
+            showToast("💰 Payout claimed!", "success");
+        } catch (err) {
+            console.error(err);
+            showToast("Claim failed: " + (err.message || "Unknown error"), "error");
+        } finally {
+            setIsClaiming(false);
+        }
+    }, [recoveredProof, isClaiming, handleClaimPayout, playSound]);
 
 
 
@@ -694,6 +720,15 @@ function App() {
         <div style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden' }}>
 
             {/* 1. LOBBY VIEW - Handled by LudoLobby.tsx in the new routing system */}
+            {/* G-012: recovered payout — the room may be long gone, the on-chain claim isn't */}
+            {recoveredProof && appState !== 'game' && (
+                <div className="recovered-claim-banner" role="alert">
+                    <span>💰 You have an unclaimed payout waiting!</span>
+                    <button onClick={onRecoveredClaim} disabled={isClaiming}>
+                        {isClaiming ? 'Claiming…' : 'Claim now'}
+                    </button>
+                </div>
+            )}
             {appState === 'lobby' && (
                 <WarpTransition>
                     <div className="lobby-background">

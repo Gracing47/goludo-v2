@@ -1078,3 +1078,39 @@ body {
         transform: none !important;
     }
 }
+
+/* G-012 (Daniel W1): recovered-payout claim banner — room gone, claim alive */
+.recovered-claim-banner {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(20, 20, 40, 0.95);
+    border: 1px solid rgba(90, 220, 160, 0.55);
+    color: #b9f2d4;
+    font-size: 0.9rem;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+    max-width: calc(100vw - 24px);
+}
+
+.recovered-claim-banner button {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #2fbf71, #1f9e5c);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.recovered-claim-banner button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

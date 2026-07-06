@@ -168,6 +168,16 @@ const aiMatchLimiter = rateLimit({
     legacyHeaders: false
 });
 
+// G-012 (Daniel W3): cancel verification costs two RPC calls — don't let
+// strangers burn the RPC quota by spamming known roomIds.
+const cancelRoomLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    message: { error: 'Too many cancel requests. Please wait.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
 // NOTE: Primary /health endpoint is defined below with full monitoring data (uptime, memory, etc.)
 
 // Basic request logger for production monitoring
@@ -979,7 +989,7 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
 // G-012: refund UI backend — the creator cancelled on-chain, so drop the lobby
 // room and tell everyone in it. On-chain state is the source of truth: we only
 // remove the room after verifying the contract says CANCELLED (4).
-app.post('/api/rooms/cancel', async (req, res) => {
+app.post('/api/rooms/cancel', cancelRoomLimiter, async (req, res) => {
     const { roomId } = req.body || {};
     if (typeof roomId !== 'string' || !/^0x[0-9a-fA-F]{64}$/.test(roomId)) {
         return res.status(400).json({ error: 'Invalid roomId' });
@@ -1013,6 +1023,7 @@ app.get('/api/rooms', (req, res) => res.json(activeRooms.map(room => ({
     stake: room.stake,
     mode: (room as any).mode ?? room.gameState?.mode ?? 'classic',
     maxPlayers: room.maxPlayers,
+    creator: (room as any).creator ?? null, // G-012 (Daniel B1): UI needs the real creator for Cancel&Refund
     createdAt: room.createdAt,
     players: room.players.map(p => p ? { name: p.name, address: p.address, color: p.color } : null),
 }))));
@@ -1055,6 +1066,8 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
         gameState: null,
         mode: req.body.mode || 'classic', // Track game variant
         status: "WAITING",
+        // G-012 (Daniel B1): creator explicitly — players[0] is a COLOR slot, not the creator
+        creator: creatorAddress?.toLowerCase(),
         createdAt: Date.now() // Track creation time for cleanup
     };
 

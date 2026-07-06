@@ -101,8 +101,9 @@ const Lobby = ({ onStartGame }) => {
                         console.log(`🚀 Room status is ${room.status} - Connecting immediately!`);
                         handleStart(room);
                     } else if (!room) {
-                        // G-012: room vanished (host cancelled or expired) — don't wait forever
-                        showToast("This room was cancelled or expired. Stakes are refunded on cancel.", "info");
+                        // G-012 (Daniel W4): room vanished — could be host-cancel (refunded),
+                        // expiry or a backend restart. Don't promise money we can't see.
+                        showToast("This room is no longer available. If the host cancelled, stakes were refunded on-chain.", "info");
                         setWaitingRoomId(null);
                         setStep('web3-lobby');
                     }
@@ -595,8 +596,9 @@ const Lobby = ({ onStartGame }) => {
                     const currentRoom = openRooms.find(r => r.id === waitingRoomId);
                     const playerCount = currentRoom?.players?.filter(p => p).length || 1;
                     const maxPlayers = currentRoom?.maxPlayers || 2;
-                    // G-012: only the on-chain creator can cancel & refund (contract rule)
-                    const isCreator = currentRoom?.players?.[0]?.address?.toLowerCase() === account?.address?.toLowerCase();
+                    // G-012 (Daniel B1): players[] is indexed by COLOR, not join order —
+                    // only the backend's explicit creator field identifies the host.
+                    const isCreator = !!currentRoom?.creator && currentRoom.creator.toLowerCase() === account?.address?.toLowerCase();
 
                     return (
                         <div className="waiting-room">
