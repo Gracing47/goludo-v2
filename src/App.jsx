@@ -532,6 +532,18 @@ function App() {
 
                 const requestPayoutSignature = async () => {
                     try {
+                        // G-012: reuse cached proof (survives tab close / reload)
+                        try {
+                            const cached = localStorage.getItem(`goludo_payout_${gameConfig.roomId}`);
+                            if (cached) {
+                                const proof = JSON.parse(cached);
+                                if (proof?.deadline && Number(proof.deadline) * 1000 > Date.now()) {
+                                    console.log("💾 Restoring cached payout proof for room", gameConfig.roomId);
+                                    setPayoutProof(proof);
+                                    return;
+                                }
+                            }
+                        } catch { /* cache is best-effort */ }
                         console.log("🏆 Game Won! Requesting signature...");
                         const potAmount = (BigInt(ethers.parseEther(gameConfig.stake.toString())) * BigInt(gameConfig.playerCount)).toString();
 
@@ -548,6 +560,8 @@ function App() {
                         const data = await response.json();
                         if (data.error) throw new Error(data.error);
                         setPayoutProof(data);
+                        // G-012: persist proof so a closed tab doesn't lose the claim
+                        try { localStorage.setItem(`goludo_payout_${gameConfig.roomId}`, JSON.stringify(data)); } catch { /* best-effort */ }
                     } catch (error) {
                         console.error("Payout signature failed:", error);
                     }
@@ -563,6 +577,8 @@ function App() {
         try {
             await handleClaimPayout(payoutProof);
             setPayoutProof(null);
+            // G-012: claimed → drop the cached proof
+            try { localStorage.removeItem(`goludo_payout_${gameConfig?.roomId}`); } catch { /* best-effort */ }
             setIsClaimed(true); // Mark as claimed!
             playSound('success');
         } catch (err) {
@@ -571,7 +587,28 @@ function App() {
         } finally {
             setIsClaiming(false);
         }
-    }, [payoutProof, isClaiming, handleClaimPayout]);
+    }, [payoutProof, isClaiming, handleClaimPayout, gameConfig?.roomId]);
+
+    // G-012: on app start, surface unclaimed & unexpired payout proofs; purge expired ones
+    useEffect(() => {
+        try {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k?.startsWith('goludo_payout_')) keys.push(k);
+            }
+            for (const k of keys) {
+                let proof = null;
+                try { proof = JSON.parse(localStorage.getItem(k) || 'null'); } catch { /* ignore */ }
+                if (proof?.deadline && Number(proof.deadline) * 1000 > Date.now()) {
+                    const roomId = k.slice('goludo_payout_'.length);
+                    showToast(`💰 Unclaimed payout found! Rejoin room ${roomId} to claim before the deadline.`, 'info');
+                    break;
+                }
+                localStorage.removeItem(k); // expired or unreadable → purge
+            }
+        } catch { /* best-effort */ }
+    }, []);
 
 
 

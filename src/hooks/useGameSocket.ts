@@ -92,6 +92,16 @@ export const useGameSocket = (roomId: string | undefined, account: Web3Account |
             setTimeout(() => setServerMsg(null), 5000);
         });
 
+        socket.on('join_error', ({ message }: { roomId?: string; message?: string }) => {
+            // G-012: unknown room → clear message + way back instead of endless spinner
+            console.error('🚫 join_error:', message);
+            setServerMsg(`🚫 ${message || 'Room not found'} — returning to lobby...`);
+            setTimeout(() => {
+                setServerMsg(null);
+                setAppState('lobby');
+            }, 3000);
+        });
+
         socket.on('disconnect', (reason) => {
             console.warn('🔌 Socket disconnected:', reason);
             if (reason === "io server disconnect" || reason === "transport close" || reason === "ping timeout") {

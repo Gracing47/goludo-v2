@@ -498,7 +498,7 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
     // Schedule room removal
     setTimeout(() => {
         cleanupRoom(room.id, activeRooms);
-    }, 5 * 60 * 1000); // 5 minutes for players to view results
+    }, 60 * 60 * 1000); // G-012: 60 minutes so mobile winners don't lose the claim window (was 5)
 }
 
 // Helper function to get next player
@@ -592,6 +592,12 @@ io.on('connection', (socket) => {
 
         // Map Socket ID to Player
         const room = activeRooms.find(r => r.id?.toLowerCase() === roomId);
+        if (!room) {
+            // G-012: dignified failure instead of a silent dead-end ("Establishing Connection" forever)
+            console.warn(`🚫 join_match for unknown room: ${roomId}`);
+            socket.emit('join_error', { roomId, message: 'Room not found or expired' });
+            return;
+        }
         if (room && playerAddress) {
             // Case-insensitive address search for better robustness
             const playerIndex = room.players.findIndex((p: any) => p && p.address?.toLowerCase() === playerAddress);
@@ -970,7 +976,16 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
     }
 });
 
-app.get('/api/rooms', (req, res) => res.json(activeRooms));
+// G-012: data minimization — public payload without socketIds / internal fields
+app.get('/api/rooms', (req, res) => res.json(activeRooms.map(room => ({
+    id: room.id,
+    status: room.status,
+    stake: room.stake,
+    mode: (room as any).mode ?? room.gameState?.mode ?? 'classic',
+    maxPlayers: room.maxPlayers,
+    createdAt: room.createdAt,
+    players: room.players.map(p => p ? { name: p.name, address: p.address, color: p.color } : null),
+}))));
 
 app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchema), async (req, res) => {
     let { roomId, txHash, stake, maxPlayers, creatorName, creatorAddress } = req.body;
