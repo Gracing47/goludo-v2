@@ -13,38 +13,34 @@ import { avatarUrl } from '../utils/avatar';
 import { showToast } from '../services/toast';
 import './UsernameOnboard.css';
 
-const DISMISS_KEY = 'goludo_username_onboard_done';
-
 const UsernameOnboard = () => {
     const account = useActiveAccount();
     const [show, setShow] = useState(false);
     const [name, setName] = useState('');
     const [saving, setSaving] = useState(false);
+    const [inlineError, setInlineError] = useState('');
 
     useEffect(() => {
         if (!account?.address) return;
         let alive = true;
         (async () => {
             try {
-                if (localStorage.getItem(DISMISS_KEY) === account.address.toLowerCase()) return;
+                // Mandatory: prompt whenever a connected wallet has no name yet.
                 const res = await fetch(`${API_URL}/api/profile/${account.address}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 if (alive && !data?.profile?.username) setShow(true);
+                else if (alive) setShow(false);
             } catch { /* offline — skip */ }
         })();
         return () => { alive = false; };
     }, [account?.address]);
 
-    const done = () => {
-        try { localStorage.setItem(DISMISS_KEY, account?.address?.toLowerCase() || '1'); } catch { /* ignore */ }
-        setShow(false);
-    };
-
     const save = async () => {
         const n = name.trim();
+        setInlineError('');
         if (!/^[a-zA-Z0-9_]{3,16}$/.test(n)) {
-            showToast('3–16 characters: letters, numbers, underscore.', 'error');
+            setInlineError('3–16 characters: letters, numbers, underscore.');
             return;
         }
         setSaving(true);
@@ -56,11 +52,12 @@ const UsernameOnboard = () => {
                 body: JSON.stringify({ username: n, ...signed }),
             });
             const json = await res.json();
+            if (res.status === 409) { setInlineError('That name is already taken — pick another.'); return; }
             if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
             showToast(`👋 Welcome, ${n}!`, 'success');
-            done();
+            setShow(false); // only closes on a successful, unique name — mandatory
         } catch (err) {
-            showToast(`Could not set name: ${err.message}`, 'error');
+            setInlineError(err.message || 'Could not set name.');
         } finally {
             setSaving(false);
         }
@@ -69,22 +66,22 @@ const UsernameOnboard = () => {
     if (!show || !account?.address) return null;
 
     return (
-        <div className="uno-backdrop" onClick={done}>
-            <div className="uno-card" onClick={(e) => e.stopPropagation()}>
+        <div className="uno-backdrop">
+            <div className="uno-card">
                 <img className="uno-avatar" src={avatarUrl(account.address, 72)} alt="" />
-                <h3>Pick your player name</h3>
-                <p>This is how you'll show up on the leaderboard and to opponents. You can change it later in your profile.</p>
+                <h3>Choose your player name</h3>
+                <p>Required to play — this is your unique name on the leaderboard and to opponents. You can change it later in your profile.</p>
                 <input
                     value={name}
                     maxLength={16}
                     placeholder="e.g. DiceKing"
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => { setName(e.target.value); setInlineError(''); }}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !saving) save(); }}
                     autoFocus
                 />
+                {inlineError && <span className="uno-inline-error">{inlineError}</span>}
                 <div className="uno-actions">
-                    <button className="uno-skip" onClick={done} disabled={saving}>Skip for now</button>
-                    <button className="uno-save" onClick={save} disabled={saving || name.trim().length < 3}>
+                    <button className="uno-save full" onClick={save} disabled={saving || name.trim().length < 3}>
                         {saving ? 'Saving…' : 'Save name'}
                     </button>
                 </div>

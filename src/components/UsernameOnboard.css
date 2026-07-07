@@ -36,12 +36,14 @@
     flex: 1; padding: 12px; min-height: 46px;
     border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem;
 }
-.uno-skip {
-    background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);
-}
 .uno-save {
     border: none; color: #fff;
     background: linear-gradient(135deg, #6c5cff, #4f3fd8);
 }
-.uno-save:disabled, .uno-skip:disabled { opacity: 0.5; cursor: not-allowed; }
+.uno-save.full { width: 100%; }
+.uno-save:disabled { opacity: 0.5; cursor: not-allowed; }
+.uno-inline-error {
+    display: block; margin: -6px 0 12px;
+    font-size: 0.78rem; color: #ff9b9b;
+}
 .uno-note { display: block; margin-top: 12px; font-size: 0.68rem; opacity: 0.55; }
