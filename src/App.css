@@ -1129,9 +1129,9 @@ body {
 /* G-029: voice controls placement in the game view */
 .voice-controls-slot {
     position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    right: 12px;
-    left: auto;
+    left: 10px;
+    bottom: 26%;
+    right: auto;
     transform: none;
-    max-width: calc(100vw - 24px);
+    z-index: 35;
 }

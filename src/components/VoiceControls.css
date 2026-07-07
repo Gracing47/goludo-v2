@@ -1,73 +1,86 @@
-/* VoiceControls (G-029) — compact AAA widget, bottom-right, never over the dice */
+/* VoiceControls (G-029) — standalone push-to-talk, left edge, clear of the
+   top gear and bottom burger. Never a hot mic: open only while held. */
+.ptt-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
 
-/* Collapsed: single round mic FAB */
-.voice-fab-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.voice-fab {
-    width: 44px; height: 44px;
+.ptt-side { display: flex; align-items: center; gap: 6px; }
+
+.ptt-dot { width: 8px; height: 8px; border-radius: 50%; }
+.ptt-dot.live { background: #2fbf71; box-shadow: 0 0 8px rgba(47,191,113,0.9); }
+.ptt-dot.waiting { background: #ffcf6b; box-shadow: 0 0 8px rgba(255,207,107,0.8); animation: ptt-pulse 1.4s infinite; }
+.ptt-dot.connecting { background: #9b8cff; animation: ptt-pulse 1.4s infinite; }
+@keyframes ptt-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+/* The main PTT button */
+.ptt-btn {
+    position: relative;
+    width: 60px; height: 60px;
     display: flex; align-items: center; justify-content: center;
     border-radius: 50%;
-    border: 1.5px solid rgba(124, 108, 255, 0.55);
-    background: radial-gradient(circle at 30% 30%, rgba(124,108,255,0.35), rgba(20,20,40,0.92));
-    color: #cfc6ff;
+    border: 2px solid rgba(124, 108, 255, 0.6);
+    background: radial-gradient(circle at 32% 28%, rgba(124,108,255,0.4), rgba(16,16,32,0.94));
+    color: #e6e1ff;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.45), 0 0 12px rgba(124,108,255,0.25);
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
-    backdrop-filter: blur(4px);
-}
-.voice-fab:hover { transform: scale(1.06); box-shadow: 0 6px 18px rgba(0,0,0,0.5), 0 0 18px rgba(124,108,255,0.45); }
-.voice-fab:active { transform: scale(0.96); }
-.voice-fab-error {
-    max-width: 180px; text-align: right;
-    font-size: 0.66rem; color: #ff9b9b;
-    background: rgba(20,20,40,0.9); padding: 3px 7px; border-radius: 8px;
-}
-
-/* Enabled: vertical stack of round buttons */
-.voice-stack {
-    display: flex; flex-direction: column; align-items: center; gap: 7px;
-    padding: 8px 6px;
-    border-radius: 22px;
-    background: rgba(16, 16, 32, 0.72);
-    border: 1px solid rgba(124, 108, 255, 0.28);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-}
-
-.voice-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.voice-dot.live { background: #2fbf71; box-shadow: 0 0 8px rgba(47,191,113,0.9); }
-.voice-dot.waiting { background: #ffcf6b; box-shadow: 0 0 8px rgba(255,207,107,0.8); animation: vc-pulse 1.4s infinite; }
-.voice-dot.connecting { background: #9b8cff; animation: vc-pulse 1.4s infinite; }
-@keyframes vc-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-.voice-round {
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    border: 1.5px solid rgba(124, 108, 255, 0.4);
-    background: rgba(124, 108, 255, 0.14);
-    color: #cfc6ff;
-    cursor: pointer;
-    transition: transform 0.1s ease, background 0.12s ease, box-shadow 0.12s ease;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45), 0 0 14px rgba(124,108,255,0.28);
+    transition: transform 0.1s ease, box-shadow 0.12s ease, border-color 0.12s ease;
     user-select: none; -webkit-user-select: none; touch-action: none;
+    -webkit-tap-highlight-color: transparent;
 }
-.voice-round:hover { background: rgba(124, 108, 255, 0.26); }
-.voice-round:active { transform: scale(0.94); }
-
-/* Big push-to-talk in the middle */
-.voice-round.ptt { width: 46px; height: 46px; }
-.voice-round.ptt.talking {
-    background: rgba(47, 191, 113, 0.32);
-    border-color: rgba(47, 191, 113, 0.75);
-    color: #d6ffe9;
-    box-shadow: 0 0 16px rgba(47, 191, 113, 0.6);
+.ptt-btn.idle:hover { transform: scale(1.05); }
+.ptt-btn.ready:active,
+.ptt-btn.talking {
+    transform: scale(1.08);
+    border-color: rgba(47, 191, 113, 0.9);
+    color: #d9ffe9;
+    background: radial-gradient(circle at 32% 28%, rgba(47,191,113,0.5), rgba(16,16,32,0.94));
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 22px rgba(47,191,113,0.65);
 }
 
-/* Secondary round buttons */
-.voice-round.small { width: 34px; height: 34px; font-size: 0.9rem; }
-.voice-round.small.on { border-color: rgba(255,90,90,0.6); color: #ffb0b0; background: rgba(255,70,70,0.14); }
-.voice-round.small.muted { border-color: rgba(255,90,90,0.5); color: #ff9b9b; }
-.voice-round.small.leave { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+/* pulsing ring while talking */
+.ptt-ring {
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    border: 2px solid rgba(47, 191, 113, 0.6);
+    opacity: 0;
+}
+.ptt-btn.talking .ptt-ring { animation: ptt-ring 1s infinite; }
+@keyframes ptt-ring {
+    0% { opacity: 0.7; transform: scale(0.9); }
+    100% { opacity: 0; transform: scale(1.25); }
+}
+
+.ptt-caption {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.75);
+    background: rgba(16,16,32,0.7);
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.ptt-error {
+    max-width: 160px; text-align: center;
+    font-size: 0.64rem; color: #ff9b9b;
+    background: rgba(16,16,32,0.9); padding: 3px 7px; border-radius: 8px;
+}
+
+.ptt-mini {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1.5px solid rgba(124,108,255,0.4);
+    background: rgba(124,108,255,0.14);
+    color: #cfc6ff; cursor: pointer; font-size: 0.85rem;
+}
+.ptt-mini:hover { background: rgba(124,108,255,0.26); }
+.ptt-mini.muted { border-color: rgba(255,90,90,0.5); color: #ff9b9b; }
+.ptt-mini.leave { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.65); }
 
 @media (prefers-reduced-motion: reduce) {
-    .voice-dot.waiting, .voice-dot.connecting { animation: none; }
-    .voice-fab, .voice-round { transition: none; }
+    .ptt-dot.waiting, .ptt-dot.connecting, .ptt-btn.talking .ptt-ring { animation: none; }
+    .ptt-btn { transition: none; }
 }

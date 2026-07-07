@@ -122,7 +122,18 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
         try {
             // Request the mic FIRST so the permission prompt ALWAYS appears on
             // the click gesture — never gated behind a socket check (bugfix).
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            // Best free quality: browser echo-cancel + noise-suppress + auto-gain,
+            // mono @48k (Opus handles the rest — no paid infra needed).
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    channelCount: 1,
+                    sampleRate: 48000,
+                },
+                video: false,
+            });
             const s = socketRef.current, r = roomIdRef.current;
             if (!s || !r) { stream.getTracks().forEach(t => t.stop()); setStatus('off'); return; }
             localStreamRef.current = stream;
