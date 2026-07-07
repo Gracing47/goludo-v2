@@ -81,7 +81,7 @@ export const CHAIN_REGISTRY: Record<number, GoLudoChainConfig> = {
 
 const env = (import.meta as any).env ?? {};
 
-export const ACTIVE_CHAIN_ID: number = Number(env.VITE_CHAIN_ID ?? 114);
+export const ACTIVE_CHAIN_ID: number = Number(env.VITE_CHAIN_ID || 114); // || not ??: empty string must not become 0 (Daniel N6)
 
 const config = CHAIN_REGISTRY[ACTIVE_CHAIN_ID];
 if (!config) {
@@ -94,7 +94,14 @@ if (!config) {
 export const activeChainConfig: GoLudoChainConfig = config;
 export const activeChain: Chain = config.chain;
 
-/** Per-chain contract address lookup with legacy fallback (see header). */
+/**
+ * Per-chain contract address lookup.
+ * Daniel G-026a-B1: the legacy fallback (VITE_<NAME>_ADDRESS) is ONLY valid on
+ * Coston2 (114) — on any other chain a missing per-chain env must fail fast,
+ * otherwise staked play would silently bind to the Coston2 address on a
+ * foreign chain (exactly the G-024/AAA-M32 failure mode).
+ */
 export function contractAddressFromEnv(name: "GOTOKEN" | "LUDOVAULT"): unknown {
-    return env[`VITE_${name}_ADDRESS_${ACTIVE_CHAIN_ID}`] ?? env[`VITE_${name}_ADDRESS`];
+    return env[`VITE_${name}_ADDRESS_${ACTIVE_CHAIN_ID}`]
+        ?? (ACTIVE_CHAIN_ID === 114 ? env[`VITE_${name}_ADDRESS`] : undefined);
 }

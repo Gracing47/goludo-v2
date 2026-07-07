@@ -72,6 +72,8 @@ model GameHistory {
   id           String   @id @default(uuid())
   roomId       String   @unique
   chainId      Int      @default(114) // G-026a: chain the match ran on (Coston2 default)
+  // NOTE: @@index([chainId]) is declared at the bottom of this model (Daniel W2:
+  // schema must match the hand-written migration or migrate dev drops the index)
   mode         String   // 'classic' | 'rapid'
 
   players      Json     // Array of player addresses
@@ -91,4 +93,5 @@ model GameHistory {
   @@index([mode])
   @@index([winner])
   @@index([createdAt])
+  @@index([chainId])
 }

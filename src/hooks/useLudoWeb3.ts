@@ -362,6 +362,7 @@ export const useLudoWeb3 = () => {
 
         setIsProcessing(true);
         try {
+            await ensureChain(); // G-026a (Daniel W3): faucet is often a new user's FIRST tx
             const cooldown = await readContract({
                 contract: goTokenContract,
                 method: "function faucetCooldownRemaining(address) view returns (uint256)",

@@ -229,7 +229,7 @@ export class ProfileManager {
 
         return prisma.gameHistory.create({
             data: {
-                chainId: data.chainId ?? 114, // G-026a
+                chainId: data.chainId ?? parseInt(process.env.CHAIN_ID || '114'), // G-026a (Daniel N7: env, not hardcoded)
                 roomId: data.roomId,
                 mode: data.mode,
                 players: data.players,

@@ -23,7 +23,7 @@ Recommendation: CREATE2 deterministic deploys so addresses match across chains
 Set env:
 - `CHAIN_ID=<id>` (drives EIP-712 domain, room chainId, stats)
 - `FLARE_RPC_URL=<target rpc>` (name is legacy — it is THE rpc url)
-- `GOTOKEN_ADDRESS`, `LUDOVAULT_ADDRESS`, `VITE_*` mirrors
+- `GOTOKEN_ADDRESS`, `LUDOVAULT_ADDRESS` **UND zwingend `VITE_LUDOVAULT_ADDRESS`/`VITE_GOTOKEN_ADDRESS`** — der contractVerifier liest NUR den VITE-Namen; ohne ihn läuft das Backend mit deaktivierter On-Chain-Verifikation (Daniel W4)
 - `SERVER_SIGNER_PRIVATE_KEY=<per-chain key>`
 - `ADMIN_KEY` (≥24 chars, new one per instance)
 `prisma migrate deploy` runs via startCommand; GameHistory rows carry `chainId`.
