@@ -2,15 +2,17 @@
  * useVoiceChat (G-029) — opt-in P2P voice for a 2-player match.
  *
  * WebRTC audio, signaled over the existing game socket (room-scoped relay).
- * Design constraints from Daniel's ticket review:
- *  - BOTH players must enable voice before any audio flows (no one-sided listen).
- *  - Remote audio only plays after a user gesture (iOS autoplay unlock) — the
- *    enable button IS that gesture.
- *  - "Perfect negotiation" so reconnects renegotiate without glare; the room
- *    creator is the polite peer (deterministic role).
- *  - On disable / unmount / peer-leave: every track stopped, pc closed — the
- *    browser mic indicator must go OFF.
- *  - Local mute toggles the mic track; remote mute gates the <audio> element.
+ * Design constraints from Daniel's ticket review + review round 2:
+ *  - BOTH players must enable before any audio flows (no one-sided listen).
+ *  - Remote audio plays only after a user gesture (iOS unlock) — the enable
+ *    button IS that gesture — and the <audio> sink is attached to the DOM
+ *    (detached elements are silent on iOS Safari). [Daniel B2]
+ *  - ONE deterministic offer trigger: the impolite peer offers once it knows
+ *    the peer is ready (peerReadyRef), never double-offers. [Daniel W3]
+ *  - Teardown uses refs only, so a socket/room reference change never tears
+ *    down a live session. [Daniel B3]
+ *  - On disable / unmount / peer-leave: every track stopped, pc closed,
+ *    <audio> removed — browser mic indicator goes OFF.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
@@ -22,8 +24,8 @@ type VoiceStatus = 'off' | 'connecting' | 'waiting' | 'live' | 'error';
 interface Params {
     socket: Socket | null;
     roomId: string | null;
-    isPolite: boolean; // room creator = polite peer (deterministic)
-    enabled: boolean;  // parent only mounts voice for web3/PvP matches
+    isPolite: boolean;
+    enabled: boolean;
 }
 
 export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
@@ -32,16 +34,28 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
     const [remoteMuted, setRemoteMuted] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Latest socket/roomId/isPolite via refs so callbacks stay stable (B3).
+    const socketRef = useRef(socket); socketRef.current = socket;
+    const roomIdRef = useRef(roomId); roomIdRef.current = roomId;
+    const politeRef = useRef(isPolite); politeRef.current = isPolite;
+
     const pcRef = useRef<RTCPeerConnection | null>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
     const audioElRef = useRef<HTMLAudioElement | null>(null);
     const makingOfferRef = useRef(false);
-    const activeRef = useRef(false); // did WE opt in?
+    const activeRef = useRef(false);
+    const peerReadyRef = useRef(false);
 
-    // ---- teardown: stop every track, close pc, drop audio ----
+    const emit = (event: string, extra: any = {}) => {
+        const s = socketRef.current, r = roomIdRef.current;
+        if (s && r) s.emit(event, { roomId: r, ...extra });
+    };
+
     const teardown = useCallback((tellPeer: boolean) => {
+        const wasActive = activeRef.current;
         activeRef.current = false;
-        if (tellPeer && socket && roomId) socket.emit('voice_end', { roomId });
+        peerReadyRef.current = false;
+        if (tellPeer && wasActive) emit('voice_end');
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(t => t.stop()); // mic indicator OFF
             localStreamRef.current = null;
@@ -50,53 +64,55 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
             pcRef.current.ontrack = null;
             pcRef.current.onicecandidate = null;
             pcRef.current.onnegotiationneeded = null;
+            pcRef.current.onconnectionstatechange = null;
             pcRef.current.close();
             pcRef.current = null;
         }
         if (audioElRef.current) {
             audioElRef.current.srcObject = null;
+            audioElRef.current.remove(); // B2: drop the DOM sink
+            audioElRef.current = null;
         }
         makingOfferRef.current = false;
         setStatus('off');
         setRemoteMuted(false);
         setMicMuted(false);
-    }, [socket, roomId]);
+    }, []);
 
     const createPeer = useCallback(() => {
         const pc = new RTCPeerConnection({ iceServers: STUN });
-
-        pc.onicecandidate = (e) => {
-            if (e.candidate && socket && roomId) socket.emit('voice_ice', { roomId, candidate: e.candidate });
-        };
+        pc.onicecandidate = (e) => { if (e.candidate) emit('voice_ice', { candidate: e.candidate }); };
         pc.ontrack = (e) => {
-            // Attach the remote stream; the <audio> element was created after a
-            // user gesture, so playback is allowed (iOS-safe).
             if (audioElRef.current && e.streams[0]) {
                 audioElRef.current.srcObject = e.streams[0];
-                audioElRef.current.play().catch(() => { /* gesture already satisfied; ignore */ });
+                audioElRef.current.play().catch(() => { /* gesture already satisfied */ });
             }
             setStatus('live');
         };
-        pc.onnegotiationneeded = async () => {
-            try {
-                makingOfferRef.current = true;
-                await pc.setLocalDescription();
-                if (socket && roomId) socket.emit('voice_offer', { roomId, description: pc.localDescription });
-            } catch { /* handled by perfect-negotiation rollback */ }
-            finally { makingOfferRef.current = false; }
-        };
         pc.onconnectionstatechange = () => {
-            if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-                if (activeRef.current) setStatus('waiting');
-            }
+            const st = pc.connectionState;
+            if ((st === 'failed' || st === 'disconnected') && activeRef.current) setStatus('waiting');
         };
         pcRef.current = pc;
         return pc;
-    }, [socket, roomId]);
+    }, []);
 
-    // ---- user enables voice (this is the iOS autoplay-unlock gesture) ----
+    // Impolite peer creates the single offer once both sides are ready.
+    const maybeOffer = useCallback(async () => {
+        if (!activeRef.current || politeRef.current || !peerReadyRef.current) return;
+        const pc = pcRef.current;
+        if (!pc || pc.signalingState !== 'stable') return;
+        try {
+            makingOfferRef.current = true;
+            await pc.setLocalDescription(await pc.createOffer());
+            emit('voice_offer', { description: pc.localDescription });
+        } catch { /* ignore */ } finally { makingOfferRef.current = false; }
+    }, []);
+
     const enableVoice = useCallback(async () => {
-        if (!socket || !roomId || activeRef.current) return;
+        if (activeRef.current) return; // B3: guard double-enable
+        const s = socketRef.current, r = roomIdRef.current;
+        if (!s || !r) return;
         setError(null);
         setStatus('connecting');
         try {
@@ -104,20 +120,20 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
             localStreamRef.current = stream;
             activeRef.current = true;
 
-            // Pre-create the audio sink now, inside the gesture, so remote
-            // playback is permitted later on iOS Safari.
-            if (!audioElRef.current) {
-                const el = document.createElement('audio');
-                el.autoplay = true;
-                (el as any).playsInline = true;
-                audioElRef.current = el;
-            }
+            // B2: attach the audio sink to the DOM inside the gesture (iOS-safe).
+            const el = document.createElement('audio');
+            el.autoplay = true;
+            (el as any).playsInline = true;
+            el.style.display = 'none';
+            document.body.appendChild(el);
+            audioElRef.current = el;
 
             const pc = createPeer();
             stream.getTracks().forEach(t => pc.addTrack(t, stream));
 
             setStatus('waiting');
-            socket.emit('voice_ready', { roomId }); // tell peer we're in
+            emit('voice_ready');       // announce to peer
+            await maybeOffer();        // peer may already be ready
         } catch (err: any) {
             activeRef.current = false;
             setStatus('error');
@@ -125,7 +141,7 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
                 ? 'Microphone blocked — allow it in your browser settings to use voice.'
                 : 'Could not start voice.');
         }
-    }, [socket, roomId, createPeer]);
+    }, [createPeer, maybeOffer]);
 
     const disableVoice = useCallback(() => teardown(true), [teardown]);
 
@@ -144,37 +160,30 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
         });
     }, []);
 
-    // ---- signaling ----
+    // signaling
     useEffect(() => {
-        if (!socket || !roomId) return;
+        if (!socket) return;
 
-        const onPeerReady = async () => {
-            // Both sides opted in. The IMPOLITE peer kicks off the offer so we
-            // don't double-offer; addTrack already queued negotiationneeded.
-            if (activeRef.current && !isPolite && pcRef.current && pcRef.current.signalingState === 'stable') {
-                try {
-                    makingOfferRef.current = true;
-                    await pcRef.current.setLocalDescription();
-                    socket.emit('voice_offer', { roomId, description: pcRef.current.localDescription });
-                } catch { /* ignore */ } finally { makingOfferRef.current = false; }
-            }
-        };
+        const onPeerReady = () => { peerReadyRef.current = true; maybeOffer(); };
 
         const onOffer = async ({ description }: any) => {
-            if (!activeRef.current) return; // we haven't opted in → ignore, no audio
+            if (!activeRef.current) return; // not opted in → never receive audio
+            peerReadyRef.current = true;
             const pc = pcRef.current ?? createPeer();
-            const offerCollision = description.type === 'offer' &&
-                (makingOfferRef.current || pc.signalingState !== 'stable');
-            if (offerCollision && !isPolite) return; // impolite peer ignores colliding offer
+            const collision = description.type === 'offer' && (makingOfferRef.current || pc.signalingState !== 'stable');
+            if (collision && !politeRef.current) return; // impolite ignores colliding offer
             try {
-                await pc.setRemoteDescription(description);
+                if (collision) await Promise.all([
+                    pc.setLocalDescription({ type: 'rollback' } as any),
+                    pc.setRemoteDescription(description),
+                ]);
+                else await pc.setRemoteDescription(description);
                 if (description.type === 'offer') {
-                    // ensure our mic is attached before answering
-                    if (localStreamRef.current && pc.getSenders().length === 0) {
+                    if (localStreamRef.current && pc.getSenders().every(sn => !sn.track)) {
                         localStreamRef.current.getTracks().forEach(t => pc.addTrack(t, localStreamRef.current!));
                     }
-                    await pc.setLocalDescription();
-                    socket.emit('voice_answer', { roomId, description: pc.localDescription });
+                    await pc.setLocalDescription(await pc.createAnswer());
+                    emit('voice_answer', { description: pc.localDescription });
                 }
             } catch { /* ignore */ }
         };
@@ -186,19 +195,10 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
         };
 
         const onIce = async ({ candidate }: any) => {
-            if (pcRef.current && candidate) {
-                try { await pcRef.current.addIceCandidate(candidate); } catch { /* ignore */ }
-            }
+            if (pcRef.current && candidate) { try { await pcRef.current.addIceCandidate(candidate); } catch { /* ignore */ } }
         };
 
-        const onPeerEnd = () => {
-            // Peer disabled voice or left — tear our side down but stay ready to
-            // re-enable. Do NOT tell the peer back (avoid ping-pong).
-            if (activeRef.current) {
-                teardown(false);
-                setStatus('off');
-            }
-        };
+        const onPeerEnd = () => { if (activeRef.current) teardown(false); };
 
         socket.on('voice_ready', onPeerReady);
         socket.on('voice_offer', onOffer);
@@ -212,13 +212,14 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
             socket.off('voice_ice', onIce);
             socket.off('voice_end', onPeerEnd);
         };
-    }, [socket, roomId, isPolite, createPeer, teardown]);
+    }, [socket, createPeer, maybeOffer, teardown]);
 
-    // Cleanup on unmount / when the feature is disabled by the parent
+    // Tear down only when the feature is disabled or the component unmounts —
+    // NOT on socket/room ref changes (B3: teardown has no such deps now).
     useEffect(() => {
         if (!enabled) teardown(true);
         return () => teardown(true);
     }, [enabled, teardown]);
 
-    return { status, micMuted, remoteMuted, error, enableVoice, disableVoice, toggleMic, toggleRemote, active: activeRef.current };
+    return { status, micMuted, remoteMuted, error, enableVoice, disableVoice, toggleMic, toggleRemote };
 }

@@ -959,21 +959,22 @@ function App() {
                     />
 
                     {/* G-029: opt-in voice chat (web3 PvP only). Polite peer =
-                        lower wallet address (deterministic, no creator lookup). */}
-                    {gameConfig.mode === 'web3' && gameConfig.roomId && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
-                        <div className="voice-controls-slot">
-                            <VoiceControls
-                                socket={socket}
-                                roomId={gameConfig.roomId}
-                                enabled={true}
-                                isPolite={(() => {
-                                    const me = account?.address?.toLowerCase() || '';
-                                    const others = (gameConfig.players || []).filter(p => p?.address && p.address.toLowerCase() !== me).map(p => p.address.toLowerCase());
-                                    return others.every(o => me < o);
-                                })()}
-                            />
-                        </div>
-                    )}
+                        lower wallet address (deterministic). Only mount once our
+                        address is known, else the tiebreak is undefined (Daniel W2). */}
+                    {gameConfig.mode === 'web3' && gameConfig.roomId && account?.address && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (() => {
+                        const me = account.address.toLowerCase();
+                        const others = (gameConfig.players || []).filter(p => p?.address && p.address.toLowerCase() !== me).map(p => p.address.toLowerCase());
+                        return (
+                            <div className="voice-controls-slot">
+                                <VoiceControls
+                                    socket={socket}
+                                    roomId={gameConfig.roomId}
+                                    enabled={true}
+                                    isPolite={others.every(o => me < o)}
+                                />
+                            </div>
+                        );
+                    })()}
 
                     {/* 3. POT DISPLAY */}
                     {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
