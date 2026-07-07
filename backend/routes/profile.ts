@@ -4,8 +4,8 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { ethers } from 'ethers';
 import { ProfileManager } from '../services/profileManager.js';
+import { issueNonce, verifySignedAction } from '../services/signedAction.js';
 
 const router = express.Router();
 const profileManager = ProfileManager.getInstance();
@@ -57,25 +57,32 @@ router.get('/leaderboard/:metric', async (req, res) => {
     }
 });
 
-// POST /api/profile/username — G-028 user hardening: only the wallet OWNER can
-// name themselves. The client signs `GoLudo username: <name>`; we recover the
-// signer address from the signature — no way to rename someone else's wallet.
+// GET /api/auth/nonce?address=0x… — single-use nonce for signed actions (G-032)
+router.get('/auth/nonce', profileLimiter, (req, res) => {
+    try {
+        const address = String(req.query.address || '');
+        res.json(issueNonce(address));
+    } catch (error: any) {
+        res.status(400).json({ error: error.message || 'Could not issue nonce' });
+    }
+});
+
+// POST /api/profile/username — G-028 + G-032: only the wallet OWNER can name
+// themselves, and the signature is replay-safe (nonce + deadline). The client
+// GETs a nonce, signs the structured `set-username` message, we verify + consume.
 router.post('/profile/username', profileLimiter, async (req, res) => {
     try {
-        const { username, signature } = req.body || {};
+        const { username, nonce, deadline, signature } = req.body || {};
         if (typeof username !== 'string' || !/^[a-zA-Z0-9_]{3,16}$/.test(username)) {
             return res.status(400).json({ error: 'Username must be 3–16 chars: letters, numbers, underscore' });
         }
-        if (typeof signature !== 'string' || !signature.startsWith('0x')) {
-            return res.status(400).json({ error: 'Missing signature' });
-        }
-        let recovered: string;
+        let verified;
         try {
-            recovered = ethers.verifyMessage(`GoLudo username: ${username}`, signature);
-        } catch {
-            return res.status(400).json({ error: 'Invalid signature' });
+            verified = verifySignedAction({ action: 'set-username', target: username, nonce, deadline, signature });
+        } catch (e: any) {
+            return res.status(400).json({ error: e.message || 'Invalid signature' });
         }
-        const result = await profileManager.setUsername(recovered, username);
+        const result = await profileManager.setUsername(verified.signer, username);
         res.json({ ok: true, ...result });
     } catch (error: any) {
         if (error.code === 'TAKEN') return res.status(409).json({ error: 'Username already taken' });

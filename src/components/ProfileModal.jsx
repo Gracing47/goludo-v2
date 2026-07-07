@@ -15,6 +15,7 @@ import { API_URL } from '../config/api';
 import { STAKE_CURRENCY_SYMBOL } from '../config/currency';
 import { weiToGo, shortAddr } from '../utils/format';
 import { avatarUrl } from '../utils/avatar';
+import { signAction } from '../utils/signAction';
 import { showToast } from '../services/toast';
 import './ProfileModal.css';
 
@@ -49,11 +50,11 @@ const ProfileModal = ({ onClose, address }) => {
         }
         setSaving(true);
         try {
-            const signature = await account.signMessage({ message: `GoLudo username: ${name}` });
+            const signed = await signAction(account, 'set-username', name); // G-032: nonce + deadline
             const res = await fetch(`${API_URL}/api/profile/username`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: name, signature }),
+                body: JSON.stringify({ username: name, ...signed }),
             });
             const json = await res.json();
             if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
