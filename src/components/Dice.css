@@ -324,27 +324,35 @@
 
 .dice-result-overlay {
     position: absolute;
-    bottom: -28px;
+    bottom: -34px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1px;
+    gap: 2px;
     pointer-events: none;
     z-index: 4;
     animation: pop-in var(--dur-fast) var(--ease-spring);
 }
 
+/* High-contrast pill so the rolled number reads on ANY board background */
 .dice-result-number {
     font-family: var(--font-display, 'Orbitron', sans-serif);
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     font-weight: var(--font-extrabold, 900);
-    color: var(--neon-cyan, #00f3ff);
-    text-shadow:
-        0 0 8px rgba(0, 243, 255, 0.90),
-        0 0 20px rgba(0, 243, 255, 0.55);
+    color: #ffffff;
     line-height: 1;
+    min-width: 2.1em;
+    padding: 5px 0;
+    text-align: center;
+    border-radius: 12px;
+    background: rgba(10, 12, 28, 0.92);
+    border: 2px solid var(--neon-cyan, #00f3ff);
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.55),
+        0 0 14px rgba(0, 243, 255, 0.55);
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.85);
 }
 
 .dice-roll-again-cue {
@@ -361,10 +369,10 @@
 /* Tighten vertical space on smallest phones */
 @media (max-width: 390px) {
     .dice-result-overlay {
-        bottom: -24px;
+        bottom: -30px;
     }
-    .dice-result-number { font-size: 0.9rem; }
-    .dice-roll-again-cue { font-size: 0.40rem; }
+    .dice-result-number { font-size: 1.25rem; padding: 4px 0; }
+    .dice-roll-again-cue { font-size: 0.42rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
