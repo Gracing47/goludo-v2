@@ -204,6 +204,9 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
 
         // Parse logs for RoomCreated event
         const roomCreatedEvent = receipt.logs
+            // Daniel W1: only logs emitted by OUR vault — an attacker contract
+            // can emit signature-identical events in the same tx.
+            .filter(log => log.address.toLowerCase() === ctx.vault.target.toLowerCase())
             .map(log => {
                 try {
                     return ctx.vault.interface.parseLog(log);
@@ -294,6 +297,8 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
 
         // Parse logs for RoomJoined event
         const roomJoinedEvent = receipt.logs
+            // Daniel W1: only logs emitted by OUR vault (see verifyRoomCreation)
+            .filter(log => log.address.toLowerCase() === ctx.vault.target.toLowerCase())
             .map(log => {
                 try {
                     return ctx.vault.interface.parseLog(log);

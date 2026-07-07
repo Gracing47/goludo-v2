@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
-import { signPayout, walletAddress, CONTRACT_FEE_BPS, BPS_DENOMINATOR } from './services/signer.js';
+import { signPayout, walletAddress, supportedSignerChainIds, CONTRACT_FEE_BPS, BPS_DENOMINATOR } from './services/signer.js';
 import path from 'path';
 import dotenv from 'dotenv';
 import http from 'http';
@@ -996,6 +996,17 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
         };
         const potAmount = contractRoom.pot;
 
+        // Daniel W2 (defense-in-depth): the winner must be an ON-CHAIN
+        // participant and the room must be ACTIVE on-chain before we sign.
+        if (contractRoom.status !== 2) {
+            res.status(409).json({ error: `On-chain room status is ${contractRoom.status}, not ACTIVE — refusing to sign` });
+            return;
+        }
+        if (!contractRoom.participants.map(a => a.toLowerCase()).includes(winner.toLowerCase())) {
+            res.status(403).json({ error: 'Winner is not an on-chain participant — refusing to sign' });
+            return;
+        }
+
         // AAA-C2: Pass entry amount and participant count so signPayout can
         // cross-check that potAmount == entryAmount * participantCount before signing.
         const payoutProof = await signPayout(
@@ -1078,6 +1089,14 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     // G-026b: rooms are chain-scoped; verification runs against the room's
     // chain (fail-closed for chains this instance has no verifier config for).
     const roomChainId = Number(req.body.chainId || SERVER_CHAIN_ID);
+
+    // Daniel B1: never create a room we cannot PAY OUT — verifier config
+    // without signer config would lock stakes forever. Also whitelists the
+    // chainId for zero-stake rooms (W3).
+    if (!supportedSignerChainIds().includes(roomChainId)) {
+        res.status(403).json({ error: `Chain ${roomChainId} is not payable on this server — room creation refused` });
+        return;
+    }
 
     // ✅ PHASE 5: Verify transaction on blockchain
     if (txHash) {

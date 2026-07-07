@@ -17,7 +17,7 @@ import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from '../config/currenc
 import { activeChainConfig, ACTIVE_CHAIN_ID } from '../config/chains';
 import ChainSwitcher from './ChainSwitcher';
 import { showToast } from '../services/toast';
-import BurnTicker from './BurnTicker';
+import BurnTicker, { BURN_TICKER_CHAIN_ID } from './BurnTicker';
 import Leaderboard from './Leaderboard';
 import ProfileModal from './ProfileModal';
 
@@ -543,7 +543,7 @@ const Lobby = ({ onStartGame }) => {
                             {/* G-026b: network selection (visible once >1 chain is configured) */}
                             <ChainSwitcher />
                             {/* G-022: live deflation ticker (home chain only, see BurnTicker) */}
-                            {ACTIVE_CHAIN_ID === 114 && <BurnTicker />}
+                            {ACTIVE_CHAIN_ID === BURN_TICKER_CHAIN_ID && <BurnTicker />}
                             {/* G-023: Season-1 leaderboard (XP / wins / $GO won) + profile */}
                             <button className="create-game-btn secondary" onClick={() => setShowLeaderboard(true)}>
                                 🏆 Leaderboard

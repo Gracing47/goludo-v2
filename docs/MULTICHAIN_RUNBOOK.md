@@ -58,3 +58,19 @@ Then follow steps 2–4 above per chain (own Railway service + Vercel deployment
 ## Open for G-026b (one instance, many chains)
 Room namespacing per chain in one lobby, per-chain stats aggregation UI,
 wallet-chain-choice UX, per-chain faucet monitoring. See ticket G-026.
+
+## One-instance multi-chain (G-026b, live)
+
+Per additional chain on the SAME backend instance, set ALL FOUR (fail-closed —
+rooms are refused unless the chain is fully payable):
+- `RPC_URL_<chainId>` + `VITE_LUDOVAULT_ADDRESS_<chainId>` (verifier)
+- `SERVER_SIGNER_PRIVATE_KEY_<chainId>` (payout signer — own key per chain!)
+- Frontend: `VITE_GOTOKEN_ADDRESS_<chainId>` + `VITE_LUDOVAULT_ADDRESS_<chainId>`
+
+Known limits (Daniel-Review 07.07.):
+- `SKIP_VERIFICATION` bypasses ONLY the home chain (foreign chains stay strict).
+- Room recovery after restart covers the home chain only — foreign-chain ACTIVE
+  rooms are lost from the lobby (stakes refundable on-chain via cancel).
+- `/api/burn` reports the home chain; the UI hides the ticker elsewhere.
+- Do not set `VITE_LUDOVAULT_ADDRESS_<homeChainId>` different from the legacy
+  `VITE_LUDOVAULT_ADDRESS` — signer and verifier would diverge.
