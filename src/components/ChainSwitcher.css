@@ -1,0 +1,35 @@
+/* ChainSwitcher (G-026b) — compact network pill */
+.chain-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(90, 220, 160, 0.08);
+    border: 1px solid rgba(90, 220, 160, 0.35);
+    font-size: 0.8rem;
+}
+
+.chain-switcher .chain-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2fbf71;
+    box-shadow: 0 0 6px rgba(47, 191, 113, 0.8);
+    flex-shrink: 0;
+}
+
+.chain-switcher select {
+    background: transparent;
+    border: none;
+    color: #b9f2d4;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+}
+
+.chain-switcher select option {
+    background: #141423;
+    color: #e8e8f5;
+}

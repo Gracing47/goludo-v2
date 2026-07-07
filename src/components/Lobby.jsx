@@ -14,7 +14,8 @@ import './Lobby.css';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
 import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from '../config/currency';
-import { activeChainConfig } from '../config/chains';
+import { activeChainConfig, ACTIVE_CHAIN_ID } from '../config/chains';
+import ChainSwitcher from './ChainSwitcher';
 import { showToast } from '../services/toast';
 import BurnTicker from './BurnTicker';
 import Leaderboard from './Leaderboard';
@@ -104,7 +105,10 @@ const Lobby = ({ onStartGame }) => {
                 const res = await fetch(`${API_URL}/api/rooms`);
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
-                setOpenRooms(Array.isArray(data) ? data : []);
+                // G-026b: the lobby shows only rooms on the ACTIVE chain
+                // (rooms without chainId are legacy Coston2 rooms).
+                const all = Array.isArray(data) ? data : [];
+                setOpenRooms(all.filter(r => (r.chainId ?? 114) === ACTIVE_CHAIN_ID));
 
                 if (step === 'waiting' && waitingRoomId) {
                     const room = data.find(r => r.id === waitingRoomId);
@@ -536,8 +540,10 @@ const Lobby = ({ onStartGame }) => {
                                     <span className="room-count-badge">{waitingRooms.length}</span>
                                 )}
                             </h2>
-                            {/* G-022: live deflation ticker — every match burns $GO */}
-                            <BurnTicker />
+                            {/* G-026b: network selection (visible once >1 chain is configured) */}
+                            <ChainSwitcher />
+                            {/* G-022: live deflation ticker (home chain only, see BurnTicker) */}
+                            {ACTIVE_CHAIN_ID === 114 && <BurnTicker />}
                             {/* G-023: Season-1 leaderboard (XP / wins / $GO won) + profile */}
                             <button className="create-game-btn secondary" onClick={() => setShowLeaderboard(true)}>
                                 🏆 Leaderboard

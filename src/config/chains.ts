@@ -98,7 +98,40 @@ export const CHAIN_REGISTRY: Record<number, GoLudoChainConfig> = {
 
 const env = (import.meta as any).env ?? {};
 
-export const ACTIVE_CHAIN_ID: number = Number(env.VITE_CHAIN_ID || 114); // || not ??: empty string must not become 0 (Daniel N6)
+/** Does this chain have contracts configured? (per-chain env, legacy only for 114) */
+export function chainHasContracts(id: number): boolean {
+    const per = (n: string) => typeof env[`VITE_${n}_ADDRESS_${id}`] === "string" && env[`VITE_${n}_ADDRESS_${id}`].length > 0;
+    if (per("GOTOKEN") && per("LUDOVAULT")) return true;
+    return id === 114 && !!env.VITE_GOTOKEN_ADDRESS && !!env.VITE_LUDOVAULT_ADDRESS;
+}
+
+// G-026b: runtime chain selection — the user switches chains in the UI.
+// Stored in localStorage; a full reload re-initializes every module-level
+// contract binding cleanly (deliberate: no half-switched state, ever).
+const STORAGE_KEY = "goludo_chain_id";
+function resolveActiveChainId(): number {
+    const envDefault = Number(env.VITE_CHAIN_ID || 114); // || not ??: empty string must not become 0 (Daniel N6)
+    try {
+        const stored = Number(localStorage.getItem(STORAGE_KEY) || "");
+        if (stored > 0 && CHAIN_REGISTRY[stored] && chainHasContracts(stored)) return stored;
+        if (stored > 0) localStorage.removeItem(STORAGE_KEY); // stale/broken selection → home chain
+    } catch { /* SSR/no storage */ }
+    return envDefault;
+}
+
+export const ACTIVE_CHAIN_ID: number = resolveActiveChainId();
+
+/** Chains the user may pick in the UI: testnets with configured contracts. */
+export function selectableChains(): GoLudoChainConfig[] {
+    return Object.values(CHAIN_REGISTRY).filter(c => c.testnet && chainHasContracts(c.id));
+}
+
+/** Switch the active chain (persists + reloads — see note above). */
+export function switchActiveChain(id: number): void {
+    if (!CHAIN_REGISTRY[id] || !chainHasContracts(id)) throw new Error(`Chain ${id} is not available`);
+    try { localStorage.setItem(STORAGE_KEY, String(id)); } catch { /* best-effort */ }
+    window.location.reload();
+}
 
 const config = CHAIN_REGISTRY[ACTIVE_CHAIN_ID];
 if (!config) {

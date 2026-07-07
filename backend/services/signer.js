@@ -18,7 +18,37 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 // 🌍 Configuration from .env
 const SIGNER_PRIVATE_KEY = process.env.SERVER_SIGNER_PRIVATE_KEY;
 const VAULT_ADDRESS = process.env.VITE_LUDOVAULT_ADDRESS || process.env.LUDOVAULT_ADDRESS;
-const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114"); // Default to Coston2, override for Mainnet
+const CHAIN_ID = parseInt(process.env.CHAIN_ID || "114"); // Default/home chain (Coston2)
+
+/**
+ * G-026b: per-chain signer registry. Every chain gets its OWN key + vault:
+ *   SERVER_SIGNER_PRIVATE_KEY_<chainId> / VITE_LUDOVAULT_ADDRESS_<chainId>
+ * The default chain (CHAIN_ID) falls back to the legacy env names, so a
+ * single-chain deployment keeps working with zero env changes.
+ */
+const chainSigners = new Map();
+function getChainSigner(chainId) {
+    const id = Number(chainId || CHAIN_ID);
+    if (chainSigners.has(id)) return chainSigners.get(id);
+    const key = process.env[`SERVER_SIGNER_PRIVATE_KEY_${id}`] || (id === CHAIN_ID ? SIGNER_PRIVATE_KEY : undefined);
+    const vault = process.env[`VITE_LUDOVAULT_ADDRESS_${id}`] || (id === CHAIN_ID ? VAULT_ADDRESS : undefined);
+    if (!key || !vault) {
+        chainSigners.set(id, null);
+        return null;
+    }
+    const entry = { wallet: new ethers.Wallet(key), vaultAddress: vault, chainId: id };
+    chainSigners.set(id, entry);
+    return entry;
+}
+/** Chains this instance can sign payouts for (config present). */
+export function supportedSignerChainIds() {
+    const ids = new Set([CHAIN_ID]);
+    for (const k of Object.keys(process.env)) {
+        const m = k.match(/^SERVER_SIGNER_PRIVATE_KEY_(\d+)$/);
+        if (m) ids.add(Number(m[1]));
+    }
+    return [...ids].filter(id => getChainSigner(id));
+}
 
 /**
  * Contract feeBps — single source of truth for server-side fee math.
@@ -61,8 +91,11 @@ if (SIGNER_PRIVATE_KEY) {
  * @param {number|undefined} participantCount Number of participants — used for cross-check
  * @returns {Promise<Object>} Object containing the signature and parameters
  */
-export async function signPayout(roomId, winnerAddress, amountInWei, entryAmountInWei, participantCount) {
-    if (!wallet) throw new Error("Signer wallet not initialized");
+export async function signPayout(roomId, winnerAddress, amountInWei, entryAmountInWei, participantCount, chainId) {
+    // G-026b: resolve the per-chain signer + vault (defaults to the home chain)
+    const signerEntry = getChainSigner(chainId);
+    if (!signerEntry) throw new Error(`Signer not configured for chain ${chainId || CHAIN_ID}`);
+    const signWallet = signerEntry.wallet;
 
     // AAA-C2: Pre-sign cross-check — pot must equal entryAmount * participants.
     // Only enforced when both optional parameters are supplied.
@@ -82,12 +115,13 @@ export async function signPayout(roomId, winnerAddress, amountInWei, entryAmount
     const nonce = ethers.hexlify(ethers.randomBytes(32));
     const deadline = Math.floor(Date.now() / 1000) + 86400; // 24 hours
 
-    // 2. Define EIP-712 Domain
+    // 2. Define EIP-712 Domain — chainId + vault are PER CHAIN (G-026b):
+    // a signature for chain A is cryptographically useless on chain B.
     const domain = {
         name: "LudoVault",
         version: "1",
-        chainId: CHAIN_ID,
-        verifyingContract: VAULT_ADDRESS
+        chainId: signerEntry.chainId,
+        verifyingContract: signerEntry.vaultAddress
     };
 
     // 3. Define Types (must match contract exactly)
@@ -112,7 +146,7 @@ export async function signPayout(roomId, winnerAddress, amountInWei, entryAmount
 
     // 5. Sign the data
     try {
-        const signature = await wallet.signTypedData(domain, types, value);
+        const signature = await signWallet.signTypedData(domain, types, value);
 
         console.log(`✅ Signature generated for Room: ${roomId}`);
         console.log(`🏆 Winner: ${winnerAddress}`);

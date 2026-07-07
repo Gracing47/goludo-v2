@@ -983,8 +983,12 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
     }
 
     try {
+        // G-026b: the room's chain decides which vault we read and which
+        // per-chain signer key signs — signatures never cross chains.
+        const roomChainId = (room as any).chainId ?? SERVER_CHAIN_ID;
+
         // 🔗 PHASE 5: Fetch pot amount directly from blockchain (trustless)
-        const contractRoom = await getRoomStateFromContract(roomId) as {
+        const contractRoom = await getRoomStateFromContract(roomId, roomChainId) as {
             pot: string;
             status: number;
             entryAmount: string;
@@ -999,7 +1003,8 @@ app.post('/api/payout/sign', payoutLimiter, validateRequest(payoutSignSchema), a
             winner,
             potAmount,
             contractRoom.entryAmount,
-            contractRoom.participants.length
+            contractRoom.participants.length,
+            roomChainId
         );
         res.json(payoutProof);
     } catch (e: any) {
@@ -1037,7 +1042,7 @@ app.post('/api/rooms/cancel', cancelRoomLimiter, async (req, res) => {
         return res.status(409).json({ error: 'Room already started — cancel is only possible while WAITING' });
     }
     try {
-        const state = await getRoomStateFromContract(room.id);
+        const state = await getRoomStateFromContract(room.id, (room as any).chainId ?? SERVER_CHAIN_ID);
         if (state.status !== 4) {
             return res.status(409).json({ error: `On-chain status is ${state.status}, not CANCELLED` });
         }
@@ -1070,10 +1075,14 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
     let { roomId, txHash, stake, maxPlayers, creatorName, creatorAddress } = req.body;
     roomId = roomId?.toLowerCase();
 
+    // G-026b: rooms are chain-scoped; verification runs against the room's
+    // chain (fail-closed for chains this instance has no verifier config for).
+    const roomChainId = Number(req.body.chainId || SERVER_CHAIN_ID);
+
     // ✅ PHASE 5: Verify transaction on blockchain
     if (txHash) {
         try {
-            await verifyRoomCreation(roomId, txHash, creatorAddress, parseFloat(stake));
+            await verifyRoomCreation(roomId, txHash, creatorAddress, parseFloat(stake), roomChainId);
             console.log(`✅ Room creation verified on-chain: ${roomId}`);
         } catch (error: any) {
             console.warn(`🚨 Room creation verification failed: ${error.message}`);
@@ -1106,7 +1115,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
         status: "WAITING",
         // G-012 (Daniel B1): creator explicitly — players[0] is a COLOR slot, not the creator
         creator: creatorAddress?.toLowerCase(),
-        chainId: SERVER_CHAIN_ID, // G-026a: rooms are chain-scoped
+        chainId: roomChainId, // G-026a/b: rooms are chain-scoped (client-selected, verifier-enforced)
         createdAt: Date.now() // Track creation time for cleanup
     };
 
@@ -1189,7 +1198,7 @@ app.post('/api/rooms/join', joinRoomLimiter, validateRequest(joinRoomSchema), as
     // ✅ PHASE 5: Verify join transaction on blockchain
     if (txHash) {
         try {
-            await verifyRoomJoin(roomId, txHash, playerAddress, parseFloat(room.stake));
+            await verifyRoomJoin(roomId, txHash, playerAddress, parseFloat(room.stake), (room as any).chainId ?? SERVER_CHAIN_ID);
             console.log(`✅ Room join verified on-chain: ${playerAddress} -> ${roomId}`);
         } catch (error: any) {
             console.warn(`🚨 Room join verification failed: ${error.message}`);

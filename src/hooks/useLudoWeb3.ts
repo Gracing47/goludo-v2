@@ -184,7 +184,8 @@ export const useLudoWeb3 = () => {
                 creatorName,
                 creatorAddress: account.address,
                 color,
-                mode
+                mode,
+                chainId: activeChainConfig.id // G-026b: room is chain-scoped
             });
 
             console.log("✅ Room created successfully!", roomId);

@@ -13,6 +13,11 @@ import './BurnTicker.css';
 
 const fmtWei = (wei) => weiToGo(wei, 4);
 
+// G-026b: /api/burn reports the backend's HOME chain (Coston2) — the ticker
+// is only rendered on that chain (gated by the parent, see Lobby.jsx) until
+// the endpoint is chain-parameterized.
+export const BURN_TICKER_CHAIN_ID = 114;
+
 const BurnTicker = () => {
     const [burn, setBurn] = useState(null);
 

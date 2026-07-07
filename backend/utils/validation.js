@@ -35,6 +35,7 @@ export const createRoomSchema = z.object({
     creatorAddress: EthAddress,
     color: z.enum(['red', 'green', 'yellow', 'blue']).default('red'),
     mode: z.enum(['classic', 'rapid']).default('classic'), // V2: Game mode
+    chainId: z.union([z.number(), z.string()]).transform((v) => parseInt(v.toString())).optional(), // G-026b
 }).refine(
     (data) => {
         const stakeValue = parseFloat(data.stake);

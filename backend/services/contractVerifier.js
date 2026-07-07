@@ -99,6 +99,54 @@ if (VERIFICATION_ENABLED) {
     console.log("📋 Server running in LEGACY MODE (no blockchain verification) — dev only");
 }
 
+// ============================================
+// G-026b: PER-CHAIN VERIFICATION CONTEXTS
+// Default chain (CHAIN_ID) reuses the legacy provider above. Additional
+// chains configure via RPC_URL_<id> + VITE_LUDOVAULT_ADDRESS_<id>.
+// Non-default chains are FAIL-CLOSED: no config → requests are rejected
+// (never silently accepted like the legacy dev mode).
+// ============================================
+const chainContexts = new Map();
+if (VERIFICATION_ENABLED) {
+    chainContexts.set(CHAIN_ID, { provider, vault: ludoVaultContract, enabled: true, chainId: CHAIN_ID });
+}
+
+export function getChainContext(chainId) {
+    const id = Number(chainId || CHAIN_ID);
+    if (chainContexts.has(id)) return chainContexts.get(id);
+    const rpc = process.env[`RPC_URL_${id}`];
+    const vaultAddr = process.env[`VITE_LUDOVAULT_ADDRESS_${id}`];
+    let ctx = { provider: null, vault: null, enabled: false, chainId: id };
+    if (rpc && vaultAddr) {
+        try {
+            const net = new ethers.Network(`chain-${id}`, id);
+            net.attachPlugin(new ethers.EnsPlugin(null));
+            const prov = new ethers.JsonRpcProvider(rpc, net, { staticNetwork: net });
+            ctx = { provider: prov, vault: new ethers.Contract(vaultAddr, LUDOVAULT_MINIMAL_ABI, prov), enabled: true, chainId: id };
+            console.log(`🔗 Contract Verifier (chain ${id}): ${vaultAddr}`);
+        } catch (error) {
+            console.error(`❌ Verifier init failed for chain ${id}: ${error.message}`);
+        }
+    } else {
+        console.warn(`⚠️ No verifier config for chain ${id} (need RPC_URL_${id} + VITE_LUDOVAULT_ADDRESS_${id})`);
+    }
+    chainContexts.set(id, ctx);
+    return ctx;
+}
+
+/** Resolve ctx for money-path functions: default chain keeps legacy semantics,
+ *  foreign chains are strictly fail-closed. Returns null → caller may skip
+ *  (legacy dev mode only). Throws for unconfigured foreign chains. */
+function requireChainContext(chainId) {
+    const id = Number(chainId || CHAIN_ID);
+    if (id === CHAIN_ID) {
+        return VERIFICATION_ENABLED ? chainContexts.get(CHAIN_ID) : null;
+    }
+    const ctx = getChainContext(id);
+    if (!ctx.enabled) throw new Error(`On-chain verification not configured for chain ${id} — rejecting`);
+    return ctx;
+}
+
 
 // ============================================
 // VERIFICATION FUNCTIONS
@@ -114,9 +162,11 @@ if (VERIFICATION_ENABLED) {
  * @returns {Promise<boolean>} - True if verified
  * @throws {Error} - If verification fails
  */
-export async function verifyRoomCreation(roomId, txHash, expectedCreator, expectedStake) {
-    // Skip verification if not configured
-    if (!VERIFICATION_ENABLED || process.env.SKIP_VERIFICATION === 'true') {
+export async function verifyRoomCreation(roomId, txHash, expectedCreator, expectedStake, chainId) {
+    // G-026b: per-chain context (throws for unconfigured foreign chains)
+    const ctx = requireChainContext(chainId);
+    // Skip verification if not configured (default chain, legacy dev mode only)
+    if (!ctx || process.env.SKIP_VERIFICATION === 'true') {
         if (IS_PRODUCTION && process.env.SKIP_VERIFICATION !== 'true') {
             throw new Error('🚨 Verification bypass not allowed in production');
         }
@@ -138,7 +188,7 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
         // Fetch transaction receipt with retries (RPC lag)
         let receipt = null;
         for (let i = 0; i < 8; i++) {
-            receipt = await provider.getTransactionReceipt(txHash);
+            receipt = await ctx.provider.getTransactionReceipt(txHash);
             if (receipt) break;
             console.log(`   ⏳ Transaction not found yet, retrying in 3s... (${i + 1}/8)`);
             await new Promise(r => setTimeout(r, 3000));
@@ -156,7 +206,7 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
         const roomCreatedEvent = receipt.logs
             .map(log => {
                 try {
-                    return ludoVaultContract.interface.parseLog(log);
+                    return ctx.vault.interface.parseLog(log);
                 } catch {
                     return null;
                 }
@@ -203,9 +253,10 @@ export async function verifyRoomCreation(roomId, txHash, expectedCreator, expect
  * @returns {Promise<boolean>} - True if verified
  * @throws {Error} - If verification fails
  */
-export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedStake) {
-    // Skip verification if not configured
-    if (!VERIFICATION_ENABLED || process.env.SKIP_VERIFICATION === 'true') {
+export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedStake, chainId) {
+    const ctx = requireChainContext(chainId); // G-026b
+    // Skip verification if not configured (default chain, legacy dev mode only)
+    if (!ctx || process.env.SKIP_VERIFICATION === 'true') {
         if (IS_PRODUCTION && process.env.SKIP_VERIFICATION !== 'true') {
             throw new Error('🚨 Verification bypass not allowed in production');
         }
@@ -227,7 +278,7 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
         // Fetch transaction receipt with retries (RPC lag)
         let receipt = null;
         for (let i = 0; i < 8; i++) {
-            receipt = await provider.getTransactionReceipt(txHash);
+            receipt = await ctx.provider.getTransactionReceipt(txHash);
             if (receipt) break;
             console.log(`   ⏳ Transaction not found yet, retrying in 3s... (${i + 1}/8)`);
             await new Promise(r => setTimeout(r, 3000));
@@ -245,7 +296,7 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
         const roomJoinedEvent = receipt.logs
             .map(log => {
                 try {
-                    return ludoVaultContract.interface.parseLog(log);
+                    return ctx.vault.interface.parseLog(log);
                 } catch {
                     return null;
                 }
@@ -292,15 +343,16 @@ export async function verifyRoomJoin(roomId, txHash, expectedJoiner, expectedSta
  * @param {string} roomId - bytes32 room ID
  * @returns {Promise<Object>} - Room state object
  */
-export async function getRoomStateFromContract(roomId) {
-    if (!VERIFICATION_ENABLED) {
+export async function getRoomStateFromContract(roomId, chainId) {
+    const ctx = requireChainContext(chainId); // G-026b
+    if (!ctx) {
         throw new Error("Contract verification not configured");
     }
 
     try {
         // $GO struct: (creator, maxPlayers, entryAmount, pot, createdAt, affiliate, status)
-        const room = await ludoVaultContract.rooms(roomId);
-        const participants = await ludoVaultContract.getParticipants(roomId);
+        const room = await ctx.vault.rooms(roomId);
+        const participants = await ctx.vault.getParticipants(roomId);
 
         return {
             creator: room[0],
