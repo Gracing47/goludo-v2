@@ -122,3 +122,56 @@ li.lost .hist-result { color: #ff8a8a; }
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* G-028: avatar inside the level ring + username editor */
+.profile-avatar { position: relative; }
+.avatar-img {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+}
+.profile-level-badge {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #6c5cff;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.name-edit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-left: 6px;
+    opacity: 0.7;
+}
+.name-edit-btn:hover { opacity: 1; }
+
+.name-edit-row { display: flex; gap: 6px; align-items: center; }
+.name-edit-row input {
+    width: 140px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(124, 108, 255, 0.5);
+    background: rgba(255, 255, 255, 0.06);
+    color: inherit;
+    font-size: 0.9rem;
+}
+.name-edit-row button {
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(124, 108, 255, 0.4);
+    background: rgba(124, 108, 255, 0.18);
+    color: inherit;
+    cursor: pointer;
+}
+.name-edit-row button:disabled { opacity: 0.5; cursor: not-allowed; }

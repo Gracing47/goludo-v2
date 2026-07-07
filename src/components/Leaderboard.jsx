@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { API_URL } from '../config/api';
 import { STAKE_CURRENCY_SYMBOL } from '../config/currency';
 import { weiToGo, shortAddr } from '../utils/format';
+import { avatarUrl } from '../utils/avatar';
 import './Leaderboard.css';
 
 const TABS = [
@@ -85,6 +86,7 @@ const Leaderboard = ({ onClose, ownAddress }) => {
                                 return (
                                     <li key={row.walletAddress || i} className={`leaderboard-row${isOwn ? ' own' : ''}`}>
                                         <span className="rank">{MEDALS[i] || `#${i + 1}`}</span>
+                                        <img className="lb-avatar" src={avatarUrl(row.walletAddress, 32)} alt="" loading="lazy" />
                                         <span className="player">{row.username || shortAddr(row.walletAddress)}{isOwn ? ' (you)' : ''}</span>
                                         <span className="value">{fmtValue(metric, row)}</span>
                                     </li>

@@ -10,9 +10,12 @@
  * - graceful empty state with a clear next action
  */
 import React, { useEffect, useState } from 'react';
+import { useActiveAccount } from 'thirdweb/react';
 import { API_URL } from '../config/api';
 import { STAKE_CURRENCY_SYMBOL } from '../config/currency';
 import { weiToGo, shortAddr } from '../utils/format';
+import { avatarUrl } from '../utils/avatar';
+import { showToast } from '../services/toast';
 import './ProfileModal.css';
 
 // Season-1 DISPLAY curve (client-only, non-monetary): 500 XP per level.
@@ -30,6 +33,39 @@ const fmtDuration = (s) => {
 const ProfileModal = ({ onClose, address }) => {
     const [data, setData] = useState(null);
     const [error, setError] = useState(false);
+    // G-028: username editing — hardened via wallet signature (only the owner
+    // of the connected wallet can name themselves; server verifies the sig).
+    const account = useActiveAccount();
+    const canEdit = !!account?.address && account.address.toLowerCase() === address?.toLowerCase();
+    const [editing, setEditing] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const saveUsername = async () => {
+        const name = nameInput.trim();
+        if (!/^[a-zA-Z0-9_]{3,16}$/.test(name)) {
+            showToast('3–16 characters: letters, numbers, underscore.', 'error');
+            return;
+        }
+        setSaving(true);
+        try {
+            const signature = await account.signMessage({ message: `GoLudo username: ${name}` });
+            const res = await fetch(`${API_URL}/api/profile/username`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: name, signature }),
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+            setData((d) => (d ? { ...d, profile: { ...d.profile, username: name } } : d));
+            setEditing(false);
+            showToast(`👋 You are now "${name}" on the leaderboard!`, 'success');
+        } catch (err) {
+            showToast(`Could not set name: ${err.message}`, 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
 
     useEffect(() => {
         if (!address) return;
@@ -84,10 +120,36 @@ const ProfileModal = ({ onClose, address }) => {
                         {/* Identity + progression */}
                         <div className="profile-identity">
                             <div className="profile-avatar" style={{ '--ring': `${progress * 360}deg` }}>
-                                <span className="profile-level">Lv {level}</span>
+                                {/* G-028: free deterministic DiceBear avatar, seeded by wallet */}
+                                <img className="avatar-img" src={avatarUrl(address, 56)} alt="" />
+                                <span className="profile-level-badge">Lv {level}</span>
                             </div>
                             <div className="profile-who">
-                                <strong>{p?.username || shortAddr(address)}</strong>
+                                {!editing ? (
+                                    <strong>
+                                        {p?.username || shortAddr(address)}
+                                        {canEdit && (
+                                            <button
+                                                className="name-edit-btn"
+                                                title="Set your leaderboard name"
+                                                onClick={() => { setNameInput(p?.username || ''); setEditing(true); }}
+                                            >✏️</button>
+                                        )}
+                                    </strong>
+                                ) : (
+                                    <span className="name-edit-row">
+                                        <input
+                                            value={nameInput}
+                                            maxLength={16}
+                                            placeholder="Your name"
+                                            onChange={(e) => setNameInput(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' && !saving) saveUsername(); }}
+                                            autoFocus
+                                        />
+                                        <button disabled={saving} onClick={saveUsername}>{saving ? '…' : '✔'}</button>
+                                        <button disabled={saving} onClick={() => setEditing(false)}>✕</button>
+                                    </span>
+                                )}
                                 <span className="profile-addr">{shortAddr(address)}</span>
                             </div>
                         </div>

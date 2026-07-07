@@ -9,10 +9,12 @@
  * - Full IRIS token consumption — zero purple
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../config/routes';
 import { formatStake } from '../config/currency';
+import { API_URL } from '../config/api';
+import { weiToGo } from '../utils/format';
 import { useIdlePrefetch } from '../hooks/useIdlePrefetch';
 import './LandingPage.css';
 
@@ -68,12 +70,15 @@ const CoinsIcon = () => (
 
 // ─── Static Data ─────────────────────────────────────────────────────────────
 
+// Fallback only — replaced by LIVE numbers from /api/stats as soon as they load (G-028).
 const MOCK_STATS = {
     gamesPlayed: 12847,
     totalEarned: formatStake('245.8'),
     activePlayers: 342,
     avgGameTime: '8 min',
 };
+
+type LiveStats = { gamesPlayed: number; players: number; totalPaidOutWei: string; avgGameSeconds: number };
 
 const FEATURES = [
     {
@@ -109,6 +114,34 @@ const LandingPage: React.FC = () => {
 
     // Prefetch heavy chunks on idle
     useIdlePrefetch();
+
+    // G-028: LIVE stats from the backend — homepage streams real numbers.
+    // Falls back to the static mock if the API is unreachable.
+    const [live, setLive] = useState<LiveStats | null>(null);
+    useEffect(() => {
+        let alive = true;
+        const load = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/stats`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (alive && typeof data?.gamesPlayed === 'number') setLive(data);
+            } catch { /* API offline — keep fallback */ }
+        };
+        load();
+        const t = setInterval(load, 60000);
+        return () => { alive = false; clearInterval(t); };
+    }, []);
+
+    const stats = {
+        gamesPlayed: live ? live.gamesPlayed.toLocaleString() : MOCK_STATS.gamesPlayed.toLocaleString(),
+        totalEarned: live ? formatStake(weiToGo(live.totalPaidOutWei)) : MOCK_STATS.totalEarned,
+        activePlayers: live ? live.players.toLocaleString() : String(MOCK_STATS.activePlayers),
+        avgGameTime: live?.avgGameSeconds
+            ? `${Math.max(1, Math.round(live.avgGameSeconds / 60))} min`
+            : MOCK_STATS.avgGameTime,
+        isLive: !!live,
+    };
 
     const handleLaunchApp = () => {
         navigate(ROUTES.LUDO_LOBBY);
@@ -343,13 +376,13 @@ const LandingPage: React.FC = () => {
                     <div className="stats-grid reveal-stagger">
                         <div className="stat-card reveal-up">
                             <div className="stat-icon" aria-hidden="true"><GameIcon /></div>
-                            <span className="stat-value">{MOCK_STATS.gamesPlayed.toLocaleString()}</span>
-                            <span className="stat-label">Games Played</span>
+                            <span className="stat-value">{stats.gamesPlayed}</span>
+                            <span className="stat-label">Games Played{stats.isLive ? ' · live' : ''}</span>
                         </div>
                         <div className="stat-card stat-card--highlight reveal-up">
                             <div className="stat-icon" aria-hidden="true"><CoinsIcon /></div>
-                            <span className="stat-value stat-value--gold">{MOCK_STATS.totalEarned}</span>
-                            <span className="stat-label">Total Earned</span>
+                            <span className="stat-value stat-value--gold">{stats.totalEarned}</span>
+                            <span className="stat-label">Total Earned{stats.isLive ? ' · live' : ''}</span>
                         </div>
                         <div className="stat-card reveal-up">
                             <div className="stat-icon" aria-hidden="true">
@@ -360,8 +393,8 @@ const LandingPage: React.FC = () => {
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                                 </svg>
                             </div>
-                            <span className="stat-value">{MOCK_STATS.activePlayers}</span>
-                            <span className="stat-label">Active Now</span>
+                            <span className="stat-value">{stats.activePlayers}</span>
+                            <span className="stat-label">{stats.isLive ? 'Players · live' : 'Active Now'}</span>
                         </div>
                         <div className="stat-card reveal-up">
                             <div className="stat-icon" aria-hidden="true">
@@ -370,8 +403,8 @@ const LandingPage: React.FC = () => {
                                     <polyline points="12 6 12 12 16 14" />
                                 </svg>
                             </div>
-                            <span className="stat-value">{MOCK_STATS.avgGameTime}</span>
-                            <span className="stat-label">Avg. Game</span>
+                            <span className="stat-value">{stats.avgGameTime}</span>
+                            <span className="stat-label">Avg. Game{stats.isLive ? ' · live' : ''}</span>
                         </div>
                     </div>
                 </div>

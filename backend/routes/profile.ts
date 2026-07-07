@@ -4,6 +4,7 @@
 
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import { ethers } from 'ethers';
 import { ProfileManager } from '../services/profileManager.js';
 
 const router = express.Router();
@@ -53,6 +54,47 @@ router.get('/leaderboard/:metric', async (req, res) => {
     } catch (error: any) {
         console.error('Leaderboard error:', error.message);
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
+    }
+});
+
+// POST /api/profile/username — G-028 user hardening: only the wallet OWNER can
+// name themselves. The client signs `GoLudo username: <name>`; we recover the
+// signer address from the signature — no way to rename someone else's wallet.
+router.post('/profile/username', profileLimiter, async (req, res) => {
+    try {
+        const { username, signature } = req.body || {};
+        if (typeof username !== 'string' || !/^[a-zA-Z0-9_]{3,16}$/.test(username)) {
+            return res.status(400).json({ error: 'Username must be 3–16 chars: letters, numbers, underscore' });
+        }
+        if (typeof signature !== 'string' || !signature.startsWith('0x')) {
+            return res.status(400).json({ error: 'Missing signature' });
+        }
+        let recovered: string;
+        try {
+            recovered = ethers.verifyMessage(`GoLudo username: ${username}`, signature);
+        } catch {
+            return res.status(400).json({ error: 'Invalid signature' });
+        }
+        const result = await profileManager.setUsername(recovered, username);
+        res.json({ ok: true, ...result });
+    } catch (error: any) {
+        if (error.code === 'TAKEN') return res.status(409).json({ error: 'Username already taken' });
+        console.error('Set username error:', error.message);
+        res.status(500).json({ error: 'Failed to set username' });
+    }
+});
+
+// GET /api/stats — public landing-page numbers, cached 60 s (G-028)
+let statsCache: { at: number; data: unknown } | null = null;
+router.get('/stats', async (_req, res) => {
+    try {
+        if (statsCache && Date.now() - statsCache.at < 60_000) return res.json(statsCache.data);
+        const stats = await profileManager.getGlobalStats();
+        statsCache = { at: Date.now(), data: stats };
+        res.json(stats);
+    } catch (error: any) {
+        console.error('Stats error:', error.message);
+        res.status(500).json({ error: 'Failed to fetch stats' });
     }
 });
 

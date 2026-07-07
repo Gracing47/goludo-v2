@@ -318,6 +318,47 @@ export class ProfileManager {
         };
     }
 
+    /**
+     * G-028: set a display name — uniqueness is case-insensitive.
+     * Caller (route) is responsible for verifying wallet ownership (signature).
+     */
+    async setUsername(walletAddress: string, username: string) {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) throw new Error('Prisma not initialized');
+        const normalized = walletAddress.toLowerCase();
+        const taken = await prisma.userProfile.findFirst({
+            where: { username: { equals: username, mode: 'insensitive' }, NOT: { walletAddress: normalized } },
+            select: { walletAddress: true },
+        });
+        if (taken) { const err: any = new Error('Username already taken'); err.code = 'TAKEN'; throw err; }
+        await this.getOrCreateProfile(normalized);
+        return prisma.userProfile.update({
+            where: { walletAddress: normalized },
+            data: { username },
+            select: { walletAddress: true, username: true },
+        });
+    }
+
+    /** G-028: public landing-page numbers (games, players, paid out, avg duration). */
+    async getGlobalStats() {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) return { gamesPlayed: 0, players: 0, totalPaidOutWei: '0', avgGameSeconds: 0 };
+        const [gamesPlayed, players, agg, rows] = await Promise.all([
+            prisma.gameHistory.count(),
+            prisma.userProfile.count(),
+            prisma.gameHistory.aggregate({ _avg: { duration: true } }),
+            prisma.userProfile.findMany({ select: { totalWon: true }, take: 1000 }),
+        ]);
+        let total = 0n;
+        for (const r of rows) { try { total += BigInt(r.totalWon ?? '0'); } catch { /* skip bad rows */ } }
+        return {
+            gamesPlayed,
+            players,
+            totalPaidOutWei: total.toString(),
+            avgGameSeconds: Math.round(agg._avg.duration ?? 0),
+        };
+    }
+
     async disconnect() {
         if (prisma) {
             await prisma.$disconnect();
