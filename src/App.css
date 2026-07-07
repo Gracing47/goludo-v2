@@ -805,6 +805,19 @@ body {
         padding: 0 4px;
     }
 
+    /* Feedback: on mobile the toast at top:60px landed ON the board.
+       Pin it to the very top edge, compact, so it floats above the header. */
+    .server-toast {
+        top: calc(4px + env(safe-area-inset-top, 0px));
+        font-size: 11px;
+        padding: 6px 14px;
+        max-width: calc(100vw - 20px);
+        text-align: center;
+    }
+
+    /* Voice PTT (bottom-left) shrinks; keep it above the OS nav bar. */
+    .voice-controls-slot { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+
     .pot-display {
         top: 6px;
         left: 8px;
