@@ -1,0 +1,62 @@
+/* FriendsPanel (G-030) — overlay, matches the neon lobby look */
+.fr-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(10, 10, 25, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 16px;
+}
+.fr-panel {
+    width: 100%; max-width: 420px; max-height: 82vh;
+    display: flex; flex-direction: column;
+    background: #141423;
+    border: 1px solid rgba(120, 120, 200, 0.35);
+    border-radius: 16px; padding: 16px; color: #e8e8f5;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+}
+.fr-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.fr-head h3 { margin: 0; font-size: 1.1rem; }
+.fr-close { background: none; border: none; color: inherit; cursor: pointer; opacity: 0.7; min-width: 40px; min-height: 40px; }
+.fr-close:hover { opacity: 1; }
+
+.fr-add { display: flex; gap: 8px; margin-bottom: 12px; }
+.fr-add input {
+    flex: 1; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid rgba(124,108,255,0.4);
+    background: rgba(255,255,255,0.05); color: inherit; font-size: 0.9rem;
+}
+.fr-add button {
+    padding: 10px 16px; min-height: 42px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #6c5cff, #4f3fd8); color: #fff; font-weight: 700; cursor: pointer;
+}
+.fr-add button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.fr-body { overflow-y: auto; }
+.fr-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin: 12px 0 6px; }
+.fr-body ul { list-style: none; margin: 0; padding: 0; }
+.fr-note { opacity: 0.65; font-size: 0.85rem; padding: 4px 2px; margin: 0; }
+
+.fr-row { display: flex; align-items: center; gap: 10px; padding: 7px 6px; border-radius: 8px; }
+.fr-row:nth-child(odd) { background: rgba(255,255,255,0.03); }
+.fr-avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+.fr-name { flex: 1; display: flex; align-items: center; gap: 6px; font-family: ui-monospace, monospace; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fr-online { width: 8px; height: 8px; border-radius: 50%; background: #2fbf71; box-shadow: 0 0 6px rgba(47,191,113,0.9); flex-shrink: 0; }
+.fr-pending { font-size: 0.78rem; opacity: 0.6; }
+
+.fr-actions { display: flex; gap: 5px; }
+.fr-btn {
+    min-width: 34px; min-height: 34px; padding: 4px 8px; border-radius: 8px;
+    border: 1px solid rgba(124,108,255,0.35); background: rgba(124,108,255,0.12); color: #cfc6ff; cursor: pointer; font-size: 0.85rem;
+}
+.fr-btn:hover { background: rgba(124,108,255,0.24); }
+.fr-btn.ok { border-color: rgba(47,191,113,0.5); color: #b9f2d4; background: rgba(47,191,113,0.14); }
+.fr-btn.danger { border-color: rgba(255,90,90,0.45); color: #ff9b9b; }
+.fr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.fr-signin { text-align: center; padding: 20px 8px; }
+.fr-signin-btn {
+    margin-top: 10px; padding: 11px 22px; min-height: 44px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #6c5cff, #4f3fd8); color: #fff; font-weight: 700; cursor: pointer;
+}
+
+.fr-foot { margin: 10px 0 0; font-size: 0.68rem; opacity: 0.5; text-align: center; }

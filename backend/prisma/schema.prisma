@@ -95,3 +95,28 @@ model GameHistory {
   @@index([createdAt])
   @@index([chainId])
 }
+
+// ============================================
+// FRIENDSHIP — G-030 social graph
+// One row per relationship, stored on the UNORDERED address pair
+// (addrLow < addrHigh) so A↔B never duplicates. `status`:
+//   pending  — requester sent, addressee hasn't answered
+//   accepted — friends
+//   blocked  — addrLow/addrHigh blocked the other (see `blockedBy`)
+// ============================================
+
+model Friendship {
+  id         String   @id @default(uuid())
+  addrLow    String   // lexicographically smaller wallet address
+  addrHigh   String   // lexicographically larger wallet address
+  requester  String   // who sent the request (address)
+  status     String   @default("pending") // pending | accepted | blocked
+  blockedBy  String?  // address that issued a block (null unless status=blocked)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([addrLow, addrHigh])
+  @@index([addrLow])
+  @@index([addrHigh])
+  @@index([status])
+}

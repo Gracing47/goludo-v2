@@ -38,6 +38,12 @@ async function initPrisma() {
 // Start async init
 prismaInitPromise = initPrisma();
 
+/** G-030: shared, initialized Prisma client for other services (e.g. FriendManager). */
+export async function getPrisma(): Promise<PrismaClient | null> {
+    if (prismaInitPromise) await prismaInitPromise;
+    return prisma || null;
+}
+
 // ============================================
 // TYPES
 // ============================================
@@ -360,6 +366,30 @@ export class ProfileManager {
             totalPaidOutWei: total.toString(),
             avgGameSeconds: Math.round(agg._avg.duration ?? 0),
         };
+    }
+
+    /** G-030: resolve display names for a set of addresses (for the friends list). */
+    async getUsernamesFor(addresses: string[]): Promise<Record<string, string | null>> {
+        if (prismaInitPromise) await prismaInitPromise;
+        const out: Record<string, string | null> = {};
+        if (!prisma || addresses.length === 0) return out;
+        const rows = await prisma.userProfile.findMany({
+            where: { walletAddress: { in: addresses.map(a => a.toLowerCase()) } },
+            select: { walletAddress: true, username: true },
+        });
+        for (const r of rows) out[r.walletAddress.toLowerCase()] = r.username;
+        return out;
+    }
+
+    /** G-030: look up a wallet address by (case-insensitive) username. */
+    async addressByUsername(username: string): Promise<string | null> {
+        if (prismaInitPromise) await prismaInitPromise;
+        if (!prisma) return null;
+        const row = await prisma.userProfile.findFirst({
+            where: { username: { equals: username, mode: 'insensitive' } },
+            select: { walletAddress: true },
+        });
+        return row?.walletAddress?.toLowerCase() || null;
     }
 
     async disconnect() {

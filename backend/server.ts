@@ -23,6 +23,7 @@ import { ProfileManager } from './services/profileManager.js';
 import { getBurnMetrics } from './services/burnMetrics.js';
 import profileRoutes from './routes/profile.js';
 import adminRoutes from './routes/admin.js';
+import friendRoutes from './routes/friends.js';
 import healthRoutes from './routes/health.js';
 
 interface BackendPlayer {
@@ -212,6 +213,13 @@ const COLOR_MAP = { 'red': 0, 'green': 1, 'yellow': 2, 'blue': 3 };
 // V2: Register API routes
 app.use('/api', profileRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes); // G-027: fail-closed until ADMIN_KEY is set; rate-limited (Audit B1)
+app.use('/api', friendRoutes); // G-030: friends (signed actions)
+
+// G-030: presence for the friends list — online = has a live socket in any room.
+app.locals.isOnline = (address: string): boolean => {
+    const a = address?.toLowerCase();
+    return activeRooms.some(r => r.players.some((p: any) => p && p.socketId && p.address?.toLowerCase() === a));
+};
 app.use('/', healthRoutes);
 
 const broadcastState = (room: BackendRoom, message: string | null = null) => {

@@ -21,6 +21,7 @@ import BurnTicker, { BURN_TICKER_CHAIN_ID } from './BurnTicker';
 import Leaderboard from './Leaderboard';
 import ProfileModal from './ProfileModal';
 import UsernameOnboard from './UsernameOnboard';
+import FriendsPanel from './FriendsPanel';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -80,6 +81,7 @@ const Lobby = ({ onStartGame }) => {
     const [waitingRoomId, setWaitingRoomId] = useState(null);
     const [showLeaderboard, setShowLeaderboard] = useState(false); // G-023
     const [showProfile, setShowProfile] = useState(false); // G-023 UI-2026
+    const [showFriends, setShowFriends] = useState(false); // G-030
     // 2026 UX: progressive onboarding — one dismissible explainer, then never again
     const [onboardDismissed, setOnboardDismissed] = useState(() => {
         try { return localStorage.getItem('goludo_onboard_dismissed') === '1'; } catch { return false; }
@@ -445,6 +447,18 @@ const Lobby = ({ onStartGame }) => {
             {showProfile && account?.address && (
                 <ProfileModal onClose={() => setShowProfile(false)} address={account.address} />
             )}
+            {showFriends && account?.address && (
+                <FriendsPanel
+                    onClose={() => setShowFriends(false)}
+                    onChallenge={(friend) => {
+                        // G-030 challenge: reuse the invite-link flow — create a match,
+                        // then the invite link goes to the friend (G-011).
+                        setShowFriends(false);
+                        setStep('setup');
+                        showToast(`Create your match, then send the invite link to ${friend.username || 'your friend'}.`, 'info');
+                    }}
+                />
+            )}
             <div className="lobby-header">
                 <p className="lobby-subtitle">Classic Board Game</p>
             </div>
@@ -553,6 +567,11 @@ const Lobby = ({ onStartGame }) => {
                             {account && (
                                 <button className="create-game-btn secondary" onClick={() => setShowProfile(true)}>
                                     👤 Profile
+                                </button>
+                            )}
+                            {account && (
+                                <button className="create-game-btn secondary" onClick={() => setShowFriends(true)}>
+                                    🤝 Friends
                                 </button>
                             )}
                             <button className="create-game-btn" onClick={() => setStep('setup')}>
