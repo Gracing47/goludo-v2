@@ -40,8 +40,20 @@ const VoiceControls = ({ socket, roomId, isPolite, enabled }) => {
                 </>
             ) : (
                 <>
-                    <button className={`voice-btn mic ${micMuted ? 'muted' : ''}`} onClick={toggleMic} title={micMuted ? 'Unmute yourself' : 'Mute yourself'}>
-                        <MicIcon muted={micMuted} />
+                    {/* Push-to-talk: hold to speak (mic muted otherwise). Works for
+                        mouse + touch; releasing/leaving always re-mutes. */}
+                    <button
+                        className={`voice-btn ptt ${!micMuted ? 'talking' : ''}`}
+                        onPointerDown={() => { if (micMuted) toggleMic(); }}
+                        onPointerUp={() => { if (!micMuted) toggleMic(); }}
+                        onPointerLeave={() => { if (!micMuted) toggleMic(); }}
+                        onContextMenu={(e) => e.preventDefault()}
+                        title="Hold to talk"
+                    >
+                        <MicIcon muted={micMuted} /> <span>{micMuted ? 'Hold to talk' : 'Talking…'}</span>
+                    </button>
+                    <button className={`voice-btn mic ${micMuted ? 'muted' : ''}`} onClick={toggleMic} title={micMuted ? 'Open mic (hands-free)' : 'Mute mic'}>
+                        {micMuted ? '🔇' : '🎙️'}
                     </button>
                     <button className={`voice-btn remote ${remoteMuted ? 'muted' : ''}`} onClick={toggleRemote} title={remoteMuted ? 'Unmute opponent' : 'Mute opponent'}>
                         {remoteMuted ? '🔇' : '🔊'}

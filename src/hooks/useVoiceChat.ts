@@ -119,6 +119,10 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             localStreamRef.current = stream;
             activeRef.current = true;
+            // Default to push-to-talk: mic starts muted, "hold to talk" opens it.
+            const micTrack = stream.getAudioTracks()[0];
+            if (micTrack) micTrack.enabled = false;
+            setMicMuted(true);
 
             // B2: attach the audio sink to the DOM inside the gesture (iOS-safe).
             const el = document.createElement('audio');

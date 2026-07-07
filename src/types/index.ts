@@ -114,6 +114,10 @@ export interface GameState {
     /** Consecutive sixes rolled */
     consecutiveSixes: number;
 
+    /** G-029/feedback: failed roll attempts while ALL tokens are in the yard
+     *  (classic Ludo: 3 tries to roll a 6 before the turn passes) */
+    baseRollAttempts?: number;
+
     /** Bonus moves remaining */
     bonusMoves: number;
 

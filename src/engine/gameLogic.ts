@@ -99,7 +99,26 @@ export function rollDice(state: GameState, forcedValue: number | null = null): G
             return {
                 ...newState,
                 gamePhase: GAME_PHASE.ROLL_DICE as any,
+                baseRollAttempts: 0,
                 message: 'No moves available, roll again!'
+            };
+        }
+
+        // Classic Ludo: if ALL of the player's tokens are still in the yard,
+        // only a 6 lets one out — so grant up to 3 attempts before passing.
+        const pt = newState.tokens[state.activePlayer] || [];
+        const allTokensInYard =
+            pt.some(p => p === POSITION.IN_YARD) &&
+            pt.every(p => p === POSITION.IN_YARD || p === POSITION.FINISHED);
+        const attempts = (state.baseRollAttempts || 0) + 1;
+
+        if (allTokensInYard && attempts < 3) {
+            return {
+                ...newState,
+                gamePhase: GAME_PHASE.ROLL_DICE as any,
+                consecutiveSixes: 0,
+                baseRollAttempts: attempts,
+                message: `No 6 — roll again (${attempts}/3)`
             };
         }
 
@@ -108,6 +127,7 @@ export function rollDice(state: GameState, forcedValue: number | null = null): G
             gamePhase: GAME_PHASE.ROLL_DICE as any,
             activePlayer: getNextPlayer(state.activePlayer, state.activeColors),
             consecutiveSixes: 0,
+            baseRollAttempts: 0,
             message: 'No valid moves, passing turn...'
         };
     }
@@ -115,6 +135,7 @@ export function rollDice(state: GameState, forcedValue: number | null = null): G
     return {
         ...newState,
         validMoves,
+        baseRollAttempts: 0,
         gamePhase: GAME_PHASE.SELECT_TOKEN as any
     };
 }

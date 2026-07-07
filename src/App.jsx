@@ -960,8 +960,10 @@ function App() {
 
                     {/* G-029: opt-in voice chat (web3 PvP only). Polite peer =
                         lower wallet address (deterministic). Only mount once our
-                        address is known, else the tiebreak is undefined (Daniel W2). */}
-                    {gameConfig.mode === 'web3' && gameConfig.roomId && account?.address && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (() => {
+                        address is known, else the tiebreak is undefined (Daniel W2).
+                        Stays mounted through WIN so voice doesn't cut off at the
+                        finish — players can celebrate/chat (Tommy feedback). */}
+                    {gameConfig.mode === 'web3' && gameConfig.roomId && account?.address && (() => {
                         const me = account.address.toLowerCase();
                         const others = (gameConfig.players || []).filter(p => p?.address && p.address.toLowerCase() !== me).map(p => p.address.toLowerCase());
                         return (

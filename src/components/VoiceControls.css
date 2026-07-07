@@ -30,6 +30,22 @@
 .voice-btn.mic.muted, .voice-btn.remote.muted { border-color: rgba(255, 107, 107, 0.5); color: #ff9b9b; background: rgba(255, 70, 70, 0.12); }
 .voice-btn.leave { min-width: 34px; padding: 5px 9px; }
 
+/* Push-to-talk: big, obvious, turns green while held */
+.voice-btn.ptt {
+    min-height: 42px;
+    padding: 8px 16px;
+    font-weight: 700;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+.voice-btn.ptt.talking {
+    background: rgba(47, 191, 113, 0.28);
+    border-color: rgba(47, 191, 113, 0.7);
+    color: #b9f2d4;
+    box-shadow: 0 0 14px rgba(47, 191, 113, 0.5);
+}
+
 .voice-status { color: #9be8c0; font-weight: 700; }
 .voice-status.waiting { color: #ffd39b; }
 .voice-status.connecting { color: #cfc6ff; }

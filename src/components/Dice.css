@@ -336,23 +336,22 @@
     animation: pop-in var(--dur-fast) var(--ease-spring);
 }
 
-/* High-contrast pill so the rolled number reads on ANY board background */
+/* High-contrast pill so the rolled number reads on ANY board background.
+   Fully opaque gold-on-black — no glow wash, hard readable. */
 .dice-result-number {
     font-family: var(--font-display, 'Orbitron', sans-serif);
-    font-size: 1.5rem;
-    font-weight: var(--font-extrabold, 900);
-    color: #ffffff;
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: #ffd700;
     line-height: 1;
-    min-width: 2.1em;
-    padding: 5px 0;
+    min-width: 1.9em;
+    padding: 6px 4px;
     text-align: center;
     border-radius: 12px;
-    background: rgba(10, 12, 28, 0.92);
-    border: 2px solid var(--neon-cyan, #00f3ff);
-    box-shadow:
-        0 4px 14px rgba(0, 0, 0, 0.55),
-        0 0 14px rgba(0, 243, 255, 0.55);
-    text-shadow: 0 0 8px rgba(0, 243, 255, 0.85);
+    background: #0a0c1c;
+    border: 2.5px solid #ffd700;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
 }
 
 .dice-roll-again-cue {

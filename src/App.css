@@ -1,6 +1,6 @@
 /* =========================================
-   IRIS — DEEP SPACE NEON · In-Game Chrome
-   App Layout · Mobile-First
+   IRIS â€” DEEP SPACE NEON Â· In-Game Chrome
+   App Layout Â· Mobile-First
    ========================================= */
 
 /* Mobile-specific CSS Variables */
@@ -18,13 +18,13 @@ body {
     font-family: var(--font-body, 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    /* No overflow lock — body scrolls normally so flow views (lobby, waiting room,
+    /* No overflow lock â€” body scrolls normally so flow views (lobby, waiting room,
        win screen) scroll when taller than the viewport. The in-game board stays
        locked via .app.aaa-layout (position:fixed), independent of the body. */
 }
 
 /* ============================================
-   MAIN CONTAINER — Fixed Viewport
+   MAIN CONTAINER â€” Fixed Viewport
    ============================================ */
 
 .app.aaa-layout {
@@ -35,7 +35,7 @@ body {
     grid-template-columns: 1fr;
     padding-top: var(--safe-top);
     padding-bottom: var(--safe-bottom);
-    /* Deep space cosmos — fixed so it never scrolls */
+    /* Deep space cosmos â€” fixed so it never scrolls */
     background:
         radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 243, 255, 0.07) 0%, transparent 60%),
         radial-gradient(ellipse 60% 40% at 90% 110%, rgba(58, 134, 255, 0.05) 0%, transparent 55%),
@@ -51,7 +51,7 @@ body {
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
     opacity: 0.035;
-    /* PERF: dropped mix-blend-mode — a full-screen blend layer forces the whole
+    /* PERF: dropped mix-blend-mode â€” a full-screen blend layer forces the whole
        game view to recomposite on every in-game frame (per-hop setGameState +
        screen-shake). Faint plain grain instead. */
     pointer-events: none;
@@ -79,8 +79,8 @@ body {
 }
 
 /* ============================================
-   GAME ARENA — Board + Side Panel
-   Mobile: column stack · Desktop: row
+   GAME ARENA â€” Board + Side Panel
+   Mobile: column stack Â· Desktop: row
    ============================================ */
 
 .game-arena {
@@ -114,7 +114,7 @@ body {
 }
 
 /* ============================================
-   SIDE PANEL — Dice + Timer
+   SIDE PANEL â€” Dice + Timer
    ============================================ */
 
 .side-panel {
@@ -127,7 +127,7 @@ body {
     pointer-events: auto;
     padding: 8px 20px;
     border-radius: 24px;
-    /* PERF: solid translucent panel instead of backdrop-filter — the dice panel
+    /* PERF: solid translucent panel instead of backdrop-filter â€” the dice panel
        is ALWAYS visible in-game and its backdrop blur recomposited the board
        behind it on every move-animation frame. */
     background: rgba(10, 12, 26, 0.66);
@@ -158,7 +158,7 @@ body {
 }
 
 /* ============================================
-   BOARD TIMER ANCHOR — Mobile only
+   BOARD TIMER ANCHOR â€” Mobile only
    ============================================ */
 
 .board-timer-anchor {
@@ -183,7 +183,7 @@ body {
     flex-direction: row;
     align-items: center;
     gap: 8px;
-    /* PERF: solid HUD chip (no backdrop-filter) — always visible in-game. */
+    /* PERF: solid HUD chip (no backdrop-filter) â€” always visible in-game. */
     background: rgba(30, 24, 4, 0.82);
     border-radius: 99px;
     padding: 0 14px;
@@ -268,7 +268,7 @@ body {
     z-index: var(--z-hud, 10);
 }
 
-/* ---- TURN / ACTION STATUS — top-center pill ---- */
+/* ---- TURN / ACTION STATUS â€” top-center pill ---- */
 .turn-status {
     position: absolute;
     top: 14px;
@@ -338,7 +338,7 @@ body {
 .turn-status.pod-yellow { --ts-color: #ffcc00; }
 .turn-status.pod-blue   { --ts-color: #05d9e8; }
 
-/* tone: you-must-act → draws the eye (GPU: opacity + box-shadow only) */
+/* tone: you-must-act â†’ draws the eye (GPU: opacity + box-shadow only) */
 .turn-status.tone-act {
     border-color: var(--ts-color, var(--neon-cyan));
     animation:
@@ -385,7 +385,7 @@ body {
     position: absolute;
     inset: 0;
     z-index: 110;
-    /* PERF: opaque-enough solid bg replaces backdrop-filter blur — the overlay
+    /* PERF: opaque-enough solid bg replaces backdrop-filter blur â€” the overlay
        covers the entire board so nothing behind it is visible anyway. */
     background: rgba(6, 6, 15, 0.96);
     display: flex;
@@ -417,7 +417,7 @@ body {
 }
 
 /* ============================================
-   PLAYER PODS — IRIS AAA TREATMENT
+   PLAYER PODS â€” IRIS AAA TREATMENT
    Turn state POPs, inactive recedes
    ============================================ */
 
@@ -432,7 +432,7 @@ body {
     min-width: auto;
     pointer-events: auto;
     /* Inactive: recede into the cosmos.
-       PERF: solid bg instead of backdrop-filter — pods are always visible and
+       PERF: solid bg instead of backdrop-filter â€” pods are always visible and
        a per-pod blur caused a compositor layer per pod (up to 4) on every frame. */
     background: rgba(6, 6, 18, 0.82);
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -461,7 +461,7 @@ body {
     pointer-events: none;
 }
 
-/* Active pod — the hero of the moment */
+/* Active pod â€” the hero of the moment */
 .player-pod.active {
     opacity: 1;
     filter: none;
@@ -524,7 +524,7 @@ body {
 .pod-avatar.yellow { background: linear-gradient(135deg, #ffbe0b 0%, #d97706 100%); }
 .pod-avatar.blue   { background: linear-gradient(135deg, #3a86ff 0%, #2563eb 100%); }
 
-/* Turn indicator ring — orbital sweep */
+/* Turn indicator ring â€” orbital sweep */
 .pod-turn-indicator {
     position: absolute;
     inset: -5px;
@@ -573,7 +573,7 @@ body {
     gap: 2px;
 }
 
-/* Skip dots — Iris neon treatment */
+/* Skip dots â€” Iris neon treatment */
 .pod-skips {
     display: flex;
     gap: 4px;
@@ -598,7 +598,7 @@ body {
 }
 
 /* ============================================
-   TURN TIMER — Iris deep-space style
+   TURN TIMER â€” Iris deep-space style
    ============================================ */
 
 .turn-timer {
@@ -608,7 +608,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* PERF: solid bg — timer animates every second, backdrop-filter caused
+    /* PERF: solid bg â€” timer animates every second, backdrop-filter caused
        full compositor invalidation on each tick. */
     background: rgba(6, 6, 15, 0.96);
     border-radius: 50%;
@@ -653,7 +653,7 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* Urgent state — hot pink alarm */
+/* Urgent state â€” hot pink alarm */
 .turn-timer.urgent {
     border-color: rgba(255, 0, 122, 0.55);
     box-shadow:
@@ -679,7 +679,7 @@ body {
 }
 
 /* ============================================
-   MODE BADGE — HUD Chip spec
+   MODE BADGE â€” HUD Chip spec
    ============================================ */
 
 .mode-badge {
@@ -694,7 +694,7 @@ body {
     letter-spacing: var(--tracking-widest, 2px);
     text-transform: uppercase;
     z-index: var(--z-hud, 10);
-    /* PERF: solid chip — always visible in-game, backdrop-filter recomposited
+    /* PERF: solid chip â€” always visible in-game, backdrop-filter recomposited
        the board behind it every move frame. */
     transition: box-shadow var(--dur-fast, 180ms) ease;
     min-height: 28px;
@@ -732,7 +732,7 @@ body {
 }
 
 .menu-btn-floating {
-    /* PERF: solid bg — menu button is always visible, backdrop-filter
+    /* PERF: solid bg â€” menu button is always visible, backdrop-filter
        adds a compositor layer for every in-game frame. */
     background: rgba(10, 10, 22, 0.80);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -865,7 +865,7 @@ body {
 }
 
 /* ============================================
-   SMALL PHONE (≤390px) — 380px viewport tuning
+   SMALL PHONE (â‰¤390px) â€” 380px viewport tuning
    Layered on top of the 480px block above.
    ============================================ */
 
@@ -950,7 +950,7 @@ body {
     /* ---- skip dots ---- */
     .skip-dot { width: 4px; height: 4px; }
 
-    /* ---- side-panel + dice: tighter padding, still ≥44px touch target ---- */
+    /* ---- side-panel + dice: tighter padding, still â‰¥44px touch target ---- */
     .side-panel {
         padding: 6px 14px;
         gap: 12px;
@@ -1079,7 +1079,7 @@ body {
     }
 }
 
-/* G-012 (Daniel W1): recovered-payout claim banner — room gone, claim alive */
+/* G-012 (Daniel W1): recovered-payout claim banner â€” room gone, claim alive */
 .recovered-claim-banner {
     position: fixed;
     top: 12px;
@@ -1128,10 +1128,10 @@ body {
 
 /* G-029: voice controls placement in the game view */
 .voice-controls-slot {
-    position: absolute;
-    top: 12px;
+    position: fixed;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
-    z-index: 30;
+    z-index: 40;
     max-width: calc(100vw - 24px);
 }
