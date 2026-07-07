@@ -1,54 +1,73 @@
-/* VoiceControls (G-029) — compact in-match voice bar */
-.voice-controls {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    padding: 5px 8px;
-    border-radius: 999px;
-    background: rgba(20, 20, 40, 0.7);
-    border: 1px solid rgba(124, 108, 255, 0.3);
-    backdrop-filter: blur(4px);
-    font-size: 0.78rem;
-}
+/* VoiceControls (G-029) — compact AAA widget, bottom-right, never over the dice */
 
-.voice-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 34px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(124, 108, 255, 0.4);
-    background: rgba(124, 108, 255, 0.16);
+/* Collapsed: single round mic FAB */
+.voice-fab-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.voice-fab {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1.5px solid rgba(124, 108, 255, 0.55);
+    background: radial-gradient(circle at 30% 30%, rgba(124,108,255,0.35), rgba(20,20,40,0.92));
     color: #cfc6ff;
     cursor: pointer;
-    font-size: 0.78rem;
-    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.45), 0 0 12px rgba(124,108,255,0.25);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    backdrop-filter: blur(4px);
 }
-.voice-btn:hover { background: rgba(124, 108, 255, 0.28); }
-.voice-btn.mic.muted, .voice-btn.remote.muted { border-color: rgba(255, 107, 107, 0.5); color: #ff9b9b; background: rgba(255, 70, 70, 0.12); }
-.voice-btn.leave { min-width: 34px; padding: 5px 9px; }
-
-/* Push-to-talk: big, obvious, turns green while held */
-.voice-btn.ptt {
-    min-height: 42px;
-    padding: 8px 16px;
-    font-weight: 700;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-}
-.voice-btn.ptt.talking {
-    background: rgba(47, 191, 113, 0.28);
-    border-color: rgba(47, 191, 113, 0.7);
-    color: #b9f2d4;
-    box-shadow: 0 0 14px rgba(47, 191, 113, 0.5);
+.voice-fab:hover { transform: scale(1.06); box-shadow: 0 6px 18px rgba(0,0,0,0.5), 0 0 18px rgba(124,108,255,0.45); }
+.voice-fab:active { transform: scale(0.96); }
+.voice-fab-error {
+    max-width: 180px; text-align: right;
+    font-size: 0.66rem; color: #ff9b9b;
+    background: rgba(20,20,40,0.9); padding: 3px 7px; border-radius: 8px;
 }
 
-.voice-status { color: #9be8c0; font-weight: 700; }
-.voice-status.waiting { color: #ffd39b; }
-.voice-status.connecting { color: #cfc6ff; }
+/* Enabled: vertical stack of round buttons */
+.voice-stack {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    padding: 8px 6px;
+    border-radius: 22px;
+    background: rgba(16, 16, 32, 0.72);
+    border: 1px solid rgba(124, 108, 255, 0.28);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
 
-.voice-hint { color: rgba(255,255,255,0.55); font-size: 0.68rem; }
-.voice-error { color: #ff9b9b; font-size: 0.72rem; }
+.voice-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.voice-dot.live { background: #2fbf71; box-shadow: 0 0 8px rgba(47,191,113,0.9); }
+.voice-dot.waiting { background: #ffcf6b; box-shadow: 0 0 8px rgba(255,207,107,0.8); animation: vc-pulse 1.4s infinite; }
+.voice-dot.connecting { background: #9b8cff; animation: vc-pulse 1.4s infinite; }
+@keyframes vc-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.voice-round {
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1.5px solid rgba(124, 108, 255, 0.4);
+    background: rgba(124, 108, 255, 0.14);
+    color: #cfc6ff;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.12s ease, box-shadow 0.12s ease;
+    user-select: none; -webkit-user-select: none; touch-action: none;
+}
+.voice-round:hover { background: rgba(124, 108, 255, 0.26); }
+.voice-round:active { transform: scale(0.94); }
+
+/* Big push-to-talk in the middle */
+.voice-round.ptt { width: 46px; height: 46px; }
+.voice-round.ptt.talking {
+    background: rgba(47, 191, 113, 0.32);
+    border-color: rgba(47, 191, 113, 0.75);
+    color: #d6ffe9;
+    box-shadow: 0 0 16px rgba(47, 191, 113, 0.6);
+}
+
+/* Secondary round buttons */
+.voice-round.small { width: 34px; height: 34px; font-size: 0.9rem; }
+.voice-round.small.on { border-color: rgba(255,90,90,0.6); color: #ffb0b0; background: rgba(255,70,70,0.14); }
+.voice-round.small.muted { border-color: rgba(255,90,90,0.5); color: #ff9b9b; }
+.voice-round.small.leave { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); }
+
+@media (prefers-reduced-motion: reduce) {
+    .voice-dot.waiting, .voice-dot.connecting { animation: none; }
+    .voice-fab, .voice-round { transition: none; }
+}

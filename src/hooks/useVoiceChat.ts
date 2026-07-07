@@ -111,12 +111,20 @@ export function useVoiceChat({ socket, roomId, isPolite, enabled }: Params) {
 
     const enableVoice = useCallback(async () => {
         if (activeRef.current) return; // B3: guard double-enable
-        const s = socketRef.current, r = roomIdRef.current;
-        if (!s || !r) return;
         setError(null);
+        // Secure-context / API guard — getUserMedia only exists on HTTPS.
+        if (!navigator.mediaDevices?.getUserMedia) {
+            setStatus('error');
+            setError('Voice needs a secure (https) connection.');
+            return;
+        }
         setStatus('connecting');
         try {
+            // Request the mic FIRST so the permission prompt ALWAYS appears on
+            // the click gesture — never gated behind a socket check (bugfix).
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            const s = socketRef.current, r = roomIdRef.current;
+            if (!s || !r) { stream.getTracks().forEach(t => t.stop()); setStatus('off'); return; }
             localStreamRef.current = stream;
             activeRef.current = true;
             // Default to push-to-talk: mic starts muted, "hold to talk" opens it.
