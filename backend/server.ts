@@ -108,6 +108,11 @@ export const io = new Server(server, {
 });
 const PORT = process.env.PORT || 3333;
 
+// G-026a: this instance serves exactly ONE chain (one deployment per chain
+// pattern); every room carries its chainId so data stays unambiguous when
+// more chains come online (G-026b). Same env the EIP-712 signer uses.
+const SERVER_CHAIN_ID = parseInt(process.env.CHAIN_ID || '114');
+
 let activeRooms: BackendRoom[] = [];
 
 // V2: Service singletons (lazy, crash-safe)
@@ -506,6 +511,7 @@ function declareWinner(io: Server, room: BackendRoom, winnerIdx: number) {
             }) : Promise.resolve(),
             profileManager.saveGameHistory({
                 roomId: room.id, mode: gameMode,
+                chainId: (room as any).chainId ?? SERVER_CHAIN_ID, // G-026a
                 players: playerAddresses,
                 winner: winner.address, loser: loser?.address,
                 betAmount, payoutAmount,
@@ -1055,6 +1061,7 @@ app.get('/api/rooms', (req, res) => res.json(activeRooms.map(room => ({
     mode: (room as any).mode ?? room.gameState?.mode ?? 'classic',
     maxPlayers: room.maxPlayers,
     creator: (room as any).creator ?? null, // G-012 (Daniel B1): UI needs the real creator for Cancel&Refund
+    chainId: (room as any).chainId ?? SERVER_CHAIN_ID, // G-026a
     createdAt: room.createdAt,
     players: room.players.map(p => p ? { name: p.name, address: p.address, color: p.color } : null),
 }))));
@@ -1099,6 +1106,7 @@ app.post('/api/rooms/create', createRoomLimiter, validateRequest(createRoomSchem
         status: "WAITING",
         // G-012 (Daniel B1): creator explicitly — players[0] is a COLOR slot, not the creator
         creator: creatorAddress?.toLowerCase(),
+        chainId: SERVER_CHAIN_ID, // G-026a: rooms are chain-scoped
         createdAt: Date.now() // Track creation time for cleanup
     };
 

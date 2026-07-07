@@ -7,7 +7,10 @@
  * Replaces hardcoded "ETH" strings scattered across the UI (Leo LEO-D2:
  * one consistent currency story rendered from one place).
  */
-export const NATIVE_CURRENCY_SYMBOL = 'C2FLR' as const;
+import { activeChainConfig } from './chains';
+
+/** G-026a: gas symbol now follows the ACTIVE chain from the registry. */
+export const NATIVE_CURRENCY_SYMBOL: string = activeChainConfig.nativeSymbol;
 
 /**
  * G-025: stakes moved from native coin to the $GO token (vault escrows via

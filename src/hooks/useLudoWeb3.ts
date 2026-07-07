@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { useActiveAccount, useSendTransaction, useWalletBalance } from "thirdweb/react";
+import { useActiveAccount, useActiveWalletChain, useSwitchActiveWalletChain, useSendTransaction, useWalletBalance } from "thirdweb/react";
 import { prepareContractCall, readContract, toWei, waitForReceipt } from "thirdweb";
 import { ethers } from "ethers";
 import { ludoVaultContract, goTokenContract, coston2, client, LUDO_VAULT_ADDRESS } from "../config/web3";
+import { activeChain, activeChainConfig } from "../config/chains";
 import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from "../config/currency";
 import { API_URL } from "../config/api";
 import { PayoutProof } from "../types";
@@ -16,8 +17,18 @@ import { showToast } from "../services/toast";
  */
 export const useLudoWeb3 = () => {
     const account = useActiveAccount();
+    const walletChain = useActiveWalletChain();
+    const switchChain = useSwitchActiveWalletChain();
     const { mutateAsync: sendTx } = useSendTransaction();
     const [isProcessing, setIsProcessing] = useState(false);
+
+    // G-026a: SOTA multi-chain UX — no "wrong network" errors. Before any tx
+    // we auto-prompt the wallet to switch to the active chain from the registry.
+    const ensureChain = async () => {
+        if (!walletChain || walletChain.id === activeChain.id) return;
+        showToast(`Switching wallet to ${activeChainConfig.label}…`, "info");
+        await switchChain(activeChain); // prompts add-chain in the wallet if unknown
+    };
 
     // 1. Check Native C2FLR Balance
     const { data: walletBalance } = useWalletBalance({
@@ -144,8 +155,9 @@ export const useLudoWeb3 = () => {
             const amountInWei = toWei(stakeAmount.toString());
             const roomId = ethers.id("Room_" + Date.now() + Math.random());
 
-            // Step A (G-025): $GO balance + allowance — the new vault escrows the
-            // stake via transferFrom, the old payable/native flow reverts on it.
+            // Step A (G-025/G-026a): right chain, then $GO balance + allowance —
+            // the vault escrows the stake via transferFrom.
+            await ensureChain();
             await ensureGoBalance(amountInWei);
             await ensureAllowance(amountInWei);
 
@@ -228,7 +240,8 @@ export const useLudoWeb3 = () => {
                 // Continue if it's just a RPC error, let the transaction try
             }
 
-            // Step B1.5 (G-025): $GO balance + allowance before the join tx
+            // Step B1.5 (G-025/G-026a): right chain, then $GO balance + allowance
+            await ensureChain();
             await ensureGoBalance(amountInWei);
             await ensureAllowance(amountInWei);
 
@@ -272,6 +285,7 @@ export const useLudoWeb3 = () => {
 
         setIsProcessing(true);
         try {
+            await ensureChain(); // G-026a
             console.log("Claiming payout with signature...");
 
             const claimTx = prepareContractCall({
@@ -312,6 +326,7 @@ export const useLudoWeb3 = () => {
 
         setIsProcessing(true);
         try {
+            await ensureChain(); // G-026a
             console.log("Cancelling room on-chain...", roomId);
             const cancelTx = prepareContractCall({
                 contract: ludoVaultContract,

@@ -1,9 +1,19 @@
-import { createThirdwebClient, getContract, defineChain } from "thirdweb";
+/**
+ * Web3 wiring — thirdweb client + contract instances for the ACTIVE chain.
+ *
+ * G-026a: all chain specifics live in the chain registry (./chains.ts) —
+ * this file is chain-agnostic and only binds client + contracts.
+ * Legacy export names (coston2, flareTestnet, flareMainnet) are kept as
+ * aliases so no consumer breaks; new code should import from ./chains.
+ */
+import { createThirdwebClient, getContract } from "thirdweb";
 import GoTokenABI from "../abi/GoToken.json";
 import LudoVaultABI from "../abi/LudoVault.json";
+import { CHAIN_REGISTRY, activeChain, activeChainConfig, contractAddressFromEnv } from "./chains";
 // PROD-4: Re-export the single currency source-of-truth so consumers can
 // import it from web3 without reaching into config/currency directly.
 export { NATIVE_CURRENCY_SYMBOL, formatStake } from "./currency";
+export { activeChain, activeChainConfig } from "./chains";
 
 // Load from .env via Vite
 const clientId = ((import.meta as any).env.VITE_THIRDWEB_CLIENT_ID as string) || "";
@@ -23,61 +33,20 @@ export const client = createThirdwebClient({
     clientId: clientId || "00000000000000000000000000000000",
 });
 
-// Flare Mainnet Configuration
-export const flareMainnet = defineChain({
-    id: 14,
-    name: "Flare Mainnet",
-    nativeCurrency: {
-        name: "Flare",
-        symbol: "FLR",
-        decimals: 18
-    },
-    rpcUrls: {
-        default: {
-            http: ["https://flare-api.flare.network/ext/C/rpc"]
-        }
-    },
-    blockExplorers: {
-        default: {
-            name: "Flare Explorer",
-            url: "https://flare-explorer.flare.network"
-        }
-    }
-});
-
-// Flare Coston2 Testnet Configuration
-export const flareTestnet = defineChain({
-    id: 114,
-    name: "Coston2 Testnet",
-    nativeCurrency: {
-        name: "Coston2 Flare",
-        symbol: "C2FLR",
-        decimals: 18
-    },
-    rpcUrls: {
-        default: {
-            http: ["https://coston2-api.flare.network/ext/C/rpc"]
-        }
-    },
-    blockExplorers: {
-        default: {
-            name: "Coston2 Explorer",
-            url: "https://coston2-explorer.flare.network"
-        }
-    },
-    testnet: true
-});
-
-// Alias for coston2 for compatibility
-export const coston2 = flareTestnet;
+// ── Legacy aliases (G-026a) — do not use in new code, import from ./chains ──
+export const flareMainnet = CHAIN_REGISTRY[14]!.chain;
+export const flareTestnet = CHAIN_REGISTRY[114]!.chain;
+/** @deprecated alias for the ACTIVE chain (historically Coston2) */
+export const coston2 = activeChain;
 
 // Contract Addresses — fail-fast, no silent fallback to a wrong vault (G-024, AAA-M32).
 // A hardcoded literal here previously let staked play bind to a stale vault. Refuse that.
 function requireContractAddress(name: string, value: unknown): `0x${string}` {
     if (typeof value !== "string" || !/^0x[a-fA-F0-9]{40}$/.test(value)) {
         throw new Error(
-            `[web3] ${name} is missing or not a valid 0x-address. ` +
-            `Set it in the environment (Vercel / Railway / .env). ` +
+            `[web3] ${name} is missing or not a valid 0x-address for chain ` +
+            `${activeChainConfig.label} (${activeChainConfig.id}). ` +
+            `Set VITE_${name}_ADDRESS_${activeChainConfig.id} (or legacy VITE_${name}_ADDRESS) in the environment. ` +
             `Refusing to fall back to a hardcoded contract for staked play.`
         );
     }
@@ -85,25 +54,25 @@ function requireContractAddress(name: string, value: unknown): `0x${string}` {
 }
 
 export const GO_TOKEN_ADDRESS: `0x${string}` = requireContractAddress(
-    "VITE_GOTOKEN_ADDRESS",
-    (import.meta as any).env.VITE_GOTOKEN_ADDRESS,
+    "GOTOKEN",
+    contractAddressFromEnv("GOTOKEN"),
 );
 export const LUDO_VAULT_ADDRESS: `0x${string}` = requireContractAddress(
-    "VITE_LUDOVAULT_ADDRESS",
-    (import.meta as any).env.VITE_LUDOVAULT_ADDRESS,
+    "LUDOVAULT",
+    contractAddressFromEnv("LUDOVAULT"),
 );
 
 // Contract Instances (v5 style with ABIs for proper error decoding)
 export const goTokenContract = getContract({
     client,
-    chain: coston2,
+    chain: activeChain,
     address: GO_TOKEN_ADDRESS,
     abi: GoTokenABI.abi as any,
 });
 
 export const ludoVaultContract = getContract({
     client,
-    chain: coston2,
+    chain: activeChain,
     address: LUDO_VAULT_ADDRESS,
     abi: LudoVaultABI.abi as any,
 });

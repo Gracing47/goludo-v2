@@ -14,6 +14,7 @@ import './Lobby.css';
 import { useLudoWeb3 } from '../hooks/useLudoWeb3';
 import { API_URL } from '../config/api';
 import { NATIVE_CURRENCY_SYMBOL, STAKE_CURRENCY_SYMBOL } from '../config/currency';
+import { activeChainConfig } from '../config/chains';
 import { showToast } from '../services/toast';
 import BurnTicker from './BurnTicker';
 import Leaderboard from './Leaderboard';
@@ -508,12 +509,15 @@ const Lobby = ({ onStartGame }) => {
                                 >
                                     {isProcessing ? 'Working…' : `💧 Get free $${STAKE_CURRENCY_SYMBOL} (in-app faucet)`}
                                 </button>
-                                <button
-                                    className="faucet-btn"
-                                    onClick={() => window.open('https://faucet.flare.network/coston2', '_blank')}
-                                >
-                                    Get gas ({NATIVE_CURRENCY_SYMBOL}) ↗
-                                </button>
+                                {/* G-026a: gas faucet comes from the chain registry (chain-agnostic) */}
+                                {activeChainConfig.gasFaucetUrl && (
+                                    <button
+                                        className="faucet-btn"
+                                        onClick={() => window.open(activeChainConfig.gasFaucetUrl, '_blank')}
+                                    >
+                                        Get gas ({NATIVE_CURRENCY_SYMBOL}) ↗
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

@@ -62,6 +62,8 @@ export interface GameHistoryData {
     totalTurns: number;
     startedAt: Date;
     endedAt: Date;
+    /** G-026a: chain the match ran on (default Coston2) */
+    chainId?: number;
 }
 
 type LeaderboardMetric = 'totalWins' | 'classicWins' | 'rapidWins' | 'totalWon' | 'totalXp';
@@ -227,6 +229,7 @@ export class ProfileManager {
 
         return prisma.gameHistory.create({
             data: {
+                chainId: data.chainId ?? 114, // G-026a
                 roomId: data.roomId,
                 mode: data.mode,
                 players: data.players,

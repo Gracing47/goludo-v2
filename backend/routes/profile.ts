@@ -89,7 +89,10 @@ let statsCache: { at: number; data: unknown } | null = null;
 router.get('/stats', async (_req, res) => {
     try {
         if (statsCache && Date.now() - statsCache.at < 60_000) return res.json(statsCache.data);
-        const stats = await profileManager.getGlobalStats();
+        const stats = {
+            ...(await profileManager.getGlobalStats()),
+            chainId: parseInt(process.env.CHAIN_ID || '114'), // G-026a: which chain these numbers belong to
+        };
         statsCache = { at: Date.now(), data: stats };
         res.json(stats);
     } catch (error: any) {

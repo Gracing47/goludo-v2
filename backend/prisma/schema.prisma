@@ -71,6 +71,7 @@ model UserProfile {
 model GameHistory {
   id           String   @id @default(uuid())
   roomId       String   @unique
+  chainId      Int      @default(114) // G-026a: chain the match ran on (Coston2 default)
   mode         String   // 'classic' | 'rapid'
 
   players      Json     // Array of player addresses
