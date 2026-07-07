@@ -1,0 +1,38 @@
+/* VoiceControls (G-029) — compact in-match voice bar */
+.voice-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(20, 20, 40, 0.7);
+    border: 1px solid rgba(124, 108, 255, 0.3);
+    backdrop-filter: blur(4px);
+    font-size: 0.78rem;
+}
+
+.voice-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 108, 255, 0.4);
+    background: rgba(124, 108, 255, 0.16);
+    color: #cfc6ff;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.voice-btn:hover { background: rgba(124, 108, 255, 0.28); }
+.voice-btn.mic.muted, .voice-btn.remote.muted { border-color: rgba(255, 107, 107, 0.5); color: #ff9b9b; background: rgba(255, 70, 70, 0.12); }
+.voice-btn.leave { min-width: 34px; padding: 5px 9px; }
+
+.voice-status { color: #9be8c0; font-weight: 700; }
+.voice-status.waiting { color: #ffd39b; }
+.voice-status.connecting { color: #cfc6ff; }
+
+.voice-hint { color: rgba(255,255,255,0.55); font-size: 0.68rem; }
+.voice-error { color: #ff9b9b; font-size: 0.72rem; }

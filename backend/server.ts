@@ -830,8 +830,36 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ============================================
+    // G-029: VOICE CHAT SIGNALING (WebRTC, P2P)
+    // Pure relay — audio never touches the server. We only forward SDP/ICE
+    // between the two players of the SAME room. Both must opt in; the relay
+    // just moves signaling packets, the peers enforce the media rules.
+    // ============================================
+    const forwardToRoomPeers = (event: string, data: any) => {
+        const roomId = (typeof data === 'object' ? data?.roomId : null)?.toLowerCase?.();
+        if (!roomId) return;
+        const room = activeRooms.find(r => r.id?.toLowerCase() === roomId);
+        if (!room) return;
+        // Only relay to sockets that belong to a player of this room (not spectators)
+        const memberSocketIds = new Set(room.players.filter(Boolean).map((p: any) => p.socketId).filter(Boolean));
+        if (!memberSocketIds.has(socket.id)) return; // sender must be a room member
+        socket.to(roomId).emit(event, { ...data, from: socket.id });
+    };
+    socket.on('voice_ready', (data) => forwardToRoomPeers('voice_ready', data));   // "I enabled voice"
+    socket.on('voice_offer', (data) => forwardToRoomPeers('voice_offer', data));
+    socket.on('voice_answer', (data) => forwardToRoomPeers('voice_answer', data));
+    socket.on('voice_ice', (data) => forwardToRoomPeers('voice_ice', data));
+    socket.on('voice_end', (data) => forwardToRoomPeers('voice_end', data));       // "I disabled voice"
+
     socket.on('disconnect', () => {
         console.log(`🔌 User disconnected: ${socket.id}`);
+        // G-029: tell the peer the voice partner is gone so it tears down cleanly
+        activeRooms.forEach(room => {
+            if (room.players.some((p: any) => p && p.socketId === socket.id)) {
+                socket.to(room.id).emit('voice_end', { roomId: room.id, from: socket.id });
+            }
+        });
         activeRooms.forEach(room => {
             const pIdx = room.players.findIndex((p: any) => p && p.socketId === socket.id);
             if (pIdx !== -1) {

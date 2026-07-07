@@ -18,6 +18,7 @@ import { NATIVE_CURRENCY_SYMBOL } from './config/currency';
 
 import WarpTransition from './components/WarpTransition';
 import Dice from './components/Dice';
+import VoiceControls from './components/VoiceControls';
 import AmbientLight from './components/VFX/AmbientLight';
 import VictoryCelebration from './components/VictoryCelebration';
 import AAACountdown from './components/AAACountdown';
@@ -956,6 +957,23 @@ function App() {
                         isConnected={isConnected}
                         appState={appState}
                     />
+
+                    {/* G-029: opt-in voice chat (web3 PvP only). Polite peer =
+                        lower wallet address (deterministic, no creator lookup). */}
+                    {gameConfig.mode === 'web3' && gameConfig.roomId && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (
+                        <div className="voice-controls-slot">
+                            <VoiceControls
+                                socket={socket}
+                                roomId={gameConfig.roomId}
+                                enabled={true}
+                                isPolite={(() => {
+                                    const me = account?.address?.toLowerCase() || '';
+                                    const others = (gameConfig.players || []).filter(p => p?.address && p.address.toLowerCase() !== me).map(p => p.address.toLowerCase());
+                                    return others.every(o => me < o);
+                                })()}
+                            />
+                        </div>
+                    )}
 
                     {/* 3. POT DISPLAY */}
                     {gameConfig.mode === 'web3' && gameConfig.stake && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && (

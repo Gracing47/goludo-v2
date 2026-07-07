@@ -1125,3 +1125,13 @@ body {
         scroll-behavior: auto !important;
     }
 }
+
+/* G-029: voice controls placement in the game view */
+.voice-controls-slot {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    max-width: calc(100vw - 24px);
+}
