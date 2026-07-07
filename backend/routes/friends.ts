@@ -100,7 +100,9 @@ router.get('/friends/:address', friendLimiter, async (req, res) => {
     }
 });
 
-async function handle(action: string, fn: (signer: string, target: string) => Promise<any>) {
+// NOTE: NOT async — must return the handler function itself, not a Promise,
+// or Express throws "argument handler must be a function".
+function handle(action: string, fn: (signer: string, target: string) => Promise<any>) {
     return async (req: express.Request, res: express.Response) => {
         try {
             const { signer, target } = await auth(action, req.body);
