@@ -31,6 +31,18 @@ module.exports = {
             accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
             gasPrice: 25000000000,
         },
+        // G-026b: per-chain deployer keys (blast-radius rule) — falls back to
+        // DEPLOYER_PRIVATE_KEY only if the chain-specific env is unset.
+        baseSepolia: {
+            url: "https://sepolia.base.org",
+            chainId: 84532,
+            accounts: (process.env.DEPLOYER_PRIVATE_KEY_84532 || PRIVATE_KEY) ? [process.env.DEPLOYER_PRIVATE_KEY_84532 || PRIVATE_KEY] : [],
+        },
+        celoSepolia: {
+            url: "https://forno.celo-sepolia.celo-testnet.org",
+            chainId: 11142220,
+            accounts: (process.env.DEPLOYER_PRIVATE_KEY_11142220 || PRIVATE_KEY) ? [process.env.DEPLOYER_PRIVATE_KEY_11142220 || PRIVATE_KEY] : [],
+        },
     },
     etherscan: {
         apiKey: {

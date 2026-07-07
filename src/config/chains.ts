@@ -67,13 +67,30 @@ export const CHAIN_REGISTRY: Record<number, GoLudoChainConfig> = {
         nativeSymbol: "ETH",
         gasFaucetUrl: "https://portal.cdp.coinbase.com/products/faucet",
         explorerUrl: "https://sepolia.basescan.org",
-        testnet: true, // prepared as the first non-Flare target (G-026b candidate)
+        testnet: true, // G-026b target #1 (Thomas-approved 07.07.)
         chain: defineChain({
             id: 84532,
             name: "Base Sepolia",
             nativeCurrency: { name: "Sepolia Ether", symbol: "ETH", decimals: 18 },
             rpcUrls: { default: { http: ["https://sepolia.base.org"] } },
             blockExplorers: { default: { name: "Basescan", url: "https://sepolia.basescan.org" } },
+            testnet: true,
+        }),
+    },
+    11142220: {
+        id: 11142220,
+        key: "celo-sepolia",
+        label: "Celo Sepolia Testnet",
+        nativeSymbol: "CELO-S",
+        gasFaucetUrl: "https://faucet.celo.org/",
+        explorerUrl: "https://celo-sepolia.blockscout.com",
+        testnet: true, // G-026b target #2 (Thomas-approved 07.07.; replaces deprecated Alfajores)
+        chain: defineChain({
+            id: 11142220,
+            name: "Celo Sepolia",
+            nativeCurrency: { name: "Celo Sepolia", symbol: "CELO-S", decimals: 18 },
+            rpcUrls: { default: { http: ["https://forno.celo-sepolia.celo-testnet.org"] } },
+            blockExplorers: { default: { name: "Celo Sepolia Blockscout", url: "https://celo-sepolia.blockscout.com" } },
             testnet: true,
         }),
     },

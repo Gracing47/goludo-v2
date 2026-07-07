@@ -40,6 +40,21 @@ Redeploy WITHOUT build cache (Vite bakes envs at build time — G-024 lesson).
 3. Faucet → create → join → match → claim (full UI e2e)
 4. Payout signature from chain A must FAIL on chain B (nonce/domain negative test)
 
+## Approved targets (Thomas, 07.07.2026)
+
+| Chain | chainId | Hardhat network | Gas faucet | Deployer |
+|---|---|---|---|---|
+| Base Sepolia | 84532 | `baseSepolia` | https://portal.cdp.coinbase.com/products/faucet (alt.: https://faucets.chain.link/base-sepolia) | `0xc5f0deB577D0Bc0a50b9f0CE59A655Dce3FEb1eC` |
+| Celo Sepolia | 11142220 | `celoSepolia` | https://faucet.celo.org/ | `0xE0784cd6fcFc91F94938D0304ede9AdC279E706f` |
+
+Keys: Tresor `web3/GoLudo Deployer Wallets Base Celo.md` (fresh per chain, never the Coston2 key).
+Deploy once funded:
+```bash
+cd smart-contracts
+npx hardhat run scripts/deploy.js --network baseSepolia   # then celoSepolia
+```
+Then follow steps 2–4 above per chain (own Railway service + Vercel deployment each).
+
 ## Open for G-026b (one instance, many chains)
 Room namespacing per chain in one lobby, per-chain stats aggregation UI,
 wallet-chain-choice UX, per-chain faucet monitoring. See ticket G-026.
