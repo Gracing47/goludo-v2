@@ -328,12 +328,19 @@ function App() {
         }
     }, [showCountdown, gameCountdown, appState, setGameCountdown, setShowCountdown, setAppState, gameConfig?.mode]);
 
-    // Return to lobby
+    // Return to lobby — leaving a live web3 match counts as a LOSS (opponent wins).
     const handleBackToLobby = useCallback(() => {
+        const inLiveMatch = gameConfig?.mode === 'web3' && gameConfig?.roomId && gameState
+            && gameState.gamePhase !== 'WIN' && gameState.gamePhase !== 'GAME_OVER' && account?.address;
+        if (inLiveMatch) {
+            const ok = window.confirm('Leaving now counts as a LOSS — your opponent wins the pot. Leave anyway?');
+            if (!ok) return;
+            try { socket?.emit('leave_match', { roomId: gameConfig.roomId, playerAddress: account.address }); } catch { /* best-effort */ }
+        }
         resetStore();
         aiActionInProgress.current = false;
         navigate('/'); // Go back to root
-    }, [resetStore, navigate]);
+    }, [resetStore, navigate, gameConfig, gameState, account, socket]);
 
     // Roll dice with visual delay
     const handleRoll = useCallback(() => {

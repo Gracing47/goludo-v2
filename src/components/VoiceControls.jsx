@@ -29,12 +29,14 @@ const VoiceControls = ({ socket, roomId, isPolite, enabled }) => {
     // Not yet enabled → a single tap requests the mic + connects.
     if (status === 'off' || status === 'error') {
         return (
-            <div className="ptt-wrap">
+            <div className="ptt-wrap compact">
                 <button className="ptt-btn idle" onClick={enableVoice} aria-label="Enable voice chat">
-                    <MicIcon />
+                    <MicIcon size={22} />
                 </button>
-                <span className="ptt-caption">{error ? '⚠️' : 'Tap for voice'}</span>
-                {error && <span className="ptt-error">{error}</span>}
+                <div className="ptt-labels">
+                    <span className="ptt-caption">{error ? 'Mic blocked' : 'Tap for voice'}</span>
+                    {error && <span className="ptt-error">Allow the microphone in your browser's site settings, then tap again.</span>}
+                </div>
             </div>
         );
     }
@@ -45,14 +47,7 @@ const VoiceControls = ({ socket, roomId, isPolite, enabled }) => {
     const release = () => { if (!micMuted) toggleMic(); };
 
     return (
-        <div className="ptt-wrap">
-            <div className="ptt-side">
-                <span className={`ptt-dot ${status}`} title={status === 'live' ? 'Connected' : status === 'waiting' ? 'Waiting for opponent…' : 'Connecting…'} />
-                <button className={`ptt-mini ${remoteMuted ? 'muted' : ''}`} onClick={toggleRemote} title={remoteMuted ? 'Unmute opponent' : 'Mute opponent'}>
-                    {remoteMuted ? '🔇' : '🔊'}
-                </button>
-                <button className="ptt-mini leave" onClick={disableVoice} title="Turn off voice">✕</button>
-            </div>
+        <div className="ptt-wrap compact">
             <button
                 className={`ptt-btn ${talking ? 'talking' : 'ready'}`}
                 onPointerDown={hold}
@@ -62,10 +57,19 @@ const VoiceControls = ({ socket, roomId, isPolite, enabled }) => {
                 onContextMenu={(e) => e.preventDefault()}
                 aria-label="Hold to talk"
             >
-                <MicIcon size={26} />
+                <MicIcon size={24} />
                 <span className="ptt-ring" aria-hidden="true" />
             </button>
-            <span className="ptt-caption">{talking ? 'Talking…' : 'Hold to talk'}</span>
+            <div className="ptt-labels">
+                <span className="ptt-caption">{talking ? 'Talking…' : 'Hold to talk'}</span>
+                <div className="ptt-side">
+                    <span className={`ptt-dot ${status}`} title={status === 'live' ? 'Connected' : status === 'waiting' ? 'Waiting for opponent…' : 'Connecting…'} />
+                    <button className={`ptt-mini ${remoteMuted ? 'muted' : ''}`} onClick={toggleRemote} title={remoteMuted ? 'Unmute opponent' : 'Mute opponent'}>
+                        {remoteMuted ? '🔇' : '🔊'}
+                    </button>
+                    <button className="ptt-mini leave" onClick={disableVoice} title="Turn off voice">✕</button>
+                </div>
+            </div>
         </div>
     );
 };

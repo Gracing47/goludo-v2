@@ -852,6 +852,33 @@ io.on('connection', (socket) => {
     socket.on('voice_ice', (data) => forwardToRoomPeers('voice_ice', data));
     socket.on('voice_end', (data) => forwardToRoomPeers('voice_end', data));       // "I disabled voice"
 
+    // Leave = loss (Tommy): a player who leaves a LIVE match forfeits; in a
+    // 2-player game the opponent is declared the winner immediately.
+    socket.on('leave_match', ({ roomId, playerAddress }) => {
+        const room = activeRooms.find(r => r.id?.toLowerCase() === roomId?.toLowerCase());
+        if (!room || !room.gameState) return;
+        if (room.gameState.gamePhase === 'WIN') return;
+        const idx = room.players.findIndex((p: any) => p && p.address?.toLowerCase() === playerAddress?.toLowerCase());
+        if (idx === -1) return;
+        const leaver = room.players[idx];
+        if (!leaver || leaver.forfeited) return;
+        leaver.forfeited = true;
+        leaver.socketId = null;
+        console.log(`🚪 Player ${leaver.name} LEFT the match — forfeit.`);
+        // Winner = the remaining active, non-forfeited player (2-player game).
+        const remaining = room.gameState.activeColors.filter((c: number) => c !== idx && !room.players[c]?.forfeited);
+        if (remaining.length === 1) {
+            declareWinner(io, room, remaining[0]);
+        } else if (room.gameState.activePlayer === idx) {
+            // >2 players edge case: just advance the turn past the leaver.
+            room.gameState.activePlayer = getNextPlayer(idx, room.gameState.activeColors);
+            broadcastState(room, `🚪 ${leaver.name} left the match.`);
+            handleNextTurn(io, room);
+        } else {
+            broadcastState(room, `🚪 ${leaver.name} left the match.`);
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log(`🔌 User disconnected: ${socket.id}`);
         // G-029: tell the peer the voice partner is gone so it tears down cleanly

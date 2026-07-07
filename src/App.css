@@ -1130,8 +1130,8 @@ body {
 .voice-controls-slot {
     position: fixed;
     left: 10px;
-    bottom: 26%;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     right: auto;
     transform: none;
-    z-index: 35;
+    z-index: 45;
 }

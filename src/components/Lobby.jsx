@@ -20,6 +20,7 @@ import { showToast } from '../services/toast';
 import BurnTicker, { BURN_TICKER_CHAIN_ID } from './BurnTicker';
 import Leaderboard from './Leaderboard';
 import ProfileModal from './ProfileModal';
+import UsernameOnboard from './UsernameOnboard';
 
 const COLORS = ['red', 'green', 'yellow', 'blue'];
 const COLOR_NAMES = ['Red', 'Green', 'Yellow', 'Blue'];
@@ -437,6 +438,7 @@ const Lobby = ({ onStartGame }) => {
 
     return (
         <div className="lobby">
+            <UsernameOnboard />
             {showLeaderboard && (
                 <Leaderboard onClose={() => setShowLeaderboard(false)} ownAddress={account?.address} />
             )}

@@ -6,6 +6,13 @@
     align-items: center;
     gap: 6px;
 }
+/* Compact horizontal layout for the bottom-left corner (button + labels beside it) */
+.ptt-wrap.compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+.ptt-labels { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 
 .ptt-side { display: flex; align-items: center; gap: 6px; }
 
@@ -18,7 +25,8 @@
 /* The main PTT button */
 .ptt-btn {
     position: relative;
-    width: 60px; height: 60px;
+    width: 54px; height: 54px;
+    flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     border-radius: 50%;
     border: 2px solid rgba(124, 108, 255, 0.6);
@@ -79,6 +87,13 @@
 .ptt-mini:hover { background: rgba(124,108,255,0.26); }
 .ptt-mini.muted { border-color: rgba(255,90,90,0.5); color: #ff9b9b; }
 .ptt-mini.leave { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.65); }
+
+/* Tiny phones: hide the text label, keep the button + status compact */
+@media (max-width: 480px) {
+    .ptt-btn { width: 48px; height: 48px; }
+    .ptt-wrap.compact .ptt-caption { display: none; }
+    .ptt-error { max-width: 130px; font-size: 0.6rem; }
+}
 
 @media (prefers-reduced-motion: reduce) {
     .ptt-dot.waiting, .ptt-dot.connecting, .ptt-btn.talking .ptt-ring { animation: none; }

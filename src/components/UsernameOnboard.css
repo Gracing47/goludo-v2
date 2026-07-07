@@ -1,0 +1,47 @@
+/* UsernameOnboard (G-028) — first-time name prompt */
+.uno-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(10, 10, 25, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1200; padding: 16px;
+}
+.uno-card {
+    width: 100%; max-width: 380px;
+    background: #141423;
+    border: 1px solid rgba(124, 108, 255, 0.4);
+    border-radius: 18px;
+    padding: 24px 22px;
+    text-align: center;
+    color: #e8e8f5;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+}
+.uno-avatar {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    margin-bottom: 12px;
+}
+.uno-card h3 { margin: 0 0 6px; font-size: 1.15rem; }
+.uno-card p { margin: 0 0 16px; font-size: 0.85rem; opacity: 0.75; line-height: 1.4; }
+.uno-card input {
+    width: 100%; padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(124, 108, 255, 0.5);
+    background: rgba(255,255,255,0.05);
+    color: inherit; font-size: 1rem; text-align: center;
+    margin-bottom: 14px;
+}
+.uno-actions { display: flex; gap: 8px; }
+.uno-actions button {
+    flex: 1; padding: 12px; min-height: 46px;
+    border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem;
+}
+.uno-skip {
+    background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);
+}
+.uno-save {
+    border: none; color: #fff;
+    background: linear-gradient(135deg, #6c5cff, #4f3fd8);
+}
+.uno-save:disabled, .uno-skip:disabled { opacity: 0.5; cursor: not-allowed; }
+.uno-note { display: block; margin-top: 12px; font-size: 0.68rem; opacity: 0.55; }
